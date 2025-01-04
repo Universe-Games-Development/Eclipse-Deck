@@ -1,4 +1,5 @@
 using UnityEngine;
+using Zenject;
 
 public class TableManager : MonoBehaviour {
     [SerializeField] private GameObject fieldPrefab;
@@ -11,6 +12,14 @@ public class TableManager : MonoBehaviour {
     [SerializeField] private Vector3 fieldSize = new Vector3(1.5f, 0.1f, 1.5f); // Розмір поля
 
     private Field[,] fieldGrid;
+
+
+    private UIInfo uiInfo;
+
+    [Inject]
+    private void Construct(UIInfo uiInfo) {
+        this.uiInfo = uiInfo;
+    }
 
     private void Awake() {
         if (fieldGrid == null) {
@@ -31,9 +40,13 @@ public class TableManager : MonoBehaviour {
     private Field CreateField(int row, int col) {
         Vector3 offset = new Vector3(col * horizontalOffset, 0, row * verticalOffset);
         Vector3 spawnPosition = fieldsOrigin.position + fieldsOrigin.rotation * offset;
-        GameObject newFieldObj = Instantiate(fieldPrefab, spawnPosition, Quaternion.identity);
-        newFieldObj.transform.rotation = fieldsOrigin.rotation; // Врахування повороту
-        return newFieldObj.GetComponent<Field>();
+        GameObject newFieldObj = Instantiate(fieldPrefab, spawnPosition, fieldsOrigin.rotation, fieldsOrigin);
+
+        Field createdField = newFieldObj.GetComponent<Field>();
+        createdField.InitializeUIInfo(uiInfo);
+        createdField.Index = col + 1;
+
+        return createdField;
     }
 
     public void AssignFieldsToPlayer(Opponent player, int rowIndex) {
@@ -62,11 +75,17 @@ public class TableManager : MonoBehaviour {
         }
 
         if (gridField.Owner == player) {
-            gridField.SummonCreature(selectedCard);
-            Debug.Log($"{player.Name} викликав створіння на полі.");
-            return true;
+            bool isSummoned = gridField.SummonCreature(selectedCard);
+            if (isSummoned) {
+                Debug.Log($"{player.Name} викликав створіння на полі.");
+                return true;
+            } else {
+                Debug.Log($"{player.Name} викликав але поле не змогло прийняти істоту");
+                return false;
+            }
+            
         } else {
-            Debug.LogError("Це поле належить іншому гравцеві! Не можна зіграти карту тут.");
+            Debug.LogWarning("Це поле належить іншому гравцеві! Не можна зіграти карту тут.");
             return false;
         }
     }

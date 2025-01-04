@@ -44,6 +44,10 @@ public class CardHandUI : MonoBehaviour {
             cardToLayoutMap.Remove(cardUI);
         }
 
+        if (cardUI == SelectedCard) {
+            DeselectCurrentCard();
+        }
+
         UnsubscribeCardEvents(cardUI);
         idToCardUIMap.Remove(card.Id); // Видаляємо запис про карту
         Destroy(cardUI.gameObject);

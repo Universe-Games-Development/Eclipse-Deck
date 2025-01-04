@@ -13,7 +13,7 @@ public class Player : Opponent {
     private void Start() {
         handUI.Initialize(hand);
 
-        tableManager.AssignFieldsToPlayer(this, 1);
+        tableManager.AssignFieldsToPlayer(this, 0);
 
         hand.AddCard(deck.DrawCard());
         hand.AddCard(deck.DrawCard());
@@ -29,25 +29,28 @@ public class Player : Opponent {
 
     private void TrySummonCard() {
         // Проверяем, есть ли наведённый объект
-        GameObject interactable = interactionManager.HoveredInteractable;
-        if (interactable && interactable.TryGetComponent(out Field field)) {
+        if (interactionManager.HoveredInteractable && interactionManager.HoveredInteractable.TryGetComponent(out Field field)) {
             // Получаем выбранную карту напрямую из handUI
             CardUI selectedUICard = handUI.SelectedCard;
-            Card selectedCard = hand.GetCardByID(selectedUICard.Id);
-
-            if (selectedCard != null) {
-                bool isPlayed = tableManager.SummonCreature(this, selectedCard, field);
-                if (isPlayed) {
-                    hand.RemoveCard(selectedCard);
-                    field.SummonCreature(selectedCard);
-                    handUI.DeselectCurrentCard();
-                    Debug.Log($"Card {selectedCard.Name} summoned to field!");
-                }
-            } else {
+            if (selectedUICard == null) {
                 Debug.Log("No card selected to summon.");
+                return;
+            }
+
+            Card selectedCard = hand.GetCardByID(selectedUICard.Id);
+            if (selectedCard == null) {
+                Debug.Log("Selected card not found in hand.");
+                return;
+            }
+
+            bool isPlayed = tableManager.SummonCreature(this, selectedCard, field);
+            if (isPlayed) {
+                hand.RemoveCard(selectedCard);
+                Debug.Log($"Card {selectedCard.Name} summoned to field!");
             }
         } else {
             handUI.DeselectCurrentCard();
         }
     }
+
 }

@@ -61,16 +61,17 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
     public void SelectCard() {
         isSelected = true;
         if (animator != null) {
-            animator.SetBool("Selected", true);
+            animator.SetBool("Selected", isSelected);
         }
         cardImage.color = Color.green; // Візуальна індикація
     }
 
     public void DeselectCard() {
-        if (animator != null) {
-            animator.SetBool("Selected", false);
-        }
         isSelected = false;
+        if (animator != null) {
+            animator.SetBool("Selected", isSelected);
+        }
+        
         cardImage.color = Color.white; // Відновлення стандартного кольору
     }
 

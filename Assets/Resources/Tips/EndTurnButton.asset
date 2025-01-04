@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5b780db48e1434fbe05a443207da23, type: 3}
   m_Name: EndTurnButton
   m_EditorClassIdentifier: 
-  tipText: PROCEED TO END TURN
+  tipText: END TURN
