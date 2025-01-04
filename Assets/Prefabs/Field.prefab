@@ -67,8 +67,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 6051022360936502160, guid: 4d71413f8557b35478615dc9ea0fafbe, type: 3}
-  - {fileID: 8999676466967722699, guid: 4d71413f8557b35478615dc9ea0fafbe, type: 3}
+  - {fileID: 2100000, guid: ceebd8eca894d5845902c4670a20b33c, type: 2}
+  - {fileID: 2100000, guid: 869575289c05bdc4ca2da357bf305848, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -125,8 +125,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tipData: {fileID: 11400000, guid: 3e284876c3079624b93366aee1a3b5de, type: 2}
   Index: 0
-  spawnPoint: {fileID: 0}
-  battleCreaturePrefab: {fileID: 0}
+  spawnPoint: {fileID: 3417977091324475684}
+  battleCreaturePrefab: {fileID: 5057081012966347309, guid: cfd7bc964292aaa498b79a32111aed4e, type: 3}
 --- !u!1 &768611609889918951
 GameObject:
   m_ObjectHideFlags: 0

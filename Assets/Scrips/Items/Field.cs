@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Zenject.SpaceFighter;
 
 public class Field : TipItem {
     public Opponent Owner { get; private set; } // Власник цього поля
@@ -9,28 +10,24 @@ public class Field : TipItem {
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private GameObject battleCreaturePrefab;
 
-    public void InitializeField(Opponent owner) {
-        Owner = owner;
-        OccupiedCreature = null;
-    }
+    internal bool SummonCreature(Card selectedCard) {
+        if (OccupiedCreature != null) {
+            Debug.Log($"{name} вже зайняте");
+            return false; // Поле вже зайняте
+        }
+            
 
-    internal void SummonCreature(Card selectedCard) {
         GameObject battleCreatureObj = Instantiate(battleCreaturePrefab, spawnPoint);
         BattleCreature battleCreature = battleCreatureObj.GetComponent<BattleCreature>();
         battleCreature.Initialize(selectedCard, this, new SingleAttack());
+        OccupiedCreature = battleCreature;
+        return true;
     }
 
-    // Метод для додавання істоти на поле
-    public bool PlaceCreature(BattleCreature creature) {
-        if (OccupiedCreature == null) {
-            OccupiedCreature = creature;
-            return true;
-        }
-        return false; // Поле вже зайняте
-    }
 
     // Метод для видалення істоти з поля
     public void RemoveCreature() {
+        // TO DO : Death
         OccupiedCreature = null;
     }
 
@@ -54,7 +51,9 @@ public class Field : TipItem {
         string info = $"Поле #{Index}\nВласник: {Owner?.Name}";
 
         if (OccupiedCreature != null) {
-            info += $"\nІстота: {OccupiedCreature.Name}\nЗдоров'я: {OccupiedCreature.health.GetHealth()}";
+            info += $"\nІстота: {OccupiedCreature.Name}" +
+                $"\nHp: {OccupiedCreature.health.GetHealth()} " +
+                $" Atk: {OccupiedCreature.Attack}";
         } else {
             info += "\nПоле порожнє.";
         }

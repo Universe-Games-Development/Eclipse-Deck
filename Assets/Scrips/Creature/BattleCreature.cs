@@ -7,22 +7,22 @@ public class BattleCreature : MonoBehaviour
     private Field currentField;
     private Animator animator;
     private AudioSource audioSource;
+    private SpriteRenderer spriteRenderer;
 
     [SerializeField] private AudioClip attackSound; // Звук атаки
     [SerializeField] private string attackAnimationTrigger = "Attack"; // Триггер анімації атаки
     [SerializeField] private Transform originalRotation; // Початкова орієнтація спрайта
 
     public Health health;
-    private int Attack;
+    public int Attack;
     public string Name;
     private AttackStrategy attackStrategy;
 
     private void Awake() {
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
-        if (!TryGetComponent(out health)) {
-            gameObject.AddComponent(typeof(Health));
-        }
+        health = GetComponent<Health>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     public void Initialize(Card card, Field field, AttackStrategy newAttackStrategy) {
@@ -32,6 +32,7 @@ public class BattleCreature : MonoBehaviour
         attackStrategy = newAttackStrategy;
         currentField = field;
         originalRotation = transform; // зберігаємо початкову орієнтацію спрайта
+        spriteRenderer.sprite = card.MainImage;
     }
 
     public void PerformAttack(Field[] enemyFields) {
