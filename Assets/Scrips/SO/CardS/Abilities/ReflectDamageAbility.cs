@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ReflectDamage", menuName = "Cards/Abilities/ReflectDamage")]
-public class ReflectDamageAbilitySO : AbilitySO {
+public class ReflectDamageAbilitySO : CardAbilitySO {
     public override void ActivateAbility(GameContext gameContext) {
         if (gameContext.sourceCard != null && gameContext.targetCard != null) {
             // Відбиваємо шкоду назад до нападника

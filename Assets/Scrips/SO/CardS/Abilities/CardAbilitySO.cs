@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Ability", menuName = "Cards/Abilities/BaseAbility")]
-public abstract class AbilitySO : ScriptableObject {
+public abstract class CardAbilitySO : ScriptableObject  {
     public string abilityName;
     public string abilityDescription;
     public CardState activationState;

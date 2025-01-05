@@ -15,8 +15,9 @@ public class Card {
     public List<string> AbilityDescriptions { get; private set; }
     public IEventManager EventManager { get; private set; }
     public Sprite MainImage { get; private set; }
+    public Action<CardState> OnStateChanged { get; internal set; }
 
-    private List<Ability> abilities;
+    private List<CardAbility> abilities;
     private List<IEffect> activeEffects;
 
     // Додавання унікального ідентифікатора в конструктор
@@ -34,12 +35,12 @@ public class Card {
         Health = cardSO.health;
         MainImage = cardSO.mainImage;
 
-        abilities = new List<Ability>();
+        abilities = new List<CardAbility>();
         AbilityDescriptions = new List<string>();
         activeEffects = new List<IEffect>();
 
         foreach (var abilitySO in cardSO.abilities) {
-            var ability = new Ability(abilitySO, this, eventManager);
+            var ability = new CardAbility(abilitySO, this, eventManager);
             abilities.Add(ability);
             AbilityDescriptions.Add(abilitySO.abilityDescription);
         }
@@ -56,14 +57,7 @@ public class Card {
 
     public void ChangeState(CardState newState) {
         CurrentState = newState;
-
-        foreach (var ability in abilities) {
-            if (newState == ability.activationState) {
-                ability.RegisterAbility();
-            } else if (newState == ability.deactivationState) {
-                ability.UnregisterAbility();
-            }
-        }
+        OnStateChanged?.Invoke(CurrentState);
     }
 }
 
