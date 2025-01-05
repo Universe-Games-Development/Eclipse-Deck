@@ -6,10 +6,12 @@ public class Health : MonoBehaviour {
     [SerializeField] protected int currentHealth = 5;
     [SerializeField] private int damageThreshold = 1; // Integers don't have floating-point precision
 
-    // Events for damage and healing
+    // Events for damage, healing, and max health changes
     public event Action OnDamageTaken;
     public event Action OnHealed;
     public event Action OnDeath;
+    public event Action OnMaxHealthIncreased;
+    public event Action OnMaxHealthDecreased;
 
     private void Awake() {
         currentHealth = maxHealth;
@@ -46,11 +48,12 @@ public class Health : MonoBehaviour {
             Death();
         } else {
             Hurt();
+            Debug.Log($"{gameObject} отримує {damage} шкоди. Здоров'я: {currentHealth}.");
             OnDamageTaken?.Invoke(); // Invoke damage event
         }
     }
 
-    protected virtual void Heal(int amount) {
+    public virtual void Heal(int amount) {
         if (amount < 0) {
             Debug.Log("Unexpected negative heal");
             return;
@@ -62,7 +65,7 @@ public class Health : MonoBehaviour {
         OnHealed?.Invoke(); // Invoke heal event
     }
 
-    protected virtual void Hurt() {
+    public virtual void Hurt() {
         // UI call
         // Audio call
         Debug.Log(gameObject.name + " got hurt");
@@ -75,5 +78,19 @@ public class Health : MonoBehaviour {
 
     public int GetHealth() {
         return currentHealth;
+    }
+
+    public void IncreaseMaxHealth(int amount) {
+        maxHealth += amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        OnMaxHealthIncreased?.Invoke();
+        Debug.Log($"{gameObject.name} max health increased by {amount}. Max Health: {maxHealth}");
+    }
+
+    public void DecreaseMaxHealth(int amount) {
+        maxHealth -= amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        OnMaxHealthDecreased?.Invoke();
+        Debug.Log($"{gameObject.name} max health decreased by {amount}. Max Health: {maxHealth}");
     }
 }

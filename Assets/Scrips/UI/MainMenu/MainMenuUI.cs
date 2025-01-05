@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 public class MainMenuUI : MonoBehaviour {
     [Header("UI_References :")]
@@ -16,13 +17,16 @@ public class MainMenuUI : MonoBehaviour {
 
     
     private StartGameHandler startGameHandler;
+    [Inject]
+    public void Contruct(LevelManager levelManager) {
+        this.levelManager = levelManager;
+    }
 
     private void Awake() {
         startGameHandler = GetComponent<StartGameHandler>();
     }
 
     private void Start() {
-        levelManager = LevelManager.Instance;
 
         // set buttons listeners
         uiStartButton?.onClick.AddListener(() => OnButtonClick(uiStartButton, startGameHandler.StartGame));

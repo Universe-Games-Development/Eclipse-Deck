@@ -1,55 +1,75 @@
 using TMPro;
 using UnityEngine;
 using System.Collections;
+using Zenject;
 
 public class UIInfo : MonoBehaviour {
-    [SerializeField] private TextMeshProUGUI m_TextMeshProUGUI;
+    [Header("Settings")]
     [SerializeField] private float minDisplayDuration = 3f; // Мінімальний час показу в секундах
     [SerializeField] private float timePerCharacter = 0.1f; // Додатковий час за кожен символ
 
+    [Header("References")]
+    [SerializeField] private TextMeshProUGUI tipTextField;
+
+    private UIManager uiManager;
     private ITipProvider currentTipProvider;
     private Coroutine hideCoroutine;
+
+    [Inject]
+    public void Construct(UIManager uiManager) {
+        this.uiManager = uiManager;
+    }
+
+    private void OnEnable() {
+        uiManager.OnInfoItemEnter += ShowInfo;
+        uiManager.OnInfoItemExit += HideInfo;
+    }
+
+    private void OnDisable() {
+        uiManager.OnInfoItemEnter -= ShowInfo;
+        uiManager.OnInfoItemExit -= HideInfo;
+    }
 
     public void ShowInfo(ITipProvider tipProvider) {
         if (tipProvider == null) return;
 
+        // Зупиняємо попередню корутину, якщо така існує
         if (hideCoroutine != null) {
             StopCoroutine(hideCoroutine);
         }
 
+        // Зберігаємо поточного постачальника та відображаємо текст
         currentTipProvider = tipProvider;
-        m_TextMeshProUGUI.text = tipProvider.GetInfo();
+        tipTextField.text = tipProvider.GetInfo();
 
-        // Обчислення тривалості показу
+        // Обчислюємо тривалість показу та запускаємо корутину для автоматичного приховування
         float displayDuration = CalculateDisplayDuration(tipProvider.GetInfo());
-
-        // Запускаємо корутину для автоматичного приховування інформації
         hideCoroutine = StartCoroutine(HideInfoAfterDelay(displayDuration));
-    }
-
-    private IEnumerator HideInfoAfterDelay(float duration) {
-        yield return new WaitForSeconds(duration);
-
-        HideInfo(currentTipProvider);
     }
 
     public void HideInfo(ITipProvider tipProvider) {
         if (tipProvider != currentTipProvider) return;
 
-        m_TextMeshProUGUI.text = string.Empty;
+        // Очищуємо текст і скидаємо стан
+        tipTextField.text = string.Empty;
         currentTipProvider = null;
 
+        // Зупиняємо корутину, якщо вона існує
         if (hideCoroutine != null) {
             StopCoroutine(hideCoroutine);
             hideCoroutine = null;
         }
     }
 
-    private float CalculateDisplayDuration(string text) {
-        if (string.IsNullOrEmpty(text)) return minDisplayDuration;
+    private IEnumerator HideInfoAfterDelay(float duration) {
+        yield return new WaitForSeconds(duration);
+        HideInfo(currentTipProvider);
+    }
 
-        // Розрахунок: мінімальний час + час за кожен символ
-        float calculatedDuration = minDisplayDuration + (text.Length * timePerCharacter);
-        return calculatedDuration;
+    private float CalculateDisplayDuration(string text) {
+        if (string.IsNullOrEmpty(text)) {
+            return minDisplayDuration;
+        }
+        return minDisplayDuration + (text.Length * timePerCharacter);
     }
 }

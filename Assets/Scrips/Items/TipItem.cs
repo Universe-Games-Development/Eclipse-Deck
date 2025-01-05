@@ -4,25 +4,18 @@ using Zenject;
 public class TipItem : MonoBehaviour, ITipProvider {
     [SerializeField] private TipData tipData;
 
-    protected UIInfo uiInfo;
+    [Inject] protected UIManager uiManager;
 
-    [Inject]
-    private void Construct(UIInfo uiInfo) {
-        this.uiInfo = uiInfo;
-    }
-
-    public void InitializeUIInfo(UIInfo uiInfo) {
-        if (!this.uiInfo) {
-            this.uiInfo = uiInfo;
-        }
+    public void Initialize(UIManager uiManager) {
+        this.uiManager = uiManager;
     }
 
     void OnMouseEnter() {
-        uiInfo.ShowInfo(this);
+        uiManager.ShowInfo(this);
     }
 
     void OnMouseExit() {
-        uiInfo.HideInfo(this);
+        uiManager.HideInfo(this);
     }
 
     public virtual string GetInfo() {

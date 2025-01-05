@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee7b91f193b2fe04cbfec8248c9a7259, type: 3}
+  m_Name: Guardian of Tranquility
+  m_EditorClassIdentifier: 
+  cardName: Guardian
+  description: 
+  mainImage: {fileID: 0}
+  id: b7ec408c-c235-47f8-8684-8368f30e5631
+  rarity: 0
+  cardType: 1
+  cost: 1
+  attack: 0
+  health: 5
+  abilities: []
