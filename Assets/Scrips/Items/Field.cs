@@ -35,10 +35,10 @@ public class Field : TipItem {
     public void ReceiveAttack(int damage) {
         if (OccupiedCreature != null) {
             // Якщо на полі є істота, вона отримує шкоду
-            OccupiedCreature.TakeDamage(damage);
+            OccupiedCreature.health.ApplyDamage(damage);
         } else {
             // Якщо поле порожнє, шкоду отримує власник поля
-            Owner.TakeDamage(damage);
+            Owner.health.ApplyDamage(damage);
             Debug.Log($"{Owner.Name} отримує {damage} шкоди, тому що поле {Owner} порожнє.");
         }
     }
@@ -66,6 +66,5 @@ public class Field : TipItem {
     }
 
     internal void SetFieldOwnerIndicator(Opponent owner) {
-        Debug.Log("Field assigned to : " + owner.Name);
     }
 }

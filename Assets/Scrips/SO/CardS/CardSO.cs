@@ -15,7 +15,7 @@ public class CardSO : ScriptableObject {
     public int cost;
     public int attack;
     public int health;
-    public AbilitySO[] abilities;
+    public CardAbilitySO[] abilities;
 
     private void OnValidate() {
         if (string.IsNullOrEmpty(id)) {

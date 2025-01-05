@@ -13,13 +13,7 @@ public class TableManager : MonoBehaviour {
 
     private Field[,] fieldGrid;
 
-
-    private UIInfo uiInfo;
-
-    [Inject]
-    private void Construct(UIInfo uiInfo) {
-        this.uiInfo = uiInfo;
-    }
+    [Inject] protected DiContainer diContainer;
 
     private void Awake() {
         if (fieldGrid == null) {
@@ -40,10 +34,11 @@ public class TableManager : MonoBehaviour {
     private Field CreateField(int row, int col) {
         Vector3 offset = new Vector3(col * horizontalOffset, 0, row * verticalOffset);
         Vector3 spawnPosition = fieldsOrigin.position + fieldsOrigin.rotation * offset;
-        GameObject newFieldObj = Instantiate(fieldPrefab, spawnPosition, fieldsOrigin.rotation, fieldsOrigin);
+        GameObject newFieldObj = diContainer.InstantiatePrefab(fieldPrefab, spawnPosition, fieldsOrigin.rotation, fieldsOrigin);
 
         Field createdField = newFieldObj.GetComponent<Field>();
-        createdField.InitializeUIInfo(uiInfo);
+        
+
         createdField.Index = col + 1;
 
         return createdField;

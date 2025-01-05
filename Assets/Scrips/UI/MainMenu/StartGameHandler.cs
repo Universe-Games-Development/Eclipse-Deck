@@ -1,10 +1,17 @@
 using UnityEngine;
 using System.Collections;
+using Zenject;
 
 public class StartGameHandler : MonoBehaviour {
     private CameraSplineMover cameraSplineMover;
     private Animator uiAnimator;
     [SerializeField] private AnimationClip monitorMoveUp;
+
+    private LevelManager levelManager;
+    [Inject]
+    public void Contruct(LevelManager levelManager) {
+        this.levelManager = levelManager;
+    }
 
     private void Awake() {
         cameraSplineMover = GetComponent<CameraSplineMover>();
@@ -38,10 +45,6 @@ public class StartGameHandler : MonoBehaviour {
     }
 
     private void OnCameraMovementComplete() {
-        if (LevelManager.Instance != null) {
-            LevelManager.Instance.StartGame();
-        } else {
-            Debug.LogError("LevelManager.Instance не знайдено!");
-        }
+        levelManager.StartGame();
     }
 }

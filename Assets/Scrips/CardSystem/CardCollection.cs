@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-using Zenject;
 
 public class CardCollection {
     public class CardEntry {
@@ -31,7 +29,7 @@ public class CardCollection {
     public void GenerateTestDeck(int count) {
         
         for (int i = 0; i < count; i++) {
-            AddCardToCollection(resourceManager.GetRandomCard());
+            AddCardToCollection(resourceManager.GetRandomResource<CardSO>(ResourceType.CARDS));
         }
     }
 
@@ -41,7 +39,7 @@ public class CardCollection {
         List<CardSO> validCards = new List<CardSO>();
 
         // Додаємо всі карти з бази в validCards, перевіряючи їх вартість
-        foreach (CardSO card in resourceManager.GetAllCards()) {
+        foreach (CardSO card in resourceManager.GetAllResources<CardSO>(ResourceType.CARDS)) {
             if (IsValidCard(card, averageCost)) {
                 validCards.Add(card);
             }

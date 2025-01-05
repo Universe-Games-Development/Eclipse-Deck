@@ -3,7 +3,6 @@ using UnityEngine.UI;
 
 public class SettingsUI : MonoBehaviour {
     [Header("UI_References:")]
-    [SerializeField] private GameObject uiCanvas;
     [SerializeField] private Button closeButton;
     [Space]
     [SerializeField] private Toggle musicToggle;
@@ -49,15 +48,15 @@ public class SettingsUI : MonoBehaviour {
     }
 
     public void Close() {
-        if (uiCanvas != null) uiCanvas.SetActive(false);
+        gameObject.SetActive(false);
     }
 
     public void Show() {
-        if (uiCanvas != null) uiCanvas.SetActive(true);
+        gameObject.SetActive(true);
     }
 
     public void Toggle(bool state) {
-        if (uiCanvas != null) uiCanvas.SetActive(state);
+        gameObject.SetActive(state);
     }
 
     private void OnButtonClick(Button button, UnityEngine.Events.UnityAction action) {

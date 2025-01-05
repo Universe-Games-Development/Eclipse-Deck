@@ -9,7 +9,7 @@ public class Opponent : MonoBehaviour
     protected Deck discardDeck;
 
     protected CardHand hand;
-    protected Health health;
+    public Health health;
 
     private ResourceManager resourceManager;
     private IEventManager eventManager;
@@ -31,11 +31,5 @@ public class Opponent : MonoBehaviour
         Debug.Log("deck initialized with cards : " + deck.GetCount());
 
         hand = new CardHand();
-    }
-
-    public void TakeDamage(int damage) {
-        health.ApplyDamage(damage);
-
-        Debug.Log($"{gameObject} отримує {damage} шкоди. Здоров'я: {health.GetHealth()}.");
     }
 }

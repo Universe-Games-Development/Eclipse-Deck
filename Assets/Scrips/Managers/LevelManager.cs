@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class LevelManager : Singleton<LevelManager> {
+public class LevelManager : MonoBehaviour {
 
     [Header("Scene data")]
     public string currentSceneName;
