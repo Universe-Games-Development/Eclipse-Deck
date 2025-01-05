@@ -40,7 +40,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
     }
 
     public void OnPointerClick(PointerEventData eventData) {
-        Debug.Log($"Pointer clicked card: {cardNameText.text}");
         OnCardClicked?.Invoke(this);
     }
 

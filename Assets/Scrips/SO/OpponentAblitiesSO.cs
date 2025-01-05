@@ -1,12 +1,11 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Ability", menuName = "Abilities/BaseAbility")]
-public abstract class OpponentAblitiesSO : ScriptableObject {
-    public string abilityName;
-    public string abilityDescription;
+public abstract class OpponentPerkSO : ScriptableObject {
+    public string perkName;
+    public string perkDescription;
     public EventType activationState;
 
     public virtual void ActivateAbility(GameContext gameContext) {
-        Debug.Log("Base ability activation");
+        Debug.Log("Base perk activation");
     }
 }

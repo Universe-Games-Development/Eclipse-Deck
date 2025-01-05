@@ -6,15 +6,13 @@ using UnityEngine;
 public class CardAbility : IEventListener {
     private CardAbilitySO abilitySO;
     private Card card;
+    private bool isRegistered = false;
     private IEventManager eventManager;
-    public CardState activationState;
-    private bool isRegistered = false; // Прапорець для відстеження реєстрації
 
     public CardAbility(CardAbilitySO abilitySO, Card card, IEventManager eventManager) {
         this.abilitySO = abilitySO;
         this.card = card;
         this.eventManager = eventManager;
-        activationState = abilitySO.activationState;
 
         // Підписка на подію зміни стану карти
         card.OnStateChanged += OnCardStateChanged;
@@ -39,7 +37,7 @@ public class CardAbility : IEventListener {
 
     // Перевірка і реєстрація здібності, якщо стан підходить
     private void CheckAndRegisterAbility() {
-        if (card.CurrentState == activationState) {
+        if (card.CurrentState == abilitySO.activationState) {
             if (!isRegistered) {
                 RegisterActivation();
             }
@@ -51,16 +49,21 @@ public class CardAbility : IEventListener {
     }
 
     // Реєстрація здібності
-    public void RegisterActivation() {
+    public virtual void RegisterActivation() {
+        if (isRegistered) {
+            Debug.LogWarning($"Ability for card {card.Name} is already registered.");
+            return;
+        }
+
         Debug.Log($"Registering ability for card: {card.Name}");
-        eventManager.RegisterListener(this, EventType.ON_CARD_CLICKED, ExecutionType.Parallel);
+        eventManager.RegisterListener(this, abilitySO.eventTrigger, ExecutionType.Parallel);
         isRegistered = true;
     }
 
     // Відписка від здібності
-    public void UnregisterActivation() {
+    public virtual void UnregisterActivation() {
         Debug.Log($"Unregistering ability for card: {card.Name}");
-        eventManager.UnregisterListener(this, EventType.ON_CARD_CLICKED);
+        eventManager.UnregisterListener(this, abilitySO.eventTrigger);
         isRegistered = false;
     }
 

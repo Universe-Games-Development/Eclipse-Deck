@@ -1,6 +1,7 @@
 using UnityEngine;
 using Zenject;
 
+[RequireComponent (typeof(Health))]
 public class Opponent : MonoBehaviour
 {
     public string Name = "Opponent";
@@ -23,6 +24,7 @@ public class Opponent : MonoBehaviour
     }
 
     protected virtual void Awake() {
+        health = GetComponent<Health>();
 
         cardCollection = new CardCollection(resourceManager);
         cardCollection.GenerateTestDeck(20);
@@ -30,6 +32,6 @@ public class Opponent : MonoBehaviour
         deck = new Deck(this, cardCollection, eventManager);
         Debug.Log("deck initialized with cards : " + deck.GetCount());
 
-        hand = new CardHand();
+        hand = new CardHand(this, eventManager);
     }
 }

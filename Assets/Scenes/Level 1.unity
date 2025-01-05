@@ -847,6 +847,7 @@ GameObject:
   m_Component:
   - component: {fileID: 432073389}
   - component: {fileID: 432073390}
+  - component: {fileID: 432073391}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -886,6 +887,21 @@ MonoBehaviour:
   health: {fileID: 0}
   tableManager: {fileID: 971594362}
   handUI: {fileID: 376870063}
+--- !u!114 &432073391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 432073387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2314fb26a03299444b44c1d1a483c049, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 5
+  currentHealth: 5
+  damageThreshold: 1
 --- !u!1 &462874218
 GameObject:
   m_ObjectHideFlags: 0

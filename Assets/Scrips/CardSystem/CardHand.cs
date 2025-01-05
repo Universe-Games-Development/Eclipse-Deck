@@ -9,16 +9,28 @@ public class CardHand {
     public event Action<Card> OnCardAdd;
     public event Action<Card> OnCardRemove;
 
+    private Opponent owner;
     private readonly int maxHandSize;
+    private IEventManager eventManager;
 
-    public CardHand(int maxHandSize = DEFAULT_SIZE) {
+    public CardHand(Opponent owner, IEventManager eventManager, int maxHandSize = DEFAULT_SIZE) {
         this.maxHandSize = maxHandSize;
+        this.eventManager = eventManager;
     }
 
     public void AddCard(Card card) {
         if (cardsInHand.Count < maxHandSize) {
+            card.ChangeState(CardState.InHand);
+
+            GameContext gameContext = new GameContext();
+            gameContext.sourceCard = card;
+            gameContext.activePlayer = owner;
+
+            eventManager.TriggerEventAsync(EventType.ON_CARD_DRAWN, gameContext);
             cardsInHand.Add(card);
             OnCardAdd?.Invoke(card);
+        } else {
+            card.ChangeState(CardState.Discarded);
         }
     }
 

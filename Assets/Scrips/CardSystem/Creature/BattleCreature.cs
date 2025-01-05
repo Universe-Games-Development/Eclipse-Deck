@@ -1,8 +1,13 @@
 using UnityEngine;
 using System.Collections;
+using System;
+using Zenject;
+
 
 public class BattleCreature : MonoBehaviour
 {
+    private Card card;
+
     private Field currentField;
     private Animator animator;
     private AudioSource audioSource;
@@ -13,25 +18,41 @@ public class BattleCreature : MonoBehaviour
     [SerializeField] private Transform originalRotation; // Початкова орієнтація спрайта
 
     public Health health;
-    public int Attack;
     public string Name;
     private AttackStrategy attackStrategy;
+
+    private IEventManager eventManager;
 
     private void Awake() {
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
         health = GetComponent<Health>();
+        health.OnDeath += Death;
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-    public void Initialize(Card card, Field field, AttackStrategy newAttackStrategy) {
+    private async void Death() {
+        GameContext gameContext = new GameContext();
+        gameContext.sourceCreature = this;
+        await eventManager.TriggerEventAsync(EventType.ON_CARD_DISCARDED, gameContext);
+        card.ChangeState(CardState.Discarded);
+    }
+
+    public async void Initialize(Card card, Field field, AttackStrategy newAttackStrategy) {
         Name = card.Name;
-        Attack = card.Attack;
         health.SetHealth(card.Health);
         attackStrategy = newAttackStrategy;
         currentField = field;
         originalRotation = transform; // зберігаємо початкову орієнтацію спрайта
         spriteRenderer.sprite = card.MainImage;
+
+        GameContext gameContext = new GameContext();
+        gameContext.sourceCreature = this;
+
+        eventManager = card.EventManager; ;
+        await eventManager.TriggerEventAsync(EventType.ON_CREATURE_SUMMONED, gameContext);
+
+        card.ChangeState(CardState.OnTable);
     }
 
     public void PerformAttack(Field[] enemyFields) {
@@ -48,11 +69,16 @@ public class BattleCreature : MonoBehaviour
         yield return RotateToTarget(targetPosition);
 
         // Відтворюємо анімацію атаки
-        animator.SetTrigger(attackAnimationTrigger);
+        if (animator != null) {
+            animator.SetTrigger(attackAnimationTrigger);
+        } else {
+            Debug.LogWarning("Animator is missing on BattleCreature!");
+        }
+
         audioSource.PlayOneShot(attackSound);
 
         // Виконуємо атаку
-        attackStrategy.Attack(currentField, enemyFields, Attack);
+        attackStrategy.Attack(currentField, enemyFields, card.Attack);
 
         // Повертаємось в початкову орієнтацію після завершення атаки
         yield return new WaitForSeconds(1f); // Дочекаємось завершення анімації атаки
@@ -78,5 +104,16 @@ public class BattleCreature : MonoBehaviour
         }
 
         transform.rotation = targetRotation; // Переконуємось, що ми точно повернулись в кут
+    }
+
+    public bool Silence() {
+        foreach (var ability in card.abilities) {
+            ability.UnregisterActivation();
+        }
+        return true;
+    }
+
+    public object GetAttack() {
+        return card.Attack;
     }
 }

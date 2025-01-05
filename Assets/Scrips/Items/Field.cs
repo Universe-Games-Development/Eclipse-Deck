@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-using Zenject.SpaceFighter;
+using Zenject;
 
 public class Field : TipItem {
     public Opponent Owner { get; private set; } // Власник цього поля
@@ -15,7 +15,6 @@ public class Field : TipItem {
             Debug.Log($"{name} вже зайняте");
             return false; // Поле вже зайняте
         }
-            
 
         GameObject battleCreatureObj = Instantiate(battleCreaturePrefab, spawnPoint);
         BattleCreature battleCreature = battleCreatureObj.GetComponent<BattleCreature>();
@@ -53,7 +52,7 @@ public class Field : TipItem {
         if (OccupiedCreature != null) {
             info += $"\nІстота: {OccupiedCreature.Name}" +
                 $"\nHp: {OccupiedCreature.health.GetHealth()} " +
-                $" Atk: {OccupiedCreature.Attack}";
+                $" Atk: {OccupiedCreature.GetAttack()}";
         } else {
             info += "\nПоле порожнє.";
         }

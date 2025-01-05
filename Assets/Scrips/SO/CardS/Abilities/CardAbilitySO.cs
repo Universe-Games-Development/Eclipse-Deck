@@ -1,13 +1,20 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Ability", menuName = "Cards/Abilities/BaseAbility")]
-public abstract class CardAbilitySO : ScriptableObject  {
+public abstract class CardAbilitySO : ScriptableObject {
     public string abilityName;
     public string abilityDescription;
     public CardState activationState;
-    public CardState deactivationState;
+    public EventType eventTrigger;
 
-    public virtual void ActivateAbility(GameContext gameContext) {
+    public virtual bool ActivateAbility(GameContext gameContext) {
         Debug.Log("Base ability activation");
+        return true;
+    }
+
+    // Викликається щоразу, коли об'єкт змінюється в редакторі
+    private void OnValidate() {
+        if (string.IsNullOrEmpty(abilityName)) {
+            abilityName = GetType().Name;
+        }
     }
 }

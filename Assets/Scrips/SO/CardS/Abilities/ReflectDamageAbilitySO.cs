@@ -2,7 +2,7 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "ReflectDamage", menuName = "Cards/Abilities/ReflectDamage")]
 public class ReflectDamageAbilitySO : CardAbilitySO {
-    public override void ActivateAbility(GameContext gameContext) {
+    public override bool ActivateAbility(GameContext gameContext) {
         if (gameContext.sourceCard != null && gameContext.targetCard != null) {
             // Відбиваємо шкоду назад до нападника
             int reflectedDamage = gameContext.damage;
@@ -11,5 +11,7 @@ public class ReflectDamageAbilitySO : CardAbilitySO {
             // Викликаємо метод TakeDamage для нанесення шкоди назад до карти-нападника
             gameContext.sourceCard.TakeDamage(reflectedDamage);
         }
+        return true;
     }
+    
 }

@@ -17,7 +17,7 @@ public class Card {
     public Sprite MainImage { get; private set; }
     public Action<CardState> OnStateChanged { get; internal set; }
 
-    private List<CardAbility> abilities;
+    public List<CardAbility> abilities;
     private List<IEffect> activeEffects;
 
     // Додавання унікального ідентифікатора в конструктор
@@ -44,6 +44,8 @@ public class Card {
             abilities.Add(ability);
             AbilityDescriptions.Add(abilitySO.abilityDescription);
         }
+
+        ChangeState(CardState.InDeck);
     }
 
     // Метод для нанесення шкоди
@@ -56,6 +58,7 @@ public class Card {
     }
 
     public void ChangeState(CardState newState) {
+        if (CurrentState == newState) return;
         CurrentState = newState;
         OnStateChanged?.Invoke(CurrentState);
     }
