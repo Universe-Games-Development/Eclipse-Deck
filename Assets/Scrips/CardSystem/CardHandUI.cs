@@ -51,8 +51,6 @@ public class CardHandUI : MonoBehaviour {
         UnsubscribeCardEvents(cardUI);
         idToCardUIMap.Remove(card.Id); // Видаляємо запис про карту
         Destroy(cardUI.gameObject);
-
-        Debug.Log($"Card {card} була успішно видалена з UI.");
     }
     #endregion
 
@@ -106,7 +104,6 @@ public class CardHandUI : MonoBehaviour {
         if (SelectedCard != null) {
             SelectedCard.DeselectCard();
             SelectedCard = null;
-            Debug.Log("Card deselected.");
         }
     }
     #endregion

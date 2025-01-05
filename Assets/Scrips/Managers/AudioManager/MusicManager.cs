@@ -10,6 +10,7 @@ public enum MusicType {
 [RequireComponent(typeof(AudioSource))]
 public class MusicManager : MonoBehaviour {
     public MusicType currentMusicType;
+    [SerializeField] private bool PlayOnAwake;
     [SerializeField] private SoundList[] musicList;
 
     private AudioSource audioSource;
@@ -25,7 +26,9 @@ public class MusicManager : MonoBehaviour {
 
     private void Awake() {
         audioSource = GetComponent<AudioSource>();
-        PlayMusic();
+        if (PlayOnAwake) {
+            PlayMusic();
+        }
     }
 
 

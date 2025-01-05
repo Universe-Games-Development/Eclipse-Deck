@@ -16,7 +16,9 @@ public class Deck {
     private void InitializeDeck(CardCollection collection) {
         foreach (var cardEntry in collection.cardEntries) {
             for (int i = 0; i < cardEntry.quantity; i++) {
-                AddCard(new Card(cardEntry.cardSO, owner, eventManager));
+                Card newCard = new Card(cardEntry.cardSO, owner, eventManager);
+                AddCard(newCard);
+                newCard.ChangeState(CardState.InDeck);
             }
         }
         ShuffleDeck();

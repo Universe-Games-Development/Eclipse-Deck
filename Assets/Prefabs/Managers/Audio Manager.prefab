@@ -89,7 +89,7 @@ AudioSource:
   m_GameObject: {fileID: 3609017353944827838}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: eb3b662d184695342bc1540a3988a31b, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
@@ -205,8 +205,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 318278662982416134}
-  - component: {fileID: 3090190157550355150}
   - component: {fileID: 3005319065087275707}
+  - component: {fileID: 3090190157550355150}
   m_Layer: 0
   m_Name: Music Manager
   m_TagString: Untagged
@@ -229,6 +229,30 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6795733738296008797}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3005319065087275707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6901251355846525097}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88132b8dee1db2d4988ea249bc9db6f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentMusicType: 0
+  PlayOnAwake: 0
+  musicList:
+  - name: IN_GAME_MUSIC
+    sounds:
+    - {fileID: 8300000, guid: 0ae00956f936b9f4ab0b6af8e852b5f8, type: 3}
+  - name: UI_MUSIC
+    sounds: []
+  - name: WIN_MUSIC
+    sounds: []
+  - name: DEFEAT_MUSIC
+    sounds: []
 --- !u!82 &3090190157550355150
 AudioSource:
   m_ObjectHideFlags: 0
@@ -238,9 +262,9 @@ AudioSource:
   m_GameObject: {fileID: 6901251355846525097}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: -6977752527656747554, guid: 6a74db75712a93841993b583dba30c25, type: 2}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: eb3b662d184695342bc1540a3988a31b, type: 2}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 00eb981dfcbbaf941bb51764d9214366, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -326,30 +350,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &3005319065087275707
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6901251355846525097}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88132b8dee1db2d4988ea249bc9db6f6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  musicList:
-  - name: IN_GAME_MUSIC
-    sounds:
-    - {fileID: 8300000, guid: 0ae00956f936b9f4ab0b6af8e852b5f8, type: 3}
-  - name: UI_MUSIC
-    sounds:
-    - {fileID: 8300000, guid: 0ae00956f936b9f4ab0b6af8e852b5f8, type: 3}
-  - name: WIN_MUSIC
-    sounds: []
-  - name: DEFEAT_MUSIC
-    sounds: []
-  currentMusicType: 0
 --- !u!1 &7162496724253475843
 GameObject:
   m_ObjectHideFlags: 0
@@ -392,7 +392,7 @@ AudioSource:
   m_GameObject: {fileID: 7162496724253475843}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: -8018238433080857637, guid: 6a74db75712a93841993b583dba30c25, type: 2}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: eb3b662d184695342bc1540a3988a31b, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
