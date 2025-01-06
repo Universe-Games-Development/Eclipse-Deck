@@ -1,12 +1,9 @@
 using UnityEngine;
 
-namespace Zenject.Tests.Factories.BindFactory
-{
+namespace Zenject.Tests.Factories.BindFactory {
     //[CreateAssetMenu(fileName = "Bar", menuName = "Installers/Bar")]
-    public class Bar : ScriptableObject
-    {
-        public class Factory : PlaceholderFactory<Bar>
-        {
+    public class Bar : ScriptableObject {
+        public class Factory : PlaceholderFactory<Bar> {
         }
     }
 }

@@ -2,35 +2,28 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
-namespace ModestTree
-{
-    public static class TypeExtensions
-    {
+namespace ModestTree {
+    public static class TypeExtensions {
         static readonly Dictionary<Type, bool> _isClosedGenericType = new Dictionary<Type, bool>();
         static readonly Dictionary<Type, bool> _isOpenGenericType = new Dictionary<Type, bool>();
         static readonly Dictionary<Type, bool> _isValueType = new Dictionary<Type, bool>();
         static readonly Dictionary<Type, Type[]> _interfaces = new Dictionary<Type, Type[]>();
 
-        public static bool DerivesFrom<T>(this Type a)
-        {
+        public static bool DerivesFrom<T>(this Type a) {
             return DerivesFrom(a, typeof(T));
         }
 
         // This seems easier to think about than IsAssignableFrom
-        public static bool DerivesFrom(this Type a, Type b)
-        {
+        public static bool DerivesFrom(this Type a, Type b) {
             return b != a && a.DerivesFromOrEqual(b);
         }
 
-        public static bool DerivesFromOrEqual<T>(this Type a)
-        {
+        public static bool DerivesFromOrEqual<T>(this Type a) {
             return DerivesFromOrEqual(a, typeof(T));
         }
 
-        public static bool DerivesFromOrEqual(this Type a, Type b)
-        {
+        public static bool DerivesFromOrEqual(this Type a, Type b) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return b == a || b.GetTypeInfo().IsAssignableFrom(a.GetTypeInfo());
 #else
@@ -40,27 +33,22 @@ namespace ModestTree
 
 #if !(UNITY_WSA && ENABLE_DOTNET)
         // TODO: Is it possible to do this on WSA?
-        public static bool IsAssignableToGenericType(Type givenType, Type genericType)
-        {
+        public static bool IsAssignableToGenericType(Type givenType, Type genericType) {
             var interfaceTypes = givenType.Interfaces();
 
-            foreach (var it in interfaceTypes)
-            {
-                if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
-                {
+            foreach (var it in interfaceTypes) {
+                if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType) {
                     return true;
                 }
             }
 
-            if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
-            {
+            if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType) {
                 return true;
             }
 
             Type baseType = givenType.BaseType;
 
-            if (baseType == null)
-            {
+            if (baseType == null) {
                 return false;
             }
 
@@ -68,8 +56,7 @@ namespace ModestTree
         }
 #endif
 
-        public static bool IsEnum(this Type type)
-        {
+        public static bool IsEnum(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().IsEnum;
 #else
@@ -77,11 +64,9 @@ namespace ModestTree
 #endif
         }
 
-        public static bool IsValueType(this Type type)
-        {
+        public static bool IsValueType(this Type type) {
             bool result;
-            if (!_isValueType.TryGetValue(type, out result))
-            {
+            if (!_isValueType.TryGetValue(type, out result)) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
                 result = type.GetTypeInfo().IsValueType;
 #else
@@ -92,8 +77,7 @@ namespace ModestTree
             return result;
         }
 
-        public static MethodInfo[] DeclaredInstanceMethods(this Type type)
-        {
+        public static MethodInfo[] DeclaredInstanceMethods(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetRuntimeMethods()
                 .Where(x => x.DeclaringType == type).ToArray();
@@ -103,8 +87,7 @@ namespace ModestTree
 #endif
         }
 
-        public static PropertyInfo[] DeclaredInstanceProperties(this Type type)
-        {
+        public static PropertyInfo[] DeclaredInstanceProperties(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             // There doesn't appear to be an IsStatic member on PropertyInfo
             return type.GetRuntimeProperties()
@@ -115,8 +98,7 @@ namespace ModestTree
 #endif
         }
 
-        public static FieldInfo[] DeclaredInstanceFields(this Type type)
-        {
+        public static FieldInfo[] DeclaredInstanceFields(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetRuntimeFields()
                 .Where(x => x.DeclaringType == type && !x.IsStatic).ToArray();
@@ -133,8 +115,7 @@ namespace ModestTree
         }
 #endif
 
-        public static Type BaseType(this Type type)
-        {
+        public static Type BaseType(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().BaseType;
 #else
@@ -142,16 +123,14 @@ namespace ModestTree
 #endif
         }
 
-        public static bool IsGenericType(this Type type)
-        {
+        public static bool IsGenericType(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().IsGenericType;
 #else
             return type.IsGenericType;
 #endif
         }
-        public static bool IsGenericTypeDefinition(this Type type)
-        {
+        public static bool IsGenericTypeDefinition(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().IsGenericTypeDefinition;
 #else
@@ -159,8 +138,7 @@ namespace ModestTree
 #endif
         }
 
-        public static bool IsPrimitive(this Type type)
-        {
+        public static bool IsPrimitive(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().IsPrimitive;
 #else
@@ -168,8 +146,7 @@ namespace ModestTree
 #endif
         }
 
-        public static bool IsInterface(this Type type)
-        {
+        public static bool IsInterface(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().IsInterface;
 #else
@@ -177,8 +154,7 @@ namespace ModestTree
 #endif
         }
 
-        public static bool ContainsGenericParameters(this Type type)
-        {
+        public static bool ContainsGenericParameters(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().ContainsGenericParameters;
 #else
@@ -186,8 +162,7 @@ namespace ModestTree
 #endif
         }
 
-        public static bool IsAbstract(this Type type)
-        {
+        public static bool IsAbstract(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().IsAbstract;
 #else
@@ -195,8 +170,7 @@ namespace ModestTree
 #endif
         }
 
-        public static bool IsSealed(this Type type)
-        {
+        public static bool IsSealed(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().IsSealed;
 #else
@@ -204,8 +178,7 @@ namespace ModestTree
 #endif
         }
 
-        public static MethodInfo Method(this Delegate del)
-        {
+        public static MethodInfo Method(this Delegate del) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return del.GetMethodInfo();
 #else
@@ -213,8 +186,7 @@ namespace ModestTree
 #endif
         }
 
-        public static Type[] GenericArguments(this Type type)
-        {
+        public static Type[] GenericArguments(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().GenericTypeArguments;
 #else
@@ -222,11 +194,9 @@ namespace ModestTree
 #endif
         }
 
-        public static Type[] Interfaces(this Type type)
-        {
+        public static Type[] Interfaces(this Type type) {
             Type[] result;
-            if (!_interfaces.TryGetValue(type, out result))
-            {
+            if (!_interfaces.TryGetValue(type, out result)) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
                 result = type.GetTypeInfo().ImplementedInterfaces.ToArray();
 #else
@@ -237,8 +207,7 @@ namespace ModestTree
             return result;
         }
 
-        public static ConstructorInfo[] Constructors(this Type type)
-        {
+        public static ConstructorInfo[] Constructors(this Type type) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetTypeInfo().DeclaredConstructors.ToArray();
 #else
@@ -247,8 +216,7 @@ namespace ModestTree
 #endif
         }
 
-        public static object GetDefaultValue(this Type type)
-        {
+        public static object GetDefaultValue(this Type type) {
 #if ENABLE_IL2CPP
             // Workaround for IL2CPP returning default(T) for Activator.CreateInstance(typeof(T?))
             if (type.IsGenericType() && type.GetGenericTypeDefinition() == typeof(Nullable<>))
@@ -257,45 +225,37 @@ namespace ModestTree
             }
 #endif
 
-            if (type.IsValueType())
-            {
+            if (type.IsValueType()) {
                 return Activator.CreateInstance(type);
             }
 
             return null;
         }
 
-        public static bool IsClosedGenericType(this Type type)
-        {
+        public static bool IsClosedGenericType(this Type type) {
             bool result;
-            if (!_isClosedGenericType.TryGetValue(type, out result))
-            {
+            if (!_isClosedGenericType.TryGetValue(type, out result)) {
                 result = type.IsGenericType() && type != type.GetGenericTypeDefinition();
                 _isClosedGenericType[type] = result;
             }
             return result;
         }
 
-        public static IEnumerable<Type> GetParentTypes(this Type type)
-        {
-            if (type == null || type.BaseType() == null || type == typeof(object) || type.BaseType() == typeof(object))
-            {
+        public static IEnumerable<Type> GetParentTypes(this Type type) {
+            if (type == null || type.BaseType() == null || type == typeof(object) || type.BaseType() == typeof(object)) {
                 yield break;
             }
 
             yield return type.BaseType();
 
-            foreach (var ancestor in type.BaseType().GetParentTypes())
-            {
+            foreach (var ancestor in type.BaseType().GetParentTypes()) {
                 yield return ancestor;
             }
         }
 
-        public static bool IsOpenGenericType(this Type type)
-        {
+        public static bool IsOpenGenericType(this Type type) {
             bool result;
-            if (!_isOpenGenericType.TryGetValue(type, out result))
-            {
+            if (!_isOpenGenericType.TryGetValue(type, out result)) {
                 result = type.IsGenericType() && type == type.GetGenericTypeDefinition();
                 _isOpenGenericType[type] = result;
             }
@@ -303,47 +263,40 @@ namespace ModestTree
         }
 
         public static T GetAttribute<T>(this MemberInfo provider)
-            where T : Attribute
-        {
+            where T : Attribute {
             return provider.AllAttributes<T>().Single();
         }
 
         public static T TryGetAttribute<T>(this MemberInfo provider)
-            where T : Attribute
-        {
+            where T : Attribute {
             return provider.AllAttributes<T>().OnlyOrDefault();
         }
 
         public static bool HasAttribute(
-            this MemberInfo provider, params Type[] attributeTypes)
-        {
+            this MemberInfo provider, params Type[] attributeTypes) {
             return provider.AllAttributes(attributeTypes).Any();
         }
 
         public static bool HasAttribute<T>(this MemberInfo provider)
-            where T : Attribute
-        {
+            where T : Attribute {
             return provider.AllAttributes(typeof(T)).Any();
         }
 
         public static IEnumerable<T> AllAttributes<T>(
             this MemberInfo provider)
-            where T : Attribute
-        {
+            where T : Attribute {
             return provider.AllAttributes(typeof(T)).Cast<T>();
         }
 
         public static IEnumerable<Attribute> AllAttributes(
-            this MemberInfo provider, params Type[] attributeTypes)
-        {
+            this MemberInfo provider, params Type[] attributeTypes) {
             Attribute[] allAttributes;
 #if NETFX_CORE
             allAttributes = provider.GetCustomAttributes<Attribute>(true).ToArray();
 #else
             allAttributes = System.Attribute.GetCustomAttributes(provider, typeof(Attribute), true);
 #endif
-            if (attributeTypes.Length == 0)
-            {
+            if (attributeTypes.Length == 0) {
                 return allAttributes;
             }
 
@@ -353,35 +306,30 @@ namespace ModestTree
         // We could avoid this duplication here by using ICustomAttributeProvider but this class
         // does not exist on the WP8 platform
         public static bool HasAttribute(
-            this ParameterInfo provider, params Type[] attributeTypes)
-        {
+            this ParameterInfo provider, params Type[] attributeTypes) {
             return provider.AllAttributes(attributeTypes).Any();
         }
 
         public static bool HasAttribute<T>(this ParameterInfo provider)
-            where T : Attribute
-        {
+            where T : Attribute {
             return provider.AllAttributes(typeof(T)).Any();
         }
 
         public static IEnumerable<T> AllAttributes<T>(
             this ParameterInfo provider)
-            where T : Attribute
-        {
+            where T : Attribute {
             return provider.AllAttributes(typeof(T)).Cast<T>();
         }
 
         public static IEnumerable<Attribute> AllAttributes(
-            this ParameterInfo provider, params Type[] attributeTypes)
-        {
+            this ParameterInfo provider, params Type[] attributeTypes) {
             Attribute[] allAttributes;
 #if NETFX_CORE
             allAttributes = provider.GetCustomAttributes<Attribute>(true).ToArray();
 #else
             allAttributes = System.Attribute.GetCustomAttributes(provider, typeof(Attribute), true);
 #endif
-            if (attributeTypes.Length == 0)
-            {
+            if (attributeTypes.Length == 0) {
                 return allAttributes;
             }
 

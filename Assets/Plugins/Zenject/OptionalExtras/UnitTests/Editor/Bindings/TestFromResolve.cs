@@ -1,15 +1,12 @@
-using System.Linq;
 using NUnit.Framework;
+using System.Linq;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromResolve : ZenjectUnitTestFixture
-    {
+    public class TestFromResolve : ZenjectUnitTestFixture {
         [Test]
-        public void TestTransient()
-        {
+        public void TestTransient() {
             var foo = new Foo();
 
             Container.BindInstance(foo);
@@ -20,8 +17,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestIdentifier()
-        {
+        public void TestIdentifier() {
             var foo = new Foo();
 
             Container.Bind<Foo>().WithId("foo").FromInstance(foo);
@@ -32,8 +28,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestCached()
-        {
+        public void TestCached() {
             Container.Bind<Foo>().AsTransient();
             Container.Bind<IFoo>().To<Foo>().FromResolve().AsCached();
 
@@ -42,8 +37,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSingle()
-        {
+        public void TestSingle() {
             var foo = new Foo();
             Container.Bind<Foo>().FromInstance(foo);
             Container.Bind<IFoo>().To<Foo>().FromResolve();
@@ -54,16 +48,14 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestNoMatch()
-        {
+        public void TestNoMatch() {
             Container.Bind<IFoo>().To<Foo>().FromResolve();
 
             Assert.Throws(() => Container.Resolve<IFoo>());
         }
 
         [Test]
-        public void TestSingleFailure()
-        {
+        public void TestSingleFailure() {
             Container.Bind<Foo>().AsCached();
             Container.Bind<Foo>().AsCached();
             Container.Bind<IFoo>().To<Foo>().FromResolve();
@@ -72,16 +64,14 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInfiniteLoop()
-        {
+        public void TestInfiniteLoop() {
             Container.Bind<IFoo>().To<IFoo>().FromResolve().AsSingle();
 
             Assert.Throws(() => Container.Resolve<IFoo>());
         }
 
         [Test]
-        public void TestResolveManyTransient()
-        {
+        public void TestResolveManyTransient() {
             Container.Bind<Foo>().AsTransient();
             Container.Bind<Foo>().FromInstance(new Foo());
 
@@ -91,8 +81,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestResolveManyTransient2()
-        {
+        public void TestResolveManyTransient2() {
             Container.Bind<Foo>().AsTransient();
             Container.Bind<Foo>().FromInstance(new Foo());
 
@@ -103,8 +92,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestResolveManyCached()
-        {
+        public void TestResolveManyCached() {
             Container.Bind<Foo>().AsTransient();
             Container.Bind<Foo>().AsTransient();
 
@@ -115,8 +103,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestResolveManyCached2()
-        {
+        public void TestResolveManyCached2() {
             Container.Bind<Foo>().AsTransient();
             Container.Bind<Foo>().AsTransient();
 
@@ -128,8 +115,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestResolveManyCached3()
-        {
+        public void TestResolveManyCached3() {
             Container.Bind<Foo>().AsTransient();
             Container.Bind<Foo>().AsTransient();
 
@@ -142,8 +128,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestResolveSingleLocal()
-        {
+        public void TestResolveSingleLocal() {
             var foo1 = new Foo();
             var foo2 = new Foo();
 
@@ -158,8 +143,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInjectSource1()
-        {
+        public void TestInjectSource1() {
             var foo1 = new Foo();
             var foo2 = new Foo();
 
@@ -174,8 +158,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInjectSource2()
-        {
+        public void TestInjectSource2() {
             var foo1 = new Foo();
             var foo2 = new Foo();
             var foo3 = new Foo();
@@ -189,19 +172,16 @@ namespace Zenject.Tests.Bindings
             subContainer.Bind<IFoo>().To<Foo>().FromResolveAll(null, InjectSources.Local);
 
             Assert.Throws(() => subContainer.Resolve<IFoo>());
-            Assert.That(Enumerable.SequenceEqual(subContainer.ResolveAll<IFoo>(), new [] { foo2, foo3, }));
+            Assert.That(Enumerable.SequenceEqual(subContainer.ResolveAll<IFoo>(), new[] { foo2, foo3, }));
         }
 
-        interface IBar
-        {
+        interface IBar {
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class Foo : IFoo, IBar
-        {
+        class Foo : IFoo, IBar {
         }
     }
 }

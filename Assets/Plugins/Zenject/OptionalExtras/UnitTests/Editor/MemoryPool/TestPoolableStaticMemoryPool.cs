@@ -1,15 +1,12 @@
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests
-{
+namespace Zenject.Tests {
     [TestFixture]
-    public class TestPoolableStaticMemoryPool : ZenjectUnitTestFixture
-    {
+    public class TestPoolableStaticMemoryPool : ZenjectUnitTestFixture {
         [Test]
-        public void RunTest()
-        {
+        public void RunTest() {
             var pool = Foo.Pool;
 
             pool.Clear();
@@ -33,28 +30,23 @@ namespace Zenject.Tests
             Assert.IsEqual(foo.Data, null);
         }
 
-        public class Foo : IPoolable<string>, IDisposable
-        {
+        public class Foo : IPoolable<string>, IDisposable {
             public static readonly PoolableStaticMemoryPool<string, Foo> Pool =
                 new PoolableStaticMemoryPool<string, Foo>();
 
-            public string Data
-            {
+            public string Data {
                 get; private set;
             }
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 Pool.Despawn(this);
             }
 
-            public void OnSpawned(string data)
-            {
+            public void OnSpawned(string data) {
                 Data = data;
             }
 
-            public void OnDespawned()
-            {
+            public void OnDespawned() {
                 Data = null;
             }
         }

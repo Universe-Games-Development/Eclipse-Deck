@@ -1,19 +1,15 @@
-using System.Collections.Generic;
 using NUnit.Framework;
+using System.Collections.Generic;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestResolve : ZenjectUnitTestFixture
-    {
-        class Foo
-        {
+    public class TestResolve : ZenjectUnitTestFixture {
+        class Foo {
         }
 
         [Test]
-        public void TestResolveAmbiguousBindings1()
-        {
+        public void TestResolveAmbiguousBindings1() {
             var f1 = new Foo();
             var f2 = new Foo();
 
@@ -26,8 +22,7 @@ namespace Zenject.Tests.Other
 
 
         [Test]
-        public void TestResolveAmbiguousBindings2()
-        {
+        public void TestResolveAmbiguousBindings2() {
             var f1 = new Foo();
             var f2 = new Foo();
 
@@ -39,8 +34,7 @@ namespace Zenject.Tests.Other
         }
 
         [Test]
-        public void TestDirectListBindings1()
-        {
+        public void TestDirectListBindings1() {
             var f1 = new Foo();
 
             Container.BindInstance(f1);
@@ -55,12 +49,10 @@ namespace Zenject.Tests.Other
             Assert.IsEqual(Container.Instantiate<Bar>().Foos, l1);
         }
 
-        class Bar
-        {
+        class Bar {
             public List<Foo> Foos;
 
-            public Bar(List<Foo> foos)
-            {
+            public Bar(List<Foo> foos) {
                 Foos = foos;
             }
         }

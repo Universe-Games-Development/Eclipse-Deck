@@ -1,17 +1,14 @@
 
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine.TestTools;
 
 #pragma warning disable 219
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestMemoryPool1 : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestMemoryPool1 : ZenjectIntegrationTestFixture {
         [UnityTest]
-        public IEnumerator TestFactoryProperties()
-        {
+        public IEnumerator TestFactoryProperties() {
             PreInstall();
             Container.BindMemoryPool<Foo, Foo.Pool>();
 
@@ -77,23 +74,18 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        class Foo
-        {
-            public string Value
-            {
+        class Foo {
+            public string Value {
                 get;
                 private set;
             }
 
-            public int ResetCount
-            {
+            public int ResetCount {
                 get; private set;
             }
 
-            public class Pool : MemoryPool<string, Foo>
-            {
-                protected override void Reinitialize(string value, Foo foo)
-                {
+            public class Pool : MemoryPool<string, Foo> {
+                protected override void Reinitialize(string value, Foo foo) {
                     foo.Value = value;
                     foo.ResetCount++;
                 }
@@ -101,15 +93,13 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestAbstractMemoryPoolValidate()
-        {
+        public IEnumerator TestAbstractMemoryPoolValidate() {
             TestAbstractMemoryPoolInternal();
             yield break;
         }
 
         [UnityTest]
-        public IEnumerator TestAbstractMemoryPool()
-        {
+        public IEnumerator TestAbstractMemoryPool() {
             TestAbstractMemoryPoolInternal();
 
             var pool = Container.Resolve<BarPool>();
@@ -120,8 +110,7 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        void TestAbstractMemoryPoolInternal()
-        {
+        void TestAbstractMemoryPoolInternal() {
             PreInstall();
             Container.BindMemoryPool<IBar, BarPool>()
                 .WithInitialSize(3).To<Bar>().NonLazy();
@@ -129,16 +118,13 @@ namespace Zenject.Tests.Bindings
             PostInstall();
         }
 
-        public interface IBar
-        {
+        public interface IBar {
         }
 
-        public class Bar : IBar
-        {
+        public class Bar : IBar {
         }
 
-        public class BarPool : MemoryPool<int, IBar>
-        {
+        public class BarPool : MemoryPool<int, IBar> {
         }
     }
 }

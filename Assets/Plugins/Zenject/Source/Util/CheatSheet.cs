@@ -1,15 +1,12 @@
-using System.Linq;
 using ModestTree;
+using System.Linq;
 using UnityEngine;
 
 #pragma warning disable 219
 
-namespace Zenject
-{
-    public class CheatSheet : Installer<CheatSheet>
-    {
-        public override void InstallBindings()
-        {
+namespace Zenject {
+    public class CheatSheet : Installer<CheatSheet> {
+        public override void InstallBindings() {
             // Create a new instance of Foo for every class that asks for it
             Container.Bind<Foo>().AsTransient();
 
@@ -90,30 +87,24 @@ namespace Zenject
             InstallMore();
         }
 
-        Foo GetFoo(InjectContext ctx)
-        {
+        Foo GetFoo(InjectContext ctx) {
             return new Foo();
         }
 
-        IFoo GetRandomFoo(InjectContext ctx)
-        {
-            switch (Random.Range(0, 3))
-            {
-                case 0:
-                {
-                    return ctx.Container.Instantiate<Foo1>();
-                }
-                case 1:
-                {
-                    return ctx.Container.Instantiate<Foo2>();
-                }
+        IFoo GetRandomFoo(InjectContext ctx) {
+            switch (Random.Range(0, 3)) {
+                case 0: {
+                        return ctx.Container.Instantiate<Foo1>();
+                    }
+                case 1: {
+                        return ctx.Container.Instantiate<Foo2>();
+                    }
             }
 
             return ctx.Container.Instantiate<Foo3>();
         }
 
-        void InstallMore()
-        {
+        void InstallMore() {
             ///////////// FromResolveGetter
 
             // Bind to a property on another dependency
@@ -181,20 +172,17 @@ namespace Zenject
         }
 
         // Then when we inject these dependencies we have to use the same ID:
-        public class Norf
-        {
+        public class Norf {
             [Inject(Id = "FooA")]
             public string Foo;
         }
 
-        public class Qux
-        {
+        public class Qux {
             [Inject(Id = "FooB")]
             public string Foo;
         }
 
-        public void InstallMore2()
-        {
+        public void InstallMore2() {
             ///////////// AsCached
 
             // In this example, we bind three instances of Foo, including one without an ID
@@ -212,16 +200,14 @@ namespace Zenject
         // instance
         // Bindings without IDs can therefore be used as a default and we can
         // specify IDs for specific versions of the same type
-        public class Norf2
-        {
+        public class Norf2 {
             [Inject]
             public Foo Foo;
         }
 
         // Qux2._foo will be the same instance as Norf2._foo
         // This is because we are using AsCached rather than AsTransient
-        public class Qux2
-        {
+        public class Qux2 {
             [Inject]
             public Foo Foo;
 
@@ -229,8 +215,7 @@ namespace Zenject
             public Foo Foo2;
         }
 
-        public void InstallMore3()
-        {
+        public void InstallMore3() {
             ///////////// Conditions
 
             // This will make Foo only visible to Bar
@@ -305,30 +290,23 @@ namespace Zenject
             InstallMore4();
         }
 
-        public class FooInstaller : Installer<FooInstaller>
-        {
-            public FooInstaller(string foo)
-            {
+        public class FooInstaller : Installer<FooInstaller> {
+            public FooInstaller(string foo) {
             }
 
-            public override void InstallBindings()
-            {
+            public override void InstallBindings() {
             }
         }
 
-        public class FooInstallerWithArgs : Installer<string, FooInstallerWithArgs>
-        {
-            public FooInstallerWithArgs(string foo)
-            {
+        public class FooInstallerWithArgs : Installer<string, FooInstallerWithArgs> {
+            public FooInstallerWithArgs(string foo) {
             }
 
-            public override void InstallBindings()
-            {
+            public override void InstallBindings() {
             }
         }
 
-        void InstallMore4()
-        {
+        void InstallMore4() {
             ///////////// Installing Other Installers
 
             // Immediately call InstallBindings() on FooInstaller
@@ -379,57 +357,43 @@ namespace Zenject
             Foo foo3 = Container.InstantiateComponent<Foo>(go);
         }
 
-        public interface IFoo2
-        {
+        public interface IFoo2 {
         }
 
-        public interface IFoo
-        {
+        public interface IFoo {
         }
 
-        public interface IBar : IFoo
-        {
+        public interface IBar : IFoo {
         }
 
-        public class Foo : MonoBehaviour, IFoo, IFoo2, IBar
-        {
-            public Bar GetBar()
-            {
+        public class Foo : MonoBehaviour, IFoo, IFoo2, IBar {
+            public Bar GetBar() {
                 return new Bar();
             }
 
-            public string GetTitle()
-            {
+            public string GetTitle() {
                 return "title";
             }
         }
 
-        public class Foo1 : IFoo
-        {
+        public class Foo1 : IFoo {
         }
 
-        public class Foo2 : IFoo
-        {
+        public class Foo2 : IFoo {
         }
 
-        public class Foo3 : IFoo
-        {
+        public class Foo3 : IFoo {
         }
 
-        public class Baz
-        {
+        public class Baz {
         }
 
-        public class Gui
-        {
+        public class Gui {
         }
 
-        public class Bar : IBar
-        {
-            public Foo Foo
-            {
-                get
-                {
+        public class Bar : IBar {
+            public Foo Foo {
+                get {
                     return null;
                 }
             }

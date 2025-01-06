@@ -3,39 +3,32 @@
 using System;
 using UnityEngine;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class TransformScopeConcreteIdArgConditionCopyNonLazyBinder : ScopeConcreteIdArgConditionCopyNonLazyBinder
-    {
+    public class TransformScopeConcreteIdArgConditionCopyNonLazyBinder : ScopeConcreteIdArgConditionCopyNonLazyBinder {
         public TransformScopeConcreteIdArgConditionCopyNonLazyBinder(
             BindInfo bindInfo,
             GameObjectCreationParameters gameObjectInfo)
-            : base(bindInfo)
-        {
+            : base(bindInfo) {
             GameObjectInfo = gameObjectInfo;
         }
 
-        protected GameObjectCreationParameters GameObjectInfo
-        {
+        protected GameObjectCreationParameters GameObjectInfo {
             get;
             private set;
         }
 
-        public ScopeConcreteIdArgConditionCopyNonLazyBinder UnderTransform(Transform parent)
-        {
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder UnderTransform(Transform parent) {
             GameObjectInfo.ParentTransform = parent;
             return this;
         }
 
-        public ScopeConcreteIdArgConditionCopyNonLazyBinder UnderTransform(Func<InjectContext, Transform> parentGetter)
-        {
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder UnderTransform(Func<InjectContext, Transform> parentGetter) {
             GameObjectInfo.ParentTransformGetter = parentGetter;
             return this;
         }
 
-        public ScopeConcreteIdArgConditionCopyNonLazyBinder UnderTransformGroup(string transformGroupname)
-        {
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder UnderTransformGroup(string transformGroupname) {
             GameObjectInfo.GroupName = transformGroupname;
             return this;
         }

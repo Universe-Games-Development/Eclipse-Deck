@@ -1,15 +1,12 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Zenject.Asteroids
-{
-    public class GameInstaller : MonoInstaller
-    {
+namespace Zenject.Asteroids {
+    public class GameInstaller : MonoInstaller {
         [Inject]
         Settings _settings = null;
 
-        public override void InstallBindings()
-        {
+        public override void InstallBindings() {
             // In this example there is only one 'installer' but in larger projects you
             // will likely end up with many different re-usable installers
             // that you'll want to use in several different scenes
@@ -32,8 +29,7 @@ namespace Zenject.Asteroids
             InstallExecutionOrder();
         }
 
-        void InstallAsteroids()
-        {
+        void InstallAsteroids() {
             // ITickable, IFixedTickable, IInitializable and IDisposable are special Zenject interfaces.
             // Binding a class to any of these interfaces creates an instance of the class at startup.
             // Binding to any of these interfaces is also necessary to have the method defined in that interface be
@@ -65,8 +61,7 @@ namespace Zenject.Asteroids
                 .UnderTransformGroup("Asteroids");
         }
 
-        void InstallMisc()
-        {
+        void InstallMisc() {
             Container.BindInterfacesAndSelfTo<GameController>().AsSingle();
             Container.Bind<LevelHelper>().AsSingle();
 
@@ -81,8 +76,7 @@ namespace Zenject.Asteroids
                 .FromComponentInNewPrefab(_settings.BrokenShipPrefab);
         }
 
-        void InstallSignals()
-        {
+        void InstallSignals() {
             // Every scene that uses signals needs to install the built-in installer SignalBusInstaller
             // Or alternatively it can be installed at the project context level (see docs for details)
             SignalBusInstaller.Install(Container);
@@ -91,8 +85,7 @@ namespace Zenject.Asteroids
             Container.DeclareSignal<ShipCrashedSignal>();
         }
 
-        void InstallShip()
-        {
+        void InstallShip() {
             Container.Bind<ShipStateFactory>().AsSingle();
 
             // Note that the ship itself is bound using a ZenjectBinding component (see Ship
@@ -103,8 +96,7 @@ namespace Zenject.Asteroids
             Container.BindFactory<ShipStateMoving, ShipStateMoving.Factory>().WhenInjectedInto<ShipStateFactory>();
         }
 
-        void InstallExecutionOrder()
-        {
+        void InstallExecutionOrder() {
             // In many cases you don't need to worry about execution order,
             // however sometimes it can be important
             // If for example we wanted to ensure that AsteroidManager.Initialize
@@ -117,8 +109,7 @@ namespace Zenject.Asteroids
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public GameObject ExplosionPrefab;
             public GameObject BrokenShipPrefab;
             public GameObject AsteroidPrefab;

@@ -1,17 +1,14 @@
-using System.Linq;
 using ModestTree;
+using System.Linq;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class PlaceholderFactoryBindingFinalizer<TContract> : ProviderBindingFinalizer
-    {
+    public class PlaceholderFactoryBindingFinalizer<TContract> : ProviderBindingFinalizer {
         readonly FactoryBindInfo _factoryBindInfo;
 
         public PlaceholderFactoryBindingFinalizer(
             BindInfo bindInfo, FactoryBindInfo factoryBindInfo)
-            : base(bindInfo)
-        {
+            : base(bindInfo) {
             // Note that it doesn't derive from PlaceholderFactory<TContract>
             // when used with To<>, so we can only check IPlaceholderFactory
             Assert.That(factoryBindInfo.FactoryType.DerivesFrom<IPlaceholderFactory>());
@@ -19,8 +16,7 @@ namespace Zenject
             _factoryBindInfo = factoryBindInfo;
         }
 
-        protected override void OnFinalizeBinding(DiContainer container)
-        {
+        protected override void OnFinalizeBinding(DiContainer container) {
             var provider = _factoryBindInfo.ProviderFunc(container);
 
             var transientProvider = new TransientProvider(
@@ -34,12 +30,9 @@ namespace Zenject
 
             IProvider mainProvider;
 
-            if (BindInfo.Scope == ScopeTypes.Unset || BindInfo.Scope == ScopeTypes.Singleton)
-            {
+            if (BindInfo.Scope == ScopeTypes.Unset || BindInfo.Scope == ScopeTypes.Singleton) {
                 mainProvider = BindingUtil.CreateCachedProvider(transientProvider);
-            }
-            else
-            {
+            } else {
                 Assert.IsEqual(BindInfo.Scope, ScopeTypes.Transient);
                 mainProvider = transientProvider;
             }

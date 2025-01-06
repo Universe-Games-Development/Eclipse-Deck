@@ -1,30 +1,24 @@
 
-using System;
 using NUnit.Framework;
+using System;
 using Zenject.Internal;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestCustomInjectAttribute : ZenjectUnitTestFixture
-    {
-        public class InjectCustomAttribute : Attribute
-        {
+    public class TestCustomInjectAttribute : ZenjectUnitTestFixture {
+        public class InjectCustomAttribute : Attribute {
         }
 
-        class Bar
-        {
+        class Bar {
         }
 
         [NoReflectionBaking]
-        class Foo
-        {
+        class Foo {
             [InjectCustom]
             public Bar BarField = null;
 
-            public Foo(Bar barParam)
-            {
+            public Foo(Bar barParam) {
                 BarParam = barParam;
             }
 
@@ -32,21 +26,18 @@ namespace Zenject.Tests.Other
             public Bar BarMethod;
 
             [InjectCustom]
-            public Bar BarProperty
-            {
+            public Bar BarProperty {
                 get; private set;
             }
 
             [InjectCustom]
-            public void Construct(Bar bar)
-            {
+            public void Construct(Bar bar) {
                 BarMethod = bar;
             }
         }
 
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             ReflectionTypeAnalyzer.AddCustomInjectAttribute(typeof(InjectCustomAttribute));
 
             Container.Bind<Bar>().AsSingle();

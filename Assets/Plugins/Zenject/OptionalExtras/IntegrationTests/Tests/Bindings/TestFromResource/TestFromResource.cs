@@ -1,20 +1,17 @@
 ﻿
+using ModestTree;
 using System.Collections;
 using System.Collections.Generic;
-using ModestTree;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromResource : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromResource : ZenjectIntegrationTestFixture {
         const string ResourcePath = "TestFromResource/TestTexture";
         const string ResourcePath2 = "TestFromResource/TestTexture2";
 
         [UnityTest]
-        public IEnumerator TestBasic()
-        {
+        public IEnumerator TestBasic() {
             PreInstall();
             Container.Bind<Texture>().FromResource(ResourcePath);
 
@@ -25,8 +22,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestTransient()
-        {
+        public IEnumerator TestTransient() {
             PreInstall();
             Container.Bind<Texture>().FromResource(ResourcePath).AsTransient();
             Container.Bind<Texture>().FromResource(ResourcePath);
@@ -39,8 +35,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCached()
-        {
+        public IEnumerator TestCached() {
             PreInstall();
             Container.Bind<Texture>().FromResource(ResourcePath).AsSingle();
 
@@ -51,8 +46,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSingle()
-        {
+        public IEnumerator TestSingle() {
             PreInstall();
             Container.Bind(typeof(Texture), typeof(Texture)).To<Texture>().FromResource(ResourcePath).AsSingle();
 
@@ -63,8 +57,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSingleWithError()
-        {
+        public IEnumerator TestSingleWithError() {
             PreInstall();
             Container.Bind<Texture>().FromResource(ResourcePath).AsSingle();
             Container.Bind<Texture>().FromResource(ResourcePath2).AsSingle();
@@ -75,24 +68,20 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        public class Runner : MonoBehaviour
-        {
+        public class Runner : MonoBehaviour {
             List<Texture> _textures;
 
             [Inject]
-            public void Construct(List<Texture> textures, int expectedAmount)
-            {
+            public void Construct(List<Texture> textures, int expectedAmount) {
                 _textures = textures;
 
                 Assert.IsEqual(textures.Count, expectedAmount);
             }
 
-            void OnGUI()
-            {
+            void OnGUI() {
                 int top = 0;
 
-                foreach (var tex in _textures)
-                {
+                foreach (var tex in _textures) {
                     var rect = new Rect(0, top, Screen.width * 0.5f, Screen.height * 0.5f);
 
                     GUI.DrawTexture(rect, tex);

@@ -7,7 +7,7 @@ public class RayService : MonoBehaviour {
     [Header("Table View")]
     [SerializeField] private float tableRayDistance = 20f;
     [SerializeField] private LayerMask itemsLayer;
-    
+
 
     private void Awake() {
         raycastCamera = Camera.main;

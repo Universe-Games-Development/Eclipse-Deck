@@ -1,23 +1,18 @@
 ﻿using UnityEngine;
 
-namespace Zenject.Tests.Bindings.InstantiateCallback
-{
-    public class Foo : MonoBehaviour
-    {
-        public string Value
-        {
+namespace Zenject.Tests.Bindings.InstantiateCallback {
+    public class Foo : MonoBehaviour {
+        public string Value {
             get; set;
         }
 
-        public bool WasInjected
-        {
+        public bool WasInjected {
             get;
             private set;
         }
 
         [Inject]
-        public void Construct()
-        {
+        public void Construct() {
             WasInjected = true;
         }
     }

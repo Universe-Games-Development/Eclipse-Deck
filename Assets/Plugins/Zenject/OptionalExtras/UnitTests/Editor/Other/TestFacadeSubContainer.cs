@@ -1,17 +1,14 @@
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestFacadeSubContainer
-    {
+    public class TestFacadeSubContainer {
         static int NumInstalls;
 
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             NumInstalls = 0;
             InitTest.WasRun = false;
             TickTest.WasRun = false;
@@ -43,8 +40,7 @@ namespace Zenject.Tests.Other
             Assert.That(DisposeTest.WasRun);
         }
 
-        public void InstallFoo(DiContainer subContainer)
-        {
+        public void InstallFoo(DiContainer subContainer) {
             NumInstalls++;
 
             subContainer.Bind<FooKernel>().AsSingle();
@@ -54,36 +50,29 @@ namespace Zenject.Tests.Other
             subContainer.Bind<IDisposable>().To<DisposeTest>().AsSingle();
         }
 
-        public class FooKernel : Kernel
-        {
+        public class FooKernel : Kernel {
         }
 
-        public class InitTest : IInitializable
-        {
+        public class InitTest : IInitializable {
             public static bool WasRun;
 
-            public void Initialize()
-            {
+            public void Initialize() {
                 WasRun = true;
             }
         }
 
-        public class TickTest : ITickable
-        {
+        public class TickTest : ITickable {
             public static bool WasRun;
 
-            public void Tick()
-            {
+            public void Tick() {
                 WasRun = true;
             }
         }
 
-        public class DisposeTest : IDisposable
-        {
+        public class DisposeTest : IDisposable {
             public static bool WasRun;
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 WasRun = true;
             }
         }

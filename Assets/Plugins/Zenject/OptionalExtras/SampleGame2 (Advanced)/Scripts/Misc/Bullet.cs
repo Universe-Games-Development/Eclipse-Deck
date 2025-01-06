@@ -1,15 +1,12 @@
 ﻿using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
-    public enum BulletTypes
-    {
+namespace Zenject.SpaceFighter {
+    public enum BulletTypes {
         FromEnemy,
         FromPlayer
     }
 
-    public class Bullet : MonoBehaviour, IPoolable<float, float, BulletTypes, IMemoryPool>
-    {
+    public class Bullet : MonoBehaviour, IPoolable<float, float, BulletTypes, IMemoryPool> {
         float _startTime;
         BulletTypes _type;
         float _speed;
@@ -26,49 +23,39 @@ namespace Zenject.SpaceFighter
 
         IMemoryPool _pool;
 
-        public BulletTypes Type
-        {
+        public BulletTypes Type {
             get { return _type; }
         }
 
-        public Vector3 MoveDirection
-        {
+        public Vector3 MoveDirection {
             get { return transform.right; }
         }
 
-        public void OnTriggerEnter(Collider other)
-        {
+        public void OnTriggerEnter(Collider other) {
             var enemyView = other.GetComponent<EnemyView>();
 
-            if (enemyView != null && _type == BulletTypes.FromPlayer)
-            {
+            if (enemyView != null && _type == BulletTypes.FromPlayer) {
                 enemyView.Facade.Die();
                 _pool.Despawn(this);
-            }
-            else
-            {
+            } else {
                 var player = other.GetComponent<PlayerFacade>();
 
-                if (player != null && _type == BulletTypes.FromEnemy)
-                {
+                if (player != null && _type == BulletTypes.FromEnemy) {
                     player.TakeDamage(MoveDirection);
                     _pool.Despawn(this);
                 }
             }
         }
 
-        public void Update()
-        {
+        public void Update() {
             transform.position -= transform.right * _speed * Time.deltaTime;
 
-            if (Time.realtimeSinceStartup - _startTime > _lifeTime)
-            {
+            if (Time.realtimeSinceStartup - _startTime > _lifeTime) {
                 _pool.Despawn(this);
             }
         }
 
-        public void OnSpawned(float speed, float lifeTime, BulletTypes type, IMemoryPool pool)
-        {
+        public void OnSpawned(float speed, float lifeTime, BulletTypes type, IMemoryPool pool) {
             _pool = pool;
             _type = type;
             _speed = speed;
@@ -79,13 +66,11 @@ namespace Zenject.SpaceFighter
             _startTime = Time.realtimeSinceStartup;
         }
 
-        public void OnDespawned()
-        {
+        public void OnDespawned() {
             _pool = null;
         }
 
-        public class Factory : PlaceholderFactory<float, float, BulletTypes, Bullet>
-        {
+        public class Factory : PlaceholderFactory<float, float, BulletTypes, Bullet> {
         }
     }
 }

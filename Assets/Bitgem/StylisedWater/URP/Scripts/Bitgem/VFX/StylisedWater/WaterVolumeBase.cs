@@ -1,18 +1,15 @@
 ﻿#region Using statements
 
 using Bitgem.Core;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 #endregion
 
-namespace Bitgem.VFX.StylisedWater
-{
+namespace Bitgem.VFX.StylisedWater {
     [ExecuteInEditMode]
     [RequireComponent(typeof(MeshFilter))]
-    public class WaterVolumeBase : MonoBehaviour
-    {
+    public class WaterVolumeBase : MonoBehaviour {
         #region Constants
 
         public const int MAX_TILES_X = 100;
@@ -24,8 +21,7 @@ namespace Bitgem.VFX.StylisedWater
         #region Flag lists
 
         [System.Flags]
-        public enum TileFace : int
-        {
+        public enum TileFace : int {
             NegX = 1,
             PosX = 2,
             NegZ = 4,
@@ -63,25 +59,20 @@ namespace Bitgem.VFX.StylisedWater
 
         #region Private methods
 
-        private void ensureReferences()
-        {
+        private void ensureReferences() {
             // ensure a mesh filter
-            if (meshFilter == null)
-            {
+            if (meshFilter == null) {
                 mesh = null;
                 meshFilter = gameObject.GetComponent<MeshFilter>();
-                if (meshFilter == null)
-                {
+                if (meshFilter == null) {
                     meshFilter = gameObject.AddComponent<MeshFilter>();
                 }
             }
 
             // ensure a mesh
-            if (mesh == null)
-            {
+            if (mesh == null) {
                 mesh = meshFilter.sharedMesh;
-                if (mesh == null || mesh.name != "WaterVolume-" + gameObject.GetInstanceID())
-                {
+                if (mesh == null || mesh.name != "WaterVolume-" + gameObject.GetInstanceID()) {
                     mesh = new UnityEngine.Mesh();
                     mesh.name = "WaterVolume-" + gameObject.GetInstanceID();
                 }
@@ -95,24 +86,20 @@ namespace Bitgem.VFX.StylisedWater
 
         #region Public methods
 
-        public float? GetHeight(Vector3 _position)
-        {
+        public float? GetHeight(Vector3 _position) {
             // convert the position to a tile
             var x = Mathf.FloorToInt((_position.x - transform.position.x + 0.5f) / TileSize);
             var z = Mathf.FloorToInt((_position.z - transform.position.z + 0.5f) / TileSize);
 
             // check if out of bounds
-            if (x < 0 || x >= MAX_TILES_X || z < 0 || z >= MAX_TILES_Z)
-            {
+            if (x < 0 || x >= MAX_TILES_X || z < 0 || z >= MAX_TILES_Z) {
                 return null;
             }
 
             // find the highest active water block in the column
             // TODO : could be reworked to cater for gaps
-            for (var y = MAX_TILES_Y - 1; y >= 0; y--)
-            {
-                if (tiles[x, y, z])
-                {
+            for (var y = MAX_TILES_Y - 1; y >= 0; y--) {
+                if (tiles[x, y, z]) {
                     return transform.position.y + y * TileSize;
                 }
             }
@@ -121,8 +108,7 @@ namespace Bitgem.VFX.StylisedWater
             return null;
         }
 
-        public void Rebuild()
-        {
+        public void Rebuild() {
             Debug.Log("rebuilding water volume \"" + gameObject.name + "\"");
 
             // ensure references to components before trying to use them
@@ -143,15 +129,11 @@ namespace Bitgem.VFX.StylisedWater
             var indices = new List<int>();
 
             // iterate the tiles
-            for (var x = 0; x < MAX_TILES_X; x++)
-            {
-                for (var y = 0; y < MAX_TILES_Y; y++)
-                {
-                    for (var z = 0; z < MAX_TILES_Z; z++)
-                    {
+            for (var x = 0; x < MAX_TILES_X; x++) {
+                for (var y = 0; y < MAX_TILES_Y; y++) {
+                    for (var z = 0; z < MAX_TILES_Z; z++) {
                         // check there is water here
-                        if (!tiles[x, y, z])
-                        {
+                        if (!tiles[x, y, z]) {
                             continue;
                         }
 
@@ -194,8 +176,7 @@ namespace Bitgem.VFX.StylisedWater
                         var foamPosXnegZ = posXnegZ && ((IncludeFoam & TileFace.PosZ) == TileFace.PosZ || (IncludeFoam & TileFace.NegZ) == TileFace.NegZ);
 
                         // create the top face
-                        if (y == MAX_TILES_Y - 1 || !tiles[x, y + 1, z])
-                        {
+                        if (y == MAX_TILES_Y - 1 || !tiles[x, y + 1, z]) {
                             vertices.Add(new Vector3(x0, y1, z0));
                             vertices.Add(new Vector3(x0, y1, z1));
                             vertices.Add(new Vector3(x1, y1, z1));
@@ -213,17 +194,14 @@ namespace Bitgem.VFX.StylisedWater
                             colors.Add(foamPosX || foamPosZ || foamPosXposZ ? Color.red : Color.black);
                             colors.Add(foamPosX || foamNegZ || foamPosXnegZ ? Color.red : Color.black);
                             var v = vertices.Count - 4;
-                            if (foamNegX && foamPosZ || foamPosX && foamNegZ)
-                            {
+                            if (foamNegX && foamPosZ || foamPosX && foamNegZ) {
                                 indices.Add(v + 1);
                                 indices.Add(v + 2);
                                 indices.Add(v + 3);
                                 indices.Add(v + 3);
                                 indices.Add(v);
                                 indices.Add(v + 1);
-                            }
-                            else
-                            {
+                            } else {
                                 indices.Add(v);
                                 indices.Add(v + 1);
                                 indices.Add(v + 2);
@@ -234,8 +212,7 @@ namespace Bitgem.VFX.StylisedWater
                         }
 
                         // create the side faces
-                        if (faceNegX)
-                        {
+                        if (faceNegX) {
                             vertices.Add(new Vector3(x0, y0, z1));
                             vertices.Add(new Vector3(x0, y1, z1));
                             vertices.Add(new Vector3(x0, y1, z0));
@@ -260,8 +237,7 @@ namespace Bitgem.VFX.StylisedWater
                             indices.Add(v + 3);
                             indices.Add(v);
                         }
-                        if (facePosX)
-                        {
+                        if (facePosX) {
                             vertices.Add(new Vector3(x1, y0, z0));
                             vertices.Add(new Vector3(x1, y1, z0));
                             vertices.Add(new Vector3(x1, y1, z1));
@@ -286,8 +262,7 @@ namespace Bitgem.VFX.StylisedWater
                             indices.Add(v + 3);
                             indices.Add(v);
                         }
-                        if (faceNegZ)
-                        {
+                        if (faceNegZ) {
                             vertices.Add(new Vector3(x0, y0, z0));
                             vertices.Add(new Vector3(x0, y1, z0));
                             vertices.Add(new Vector3(x1, y1, z0));
@@ -312,8 +287,7 @@ namespace Bitgem.VFX.StylisedWater
                             indices.Add(v + 3);
                             indices.Add(v);
                         }
-                        if (facePosZ)
-                        {
+                        if (facePosZ) {
                             vertices.Add(new Vector3(x1, y0, z1));
                             vertices.Add(new Vector3(x1, y1, z1));
                             vertices.Add(new Vector3(x0, y1, z1));
@@ -371,8 +345,7 @@ namespace Bitgem.VFX.StylisedWater
 
         #region MonoBehaviour events
 
-        void OnValidate()
-        {
+        void OnValidate() {
             // keep tile size in a sensible range
             TileSize = Mathf.Clamp(TileSize, 0.1f, 100f);
 
@@ -383,11 +356,9 @@ namespace Bitgem.VFX.StylisedWater
             isDirty = true;
         }
 
-        void Update()
-        {
+        void Update() {
             // rebuild if needed
-            if (isDirty || (!Application.isPlaying && RealtimeUpdates))
-            {
+            if (isDirty || (!Application.isPlaying && RealtimeUpdates)) {
                 Rebuild();
             }
         }

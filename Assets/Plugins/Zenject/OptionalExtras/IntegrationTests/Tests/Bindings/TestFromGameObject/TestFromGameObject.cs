@@ -1,20 +1,17 @@
 ﻿
+using ModestTree;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using ModestTree;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromGameObject : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromGameObject : ZenjectIntegrationTestFixture {
         const string GameObjName = "TestObj";
 
         [UnityTest]
-        public IEnumerator TestBasic()
-        {
+        public IEnumerator TestBasic() {
             PreInstall();
             Container.Bind<Foo>().FromNewComponentOnNewGameObject()
                 .WithGameObjectName(GameObjName).AsSingle().NonLazy();
@@ -27,8 +24,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSingle()
-        {
+        public IEnumerator TestSingle() {
             PreInstall();
             Container.Bind(typeof(IFoo), typeof(Foo)).To<Foo>().FromNewComponentOnNewGameObject().WithGameObjectName(GameObjName).AsSingle().NonLazy();
 
@@ -40,8 +36,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestTransient()
-        {
+        public IEnumerator TestTransient() {
             PreInstall();
             Container.Bind<Foo>().FromNewComponentOnNewGameObject().WithGameObjectName(GameObjName).AsTransient().NonLazy();
             Container.Bind<IFoo>().To<Foo>().FromNewComponentOnNewGameObject().WithGameObjectName(GameObjName).AsTransient().NonLazy();
@@ -54,8 +49,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCached1()
-        {
+        public IEnumerator TestCached1() {
             PreInstall();
             Container.Bind<Foo>().FromNewComponentOnNewGameObject().WithGameObjectName(GameObjName).AsCached().NonLazy();
             Container.Bind<IFoo>().To<Foo>().FromNewComponentOnNewGameObject().WithGameObjectName(GameObjName).AsCached().NonLazy();
@@ -68,8 +62,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCached2()
-        {
+        public IEnumerator TestCached2() {
             PreInstall();
             Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>()
                 .FromNewComponentOnNewGameObject().WithGameObjectName(GameObjName).AsSingle().NonLazy();
@@ -82,8 +75,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestMultipleConcreteTransient1()
-        {
+        public IEnumerator TestMultipleConcreteTransient1() {
             PreInstall();
             Container.Bind<IFoo>().To(typeof(Foo), typeof(Bar)).FromNewComponentOnNewGameObject()
                 .WithGameObjectName(GameObjName).AsTransient().NonLazy();
@@ -97,10 +89,9 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestMultipleConcreteTransient2()
-        {
+        public IEnumerator TestMultipleConcreteTransient2() {
             PreInstall();
-            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> {typeof(Foo), typeof(Bar)}).FromNewComponentOnNewGameObject()
+            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> { typeof(Foo), typeof(Bar) }).FromNewComponentOnNewGameObject()
                 .WithGameObjectName(GameObjName).AsTransient().NonLazy();
 
             PostInstall();
@@ -112,10 +103,9 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestMultipleConcreteCached()
-        {
+        public IEnumerator TestMultipleConcreteCached() {
             PreInstall();
-            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> {typeof(Foo), typeof(Bar)}).FromNewComponentOnNewGameObject()
+            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> { typeof(Foo), typeof(Bar) }).FromNewComponentOnNewGameObject()
                 .WithGameObjectName(GameObjName).AsSingle().NonLazy();
 
             PostInstall();
@@ -127,10 +117,9 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestMultipleConcreteSingle()
-        {
+        public IEnumerator TestMultipleConcreteSingle() {
             PreInstall();
-            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> {typeof(Foo), typeof(Bar)}).FromNewComponentOnNewGameObject()
+            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> { typeof(Foo), typeof(Bar) }).FromNewComponentOnNewGameObject()
                 .WithGameObjectName(GameObjName).AsSingle().NonLazy();
 
             PostInstall();
@@ -140,8 +129,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestUnderTransformGroup()
-        {
+        public IEnumerator TestUnderTransformGroup() {
             PreInstall();
 
             Container.Bind<Foo>().FromNewComponentOnNewGameObject()
@@ -156,8 +144,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestUnderTransform()
-        {
+        public IEnumerator TestUnderTransform() {
             PreInstall();
             var tempGameObject = new GameObject("Foo");
 
@@ -172,8 +159,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestUnderTransformGetter()
-        {
+        public IEnumerator TestUnderTransformGetter() {
             PreInstall();
             var tempGameObject = new GameObject("Foo");
 
@@ -187,20 +173,16 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        public interface IBar
-        {
+        public interface IBar {
         }
 
-        public interface IFoo
-        {
+        public interface IFoo {
         }
 
-        public class Foo : MonoBehaviour, IFoo, IBar
-        {
+        public class Foo : MonoBehaviour, IFoo, IBar {
         }
 
-        public class Bar : MonoBehaviour, IFoo, IBar
-        {
+        public class Bar : MonoBehaviour, IFoo, IBar {
         }
     }
 }

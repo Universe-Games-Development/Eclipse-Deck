@@ -1,33 +1,26 @@
-namespace Zenject
-{
-    public enum PoolExpandMethods
-    {
+namespace Zenject {
+    public enum PoolExpandMethods {
         OneAtATime,
         Double,
         Disabled
     }
 
     [NoReflectionBaking]
-    public class MemoryPoolBindInfo
-    {
-        public MemoryPoolBindInfo()
-        {
+    public class MemoryPoolBindInfo {
+        public MemoryPoolBindInfo() {
             ExpandMethod = PoolExpandMethods.OneAtATime;
             MaxSize = int.MaxValue;
         }
 
-        public PoolExpandMethods ExpandMethod
-        {
+        public PoolExpandMethods ExpandMethod {
             get; set;
         }
 
-        public int InitialSize
-        {
+        public int InitialSize {
             get; set;
         }
 
-        public int MaxSize
-        {
+        public int MaxSize {
             get; set;
         }
     }

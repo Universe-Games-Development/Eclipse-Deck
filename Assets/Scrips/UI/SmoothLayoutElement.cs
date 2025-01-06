@@ -1,7 +1,6 @@
 using UnityEngine;
 
-public class SmoothLayoutElement : MonoBehaviour
-{
+public class SmoothLayoutElement : MonoBehaviour {
     private RectTransform targetLayoutElement; // Логічний елемент, до якого карта повинна наблизитися
     public float followSpeed = 10f; // Швидкість переміщення
     private const float Threshold = 0.01f;

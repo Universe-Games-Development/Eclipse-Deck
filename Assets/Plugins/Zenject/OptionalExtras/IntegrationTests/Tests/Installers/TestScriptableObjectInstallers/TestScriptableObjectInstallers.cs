@@ -1,16 +1,13 @@
 ﻿
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine.TestTools;
 using Zenject.Tests.Installers.ScriptableObjectInstallers;
 
-namespace Zenject.Tests.Installers
-{
-    public class TestScriptableObjectInstallers : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Installers {
+    public class TestScriptableObjectInstallers : ZenjectIntegrationTestFixture {
         [UnityTest]
-        public IEnumerator TestBadResourcePath()
-        {
+        public IEnumerator TestBadResourcePath() {
             PreInstall();
             Assert.Throws(() => FooInstaller.InstallFromResource("TestScriptableObjectInstallers/SDFSDFSDF", Container));
             PostInstall();
@@ -18,8 +15,7 @@ namespace Zenject.Tests.Installers
         }
 
         [UnityTest]
-        public IEnumerator TestZeroArgs()
-        {
+        public IEnumerator TestZeroArgs() {
             PreInstall();
             FooInstaller.InstallFromResource("TestScriptableObjectInstallers/FooInstaller", Container);
 
@@ -30,8 +26,7 @@ namespace Zenject.Tests.Installers
         }
 
         [UnityTest]
-        public IEnumerator TestOneArg()
-        {
+        public IEnumerator TestOneArg() {
             PreInstall();
             BarInstaller.InstallFromResource("TestScriptableObjectInstallers/BarInstaller", Container, "blurg");
 
@@ -42,8 +37,7 @@ namespace Zenject.Tests.Installers
         }
 
         [UnityTest]
-        public IEnumerator TestThreeArgs()
-        {
+        public IEnumerator TestThreeArgs() {
             PreInstall();
             QuxInstaller.InstallFromResource("TestScriptableObjectInstallers/QuxInstaller", Container, "blurg", 2.0f, 1);
 

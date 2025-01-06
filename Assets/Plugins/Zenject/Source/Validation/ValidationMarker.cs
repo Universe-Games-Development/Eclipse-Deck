@@ -1,30 +1,24 @@
 using System;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class ValidationMarker
-    {
+    public class ValidationMarker {
         public ValidationMarker(
-            Type markedType, bool instantiateFailed)
-        {
+            Type markedType, bool instantiateFailed) {
             MarkedType = markedType;
             InstantiateFailed = instantiateFailed;
         }
 
         public ValidationMarker(Type markedType)
-            : this(markedType, false)
-        {
+            : this(markedType, false) {
         }
 
-        public bool InstantiateFailed
-        {
+        public bool InstantiateFailed {
             get;
             private set;
         }
 
-        public Type MarkedType
-        {
+        public Type MarkedType {
             get;
             private set;
         }

@@ -1,21 +1,16 @@
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class NonLazyBinder : IfNotBoundBinder
-    {
+    public class NonLazyBinder : IfNotBoundBinder {
         public NonLazyBinder(BindInfo bindInfo)
-            : base(bindInfo)
-        {
+            : base(bindInfo) {
         }
 
-        public IfNotBoundBinder NonLazy()
-        {
+        public IfNotBoundBinder NonLazy() {
             BindInfo.NonLazy = true;
             return this;
         }
 
-        public IfNotBoundBinder Lazy()
-        {
+        public IfNotBoundBinder Lazy() {
             BindInfo.NonLazy = false;
             return this;
         }

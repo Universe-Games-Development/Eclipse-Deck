@@ -2,21 +2,17 @@
 
 using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class PrefabProvider : IPrefabProvider
-    {
+    public class PrefabProvider : IPrefabProvider {
         readonly UnityEngine.Object _prefab;
 
-        public PrefabProvider(UnityEngine.Object prefab)
-        {
+        public PrefabProvider(UnityEngine.Object prefab) {
             Assert.IsNotNull(prefab);
             _prefab = prefab;
         }
 
-        public UnityEngine.Object GetPrefab(InjectContext _)
-        {
+        public UnityEngine.Object GetPrefab(InjectContext _) {
             return _prefab;
         }
     }

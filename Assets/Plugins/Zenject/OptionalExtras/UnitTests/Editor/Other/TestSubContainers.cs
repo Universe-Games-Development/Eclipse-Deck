@@ -1,18 +1,14 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestSubContainers : ZenjectUnitTestFixture
-    {
-        class Test0
-        {
+    public class TestSubContainers : ZenjectUnitTestFixture {
+        class Test0 {
         }
 
         [Test]
-        public void TestIsRemoved()
-        {
+        public void TestIsRemoved() {
             var subContainer = Container.CreateSubContainer();
             var test1 = new Test0();
 
@@ -24,15 +20,13 @@ namespace Zenject.Tests.Other
                 delegate { Container.Resolve<Test0>(); });
         }
 
-        class Test1
-        {
+        class Test1 {
             [Inject]
             public Test0 Test = null;
         }
 
         [Test]
-        public void TestCase2()
-        {
+        public void TestCase2() {
             Test0 test0;
             Test1 test1;
 
@@ -61,21 +55,17 @@ namespace Zenject.Tests.Other
             Assert.That(Container.Resolve<Test1>() != test1);
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        interface IFoo2
-        {
+        interface IFoo2 {
         }
 
-        class Foo : IFoo, IFoo2
-        {
+        class Foo : IFoo, IFoo2 {
         }
 
         [Test]
-        public void TestMultipleSingletonDifferentScope()
-        {
+        public void TestMultipleSingletonDifferentScope() {
             IFoo foo1;
 
             var subContainer1 = Container.CreateSubContainer();

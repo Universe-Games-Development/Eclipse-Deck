@@ -1,28 +1,21 @@
 ﻿#region Using statements
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 #endregion
 
-namespace Bitgem.VFX.StylisedWater
-{
+namespace Bitgem.VFX.StylisedWater {
     [AddComponentMenu("Bitgem/Water  Volume (Transforms)")]
-    public class WaterVolumeTransforms : WaterVolumeBase
-    {
+    public class WaterVolumeTransforms : WaterVolumeBase {
         #region MonoBehaviour events
 
-        private void OnDrawGizmos()
-        {
-            if (!ShowDebug)
-            {
+        private void OnDrawGizmos() {
+            if (!ShowDebug) {
                 return;
             }
 
             // iterate the chldren
-            for (var i = 0; i < transform.childCount; i++)
-            {
+            for (var i = 0; i < transform.childCount; i++) {
                 // grab the local position/scale
                 var pos = transform.GetChild(i).localPosition;
                 var sca = transform.GetChild(i).localScale / TileSize;
@@ -43,8 +36,7 @@ namespace Bitgem.VFX.StylisedWater
             }
         }
 
-        private void OnTransformChildrenChanged()
-        {
+        private void OnTransformChildrenChanged() {
             Rebuild();
         }
 
@@ -52,11 +44,9 @@ namespace Bitgem.VFX.StylisedWater
 
         #region Public methods
 
-        protected override void GenerateTiles(ref bool[,,] _tiles)
-        {
+        protected override void GenerateTiles(ref bool[,,] _tiles) {
             // iterate the chldren
-            for (var i = 0; i < transform.childCount; i++)
-            {
+            for (var i = 0; i < transform.childCount; i++) {
                 // grab the local position/scale
                 var pos = transform.GetChild(i).localPosition;
                 var sca = transform.GetChild(i).localScale / TileSize;
@@ -67,15 +57,11 @@ namespace Bitgem.VFX.StylisedWater
                 var z = Mathf.RoundToInt(pos.z / TileSize);
 
                 // iterate the size of the transform
-                for (var ix = x; ix < x + Mathf.RoundToInt(sca.x); ix++)
-                {
-                    for (var iy = y; iy < y + Mathf.RoundToInt(sca.y); iy++)
-                    {
-                        for (var iz = z; iz < z + Mathf.RoundToInt(sca.z); iz++)
-                        {
+                for (var ix = x; ix < x + Mathf.RoundToInt(sca.x); ix++) {
+                    for (var iy = y; iy < y + Mathf.RoundToInt(sca.y); iy++) {
+                        for (var iz = z; iz < z + Mathf.RoundToInt(sca.z); iz++) {
                             // validate
-                            if (ix < 0 || ix >= MAX_TILES_X || iy < 0 | iy >= MAX_TILES_Y || iz < 0 || iz >= MAX_TILES_Z)
-                            {
+                            if (ix < 0 || ix >= MAX_TILES_X || iy < 0 | iy >= MAX_TILES_Y || iz < 0 || iz >= MAX_TILES_Z) {
                                 continue;
                             }
 

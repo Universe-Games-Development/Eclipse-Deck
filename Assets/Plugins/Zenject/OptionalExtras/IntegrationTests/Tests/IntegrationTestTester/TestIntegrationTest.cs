@@ -1,38 +1,30 @@
+using ModestTree;
 using System;
 using System.Collections;
-using ModestTree;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests
-{
-    public class TestIntegrationTest : ZenjectIntegrationTestFixture
-    {
-        public class Foo : IInitializable, IDisposable
-        {
-            public static bool WasDisposed
-            {
+namespace Zenject.Tests {
+    public class TestIntegrationTest : ZenjectIntegrationTestFixture {
+        public class Foo : IInitializable, IDisposable {
+            public static bool WasDisposed {
                 get; set;
             }
 
-            public static bool WasInitialized
-            {
+            public static bool WasInitialized {
                 get; set;
             }
 
-            public void Initialize()
-            {
+            public void Initialize() {
                 WasInitialized = true;
             }
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 WasDisposed = true;
             }
         }
 
         [UnityTest]
-        public IEnumerator TestRun()
-        {
+        public IEnumerator TestRun() {
             PreInstall();
 
             Foo.WasDisposed = false;
@@ -54,15 +46,13 @@ namespace Zenject.Tests
         }
 
         [UnityTest]
-        public IEnumerator TestSkipInstall()
-        {
+        public IEnumerator TestSkipInstall() {
             SkipInstall();
             yield break;
         }
 
         [UnityTest]
-        public IEnumerator TestProjectContextDestroyed()
-        {
+        public IEnumerator TestProjectContextDestroyed() {
             Assert.That(!ProjectContext.HasInstance);
             SkipInstall();
             yield return null;

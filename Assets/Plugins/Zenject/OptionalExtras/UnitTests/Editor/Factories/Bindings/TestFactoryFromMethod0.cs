@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFactoryFromMethod0 : ZenjectUnitTestFixture
-    {
+    public class TestFactoryFromMethod0 : ZenjectUnitTestFixture {
         [Test]
-        public void TestSelf()
-        {
+        public void TestSelf() {
             var foo = new Foo();
 
             Container.BindFactory<Foo, Foo.Factory>().FromMethod(c => foo).NonLazy();
@@ -17,8 +14,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcrete()
-        {
+        public void TestConcrete() {
             var foo = new Foo();
 
             Container.BindFactory<IFoo, IFooFactory>().FromMethod(c => foo).NonLazy();
@@ -26,18 +22,14 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(Container.Resolve<IFooFactory>().Create(), foo);
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class IFooFactory : PlaceholderFactory<IFoo>
-        {
+        class IFooFactory : PlaceholderFactory<IFoo> {
         }
 
-        class Foo : IFoo
-        {
-            public class Factory : PlaceholderFactory<Foo>
-            {
+        class Foo : IFoo {
+            public class Factory : PlaceholderFactory<Foo> {
             }
         }
     }

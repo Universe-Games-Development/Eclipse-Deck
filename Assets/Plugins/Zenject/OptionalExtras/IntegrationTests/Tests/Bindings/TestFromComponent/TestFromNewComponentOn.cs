@@ -5,13 +5,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromNewComponentOn : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromNewComponentOn : ZenjectIntegrationTestFixture {
         [UnityTest]
-        public IEnumerator TestBasic()
-        {
+        public IEnumerator TestBasic() {
             PreInstall();
             var gameObject = Container.CreateEmptyGameObject("Foo");
 
@@ -26,8 +23,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestBasicByMethod()
-        {
+        public IEnumerator TestBasicByMethod() {
             PreInstall();
 
             var gameObject = Container.CreateEmptyGameObject("Foo");
@@ -43,8 +39,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestTransient()
-        {
+        public IEnumerator TestTransient() {
             PreInstall();
             var gameObject = Container.CreateEmptyGameObject("Foo");
 
@@ -60,8 +55,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSingle()
-        {
+        public IEnumerator TestSingle() {
             PreInstall();
             var gameObject = Container.CreateEmptyGameObject("Foo");
 
@@ -76,8 +70,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCached1()
-        {
+        public IEnumerator TestCached1() {
             PreInstall();
             var gameObject = Container.CreateEmptyGameObject("Foo");
 
@@ -93,8 +86,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCached2()
-        {
+        public IEnumerator TestCached2() {
             PreInstall();
             var gameObject = Container.CreateEmptyGameObject("Foo");
 
@@ -110,8 +102,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCachedMultipleConcrete()
-        {
+        public IEnumerator TestCachedMultipleConcrete() {
             PreInstall();
             var gameObject = Container.CreateEmptyGameObject("Foo");
 
@@ -128,24 +119,19 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        public interface IBar
-        {
+        public interface IBar {
         }
 
-        public interface IFoo2
-        {
+        public interface IFoo2 {
         }
 
-        public interface IFoo
-        {
+        public interface IFoo {
         }
 
-        public class Foo : MonoBehaviour, IFoo, IBar, IFoo2
-        {
+        public class Foo : MonoBehaviour, IFoo, IBar, IFoo2 {
         }
 
-        public class Bar : MonoBehaviour, IFoo, IBar, IFoo2
-        {
+        public class Bar : MonoBehaviour, IFoo, IBar, IFoo2 {
         }
     }
 }

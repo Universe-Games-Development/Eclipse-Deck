@@ -1,10 +1,8 @@
 using ModestTree;
 using UnityEngine;
 
-namespace Zenject.Tests
-{
-    public class SceneContextEventsTester : MonoBehaviour
-    {
+namespace Zenject.Tests {
+    public class SceneContextEventsTester : MonoBehaviour {
         [SerializeField]
         SceneContext _sceneContext = null;
 
@@ -13,8 +11,7 @@ namespace Zenject.Tests
         bool _calledPreResolve;
         bool _calledPostResolve;
 
-        public void Awake()
-        {
+        public void Awake() {
             Assert.That(!_sceneContext.HasResolved);
             Assert.That(!_sceneContext.HasInstalled);
 
@@ -24,32 +21,27 @@ namespace Zenject.Tests
             _sceneContext.PostResolve += OnPostResolve;
         }
 
-        public void Start()
-        {
+        public void Start() {
             Assert.That(_calledPreInstall);
             Assert.That(_calledPostInstall);
             Assert.That(_calledPreResolve);
             Assert.That(_calledPostResolve);
         }
 
-        void OnPreInstall()
-        {
+        void OnPreInstall() {
             _calledPreInstall = true;
             Assert.IsNotNull(_sceneContext.Container);
         }
 
-        void OnPostInstall()
-        {
+        void OnPostInstall() {
             _calledPostInstall = true;
         }
 
-        void OnPreResolve()
-        {
+        void OnPreResolve() {
             _calledPreResolve = true;
         }
 
-        void OnPostResolve()
-        {
+        void OnPostResolve() {
             _calledPostResolve = true;
         }
     }

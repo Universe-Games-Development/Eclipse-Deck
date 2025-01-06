@@ -1,20 +1,15 @@
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
+namespace Zenject.SpaceFighter {
     // Include this just to ensure BindSignal with an object mapping works
-    public class PlayerDiedSignalObserver
-    {
-        public void OnPlayerDied()
-        {
+    public class PlayerDiedSignalObserver {
+        public void OnPlayerDied() {
             Debug.Log("Fired PlayerDiedSignal");
         }
     }
 
-    public class GameSignalsInstaller : Installer<GameSignalsInstaller>
-    {
-        public override void InstallBindings()
-        {
+    public class GameSignalsInstaller : Installer<GameSignalsInstaller> {
+        public override void InstallBindings() {
             SignalBusInstaller.Install(Container);
 
             Container.DeclareSignal<EnemyKilledSignal>();

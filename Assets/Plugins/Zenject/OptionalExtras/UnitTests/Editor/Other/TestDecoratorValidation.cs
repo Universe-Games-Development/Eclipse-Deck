@@ -1,61 +1,48 @@
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestDecoratorValidation
-    {
-        public interface ISaveHandler
-        {
+    public class TestDecoratorValidation {
+        public interface ISaveHandler {
             void Save();
         }
 
-        public class SaveHandler : ISaveHandler
-        {
-            public void Save()
-            {
+        public class SaveHandler : ISaveHandler {
+            public void Save() {
             }
         }
 
-        public class SaveDecorator1 : ISaveHandler
-        {
+        public class SaveDecorator1 : ISaveHandler {
             readonly ISaveHandler _handler;
 
-            public SaveDecorator1(ISaveHandler handler)
-            {
+            public SaveDecorator1(ISaveHandler handler) {
                 _handler = handler;
             }
 
-            public void Save()
-            {
+            public void Save() {
                 _handler.Save();
             }
         }
 
-        DiContainer Container
-        {
+        DiContainer Container {
             get; set;
         }
 
         [SetUp]
-        public void Setup()
-        {
+        public void Setup() {
             Container = new DiContainer(true);
             Container.Settings = new ZenjectSettings(ValidationErrorResponses.Throw);
         }
 
-        public class Foo
-        {
-            public Foo(ISaveHandler saveHandler)
-            {
+        public class Foo {
+            public Foo(ISaveHandler saveHandler) {
             }
         }
 
         [Test]
-        public void TestSuccess1()
-        {
+        public void TestSuccess1() {
             Container.Bind<ISaveHandler>().To<SaveHandler>().AsSingle();
             Container.Decorate<ISaveHandler>().With<SaveDecorator1>();
             Container.Bind<Foo>().AsSingle().NonLazy();
@@ -64,8 +51,7 @@ namespace Zenject.Tests.Other
         }
 
         [Test]
-        public void TestFail1()
-        {
+        public void TestFail1() {
             Container.Bind<ISaveHandler>().To<SaveHandler>().AsSingle();
             Container.Decorate<ISaveHandler>().With<SaveDecorator1>().FromResolve(Guid.NewGuid());
             Container.Bind<Foo>().AsSingle().NonLazy();
@@ -74,8 +60,7 @@ namespace Zenject.Tests.Other
         }
 
         [Test]
-        public void TestFail2()
-        {
+        public void TestFail2() {
             Container.Bind<ISaveHandler>().To<SaveHandler>().FromResolve(Guid.NewGuid()).AsSingle();
             Container.Decorate<ISaveHandler>().With<SaveDecorator1>();
             Container.Bind<Foo>().AsSingle().NonLazy();

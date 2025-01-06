@@ -1,7 +1,6 @@
 using System;
 
-namespace Zenject.SpaceFighter
-{
+namespace Zenject.SpaceFighter {
     // We prefer to use ScriptableObjectInstaller for installers that contain game settings
     // There's no reason why you couldn't use a MonoInstaller here instead, however
     // using ScriptableObjectInstaller has advantages here that make it nice for settings:
@@ -18,8 +17,7 @@ namespace Zenject.SpaceFighter
     //
     // Uncomment if you want to add alternative game settings
     //[CreateAssetMenu(menuName = "Space Fighter/Game Settings")]
-    public class GameSettingsInstaller : ScriptableObjectInstaller<GameSettingsInstaller>
-    {
+    public class GameSettingsInstaller : ScriptableObjectInstaller<GameSettingsInstaller> {
         public EnemySpawner.Settings EnemySpawner;
         public GameRestartHandler.Settings GameRestartHandler;
         public GameInstaller.Settings GameInstaller;
@@ -27,8 +25,7 @@ namespace Zenject.SpaceFighter
         public EnemySettings Enemy;
 
         [Serializable]
-        public class PlayerSettings
-        {
+        public class PlayerSettings {
             public PlayerMoveHandler.Settings PlayerMoveHandler;
             public PlayerShootHandler.Settings PlayerShootHandler;
             public PlayerDamageHandler.Settings PlayerCollisionHandler;
@@ -36,8 +33,7 @@ namespace Zenject.SpaceFighter
         }
 
         [Serializable]
-        public class EnemySettings
-        {
+        public class EnemySettings {
             public EnemyTunables DefaultSettings;
             public EnemyStateIdle.Settings EnemyStateIdle;
             public EnemyRotationHandler.Settings EnemyRotationHandler;
@@ -47,8 +43,7 @@ namespace Zenject.SpaceFighter
             public EnemyCommonSettings EnemyCommonSettings;
         }
 
-        public override void InstallBindings()
-        {
+        public override void InstallBindings() {
             // Use IfNotBound to allow overriding for eg. from play mode tests
             Container.BindInstance(EnemySpawner).IfNotBound();
             Container.BindInstance(GameRestartHandler).IfNotBound();

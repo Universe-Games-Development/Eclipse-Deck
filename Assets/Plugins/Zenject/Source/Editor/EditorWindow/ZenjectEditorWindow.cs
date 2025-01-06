@@ -1,12 +1,10 @@
-using System;
 using ModestTree;
+using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace Zenject
-{
-    public abstract class ZenjectEditorWindow : EditorWindow
-    {
+namespace Zenject {
+    public abstract class ZenjectEditorWindow : EditorWindow {
         [Inject]
         [NonSerialized]
         Kernel _kernel;
@@ -24,12 +22,9 @@ namespace Zenject
         [NonSerialized]
         GUIStyle _errorTextStyle;
 
-        GUIStyle ErrorTextStyle
-        {
-            get
-            {
-                if (_errorTextStyle == null)
-                {
+        GUIStyle ErrorTextStyle {
+            get {
+                if (_errorTextStyle == null) {
                     _errorTextStyle = new GUIStyle(GUI.skin.label);
                     _errorTextStyle.fontSize = 18;
                     _errorTextStyle.normal.textColor = Color.red;
@@ -41,23 +36,19 @@ namespace Zenject
             }
         }
 
-        protected DiContainer Container
-        {
+        protected DiContainer Container {
             get { return _container; }
         }
 
-        public virtual void OnEnable()
-        {
-            if (_fatalError != null)
-            {
+        public virtual void OnEnable() {
+            if (_fatalError != null) {
                 return;
             }
 
             Initialize();
         }
 
-        protected virtual void Initialize()
-        {
+        protected virtual void Initialize() {
             Assert.IsNull(_container);
 
             _container = new DiContainer(new[] { StaticContext.Container });
@@ -79,29 +70,22 @@ namespace Zenject
             _kernel.Initialize();
         }
 
-        public virtual void OnDisable()
-        {
-            if (_fatalError != null)
-            {
+        public virtual void OnDisable() {
+            if (_fatalError != null) {
                 return;
             }
 
             _kernel.Dispose();
         }
 
-        public virtual void Update()
-        {
-            if (_fatalError != null)
-            {
+        public virtual void Update() {
+            if (_fatalError != null) {
                 return;
             }
 
-            try
-            {
+            try {
                 _kernel.Tick();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Log.ErrorException(e);
                 _fatalError = e;
             }
@@ -110,10 +94,8 @@ namespace Zenject
             Repaint();
         }
 
-        public virtual void OnGUI()
-        {
-            if (_fatalError != null)
-            {
+        public virtual void OnGUI() {
+            if (_fatalError != null) {
                 var labelWidth = 600;
                 var labelHeight = 200;
 
@@ -123,30 +105,22 @@ namespace Zenject
                 var buttonHeight = 50;
                 var offset = new Vector2(0, 100);
 
-                if (GUI.Button(new Rect(Screen.width / 2 - buttonWidth / 2 + offset.x, Screen.height / 3 - buttonHeight / 2 + offset.y, buttonWidth, buttonHeight), "Reload"))
-                {
+                if (GUI.Button(new Rect(Screen.width / 2 - buttonWidth / 2 + offset.x, Screen.height / 3 - buttonHeight / 2 + offset.y, buttonWidth, buttonHeight), "Reload")) {
                     ExecuteFullReload();
                 }
-            }
-            else
-            {
-                try
-                {
-                    if (_guiRenderableManager != null)
-                    {
+            } else {
+                try {
+                    if (_guiRenderableManager != null) {
                         _guiRenderableManager.OnGui();
                     }
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     Log.ErrorException(e);
                     _fatalError = e;
                 }
             }
         }
 
-        protected virtual void ExecuteFullReload()
-        {
+        protected virtual void ExecuteFullReload() {
             _kernel = null;
             _guiRenderableManager = null;
             _container = null;

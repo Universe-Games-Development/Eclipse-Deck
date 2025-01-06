@@ -1,10 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace Zenject.Asteroids
-{
-    public class AudioHandler : IInitializable, IDisposable
-    {
+namespace Zenject.Asteroids {
+    public class AudioHandler : IInitializable, IDisposable {
         readonly SignalBus _signalBus;
         readonly Settings _settings;
         readonly AudioSource _audioSource;
@@ -12,31 +10,26 @@ namespace Zenject.Asteroids
         public AudioHandler(
             AudioSource audioSource,
             Settings settings,
-            SignalBus signalBus)
-        {
+            SignalBus signalBus) {
             _signalBus = signalBus;
             _settings = settings;
             _audioSource = audioSource;
         }
 
-        public void Initialize()
-        {
+        public void Initialize() {
             _signalBus.Subscribe<ShipCrashedSignal>(OnShipCrashed);
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             _signalBus.Unsubscribe<ShipCrashedSignal>(OnShipCrashed);
         }
 
-        void OnShipCrashed()
-        {
+        void OnShipCrashed() {
             _audioSource.PlayOneShot(_settings.CrashSound);
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public AudioClip CrashSound;
         }
     }

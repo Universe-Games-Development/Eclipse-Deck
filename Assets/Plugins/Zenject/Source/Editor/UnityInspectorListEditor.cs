@@ -1,34 +1,28 @@
+using ModestTree;
 using System.Collections.Generic;
 using System.Linq;
-using ModestTree;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace Zenject
-{
-    public abstract class UnityInspectorListEditor : Editor
-    {
+namespace Zenject {
+    public abstract class UnityInspectorListEditor : Editor {
         List<ReorderableList> _installersLists;
         List<SerializedProperty> _installersProperties;
 
-        protected abstract string[] PropertyDisplayNames
-        {
+        protected abstract string[] PropertyDisplayNames {
             get;
         }
 
-        protected abstract string[] PropertyNames
-        {
+        protected abstract string[] PropertyNames {
             get;
         }
 
-        protected abstract string[] PropertyDescriptions
-        {
+        protected abstract string[] PropertyDescriptions {
             get;
         }
 
-        public virtual void OnEnable()
-        {
+        public virtual void OnEnable() {
             _installersProperties = new List<SerializedProperty>();
             _installersLists = new List<ReorderableList>();
 
@@ -40,8 +34,7 @@ namespace Zenject
 
             var infos = Enumerable.Range(0, names.Length).Select(i => new { Name = names[i], DisplayName = displayNames[i], Description = descriptions[i] }).ToList();
 
-            foreach (var info in infos)
-            {
+            foreach (var info in infos) {
                 var installersProperty = serializedObject.FindProperty(info.Name);
                 _installersProperties.Add(installersProperty);
 
@@ -51,13 +44,11 @@ namespace Zenject
                 var closedName = info.DisplayName;
                 var closedDesc = info.Description;
 
-                installersList.drawHeaderCallback += rect =>
-                {
+                installersList.drawHeaderCallback += rect => {
                     GUI.Label(rect,
                     new GUIContent(closedName, closedDesc));
                 };
-                installersList.drawElementCallback += (rect, index, active, focused) =>
-                {
+                installersList.drawElementCallback += (rect, index, active, focused) => {
                     rect.width -= 40;
                     rect.x += 20;
                     EditorGUI.PropertyField(rect, installersProperty.GetArrayElementAtIndex(index), GUIContent.none, true);
@@ -65,8 +56,7 @@ namespace Zenject
             }
         }
 
-        public sealed override void OnInspectorGUI()
-        {
+        public sealed override void OnInspectorGUI() {
             serializedObject.Update();
 
             OnGui();
@@ -74,15 +64,12 @@ namespace Zenject
             serializedObject.ApplyModifiedProperties();
         }
 
-        protected virtual void OnGui()
-        {
-            if (Application.isPlaying)
-            {
+        protected virtual void OnGui() {
+            if (Application.isPlaying) {
                 GUI.enabled = false;
             }
 
-            foreach (var list in _installersLists)
-            {
+            foreach (var list in _installersLists) {
                 list.DoLayoutList();
             }
 

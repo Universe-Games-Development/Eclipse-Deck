@@ -4,43 +4,36 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 #endif
 
-namespace Zenject
-{
+namespace Zenject {
     // Zero parameters
-    public class PlaceholderFactory<TValue> : PlaceholderFactoryBase<TValue>, IFactory<TValue>
-    {
+    public class PlaceholderFactory<TValue> : PlaceholderFactoryBase<TValue>, IFactory<TValue> {
         // Note: Most of the time you should not override this method and should instead
         // use BindFactory<>.FromIFactory if you want to do some custom logic
 #if !NOT_UNITY3D
         [NotNull]
 #endif
-        public virtual TValue Create()
-        {
+        public virtual TValue Create() {
             return CreateInternal(new List<TypeValuePair>());
         }
 
-        protected sealed override IEnumerable<Type> ParamTypes
-        {
+        protected sealed override IEnumerable<Type> ParamTypes {
             get { yield break; }
         }
     }
 
     [Obsolete("Zenject.Factory has been renamed to PlaceholderFactory.  Zenject.Factory will be removed in future versions")]
-    public class Factory<TValue> : PlaceholderFactory<TValue>
-    {
+    public class Factory<TValue> : PlaceholderFactory<TValue> {
     }
 
     // One parameter
     public class PlaceholderFactory<TParam1, TValue>
-        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TValue>
-    {
+        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TValue> {
         // Note: Most of the time you should not override this method and should instead
         // use BindFactory<>.FromIFactory if you want to do some custom logic
 #if !NOT_UNITY3D
         [NotNull]
 #endif
-        public virtual TValue Create(TParam1 param)
-        {
+        public virtual TValue Create(TParam1 param) {
             return CreateInternal(
                 new List<TypeValuePair>
                 {
@@ -48,28 +41,24 @@ namespace Zenject
                 });
         }
 
-        protected sealed override IEnumerable<Type> ParamTypes
-        {
+        protected sealed override IEnumerable<Type> ParamTypes {
             get { yield return typeof(TParam1); }
         }
     }
 
     [Obsolete("Zenject.Factory has been renamed to PlaceholderFactory.  Zenject.Factory will be removed in future versions")]
-    public class Factory<TParam1, TValue> : PlaceholderFactory<TParam1, TValue>
-    {
+    public class Factory<TParam1, TValue> : PlaceholderFactory<TParam1, TValue> {
     }
 
     // Two parameters
     public class PlaceholderFactory<TParam1, TParam2, TValue>
-        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TValue>
-    {
+        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TValue> {
         // Note: Most of the time you should not override this method and should instead
         // use BindFactory<>.FromIFactory if you want to do some custom logic
 #if !NOT_UNITY3D
         [NotNull]
 #endif
-        public virtual TValue Create(TParam1 param1, TParam2 param2)
-        {
+        public virtual TValue Create(TParam1 param1, TParam2 param2) {
             return CreateInternal(
                 new List<TypeValuePair>
                 {
@@ -78,10 +67,8 @@ namespace Zenject
                 });
         }
 
-        protected sealed override IEnumerable<Type> ParamTypes
-        {
-            get
-            {
+        protected sealed override IEnumerable<Type> ParamTypes {
+            get {
                 yield return typeof(TParam1);
                 yield return typeof(TParam2);
             }
@@ -89,21 +76,18 @@ namespace Zenject
     }
 
     [Obsolete("Zenject.Factory has been renamed to PlaceholderFactory.  Zenject.Factory will be removed in future versions")]
-    public class Factory<TParam1, TParam2, TValue> : PlaceholderFactory<TParam1, TParam2, TValue>
-    {
+    public class Factory<TParam1, TParam2, TValue> : PlaceholderFactory<TParam1, TParam2, TValue> {
     }
 
     // Three parameters
     public class PlaceholderFactory<TParam1, TParam2, TParam3, TValue>
-        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TValue>
-    {
+        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TValue> {
         // Note: Most of the time you should not override this method and should instead
         // use BindFactory<>.FromIFactory if you want to do some custom logic
 #if !NOT_UNITY3D
         [NotNull]
 #endif
-        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3)
-        {
+        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3) {
             return CreateInternal(
                 new List<TypeValuePair>
                 {
@@ -113,10 +97,8 @@ namespace Zenject
                 });
         }
 
-        protected sealed override IEnumerable<Type> ParamTypes
-        {
-            get
-            {
+        protected sealed override IEnumerable<Type> ParamTypes {
+            get {
                 yield return typeof(TParam1);
                 yield return typeof(TParam2);
                 yield return typeof(TParam3);
@@ -125,21 +107,18 @@ namespace Zenject
     }
 
     [Obsolete("Zenject.Factory has been renamed to PlaceholderFactory.  Zenject.Factory will be removed in future versions")]
-    public class Factory<TParam1, TParam2, TParam3, TValue> : PlaceholderFactory<TParam1, TParam2, TParam3, TValue>
-    {
+    public class Factory<TParam1, TParam2, TParam3, TValue> : PlaceholderFactory<TParam1, TParam2, TParam3, TValue> {
     }
 
     // Four parameters
     public class PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TValue>
-        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TParam4, TValue>
-    {
+        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TParam4, TValue> {
         // Note: Most of the time you should not override this method and should instead
         // use BindFactory<>.FromIFactory if you want to do some custom logic
 #if !NOT_UNITY3D
         [NotNull]
 #endif
-        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4)
-        {
+        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4) {
             return CreateInternal(
                 new List<TypeValuePair>
                 {
@@ -150,10 +129,8 @@ namespace Zenject
                 });
         }
 
-        protected sealed override IEnumerable<Type> ParamTypes
-        {
-            get
-            {
+        protected sealed override IEnumerable<Type> ParamTypes {
+            get {
                 yield return typeof(TParam1);
                 yield return typeof(TParam2);
                 yield return typeof(TParam3);
@@ -164,21 +141,18 @@ namespace Zenject
 
     [Obsolete("Zenject.Factory has been renamed to PlaceholderFactory.  Zenject.Factory will be removed in future versions")]
     public class Factory<TParam1, TParam2, TParam3, TParam4, TValue>
-        : PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TValue>
-    {
+        : PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TValue> {
     }
 
     // Five parameters
     public class PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>
-        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>
-    {
+        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TValue> {
         // Note: Most of the time you should not override this method and should instead
         // use BindFactory<>.FromIFactory if you want to do some custom logic
 #if !NOT_UNITY3D
         [NotNull]
 #endif
-        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5)
-        {
+        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5) {
             return CreateInternal(
                 new List<TypeValuePair>
                 {
@@ -190,10 +164,8 @@ namespace Zenject
                 });
         }
 
-        protected sealed override IEnumerable<Type> ParamTypes
-        {
-            get
-            {
+        protected sealed override IEnumerable<Type> ParamTypes {
+            get {
                 yield return typeof(TParam1);
                 yield return typeof(TParam2);
                 yield return typeof(TParam3);
@@ -205,21 +177,18 @@ namespace Zenject
 
     [Obsolete("Zenject.Factory has been renamed to PlaceholderFactory.  Zenject.Factory will be removed in future versions")]
     public class Factory<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>
-        : PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>
-    {
+        : PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TValue> {
     }
 
     // Six parameters
     public class PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>
-        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>
-    {
+        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> {
         // Note: Most of the time you should not override this method and should instead
         // use BindFactory<>.FromIFactory if you want to do some custom logic
 #if !NOT_UNITY3D
         [NotNull]
 #endif
-        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6)
-        {
+        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6) {
             return CreateInternal(
                 new List<TypeValuePair>
                 {
@@ -232,10 +201,8 @@ namespace Zenject
                 });
         }
 
-        protected sealed override IEnumerable<Type> ParamTypes
-        {
-            get
-            {
+        protected sealed override IEnumerable<Type> ParamTypes {
+            get {
                 yield return typeof(TParam1);
                 yield return typeof(TParam2);
                 yield return typeof(TParam3);
@@ -248,17 +215,14 @@ namespace Zenject
 
     [Obsolete("Zenject.Factory has been renamed to PlaceholderFactory.  Zenject.Factory will be removed in future versions")]
     public class Factory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>
-        : PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>
-    {
+        : PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> {
     }
 
     // Ten parameters
     public class PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue>
-        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue>
-    {
+        : PlaceholderFactoryBase<TValue>, IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue> {
         // If you were hoping to override this method, use BindFactory<>.ToFactory instead
-        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10)
-        {
+        public virtual TValue Create(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10) {
             return CreateInternal(
                 new List<TypeValuePair>
                 {
@@ -275,10 +239,8 @@ namespace Zenject
                 });
         }
 
-        protected sealed override IEnumerable<Type> ParamTypes
-        {
-            get
-            {
+        protected sealed override IEnumerable<Type> ParamTypes {
+            get {
                 yield return typeof(TParam1);
                 yield return typeof(TParam2);
                 yield return typeof(TParam3);
@@ -295,8 +257,7 @@ namespace Zenject
 
     [Obsolete("Zenject.Factory has been renamed to PlaceholderFactory.  Zenject.Factory will be removed in future versions")]
     public class Factory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue>
-        : PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue>
-    {
+        : PlaceholderFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue> {
     }
 }
 

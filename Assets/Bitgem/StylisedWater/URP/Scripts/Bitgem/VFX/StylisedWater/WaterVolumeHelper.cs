@@ -1,15 +1,11 @@
 ﻿#region Using statements
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 #endregion
 
-namespace Bitgem.VFX.StylisedWater
-{
-    public class WaterVolumeHelper : MonoBehaviour
-    {
+namespace Bitgem.VFX.StylisedWater {
+    public class WaterVolumeHelper : MonoBehaviour {
         #region Private static fields
 
         private static WaterVolumeHelper instance = null;
@@ -30,25 +26,21 @@ namespace Bitgem.VFX.StylisedWater
 
         #region Public methods
 
-        public float? GetHeight(Vector3 _position)
-        {
+        public float? GetHeight(Vector3 _position) {
             // ensure a water volume
-            if (!WaterVolume)
-            {
+            if (!WaterVolume) {
                 return 0f;
             }
 
             // ensure a material
             var renderer = WaterVolume.gameObject.GetComponent<MeshRenderer>();
-            if (!renderer || !renderer.sharedMaterial)
-            {
+            if (!renderer || !renderer.sharedMaterial) {
                 return 0f;
             }
 
             // replicate the shader logic, using parameters pulled from the specific material, to return the height at the specified position
             var waterHeight = WaterVolume.GetHeight(_position);
-            if (!waterHeight.HasValue)
-            {
+            if (!waterHeight.HasValue) {
                 return null;
             }
             var _WaveFrequency = renderer.sharedMaterial.GetFloat("_WaveFrequency");
@@ -63,8 +55,7 @@ namespace Bitgem.VFX.StylisedWater
 
         #region MonoBehaviour events
 
-        private void Awake()
-        {
+        private void Awake() {
             instance = this;
         }
 

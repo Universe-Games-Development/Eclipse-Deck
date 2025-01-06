@@ -36,8 +36,7 @@ public class Deck {
         }
     }
 
-    public void AddCard(Card card)
-    {
+    public void AddCard(Card card) {
         deck.Push(card);
     }
 

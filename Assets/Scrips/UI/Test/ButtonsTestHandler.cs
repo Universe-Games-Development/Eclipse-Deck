@@ -1,6 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 
 public class ButtonsTestHandler : MonoBehaviour {
     private List<Button> buttonsList = new List<Button>();

@@ -1,23 +1,18 @@
 using System;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class SubContainerCreatorBindInfo
-    {
+    public class SubContainerCreatorBindInfo {
         // Null = means no custom default parent
-        public string DefaultParentName
-        {
+        public string DefaultParentName {
             get; set;
         }
 
-        public bool CreateKernel
-        {
+        public bool CreateKernel {
             get; set;
         }
 
-        public Type KernelType
-        {
+        public Type KernelType {
             get; set;
         }
     }

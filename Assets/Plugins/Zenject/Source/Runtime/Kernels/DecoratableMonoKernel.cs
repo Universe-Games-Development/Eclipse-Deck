@@ -1,7 +1,5 @@
-﻿namespace Zenject
-{
-    public interface IDecoratableMonoKernel
-    {
+﻿namespace Zenject {
+    public interface IDecoratableMonoKernel {
         bool ShouldInitializeOnStart();
         void Initialize();
         void Update();
@@ -11,9 +9,8 @@
         void LateDispose();
     }
 
-    public class DecoratableMonoKernel : IDecoratableMonoKernel
-    {
-        [InjectLocal] 
+    public class DecoratableMonoKernel : IDecoratableMonoKernel {
+        [InjectLocal]
         public TickableManager TickableManager { get; protected set; } = null;
 
         [InjectLocal]
@@ -21,44 +18,37 @@
 
         [InjectLocal]
         public DisposableManager DisposablesManager { get; protected set; } = null;
-        
-        
+
+
         public virtual bool ShouldInitializeOnStart() => true;
-        
-        public virtual void Initialize()
-        {
+
+        public virtual void Initialize() {
             InitializableManager.Initialize();
         }
 
-        public void Update()
-        {
+        public void Update() {
             TickableManager.Update();
         }
 
-        public void FixedUpdate()
-        {
+        public void FixedUpdate() {
             TickableManager.FixedUpdate();
         }
 
-        public void LateUpdate()
-        {
+        public void LateUpdate() {
             TickableManager.LateUpdate();
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             DisposablesManager.Dispose();
         }
 
-        public void LateDispose()
-        {
+        public void LateDispose() {
             DisposablesManager.LateDispose();
         }
     }
 
-    public abstract class BaseMonoKernelDecorator : IDecoratableMonoKernel
-    {
-        [Inject] 
+    public abstract class BaseMonoKernelDecorator : IDecoratableMonoKernel {
+        [Inject]
         protected IDecoratableMonoKernel DecoratedMonoKernel;
 
         public virtual bool ShouldInitializeOnStart() => DecoratedMonoKernel.ShouldInitializeOnStart();
@@ -69,5 +59,5 @@
         public virtual void Dispose() => DecoratedMonoKernel.Dispose();
         public virtual void LateDispose() => DecoratedMonoKernel.LateDispose();
     }
-    
+
 }

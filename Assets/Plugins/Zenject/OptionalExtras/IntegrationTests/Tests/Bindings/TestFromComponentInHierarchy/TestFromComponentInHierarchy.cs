@@ -1,19 +1,16 @@
 
+using ModestTree;
 using System.Collections;
 using System.Collections.Generic;
-using ModestTree;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromComponentInHierarchy : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromComponentInHierarchy : ZenjectIntegrationTestFixture {
         Foo _foo1;
         Foo _foo2;
 
-        public void Setup1()
-        {
+        public void Setup1() {
             var root = new GameObject();
 
             _foo1 = root.AddComponent<Foo>();
@@ -27,8 +24,7 @@ namespace Zenject.Tests.Bindings
             _foo2 = child2.AddComponent<Foo>();
         }
 
-        public void Setup2()
-        {
+        public void Setup2() {
             var root = new GameObject();
 
             var child1 = new GameObject();
@@ -36,8 +32,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchSingle()
-        {
+        public IEnumerator RunMatchSingle() {
             Setup1();
             PreInstall();
             Container.Bind<Qux>().AsSingle();
@@ -52,8 +47,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchMultiple()
-        {
+        public IEnumerator RunMatchMultiple() {
             Setup1();
             PreInstall();
             Container.Bind<Qux>().AsSingle();
@@ -69,8 +63,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchNotFoundFailure()
-        {
+        public IEnumerator RunMatchNotFoundFailure() {
             Setup2();
             PreInstall();
             Container.Bind<Bar>().AsSingle().NonLazy();
@@ -81,8 +74,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchNotFoundSuccess()
-        {
+        public IEnumerator RunMatchNotFoundSuccess() {
             Setup2();
             PreInstall();
 
@@ -97,8 +89,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestOptional()
-        {
+        public IEnumerator TestOptional() {
             PreInstall();
 
             Container.Bind<Qiv>().AsSingle().NonLazy();
@@ -112,8 +103,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchSingleNonGeneric()
-        {
+        public IEnumerator RunMatchSingleNonGeneric() {
             Setup1();
             PreInstall();
             Container.Bind<Qux>().AsSingle();
@@ -128,8 +118,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchMultipleNonGeneric()
-        {
+        public IEnumerator RunMatchMultipleNonGeneric() {
             Setup1();
             PreInstall();
             Container.Bind<Qux>().AsSingle();
@@ -145,8 +134,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchNotFoundFailureNonGeneric()
-        {
+        public IEnumerator RunMatchNotFoundFailureNonGeneric() {
             Setup2();
             PreInstall();
             Container.Bind<Bar>().AsSingle().NonLazy();
@@ -157,8 +145,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchNotFoundSuccessNonGeneric()
-        {
+        public IEnumerator RunMatchNotFoundSuccessNonGeneric() {
             Setup2();
             PreInstall();
 
@@ -173,8 +160,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestOptionalNonGeneric()
-        {
+        public IEnumerator TestOptionalNonGeneric() {
             PreInstall();
 
             Container.Bind<Qiv>().AsSingle().NonLazy();
@@ -187,24 +173,20 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        public class Foo : MonoBehaviour
-        {
+        public class Foo : MonoBehaviour {
         }
 
-        public class Qux
-        {
+        public class Qux {
             [Inject]
             public List<Foo> Foos;
         }
 
-        public class Bar
-        {
+        public class Bar {
             [Inject]
             public Foo Foo;
         }
 
-        public class Qiv
-        {
+        public class Qiv {
             [InjectOptional]
             public Foo Foo;
         }

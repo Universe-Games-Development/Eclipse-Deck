@@ -1,29 +1,24 @@
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Signals
-{
+namespace Zenject.Tests.Signals {
     [TestFixture]
-    public class TestSignalIdentifiers : ZenjectUnitTestFixture
-    {
+    public class TestSignalIdentifiers : ZenjectUnitTestFixture {
         [SetUp]
-        public void CommonInstall()
-        {
+        public void CommonInstall() {
             SignalBusInstaller.Install(Container);
         }
 
         [Test]
-        public void TestMissingDeclaration()
-        {
+        public void TestMissingDeclaration() {
             var signalBus = Container.Resolve<SignalBus>();
 
             Assert.Throws(() => signalBus.FireId<FooSignal>("asdf"));
         }
 
         [Test]
-        public void TestSubscribeAndUnsubscribe()
-        {
+        public void TestSubscribeAndUnsubscribe() {
             var signalId = "asdf";
 
             Container.DeclareSignal<FooSignal>().WithId(signalId);
@@ -56,8 +51,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestIncompleteBinding()
-        {
+        public void TestIncompleteBinding() {
             Container.DeclareSignal<FooSignal>().WithId("asdf");
             Container.BindSignal<FooSignal>().WithId("asdf");
 
@@ -65,16 +59,14 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestBindWithoutDeclaration()
-        {
-            Container.BindSignal<FooSignal>().WithId("asdf").ToMethod(() => {});
+        public void TestBindWithoutDeclaration() {
+            Container.BindSignal<FooSignal>().WithId("asdf").ToMethod(() => { });
 
             Assert.Throws(() => Container.ResolveRoots());
         }
 
         [Test]
-        public void TestStaticMethodHandler()
-        {
+        public void TestStaticMethodHandler() {
             Container.DeclareSignal<FooSignal>().WithId("asdf");
 
             bool received = false;
@@ -90,8 +82,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestStaticMethodHandlerWithArgs()
-        {
+        public void TestStaticMethodHandlerWithArgs() {
             Container.DeclareSignal<FooSignal>().WithId("asdf");
 
             FooSignal received = null;
@@ -108,8 +99,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestInstanceMethodHandler()
-        {
+        public void TestInstanceMethodHandler() {
             Container.DeclareSignal<FooSignal>().WithId("asdf");
 
             var qux = new Qux();
@@ -124,25 +114,20 @@ namespace Zenject.Tests.Signals
             Assert.That(qux.HasRecievedSignal);
         }
 
-        public class Qux
-        {
-            public void OnFoo()
-            {
+        public class Qux {
+            public void OnFoo() {
                 HasRecievedSignal = true;
             }
 
-            public bool HasRecievedSignal
-            {
+            public bool HasRecievedSignal {
                 get; private set;
             }
         }
 
-        public class FooSignal
-        {
+        public class FooSignal {
         }
 
-        public class Foo
-        {
+        public class Foo {
         }
     }
 }

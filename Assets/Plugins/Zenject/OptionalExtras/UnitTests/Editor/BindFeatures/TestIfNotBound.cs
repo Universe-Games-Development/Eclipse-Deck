@@ -1,26 +1,20 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.BindFeatures
-{
+namespace Zenject.Tests.BindFeatures {
     [TestFixture]
-    public class TestIfNotBound : ZenjectUnitTestFixture
-    {
-        interface IFoo
-        {
+    public class TestIfNotBound : ZenjectUnitTestFixture {
+        interface IFoo {
         }
 
-        public class Foo1 : IFoo
-        {
+        public class Foo1 : IFoo {
         }
 
-        public class Foo2 : IFoo
-        {
+        public class Foo2 : IFoo {
         }
 
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             Container.Bind<IFoo>().To<Foo1>().AsSingle();
             Container.Bind<IFoo>().To<Foo2>().AsSingle();
 
@@ -28,8 +22,7 @@ namespace Zenject.Tests.BindFeatures
         }
 
         [Test]
-        public void Test2()
-        {
+        public void Test2() {
             Container.Bind<IFoo>().To<Foo1>().AsSingle();
             Container.Bind<IFoo>().To<Foo2>().AsSingle().IfNotBound();
 

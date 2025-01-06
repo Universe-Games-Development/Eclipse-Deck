@@ -1,24 +1,20 @@
 ﻿
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine.TestTools;
 using Zenject.Tests.Bindings.FromSubContainerPrefabResource;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromSubContainerPrefabResource : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromSubContainerPrefabResource : ZenjectIntegrationTestFixture {
         const string PathPrefix = "TestFromSubContainerPrefabResource/";
         const string FooResourcePath = PathPrefix + "FooSubContainer";
 
-        void CommonInstall()
-        {
+        void CommonInstall() {
             Container.Settings = new ZenjectSettings(ValidationErrorResponses.Throw);
         }
 
         [UnityTest]
-        public IEnumerator TestTransientError()
-        {
+        public IEnumerator TestTransientError() {
             PreInstall();
             CommonInstall();
 
@@ -30,8 +26,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSelfSingle()
-        {
+        public IEnumerator TestSelfSingle() {
             PreInstall();
             CommonInstall();
 
@@ -45,8 +40,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSelfTransient()
-        {
+        public IEnumerator TestSelfTransient() {
             PreInstall();
             CommonInstall();
 
@@ -60,8 +54,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSelfCached()
-        {
+        public IEnumerator TestSelfCached() {
             PreInstall();
             CommonInstall();
 
@@ -75,8 +68,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSelfSingleMultipleContracts()
-        {
+        public IEnumerator TestSelfSingleMultipleContracts() {
             PreInstall();
             CommonInstall();
 
@@ -91,8 +83,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSelfCachedMultipleContracts()
-        {
+        public IEnumerator TestSelfCachedMultipleContracts() {
             PreInstall();
             CommonInstall();
 
@@ -107,8 +98,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSelfTransientMultipleContracts()
-        {
+        public IEnumerator TestSelfTransientMultipleContracts() {
             PreInstall();
             CommonInstall();
 
@@ -123,8 +113,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestConcreteSingle()
-        {
+        public IEnumerator TestConcreteSingle() {
             PreInstall();
             CommonInstall();
 
@@ -138,8 +127,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestConcreteTransient()
-        {
+        public IEnumerator TestConcreteTransient() {
             PreInstall();
             CommonInstall();
 
@@ -154,8 +142,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestConcreteCached()
-        {
+        public IEnumerator TestConcreteCached() {
             PreInstall();
             CommonInstall();
 
@@ -169,8 +156,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestConcreteSingleMultipleContracts()
-        {
+        public IEnumerator TestConcreteSingleMultipleContracts() {
             PreInstall();
             CommonInstall();
 
@@ -186,8 +172,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestConcreteCachedMultipleContracts()
-        {
+        public IEnumerator TestConcreteCachedMultipleContracts() {
             PreInstall();
             CommonInstall();
 
@@ -201,8 +186,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSelfIdentifiersFails()
-        {
+        public IEnumerator TestSelfIdentifiersFails() {
             PreInstall();
             CommonInstall();
 
@@ -213,8 +197,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSelfIdentifiers()
-        {
+        public IEnumerator TestSelfIdentifiers() {
             PreInstall();
             CommonInstall();
 

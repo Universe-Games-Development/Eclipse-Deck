@@ -1,7 +1,6 @@
 using System;
 
-namespace Zenject.Asteroids
-{
+namespace Zenject.Asteroids {
     // We prefer to use ScriptableObjectInstaller for installers that contain game settings
     // There's no reason why you couldn't use a MonoInstaller here instead, however
     // using ScriptableObjectInstaller has advantages here that make it nice for settings:
@@ -18,8 +17,7 @@ namespace Zenject.Asteroids
     //
     // Uncomment if you want to add alternative game settings
     //[CreateAssetMenu(menuName = "Asteroids/Game Settings")]
-    public class GameSettingsInstaller : ScriptableObjectInstaller<GameSettingsInstaller>
-    {
+    public class GameSettingsInstaller : ScriptableObjectInstaller<GameSettingsInstaller> {
         public ShipSettings Ship;
         public AsteroidSettings Asteroid;
         public AudioHandler.Settings AudioHandler;
@@ -27,22 +25,19 @@ namespace Zenject.Asteroids
 
         // We use nested classes here to group related settings together
         [Serializable]
-        public class ShipSettings
-        {
+        public class ShipSettings {
             public ShipStateMoving.Settings StateMoving;
             public ShipStateDead.Settings StateDead;
             public ShipStateWaitingToStart.Settings StateStarting;
         }
 
         [Serializable]
-        public class AsteroidSettings
-        {
+        public class AsteroidSettings {
             public AsteroidManager.Settings Spawner;
             public Asteroid.Settings General;
         }
 
-        public override void InstallBindings()
-        {
+        public override void InstallBindings() {
             Container.BindInstance(Ship.StateMoving);
             Container.BindInstance(Ship.StateDead);
             Container.BindInstance(Ship.StateStarting);

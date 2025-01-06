@@ -90,4 +90,15 @@ public class CardAbility : IEventListener {
         }
     }
 
+    // Додавання методу Reset
+    public void Reset() {
+        // Скидання реєстрації здібності
+        if (isRegistered) {
+            UnregisterActivation();
+        }
+
+        // Тут можна додати додаткові логіки для скидання стану здібності,
+        // наприклад, скидання змінних, що зберігають стан здібності.
+        Debug.Log($"Ability for card {card.Name} has been reset.");
+    }
 }

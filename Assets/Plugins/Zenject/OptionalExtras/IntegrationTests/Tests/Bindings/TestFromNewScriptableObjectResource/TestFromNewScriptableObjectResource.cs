@@ -1,18 +1,15 @@
 
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine.TestTools;
 using Zenject.Tests.Bindings.FromNewScriptableObjectResource;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromNewScriptableObjectResource : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromNewScriptableObjectResource : ZenjectIntegrationTestFixture {
         const string PathPrefix = "TestFromNewScriptableObjectResource/";
 
         [UnityTest]
-        public IEnumerator TestTransientError()
-        {
+        public IEnumerator TestTransientError() {
             PreInstall();
             // Validation should detect that it doesn't exist
             Container.Bind<Foo>().FromNewScriptableObjectResource(PathPrefix + "asdfasdfas").AsTransient().NonLazy();
@@ -22,8 +19,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestTransient()
-        {
+        public IEnumerator TestTransient() {
             PreInstall();
             Foo.InstanceCount = 0;
             Container.Bind<Foo>().FromNewScriptableObjectResource(PathPrefix + "Foo").AsTransient();
@@ -42,8 +38,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSingle()
-        {
+        public IEnumerator TestSingle() {
             PreInstall();
             Foo.InstanceCount = 0;
 
@@ -57,8 +52,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestAbstractBinding()
-        {
+        public IEnumerator TestAbstractBinding() {
             PreInstall();
             Foo.InstanceCount = 0;
 
@@ -73,8 +67,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithArgumentsFail()
-        {
+        public IEnumerator TestWithArgumentsFail() {
             PreInstall();
             Container.Bind<Bob>()
                 .FromNewScriptableObjectResource(PathPrefix + "Bob").AsSingle().NonLazy();
@@ -84,8 +77,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithArguments()
-        {
+        public IEnumerator TestWithArguments() {
             PreInstall();
             Container.Bind<Bob>()
                 .FromNewScriptableObjectResource(PathPrefix + "Bob").AsSingle()

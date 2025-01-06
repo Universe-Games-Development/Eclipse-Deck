@@ -1,27 +1,21 @@
-using System.Collections.Generic;
 using NUnit.Framework;
+using System.Collections.Generic;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestResolveMany : ZenjectUnitTestFixture
-    {
-        class Test0
-        {
+    public class TestResolveMany : ZenjectUnitTestFixture {
+        class Test0 {
         }
 
-        class Test1 : Test0
-        {
+        class Test1 : Test0 {
         }
 
-        class Test2 : Test0
-        {
+        class Test2 : Test0 {
         }
 
         [Test]
-        public void TestCase1()
-        {
+        public void TestCase1() {
             Container.Bind<Test0>().To<Test1>().AsSingle();
             Container.Bind<Test0>().To<Test2>().AsSingle();
 
@@ -31,8 +25,7 @@ namespace Zenject.Tests.Other
         }
 
         [Test]
-        public void TestOptional()
-        {
+        public void TestOptional() {
             List<Test0> many = Container.ResolveAll<Test0>();
             Assert.That(many.Count == 0);
         }

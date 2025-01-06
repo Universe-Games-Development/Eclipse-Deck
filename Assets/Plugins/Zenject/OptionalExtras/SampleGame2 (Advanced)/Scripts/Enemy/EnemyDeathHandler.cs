@@ -1,10 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
-    public class EnemyDeathHandler
-    {
+namespace Zenject.SpaceFighter {
+    public class EnemyDeathHandler {
         readonly EnemyFacade _facade;
         readonly SignalBus _signalBus;
         readonly Settings _settings;
@@ -18,8 +16,7 @@ namespace Zenject.SpaceFighter
             Explosion.Factory explosionFactory,
             Settings settings,
             SignalBus signalBus,
-            EnemyFacade facade)
-        {
+            EnemyFacade facade) {
             _facade = facade;
             _signalBus = signalBus;
             _settings = settings;
@@ -28,8 +25,7 @@ namespace Zenject.SpaceFighter
             _view = view;
         }
 
-        public void Die()
-        {
+        public void Die() {
             var explosion = _explosionFactory.Create();
             explosion.transform.position = _view.Position;
 
@@ -41,8 +37,7 @@ namespace Zenject.SpaceFighter
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public AudioClip DeathSound;
             public float DeathSoundVolume = 1.0f;
         }

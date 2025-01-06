@@ -1,42 +1,34 @@
 ﻿
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Zenject.Tests.Bindings.FromPrefab;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromPrefab : ZenjectIntegrationTestFixture
-    {
-        GameObject FooPrefab
-        {
+namespace Zenject.Tests.Bindings {
+    public class TestFromPrefab : ZenjectIntegrationTestFixture {
+        GameObject FooPrefab {
             get { return GetPrefab("Foo"); }
         }
 
-        GameObject GorpPrefab
-        {
+        GameObject GorpPrefab {
             get { return GetPrefab("Gorp"); }
         }
 
-        GameObject GorpAndQuxPrefab
-        {
+        GameObject GorpAndQuxPrefab {
             get { return GetPrefab("GorpAndQux"); }
         }
 
-        GameObject NorfPrefab
-        {
+        GameObject NorfPrefab {
             get { return GetPrefab("Norf"); }
         }
 
-        GameObject JimAndBobPrefab
-        {
+        GameObject JimAndBobPrefab {
             get { return GetPrefab("JimAndBob"); }
         }
 
         [UnityTest]
-        public IEnumerator TestTransient()
-        {
+        public IEnumerator TestTransient() {
             PreInstall();
             Container.Bind<Foo>().FromComponentInNewPrefab(FooPrefab).AsTransient().NonLazy();
             Container.Bind<Foo>().FromComponentInNewPrefab(FooPrefab).AsTransient().NonLazy();
@@ -48,8 +40,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSingle()
-        {
+        public IEnumerator TestSingle() {
             PreInstall();
             Container.Bind(typeof(IFoo), typeof(Foo)).To<Foo>().FromComponentInNewPrefab(FooPrefab).AsSingle().NonLazy();
 
@@ -61,8 +52,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCached1()
-        {
+        public IEnumerator TestCached1() {
             PreInstall();
             Container.Bind(typeof(Foo), typeof(Bar)).FromComponentInNewPrefab(FooPrefab)
                 .WithGameObjectName("Foo").AsSingle().NonLazy();
@@ -77,8 +67,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithArgumentsFail()
-        {
+        public IEnumerator TestWithArgumentsFail() {
             PreInstall();
             // They have required arguments
             Container.Bind(typeof(Gorp), typeof(Qux)).FromComponentInNewPrefab(GorpAndQuxPrefab).AsSingle().NonLazy();
@@ -88,8 +77,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithArgumentsFail2()
-        {
+        public IEnumerator TestWithArgumentsFail2() {
             PreInstall();
             Container.Bind<Gorp>()
                 .FromComponentInNewPrefab(GorpAndQuxPrefab).WithGameObjectName("Gorp").AsSingle()
@@ -100,8 +88,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithArgumentsSuccess()
-        {
+        public IEnumerator TestWithArgumentsSuccess() {
             PreInstall();
             Container.Bind<Gorp>().FromComponentInNewPrefab(GorpPrefab)
                 .WithGameObjectName("Gorp").AsSingle()
@@ -116,8 +103,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithAbstractSearchSingleMatch()
-        {
+        public IEnumerator TestWithAbstractSearchSingleMatch() {
             PreInstall();
             // There are three components that implement INorf on this prefab
             Container.Bind<INorf>().FromComponentInNewPrefab(NorfPrefab).AsCached().NonLazy();
@@ -131,8 +117,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithAbstractSearchMultipleMatch()
-        {
+        public IEnumerator TestWithAbstractSearchMultipleMatch() {
             PreInstall();
             // There are three components that implement INorf on this prefab
             Container.Bind<INorf>().FromComponentsInNewPrefab(NorfPrefab).AsCached().NonLazy();
@@ -146,8 +131,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestAbstractBindingConcreteSearch()
-        {
+        public IEnumerator TestAbstractBindingConcreteSearch() {
             PreInstall();
             // Should ignore the Norf2 component on it
             Container.Bind<INorf>().To<Norf>().FromComponentsInNewPrefab(NorfPrefab).AsCached().NonLazy();
@@ -160,8 +144,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestMultipleMatchFailure()
-        {
+        public IEnumerator TestMultipleMatchFailure() {
             PreInstall();
             Container.Bind<INorf>().FromComponentsInNewPrefab(FooPrefab).AsSingle().NonLazy();
             Assert.Throws(() => PostInstall());
@@ -169,8 +152,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestMultipleMatchTransform()
-        {
+        public IEnumerator TestMultipleMatchTransform() {
             PreInstall();
             Container.Bind<Transform>().FromComponentInNewPrefab(FooPrefab).AsCached();
             PostInstall();
@@ -182,8 +164,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCircularDependencies()
-        {
+        public IEnumerator TestCircularDependencies() {
             PreInstall();
             // Jim and Bob both depend on each other
             Container.Bind(typeof(Jim), typeof(Bob)).FromComponentInNewPrefab(JimAndBobPrefab).AsSingle().NonLazy();
@@ -193,24 +174,20 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        GameObject GetPrefab(string name)
-        {
+        GameObject GetPrefab(string name) {
             return FixtureUtil.GetPrefab("TestFromPrefab/{0}".Fmt(name));
         }
 
-        public class JimAndBobRunner : IInitializable
-        {
+        public class JimAndBobRunner : IInitializable {
             readonly Bob _bob;
             readonly Jim _jim;
 
-            public JimAndBobRunner(Jim jim, Bob bob)
-            {
+            public JimAndBobRunner(Jim jim, Bob bob) {
                 _bob = bob;
                 _jim = jim;
             }
 
-            public void Initialize()
-            {
+            public void Initialize() {
                 Assert.IsNotNull(_jim.Bob);
                 Assert.IsNotNull(_bob.Jim);
 

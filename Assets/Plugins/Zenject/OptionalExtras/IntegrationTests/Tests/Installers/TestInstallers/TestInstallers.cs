@@ -1,16 +1,13 @@
 ﻿
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine.TestTools;
 using Zenject.Tests.Installers.Installers;
 
-namespace Zenject.Tests.Installers
-{
-    public class TestInstallers : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Installers {
+    public class TestInstallers : ZenjectIntegrationTestFixture {
         [UnityTest]
-        public IEnumerator TestZeroArgs()
-        {
+        public IEnumerator TestZeroArgs() {
             PreInstall();
             FooInstaller.Install(Container);
 
@@ -21,8 +18,7 @@ namespace Zenject.Tests.Installers
         }
 
         [UnityTest]
-        public IEnumerator TestOneArg()
-        {
+        public IEnumerator TestOneArg() {
             PreInstall();
             BarInstaller.Install(Container, "blurg");
 
@@ -33,8 +29,7 @@ namespace Zenject.Tests.Installers
         }
 
         [UnityTest]
-        public IEnumerator TestThreeArgs()
-        {
+        public IEnumerator TestThreeArgs() {
             PreInstall();
             QuxInstaller.Install(Container, "blurg", 2.0f, 1);
 

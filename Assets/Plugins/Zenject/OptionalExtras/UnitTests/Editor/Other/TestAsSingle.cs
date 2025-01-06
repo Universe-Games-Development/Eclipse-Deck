@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings.Singletons
-{
+namespace Zenject.Tests.Bindings.Singletons {
     [TestFixture]
-    public class TestAsSingle : ZenjectUnitTestFixture
-    {
+    public class TestAsSingle : ZenjectUnitTestFixture {
         [Test]
-        public void TestAsSingleThrows()
-        {
+        public void TestAsSingleThrows() {
             Container.Bind<Foo>().AsSingle();
             Container.Bind<Foo>().AsSingle();
 
@@ -16,8 +13,7 @@ namespace Zenject.Tests.Bindings.Singletons
         }
 
         [Test]
-        public void TestAsSingleAndTransientThrows()
-        {
+        public void TestAsSingleAndTransientThrows() {
             Container.Bind<Foo>().AsSingle();
             Container.Bind<Foo>().AsTransient();
 
@@ -25,8 +21,7 @@ namespace Zenject.Tests.Bindings.Singletons
         }
 
         [Test]
-        public void TestAsSingleAndResolveNoThrow()
-        {
+        public void TestAsSingleAndResolveNoThrow() {
             Container.Bind<Foo>().AsSingle();
             Container.Bind<IFoo>().To<Foo>().FromResolve();
 
@@ -34,121 +29,99 @@ namespace Zenject.Tests.Bindings.Singletons
         }
 
         [Test]
-        public void TestToSingleMethod1()
-        {
+        public void TestToSingleMethod1() {
             Container.Bind<Foo>().AsSingle();
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().FromMethod(container => new Foo()).AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().FromMethod(container => new Foo()).AsSingle();
+                Container.FlushBindings();
+            });
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().FromInstance(new Foo()).AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().FromInstance(new Foo()).AsSingle();
+                Container.FlushBindings();
+            });
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle();
+                Container.FlushBindings();
+            });
         }
 
         [Test]
-        public void TestToSingleMethod()
-        {
+        public void TestToSingleMethod() {
             Container.Bind<Foo>().FromMethod(container => new Foo()).AsSingle();
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().AsSingle();
+                Container.FlushBindings();
+            });
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().FromInstance(new Foo()).AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().FromInstance(new Foo()).AsSingle();
+                Container.FlushBindings();
+            });
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle();
+                Container.FlushBindings();
+            });
         }
 
         [Test]
-        public void TestToSingleInstance()
-        {
+        public void TestToSingleInstance() {
             Container.Bind<Foo>().FromInstance(new Foo()).AsSingle();
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().AsSingle();
+                Container.FlushBindings();
+            });
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().FromMethod(container => new Foo()).AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().FromMethod(container => new Foo()).AsSingle();
+                Container.FlushBindings();
+            });
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle();
+                Container.FlushBindings();
+            });
         }
 
         [Test]
-        public void TestToSingleFactory()
-        {
+        public void TestToSingleFactory() {
             Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle();
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().AsSingle();
+                Container.FlushBindings();
+            });
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().FromMethod(container => new Foo()).AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().FromMethod(container => new Foo()).AsSingle();
+                Container.FlushBindings();
+            });
 
-            Assert.Throws(() =>
-                {
-                    Container.Bind<Foo>().FromInstance(new Foo()).AsSingle();
-                    Container.FlushBindings();
-                });
+            Assert.Throws(() => {
+                Container.Bind<Foo>().FromInstance(new Foo()).AsSingle();
+                Container.FlushBindings();
+            });
         }
 
-        class Bar
-        {
-            public Foo GetFoo()
-            {
+        class Bar {
+            public Foo GetFoo() {
                 return new Foo();
             }
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class Foo : IFoo
-        {
+        class Foo : IFoo {
         }
 
-        class FooFactory : IFactory<Foo>
-        {
-            public Foo Create()
-            {
+        class FooFactory : IFactory<Foo> {
+            public Foo Create() {
                 return new Foo();
             }
         }

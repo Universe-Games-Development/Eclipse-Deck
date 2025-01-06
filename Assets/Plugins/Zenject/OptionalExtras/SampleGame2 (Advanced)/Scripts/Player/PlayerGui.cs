@@ -3,10 +3,8 @@ using UnityEngine;
 
 #pragma warning disable 649
 
-namespace Zenject.SpaceFighter
-{
-    public class PlayerGui : MonoBehaviour
-    {
+namespace Zenject.SpaceFighter {
+    public class PlayerGui : MonoBehaviour {
         [SerializeField]
         float _leftPadding;
 
@@ -40,8 +38,7 @@ namespace Zenject.SpaceFighter
         int _killCount;
 
         [Inject]
-        public void Construct(Player player, SignalBus signalBus)
-        {
+        public void Construct(Player player, SignalBus signalBus) {
             _player = player;
 
             _textureForeground = CreateColorTexture(_foregroundColor);
@@ -50,21 +47,18 @@ namespace Zenject.SpaceFighter
             signalBus.Subscribe<EnemyKilledSignal>(OnEnemyKilled);
         }
 
-        void OnEnemyKilled()
-        {
+        void OnEnemyKilled() {
             _killCount++;
         }
 
-        Texture2D CreateColorTexture(Color color)
-        {
+        Texture2D CreateColorTexture(Color color) {
             var texture = new Texture2D(1, 1);
             texture.SetPixel(1, 1, color);
             texture.Apply();
             return texture;
         }
 
-        public void OnGUI()
-        {
+        public void OnGUI() {
             var healthLabelBounds = new Rect(_leftPadding, Screen.height - _bottomPadding, _labelWidth, _labelHeight);
             GUI.Label(healthLabelBounds, "Health: {0:0}".Fmt(_player.Health));
 

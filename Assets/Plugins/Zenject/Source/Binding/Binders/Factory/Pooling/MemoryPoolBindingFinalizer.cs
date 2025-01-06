@@ -1,18 +1,15 @@
-using System.Linq;
 using ModestTree;
+using System.Linq;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class MemoryPoolBindingFinalizer<TContract> : ProviderBindingFinalizer
-    {
+    public class MemoryPoolBindingFinalizer<TContract> : ProviderBindingFinalizer {
         readonly MemoryPoolBindInfo _poolBindInfo;
         readonly FactoryBindInfo _factoryBindInfo;
 
         public MemoryPoolBindingFinalizer(
             BindInfo bindInfo, FactoryBindInfo factoryBindInfo, MemoryPoolBindInfo poolBindInfo)
-            : base(bindInfo)
-        {
+            : base(bindInfo) {
             // Note that it doesn't derive from MemoryPool<TContract>
             // when used with To<>, so we can only check IMemoryPoolBase
             Assert.That(factoryBindInfo.FactoryType.DerivesFrom<IMemoryPool>());
@@ -21,8 +18,7 @@ namespace Zenject
             _poolBindInfo = poolBindInfo;
         }
 
-        protected override void OnFinalizeBinding(DiContainer container)
-        {
+        protected override void OnFinalizeBinding(DiContainer container) {
             var factory = new FactoryProviderWrapper<TContract>(
                 _factoryBindInfo.ProviderFunc(container), new InjectContext(container, typeof(TContract)));
 
@@ -38,12 +34,9 @@ namespace Zenject
 
             IProvider mainProvider;
 
-            if (BindInfo.Scope == ScopeTypes.Unset || BindInfo.Scope == ScopeTypes.Singleton)
-            {
+            if (BindInfo.Scope == ScopeTypes.Unset || BindInfo.Scope == ScopeTypes.Singleton) {
                 mainProvider = BindingUtil.CreateCachedProvider(transientProvider);
-            }
-            else
-            {
+            } else {
                 Assert.IsEqual(BindInfo.Scope, ScopeTypes.Transient);
                 mainProvider = transientProvider;
             }

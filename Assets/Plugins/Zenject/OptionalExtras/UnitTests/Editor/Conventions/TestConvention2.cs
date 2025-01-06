@@ -3,14 +3,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Convention.Two
-{
+namespace Zenject.Tests.Convention.Two {
     [TestFixture]
-    public class TestConvention2
-    {
+    public class TestConvention2 {
         [Test]
-        public void TestBindAllInterfacesSimple()
-        {
+        public void TestBindAllInterfacesSimple() {
             var container = new DiContainer();
 
             container.Bind(x => x.AllInterfaces()).To<Foo>().AsTransient();
@@ -20,8 +17,7 @@ namespace Zenject.Tests.Convention.Two
         }
 
         [Test]
-        public void TestBindAllInterfaces2()
-        {
+        public void TestBindAllInterfaces2() {
             var container = new DiContainer();
 
             container.Bind(x => x.AllInterfaces())
@@ -31,20 +27,16 @@ namespace Zenject.Tests.Convention.Two
             Assert.IsEqual(container.ResolveAll<IBar>().Count, 2);
         }
 
-        public interface IFoo
-        {
+        public interface IFoo {
         }
 
-        public interface IBar
-        {
+        public interface IBar {
         }
 
-        public class Foo : IFoo, IBar
-        {
+        public class Foo : IFoo, IBar {
         }
 
-        public class Bar : IBar, IFoo
-        {
+        public class Bar : IBar, IFoo {
         }
     }
 }

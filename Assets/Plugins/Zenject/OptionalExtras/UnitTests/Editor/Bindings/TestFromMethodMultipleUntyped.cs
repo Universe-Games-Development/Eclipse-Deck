@@ -1,16 +1,13 @@
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromMethodMultipleUntyped : ZenjectUnitTestFixture
-    {
+    public class TestFromMethodMultipleUntyped : ZenjectUnitTestFixture {
         [Test]
-        public void TestSingle()
-        {
+        public void TestSingle() {
             var foo = new Foo();
 
             Container.Bind<Foo>().FromMethodMultipleUntyped(ctx => new[] { foo }).AsSingle().NonLazy();
@@ -19,8 +16,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSingle5()
-        {
+        public void TestSingle5() {
             // This is weird but consistent with how AsSingle is interpreted for other From types
             // like FromSubcontainerResolve, FromComponentInPrefab, etc.
             // The 'single' is really refering to the fact that it's a single resolve handler, not a
@@ -31,8 +27,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMisc()
-        {
+        public void TestMisc() {
             var foo1 = new Foo();
             var foo2 = new Foo();
 
@@ -44,8 +39,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMisc2()
-        {
+        public void TestMisc2() {
             var foo1 = new Foo();
             var foo2 = new Foo();
             var foo3 = new Foo();
@@ -63,8 +57,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestTransient()
-        {
+        public void TestTransient() {
             var foo = new Foo();
 
             Container.Bind<Foo>().FromMethodMultipleUntyped(ctx => new[] { foo }).AsTransient().NonLazy();
@@ -73,8 +66,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestCached()
-        {
+        public void TestCached() {
             var foo = new Foo();
 
             Container.Bind<Foo>().FromMethodMultipleUntyped(ctx => new[] { foo }).AsSingle().NonLazy();
@@ -82,18 +74,15 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(Container.Resolve<Foo>(), foo);
         }
 
-        IEnumerable<Foo> CreateFoos(InjectContext ctx)
-        {
+        IEnumerable<Foo> CreateFoos(InjectContext ctx) {
             yield return new Foo();
         }
 
         [Test]
-        public void TestTransient2()
-        {
+        public void TestTransient2() {
             int numCalls = 0;
 
-            Func<InjectContext, IEnumerable<object>> method = ctx =>
-            {
+            Func<InjectContext, IEnumerable<object>> method = ctx => {
                 numCalls++;
                 return new[] { new Foo() };
             };
@@ -110,20 +99,17 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestCached2()
-        {
+        public void TestCached2() {
             Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().FromMethodMultipleUntyped(ctx => new[] { new Foo() }).AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<Foo>());
             Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<IFoo>());
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class Foo : IFoo
-        {
+        class Foo : IFoo {
         }
     }
 }

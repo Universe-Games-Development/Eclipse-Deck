@@ -1,66 +1,54 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Injection
-{
+namespace Zenject.Tests.Injection {
     [TestFixture]
-    public class TestInjectSources
-    {
-        class Test0
-        {
+    public class TestInjectSources {
+        class Test0 {
         }
 
-        class Test1
-        {
+        class Test1 {
             public Test0 val;
 
             public Test1(
                 [InjectLocal]
-                Test0 val)
-            {
+                Test0 val) {
                 this.val = val;
             }
         }
 
-        class Test2
-        {
+        class Test2 {
             public Test0 val;
 
             public Test2(
                 [Inject(Source = InjectSources.Parent)]
-                Test0 val)
-            {
+                Test0 val) {
                 this.val = val;
             }
         }
 
-        class Test3
-        {
+        class Test3 {
             public Test0 val;
 
             public Test3(
                 [Inject(Source = InjectSources.AnyParent)]
-                Test0 val)
-            {
+                Test0 val) {
                 this.val = val;
             }
         }
 
-        class Test4
-        {
+        class Test4 {
             public Test0 val;
 
             public Test4(
                 [Inject(Source = InjectSources.Any)]
-                Test0 val)
-            {
+                Test0 val) {
                 this.val = val;
             }
         }
 
         [Test]
-        public void TestAny()
-        {
+        public void TestAny() {
             var rootContainer = new DiContainer();
             var sub1 = rootContainer.CreateSubContainer();
 
@@ -71,8 +59,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void TestLocal1()
-        {
+        public void TestLocal1() {
             var rootContainer = new DiContainer();
             var sub1 = rootContainer.CreateSubContainer();
 
@@ -83,8 +70,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void TestLocal2()
-        {
+        public void TestLocal2() {
             var rootContainer = new DiContainer();
             var sub1 = rootContainer.CreateSubContainer();
 
@@ -95,8 +81,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void TestParent1()
-        {
+        public void TestParent1() {
             var rootContainer = new DiContainer();
             var sub1 = rootContainer.CreateSubContainer();
 
@@ -107,8 +92,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void TestParent2()
-        {
+        public void TestParent2() {
             var rootContainer = new DiContainer();
             var sub1 = rootContainer.CreateSubContainer();
             var sub2 = sub1.CreateSubContainer();
@@ -120,8 +104,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void TestParent3()
-        {
+        public void TestParent3() {
             var rootContainer = new DiContainer();
 
             rootContainer.Bind<Test0>().AsSingle();
@@ -131,8 +114,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void TestParentAny1()
-        {
+        public void TestParentAny1() {
             var rootContainer = new DiContainer();
             var sub1 = rootContainer.CreateSubContainer();
             var sub2 = sub1.CreateSubContainer();

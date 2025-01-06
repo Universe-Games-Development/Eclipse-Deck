@@ -1,14 +1,12 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ModestTree;
 using Zenject.Internal;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class SubContainerCreatorByInstaller : ISubContainerCreator
-    {
+    public class SubContainerCreatorByInstaller : ISubContainerCreator {
         readonly Type _installerType;
         readonly DiContainer _container;
         readonly List<TypeValuePair> _extraArgs;
@@ -18,8 +16,7 @@ namespace Zenject
             DiContainer container,
             SubContainerCreatorBindInfo containerBindInfo,
             Type installerType,
-            IEnumerable<TypeValuePair> extraArgs)
-        {
+            IEnumerable<TypeValuePair> extraArgs) {
             _installerType = installerType;
             _container = container;
             _extraArgs = extraArgs.ToList();
@@ -33,12 +30,10 @@ namespace Zenject
             DiContainer container,
             SubContainerCreatorBindInfo containerBindInfo,
             Type installerType)
-            : this(container, containerBindInfo, installerType, new List<TypeValuePair>())
-        {
+            : this(container, containerBindInfo, installerType, new List<TypeValuePair>()) {
         }
 
-        public DiContainer CreateSubContainer(List<TypeValuePair> args, InjectContext context, out Action injectAction)
-        {
+        public DiContainer CreateSubContainer(List<TypeValuePair> args, InjectContext context, out Action injectAction) {
             var subContainer = _container.CreateSubContainer();
 
             SubContainerCreatorUtil.ApplyBindSettings(_containerBindInfo, subContainer);
@@ -55,8 +50,7 @@ namespace Zenject
 
             installer.InstallBindings();
 
-            injectAction = () => 
-            {
+            injectAction = () => {
                 subContainer.ResolveRoots();
             };
 

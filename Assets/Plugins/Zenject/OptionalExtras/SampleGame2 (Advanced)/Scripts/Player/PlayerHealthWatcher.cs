@@ -1,10 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
-    public class PlayerHealthWatcher : ITickable
-    {
+namespace Zenject.SpaceFighter {
+    public class PlayerHealthWatcher : ITickable {
         readonly SignalBus _signalBus;
         readonly AudioPlayer _audioPlayer;
         readonly Settings _settings;
@@ -16,8 +14,7 @@ namespace Zenject.SpaceFighter
             Explosion.Factory explosionFactory,
             Settings settings,
             AudioPlayer audioPlayer,
-            SignalBus signalBus)
-        {
+            SignalBus signalBus) {
             _signalBus = signalBus;
             _audioPlayer = audioPlayer;
             _settings = settings;
@@ -25,16 +22,13 @@ namespace Zenject.SpaceFighter
             _player = player;
         }
 
-        public void Tick()
-        {
-            if (_player.Health <= 0 && !_player.IsDead)
-            {
+        public void Tick() {
+            if (_player.Health <= 0 && !_player.IsDead) {
                 Die();
             }
         }
 
-        void Die()
-        {
+        void Die() {
             _player.IsDead = true;
 
             var explosion = _explosionFactory.Create();
@@ -48,8 +42,7 @@ namespace Zenject.SpaceFighter
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public AudioClip DeathSound;
             public float DeathSoundVolume = 1.0f;
         }

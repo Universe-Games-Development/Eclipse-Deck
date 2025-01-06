@@ -1,36 +1,29 @@
-using System;
-using System.Collections;
-using Zenject.Internal;
-using ModestTree;
-using Assert = ModestTree.Assert;
-using System.Linq;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using System;
+using System.Collections;
+using System.Linq;
 using UnityEngine;
+using Zenject.Internal;
+using Assert = ModestTree.Assert;
 
-namespace Zenject
-{
-    public abstract class ZenjectIntegrationTestFixture
-    {
+namespace Zenject {
+    public abstract class ZenjectIntegrationTestFixture {
         SceneContext _sceneContext;
 
         bool _hasEndedInstall;
         bool _hasStartedInstall;
 
-        protected DiContainer Container
-        {
-            get
-            {
+        protected DiContainer Container {
+            get {
                 Assert.That(_hasStartedInstall,
                     "Must call PreInstall() before accessing ZenjectIntegrationTestFixture.Container!");
                 return _sceneContext.Container;
             }
         }
 
-        protected SceneContext SceneContext
-        {
-            get
-            {
+        protected SceneContext SceneContext {
+            get {
                 Assert.That(_hasStartedInstall,
                     "Must call PreInstall() before accessing ZenjectIntegrationTestFixture.SceneContext!");
                 return _sceneContext;
@@ -38,8 +31,7 @@ namespace Zenject
         }
 
         [SetUp]
-        public void Setup()
-        {
+        public void Setup() {
             Assert.That(Application.isPlaying,
                 "ZenjectIntegrationTestFixture is meant to be used for play mode tests only.  Please ensure your test file '{0}' is outside of the editor folder and try again.", GetType());
 
@@ -47,14 +39,12 @@ namespace Zenject
             StaticContext.Clear();
         }
 
-        protected void SkipInstall()
-        {
+        protected void SkipInstall() {
             PreInstall();
             PostInstall();
         }
 
-        protected void PreInstall()
-        {
+        protected void PreInstall() {
             Assert.That(!_hasStartedInstall, "Called PreInstall twice in test '{0}'!", TestContext.CurrentContext.Test.Name);
             _hasStartedInstall = true;
 
@@ -75,15 +65,13 @@ namespace Zenject
         }
 
         bool CurrentTestHasAttribute<T>()
-            where T : Attribute
-        {
+            where T : Attribute {
             return GetType().GetMethod(TestContext.CurrentContext.Test.MethodName)
                 .GetCustomAttributes(true)
                 .Cast<Attribute>().OfType<T>().Any();
         }
 
-        protected void PostInstall()
-        {
+        protected void PostInstall() {
             Assert.That(_hasStartedInstall,
                 "Called PostInstall but did not call PreInstall in test '{0}'!", TestContext.CurrentContext.Test.Name);
 
@@ -94,8 +82,7 @@ namespace Zenject
 
             Container.Inject(this);
 
-            if (!Container.IsValidating)
-            {
+            if (!Container.IsValidating) {
                 // We don't have to do this here but it's kind of convenient
                 // We could also remove it and just require that users add a yield after calling
                 // and it would have the same effect
@@ -103,8 +90,7 @@ namespace Zenject
             }
         }
 
-        protected IEnumerator DestroyEverything()
-        {
+        protected IEnumerator DestroyEverything() {
             Assert.That(_hasStartedInstall,
                 "Called DestroyAll but did not call PreInstall (or SkipInstall) in test '{0}'!", TestContext.CurrentContext.Test.Name);
             DestroyEverythingInternal(false);
@@ -112,18 +98,13 @@ namespace Zenject
             yield return null;
         }
 
-        void DestroyEverythingInternal(bool immediate)
-        {
-            if (_sceneContext != null)
-            {
+        void DestroyEverythingInternal(bool immediate) {
+            if (_sceneContext != null) {
                 // We need to use DestroyImmediate so that all the IDisposable's etc get processed immediately before
                 // next test runs
-                if (immediate)
-                {
+                if (immediate) {
                     GameObject.DestroyImmediate(_sceneContext.gameObject);
-                }
-                else
-                {
+                } else {
                     GameObject.Destroy(_sceneContext.gameObject);
                 }
 
@@ -135,10 +116,8 @@ namespace Zenject
         }
 
         [TearDown]
-        public void TearDown()
-        {
-            if (TestContext.CurrentContext.Result.Outcome == ResultState.Success)
-            {
+        public void TearDown() {
+            if (TestContext.CurrentContext.Result.Outcome == ResultState.Success) {
                 Assert.That(_hasStartedInstall,
                     "PreInstall (or SkipInstall) was not called in test '{0}'!", TestContext.CurrentContext.Test.Name);
 

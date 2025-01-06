@@ -1,71 +1,58 @@
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromPoolableMemoryPoolOne : ZenjectUnitTestFixture
-    {
-        public class Foo : IPoolable<string, IMemoryPool>, IDisposable
-        {
+    public class TestFromPoolableMemoryPoolOne : ZenjectUnitTestFixture {
+        public class Foo : IPoolable<string, IMemoryPool>, IDisposable {
             IMemoryPool _pool;
             string _data;
             string _initialData;
 
-            public Foo(string initialData)
-            {
+            public Foo(string initialData) {
                 _initialData = initialData;
                 SetDefaults();
             }
 
-            public string InitialData
-            {
+            public string InitialData {
                 get { return _initialData; }
             }
 
-            public IMemoryPool Pool
-            {
+            public IMemoryPool Pool {
                 get { return _pool; }
             }
 
-            public string Data
-            {
+            public string Data {
                 get { return _data; }
             }
 
-            void SetDefaults()
-            {
+            void SetDefaults() {
                 _pool = null;
                 _data = null;
             }
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 _pool.Despawn(this);
             }
 
-            public void OnDespawned()
-            {
+            public void OnDespawned() {
                 _data = null;
                 _pool = null;
                 SetDefaults();
             }
 
-            public void OnSpawned(string data, IMemoryPool pool)
-            {
+            public void OnSpawned(string data, IMemoryPool pool) {
                 _pool = pool;
                 _data = data;
             }
 
-            public class Factory : PlaceholderFactory<string, Foo>
-            {
+            public class Factory : PlaceholderFactory<string, Foo> {
             }
         }
 
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             Container.BindFactory<string, Foo, Foo.Factory>().FromPoolableMemoryPool(x => x.WithInitialSize(2).WithArguments("blurg"));
 
             var factory = Container.Resolve<Foo.Factory>();

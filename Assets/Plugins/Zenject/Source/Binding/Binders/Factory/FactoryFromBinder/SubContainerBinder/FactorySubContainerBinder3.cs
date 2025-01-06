@@ -1,19 +1,15 @@
 using System;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
     public class FactorySubContainerBinder<TParam1, TParam2, TParam3, TContract>
-        : FactorySubContainerBinderWithParams<TContract>
-    {
+        : FactorySubContainerBinderWithParams<TContract> {
         public FactorySubContainerBinder(
             DiContainer bindContainer, BindInfo bindInfo, FactoryBindInfo factoryBindInfo, object subIdentifier)
-            : base(bindContainer, bindInfo, factoryBindInfo, subIdentifier)
-        {
+            : base(bindContainer, bindInfo, factoryBindInfo, subIdentifier) {
         }
 
-        public ScopeConcreteIdArgConditionCopyNonLazyBinder ByMethod(Action<DiContainer, TParam1, TParam2, TParam3> installerMethod)
-        {
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder ByMethod(Action<DiContainer, TParam1, TParam2, TParam3> installerMethod) {
             var subcontainerBindInfo = new SubContainerCreatorBindInfo();
 
             ProviderFunc =
@@ -27,8 +23,7 @@ namespace Zenject
 
 #if !NOT_UNITY3D
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewGameObjectMethod(
-            Action<DiContainer, TParam1, TParam2, TParam3> installerMethod)
-        {
+            Action<DiContainer, TParam1, TParam2, TParam3> installerMethod) {
             var gameObjectInfo = new GameObjectCreationParameters();
 
             ProviderFunc =
@@ -41,8 +36,7 @@ namespace Zenject
         }
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabMethod(
-            Func<InjectContext, UnityEngine.Object> prefabGetter, Action<DiContainer, TParam1, TParam2, TParam3> installerMethod)
-        {
+            Func<InjectContext, UnityEngine.Object> prefabGetter, Action<DiContainer, TParam1, TParam2, TParam3> installerMethod) {
             var gameObjectInfo = new GameObjectCreationParameters();
 
             ProviderFunc =
@@ -57,8 +51,7 @@ namespace Zenject
         }
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabMethod(
-            UnityEngine.Object prefab, Action<DiContainer, TParam1, TParam2, TParam3> installerMethod)
-        {
+            UnityEngine.Object prefab, Action<DiContainer, TParam1, TParam2, TParam3> installerMethod) {
             BindingUtil.AssertIsValidPrefab(prefab);
 
             var gameObjectInfo = new GameObjectCreationParameters();
@@ -75,8 +68,7 @@ namespace Zenject
         }
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabResourceMethod(
-            string resourcePath, Action<DiContainer, TParam1, TParam2, TParam3> installerMethod)
-        {
+            string resourcePath, Action<DiContainer, TParam1, TParam2, TParam3> installerMethod) {
             BindingUtil.AssertIsValidResourcePath(resourcePath);
 
             var gameObjectInfo = new GameObjectCreationParameters();

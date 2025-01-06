@@ -1,17 +1,14 @@
-using System.Collections.Generic;
 using NUnit.Framework;
+using System.Collections.Generic;
 using Assert = ModestTree.Assert;
 
 #pragma warning disable 219
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestMemoryPool0 : ZenjectUnitTestFixture
-    {
+    public class TestMemoryPool0 : ZenjectUnitTestFixture {
         [Test]
-        public void TestFactoryProperties()
-        {
+        public void TestFactoryProperties() {
             Container.BindMemoryPool<Foo, Foo.Pool>();
 
             var pool = Container.Resolve<Foo.Pool>();
@@ -63,24 +60,21 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestFactoryScopeDefault()
-        {
+        public void TestFactoryScopeDefault() {
             Container.BindMemoryPool<Foo, Foo.Pool>();
 
             Assert.IsEqual(Container.Resolve<Foo.Pool>(), Container.Resolve<Foo.Pool>());
         }
 
         [Test]
-        public void TestFactoryScopeTransient()
-        {
+        public void TestFactoryScopeTransient() {
             Container.BindMemoryPool<Foo, Foo.Pool>().AsTransient();
 
             Assert.IsNotEqual(Container.Resolve<Foo.Pool>(), Container.Resolve<Foo.Pool>());
         }
 
         [Test]
-        public void TestFactoryPropertiesDefault()
-        {
+        public void TestFactoryPropertiesDefault() {
             Container.BindMemoryPool<Foo>();
 
             var pool = Container.Resolve<MemoryPool<Foo>>();
@@ -127,8 +121,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestExpandDouble()
-        {
+        public void TestExpandDouble() {
             Container.BindMemoryPool<Foo, Foo.Pool>().ExpandByDoubling();
 
             var pool = Container.Resolve<Foo.Pool>();
@@ -169,8 +162,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestFixedSize()
-        {
+        public void TestFixedSize() {
             Container.BindMemoryPool<Foo, Foo.Pool>().WithFixedSize(2);
 
             var pool = Container.Resolve<Foo.Pool>();
@@ -195,8 +187,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInitialSize()
-        {
+        public void TestInitialSize() {
             Container.BindMemoryPool<Foo, Foo.Pool>().WithInitialSize(5);
 
             var pool = Container.Resolve<Foo.Pool>();
@@ -207,8 +198,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestExpandAndShrinkManually()
-        {
+        public void TestExpandAndShrinkManually() {
             Container.BindMemoryPool<Foo, Foo.Pool>();
 
             var pool = Container.Resolve<Foo.Pool>();
@@ -288,8 +278,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMaxSize()
-        {
+        public void TestMaxSize() {
             Container.BindMemoryPool<Foo, Foo.Pool>().WithInitialSize(2).WithMaxSize(4);
 
             var pool = Container.Resolve<Foo.Pool>();
@@ -326,32 +315,25 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(pool.NumInactive, 4);
         }
 
-        class Bar
-        {
-            public class Pool : MemoryPool<Bar>
-            {
+        class Bar {
+            public class Pool : MemoryPool<Bar> {
             }
         }
 
-        class Foo
-        {
-            public int ResetCount
-            {
+        class Foo {
+            public int ResetCount {
                 get; private set;
             }
 
-            public class Pool : MemoryPool<Foo>
-            {
-                protected override void OnSpawned(Foo foo)
-                {
+            public class Pool : MemoryPool<Foo> {
+                protected override void OnSpawned(Foo foo) {
                     foo.ResetCount++;
                 }
             }
         }
 
         [Test]
-        public void TestSubContainers()
-        {
+        public void TestSubContainers() {
             Container.BindMemoryPool<Qux, Qux.Pool>()
                 .FromSubContainerResolve().ByMethod(InstallQux).NonLazy();
 
@@ -359,22 +341,18 @@ namespace Zenject.Tests.Bindings
             var qux = pool.Spawn();
         }
 
-        void InstallQux(DiContainer subContainer)
-        {
+        void InstallQux(DiContainer subContainer) {
             subContainer.Bind<Qux>().AsSingle();
         }
 
-        class Qux
-        {
-            public class Pool : MemoryPool<Qux>
-            {
+        class Qux {
+            public class Pool : MemoryPool<Qux> {
             }
         }
 
         [Test]
         [ValidateOnly]
-        public void TestIds()
-        {
+        public void TestIds() {
             Container.BindMemoryPool<Foo, Foo.Pool>().WithId("foo").WithInitialSize(5);
 
             var pool = Container.ResolveId<Foo.Pool>("foo");

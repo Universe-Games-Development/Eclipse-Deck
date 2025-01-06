@@ -1,25 +1,19 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Injection
-{
+namespace Zenject.Tests.Injection {
     [TestFixture]
-    public class TestPostInjectParameters : ZenjectUnitTestFixture
-    {
-        class Test0
-        {
+    public class TestPostInjectParameters : ZenjectUnitTestFixture {
+        class Test0 {
         }
 
-        class Test1
-        {
+        class Test1 {
         }
 
-        class Test2
-        {
+        class Test2 {
         }
 
-        class Test3
-        {
+        class Test3 {
             public bool HasInitialized;
 
             public Test0 test0;
@@ -31,8 +25,7 @@ namespace Zenject.Tests.Injection
             public void Init(
                 Test0 test0,
                 [InjectOptional]
-                Test2 test2)
-            {
+                Test2 test2) {
                 Assert.That(!HasInitialized);
                 Assert.IsNotNull(test1);
                 Assert.IsNull(test2);
@@ -43,8 +36,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void Test()
-        {
+        public void Test() {
             Container.Bind<Test1>().AsSingle().NonLazy();
             Container.Bind<Test3>().AsSingle().NonLazy();
 

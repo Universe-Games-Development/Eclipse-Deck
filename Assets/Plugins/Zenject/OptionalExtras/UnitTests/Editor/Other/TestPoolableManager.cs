@@ -1,48 +1,39 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestPoolableManager : ZenjectUnitTestFixture
-    {
+    public class TestPoolableManager : ZenjectUnitTestFixture {
         static int CallCount;
 
-        public class Foo : IPoolable
-        {
+        public class Foo : IPoolable {
             public static int SpawnCallCount;
             public static int DespawnCallCount;
 
-            public void OnSpawned()
-            {
+            public void OnSpawned() {
                 SpawnCallCount = CallCount++;
             }
 
-            public void OnDespawned()
-            {
+            public void OnDespawned() {
                 DespawnCallCount = CallCount++;
             }
         }
 
-        public class Bar : IPoolable
-        {
+        public class Bar : IPoolable {
             public static int SpawnCallCount;
             public static int DespawnCallCount;
 
-            public void OnSpawned()
-            {
+            public void OnSpawned() {
                 SpawnCallCount = CallCount++;
             }
 
-            public void OnDespawned()
-            {
+            public void OnDespawned() {
                 DespawnCallCount = CallCount++;
             }
         }
 
         [Test]
-        public void TestDefaultOrder()
-        {
+        public void TestDefaultOrder() {
             Container.Bind<PoolableManager>().AsSingle();
             Container.Bind<IPoolable>().To<Foo>().AsSingle();
             Container.Bind<IPoolable>().To<Bar>().AsSingle();
@@ -71,8 +62,7 @@ namespace Zenject.Tests.Other
         }
 
         [Test]
-        public void TestExplicitOrder()
-        {
+        public void TestExplicitOrder() {
             Container.Bind<PoolableManager>().AsSingle();
             Container.Bind<IPoolable>().To<Foo>().AsSingle();
             Container.Bind<IPoolable>().To<Bar>().AsSingle();

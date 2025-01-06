@@ -1,63 +1,50 @@
-using System.Linq;
 using NUnit.Framework;
+using System.Linq;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Conditions
-{
+namespace Zenject.Tests.Conditions {
     [TestFixture]
-    public class TestConditionsParents : ZenjectUnitTestFixture
-    {
-        class Test0
-        {
+    public class TestConditionsParents : ZenjectUnitTestFixture {
+        class Test0 {
         }
 
-        interface ITest1
-        {
+        interface ITest1 {
         }
 
-        class Test1 : ITest1
-        {
+        class Test1 : ITest1 {
             public Test0 test0;
 
-            public Test1(Test0 test0)
-            {
+            public Test1(Test0 test0) {
                 this.test0 = test0;
             }
         }
 
-        class Test2 : ITest1
-        {
+        class Test2 : ITest1 {
             public Test0 test0;
 
-            public Test2(Test0 test0)
-            {
+            public Test2(Test0 test0) {
                 this.test0 = test0;
             }
         }
 
-        class Test3 : ITest1
-        {
+        class Test3 : ITest1 {
             public Test1 test1;
 
-            public Test3(Test1 test1)
-            {
+            public Test3(Test1 test1) {
                 this.test1 = test1;
             }
         }
 
-        class Test4 : ITest1
-        {
+        class Test4 : ITest1 {
             public Test1 test1;
 
-            public Test4(Test1 test1)
-            {
+            public Test4(Test1 test1) {
                 this.test1 = test1;
             }
         }
 
         [Test]
-        public void TestCase1()
-        {
+        public void TestCase1() {
             Container.Bind<Test1>().AsSingle().NonLazy();
             Container.Bind<Test0>().AsSingle().When(c => c.AllObjectTypes.Contains(typeof(Test2)));
 
@@ -66,8 +53,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestCase2()
-        {
+        public void TestCase2() {
             Container.Bind<Test1>().AsSingle().NonLazy();
             Container.Bind<Test0>().AsSingle().When(c => c.AllObjectTypes.Contains(typeof(Test1)));
 
@@ -77,8 +63,7 @@ namespace Zenject.Tests.Conditions
 
         // Test using parents to look deeper up the heirarchy..
         [Test]
-        public void TestCase3()
-        {
+        public void TestCase3() {
             var t0a = new Test0();
             var t0b = new Test0();
 
@@ -98,8 +83,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestCase4()
-        {
+        public void TestCase4() {
             Container.Bind<ITest1>().To<Test2>().AsSingle().NonLazy();
             Container.Bind<Test0>().AsSingle().When(c => c.AllObjectTypes.Contains(typeof(ITest1)));
 
@@ -108,8 +92,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestCase5()
-        {
+        public void TestCase5() {
             Container.Bind<ITest1>().To<Test2>().AsSingle().NonLazy();
             Container.Bind<Test0>().AsSingle().When(c => c.AllObjectTypes.Contains(typeof(Test2)));
 
@@ -118,8 +101,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestCase6()
-        {
+        public void TestCase6() {
             Container.Bind<ITest1>().To<Test2>().AsSingle().NonLazy();
             Container.Bind<Test0>().AsSingle().When(c => c.AllObjectTypes.Where(x => typeof(ITest1).IsAssignableFrom(x)).Any());
 

@@ -1,22 +1,18 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.BindFeatures
-{
+namespace Zenject.Tests.BindFeatures {
     [TestFixture]
-    public class TestWithArguments : ZenjectUnitTestFixture
-    {
+    public class TestWithArguments : ZenjectUnitTestFixture {
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             Container.Bind<Foo>().AsTransient().WithArguments(3).NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>().Value, 3);
         }
 
         [Test]
-        public void TestNullValues()
-        {
+        public void TestNullValues() {
             Container.Bind<Foo>().AsSingle().WithArguments(3, (string)null);
 
             var foo = Container.Resolve<Foo>();
@@ -25,29 +21,24 @@ namespace Zenject.Tests.BindFeatures
             Assert.IsEqual(foo.Value2, null);
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class Foo : IFoo
-        {
+        class Foo : IFoo {
             public Foo(
                 int value,
                 [InjectOptional]
-                string value2)
-            {
+                string value2) {
                 Value = value;
                 Value2 = value2;
             }
 
-            public int Value
-            {
+            public int Value {
                 get;
                 private set;
             }
 
-            public string Value2
-            {
+            public string Value2 {
                 get;
                 private set;
             }

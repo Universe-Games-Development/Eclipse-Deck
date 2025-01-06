@@ -3,14 +3,11 @@ using Assert = ModestTree.Assert;
 
 #pragma warning disable 219
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestMemoryPoolCustomFactory : ZenjectUnitTestFixture
-    {
+    public class TestMemoryPoolCustomFactory : ZenjectUnitTestFixture {
         [Test]
-        public void TestFromBinding()
-        {
+        public void TestFromBinding() {
             Container.BindMemoryPool<Qux, Qux.Pool>().FromIFactory(b => b.To<CustomFactory>().AsCached());
 
             var pool = Container.Resolve<Qux.Pool>();
@@ -21,8 +18,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestFromRuntime()
-        {
+        public void TestFromRuntime() {
             var settings = new MemoryPoolSettings(0, int.MaxValue, PoolExpandMethods.OneAtATime);
 
             var pool = Container.Instantiate<Qux.Pool>(new object[] { settings, new CustomFactory() });
@@ -32,18 +28,14 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(pool.NumTotal, 1);
         }
 
-        class CustomFactory : IFactory<Qux>
-        {
-            public Qux Create()
-            {
+        class CustomFactory : IFactory<Qux> {
+            public Qux Create() {
                 return new Qux();
             }
         }
 
-        class Qux
-        {
-            public class Pool : MemoryPool<Qux>
-            {
+        class Qux {
+            public class Pool : MemoryPool<Qux> {
             }
         }
     }

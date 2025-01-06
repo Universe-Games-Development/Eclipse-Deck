@@ -1,10 +1,8 @@
 using System;
 
-namespace Zenject.SpaceFighter
-{
+namespace Zenject.SpaceFighter {
     [Serializable]
-    public class EnemyCommonSettings
-    {
+    public class EnemyCommonSettings {
         public float AttackDistance = 15.0f;
     }
 }

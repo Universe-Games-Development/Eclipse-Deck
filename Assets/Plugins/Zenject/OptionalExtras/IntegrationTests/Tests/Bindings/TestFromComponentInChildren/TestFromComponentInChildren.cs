@@ -1,21 +1,18 @@
 
+using ModestTree;
 using System.Collections;
 using System.Collections.Generic;
-using ModestTree;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromComponentInChildren : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromComponentInChildren : ZenjectIntegrationTestFixture {
         Root _root;
         Child _child1;
         Child _child2;
         Grandchild _grandchild;
 
-        public void Setup1()
-        {
+        public void Setup1() {
             _root = new GameObject("root").AddComponent<Root>();
 
             _child1 = new GameObject("child1").AddComponent<Child>();
@@ -29,8 +26,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchSingleChild()
-        {
+        public IEnumerator RunMatchSingleChild() {
             Setup1();
             PreInstall();
             Container.Bind<Grandchild>().FromComponentInChildren();
@@ -45,8 +41,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchAllChildren()
-        {
+        public IEnumerator RunMatchAllChildren() {
             Setup1();
             PreInstall();
             Container.Bind<Grandchild>().FromComponentInChildren();
@@ -62,8 +57,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMissingChildrenFailure()
-        {
+        public IEnumerator RunMissingChildrenFailure() {
             new GameObject("root").AddComponent<Root>();
 
             PreInstall();
@@ -74,8 +68,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMissingChildrenSuccess()
-        {
+        public IEnumerator RunMissingChildrenSuccess() {
             var root = new GameObject("root").AddComponent<Root>();
 
             var grandchild = new GameObject("grandchild").AddComponent<Grandchild>();
@@ -89,8 +82,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestOptional()
-        {
+        public IEnumerator TestOptional() {
             var root = new GameObject("root").AddComponent<RootWithOptional>();
 
             PreInstall();
@@ -105,8 +97,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestOptional2()
-        {
+        public IEnumerator TestOptional2() {
             var root = new GameObject("root").AddComponent<Root>();
 
             var grandChild = new GameObject("grandchild").AddComponent<Grandchild>();
@@ -127,8 +118,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchSingleChildNonGeneric()
-        {
+        public IEnumerator RunMatchSingleChildNonGeneric() {
             Setup1();
             PreInstall();
             Container.Bind(typeof(Grandchild)).FromComponentInChildren();
@@ -143,8 +133,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMatchAllChildrenNonGeneric()
-        {
+        public IEnumerator RunMatchAllChildrenNonGeneric() {
             Setup1();
             PreInstall();
             Container.Bind(typeof(Grandchild)).FromComponentInChildren();
@@ -160,8 +149,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMissingChildrenFailureNonGeneric()
-        {
+        public IEnumerator RunMissingChildrenFailureNonGeneric() {
             new GameObject("root").AddComponent<Root>();
 
             PreInstall();
@@ -172,8 +160,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunMissingChildrenSuccessNonGeneric()
-        {
+        public IEnumerator RunMissingChildrenSuccessNonGeneric() {
             var root = new GameObject("root").AddComponent<Root>();
 
             var grandchild = new GameObject("grandchild").AddComponent<Grandchild>();
@@ -187,8 +174,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestOptionalNonGeneric()
-        {
+        public IEnumerator TestOptionalNonGeneric() {
             var root = new GameObject("root").AddComponent<RootWithOptional>();
 
             PreInstall();
@@ -202,8 +188,7 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        public class Root : MonoBehaviour
-        {
+        public class Root : MonoBehaviour {
             [Inject]
             public Grandchild Grandchild;
 
@@ -211,16 +196,13 @@ namespace Zenject.Tests.Bindings
             public List<Child> Childs;
         }
 
-        public class Child : MonoBehaviour
-        {
+        public class Child : MonoBehaviour {
         }
 
-        public class Grandchild : MonoBehaviour
-        {
+        public class Grandchild : MonoBehaviour {
         }
 
-        public class RootWithOptional : MonoBehaviour
-        {
+        public class RootWithOptional : MonoBehaviour {
             [InjectOptional]
             public Child Child;
         }

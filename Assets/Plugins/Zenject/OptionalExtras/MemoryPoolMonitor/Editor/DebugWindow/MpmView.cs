@@ -1,16 +1,11 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ModestTree;
 using UnityEngine;
-using UnityEditor;
-using UnityEngine.Profiling;
-using Zenject;
 
-namespace Zenject.MemoryPoolMonitor
-{
-    public class MpmView : IGuiRenderable, ITickable, IInitializable
-    {
+namespace Zenject.MemoryPoolMonitor {
+    public class MpmView : IGuiRenderable, ITickable, IInitializable {
         readonly Settings _settings;
         readonly MpmWindow _window;
 
@@ -39,47 +34,38 @@ namespace Zenject.MemoryPoolMonitor
 
         public MpmView(
             MpmWindow window,
-            Settings settings)
-        {
+            Settings settings) {
             _settings = settings;
             _window = window;
         }
 
-        public float HeaderTop
-        {
+        public float HeaderTop {
             get { return _settings.HeaderHeight + _settings.FilterHeight; }
         }
 
-        public float TotalWidth
-        {
+        public float TotalWidth {
             get { return _window.position.width; }
         }
 
-        public float TotalHeight
-        {
+        public float TotalHeight {
             get { return _window.position.height; }
         }
 
-        string GetName(IMemoryPool pool)
-        {
+        string GetName(IMemoryPool pool) {
             var type = pool.GetType();
             return "{0}.{1}".Fmt(type.Namespace, type.PrettyName());
         }
 
-        Texture2D CreateColorTexture(Color color)
-        {
+        Texture2D CreateColorTexture(Color color) {
             var texture = new Texture2D(1, 1);
             texture.SetPixel(1, 1, color);
             texture.Apply();
             return texture;
         }
 
-        Texture2D RowBackground1
-        {
-            get
-            {
-                if (_rowBackground1 == null)
-                {
+        Texture2D RowBackground1 {
+            get {
+                if (_rowBackground1 == null) {
                     _rowBackground1 = CreateColorTexture(_settings.RowBackground1);
                 }
 
@@ -87,12 +73,9 @@ namespace Zenject.MemoryPoolMonitor
             }
         }
 
-        Texture2D RowBackground2
-        {
-            get
-            {
-                if (_rowBackground2 == null)
-                {
+        Texture2D RowBackground2 {
+            get {
+                if (_rowBackground2 == null) {
                     _rowBackground2 = CreateColorTexture(_settings.RowBackground2);
                 }
 
@@ -100,12 +83,9 @@ namespace Zenject.MemoryPoolMonitor
             }
         }
 
-        Texture2D RowBackgroundHighlighted
-        {
-            get
-            {
-                if (_rowBackgroundHighlighted == null)
-                {
+        Texture2D RowBackgroundHighlighted {
+            get {
+                if (_rowBackgroundHighlighted == null) {
                     _rowBackgroundHighlighted = CreateColorTexture(_settings.RowBackgroundHighlighted);
                 }
 
@@ -113,12 +93,9 @@ namespace Zenject.MemoryPoolMonitor
             }
         }
 
-        Texture2D RowBackgroundSelected
-        {
-            get
-            {
-                if (_rowBackgroundSelected == null)
-                {
+        Texture2D RowBackgroundSelected {
+            get {
+                if (_rowBackgroundSelected == null) {
                     _rowBackgroundSelected = CreateColorTexture(_settings.RowBackgroundSelected);
                 }
 
@@ -126,12 +103,9 @@ namespace Zenject.MemoryPoolMonitor
             }
         }
 
-        Texture2D LineTexture
-        {
-            get
-            {
-                if (_lineTexture == null)
-                {
+        Texture2D LineTexture {
+            get {
+                if (_lineTexture == null) {
                     _lineTexture = CreateColorTexture(_settings.LineColor);
                 }
 
@@ -139,22 +113,18 @@ namespace Zenject.MemoryPoolMonitor
             }
         }
 
-        public void Initialize()
-        {
+        public void Initialize() {
             StaticMemoryPoolRegistry.PoolAdded += OnPoolListChanged;
             StaticMemoryPoolRegistry.PoolRemoved += OnPoolListChanged;
             _poolListDirty = true;
         }
 
-        void OnPoolListChanged(IMemoryPool pool)
-        {
+        void OnPoolListChanged(IMemoryPool pool) {
             _poolListDirty = true;
         }
 
-        public void Tick()
-        {
-            if (_poolListDirty)
-            {
+        public void Tick() {
+            if (_poolListDirty) {
                 _poolListDirty = false;
 
                 _pools.Clear();
@@ -164,25 +134,22 @@ namespace Zenject.MemoryPoolMonitor
             InPlaceStableSort<IMemoryPool>.Sort(_pools, ComparePools);
         }
 
-        bool ShouldIncludePool(IMemoryPool pool)
-        {
+        bool ShouldIncludePool(IMemoryPool pool) {
             //var poolType = pool.GetType();
 
             //if (poolType.Namespace == "Zenject")
             //{
-                //return false;
+            //return false;
             //}
 
-            if (_actualFilter.IsEmpty())
-            {
+            if (_actualFilter.IsEmpty()) {
                 return true;
             }
 
             return GetName(pool).ToLowerInvariant().Contains(_actualFilter);
         }
 
-        public void GuiRender()
-        {
+        public void GuiRender() {
             _controlID = GUIUtility.GetControlID(FocusType.Passive);
 
             Rect windowBounds = new Rect(0, 0, TotalWidth, _window.position.height);
@@ -197,8 +164,7 @@ namespace Zenject.MemoryPoolMonitor
             var searchFilter = GUI.TextField(
                 new Rect(_settings.FilterPaddingLeft, _settings.FilterPaddingTop, _settings.FilterWidth, _settings.FilterInputHeight), _searchFilter, 999);
 
-            if (searchFilter != _searchFilter)
-            {
+            if (searchFilter != _searchFilter) {
                 _searchFilter = searchFilter;
                 _actualFilter = _searchFilter.Trim().ToLowerInvariant();
                 _poolListDirty = true;
@@ -232,8 +198,7 @@ namespace Zenject.MemoryPoolMonitor
             HandleEvents();
         }
 
-        void DrawColumnHeaders(float width)
-        {
+        void DrawColumnHeaders(float width) {
             GUI.DrawTexture(new Rect(
                 0, _settings.FilterHeight - 0.5f * _settings.SplitterWidth, width, _settings.SplitterWidth), LineTexture);
 
@@ -242,8 +207,7 @@ namespace Zenject.MemoryPoolMonitor
 
             var columnPos = 0.0f;
 
-            for (int i = 0; i < NumColumns; i++)
-            {
+            for (int i = 0; i < NumColumns; i++) {
                 var columnWidth = GetColumnWidth(i);
                 DrawColumn1(i, columnPos, columnWidth);
                 columnPos += columnWidth;
@@ -251,12 +215,10 @@ namespace Zenject.MemoryPoolMonitor
         }
 
         void DrawColumn1(
-            int index, float position, float width)
-        {
+            int index, float position, float width) {
             var columnHeight = _settings.HeaderHeight + _pools.Count() * _settings.RowHeight;
 
-            if (index < 4)
-            {
+            if (index < 4) {
                 GUI.DrawTexture(new Rect(
                     position + width - _settings.SplitterWidth * 0.5f, _settings.FilterHeight,
                     _settings.SplitterWidth, columnHeight), LineTexture);
@@ -270,36 +232,29 @@ namespace Zenject.MemoryPoolMonitor
             DrawColumnHeader(index, headerBounds, ColumnTitles[index]);
         }
 
-        void HandleEvents()
-        {
-            switch (Event.current.GetTypeForControl(_controlID))
-            {
-                case EventType.ScrollWheel:
-                {
-                    _scrollPosition = Mathf.Clamp(_scrollPosition + Event.current.delta.y * _settings.ScrollSpeed, 0, TotalHeight);
-                    break;
-                }
-                case EventType.MouseDown:
-                {
-                    _selectedPoolType = TryGetPoolTypeUnderMouse();
-                    break;
-                }
+        void HandleEvents() {
+            switch (Event.current.GetTypeForControl(_controlID)) {
+                case EventType.ScrollWheel: {
+                        _scrollPosition = Mathf.Clamp(_scrollPosition + Event.current.delta.y * _settings.ScrollSpeed, 0, TotalHeight);
+                        break;
+                    }
+                case EventType.MouseDown: {
+                        _selectedPoolType = TryGetPoolTypeUnderMouse();
+                        break;
+                    }
             }
         }
 
-        Type TryGetPoolTypeUnderMouse()
-        {
+        Type TryGetPoolTypeUnderMouse() {
             var mousePositionInContent = Event.current.mousePosition + Vector2.up * _scrollPosition;
 
-            for (int i = 0; i < _pools.Count; i++)
-            {
+            for (int i = 0; i < _pools.Count; i++) {
                 var pool = _pools[i];
 
                 var rowRect = GetPoolRowRect(i);
                 rowRect.y += HeaderTop;
 
-                if (rowRect.Contains(mousePositionInContent))
-                {
+                if (rowRect.Contains(mousePositionInContent)) {
                     return pool.GetType();
                 }
             }
@@ -307,39 +262,28 @@ namespace Zenject.MemoryPoolMonitor
             return null;
         }
 
-        Rect GetPoolRowRect(int index)
-        {
+        Rect GetPoolRowRect(int index) {
             return new Rect(
                 0, index * _settings.RowHeight, TotalWidth, _settings.RowHeight);
         }
 
-        void DrawRowBackgrounds()
-        {
+        void DrawRowBackgrounds() {
             var mousePositionInContent = Event.current.mousePosition;
 
-            for (int i = 0; i < _pools.Count; i++)
-            {
+            for (int i = 0; i < _pools.Count; i++) {
                 var pool = _pools[i];
                 var rowRect = GetPoolRowRect(i);
 
                 Texture2D background;
 
-                if (pool.GetType() == _selectedPoolType)
-                {
+                if (pool.GetType() == _selectedPoolType) {
                     background = RowBackgroundSelected;
-                }
-                else
-                {
-                    if (rowRect.Contains(mousePositionInContent))
-                    {
+                } else {
+                    if (rowRect.Contains(mousePositionInContent)) {
                         background = RowBackgroundHighlighted;
-                    }
-                    else if (i % 2 == 0)
-                    {
+                    } else if (i % 2 == 0) {
                         background = RowBackground1;
-                    }
-                    else
-                    {
+                    } else {
                         background = RowBackground2;
                     }
                 }
@@ -348,24 +292,20 @@ namespace Zenject.MemoryPoolMonitor
             }
         }
 
-        float GetColumnWidth(int index)
-        {
-            if (index == 0)
-            {
+        float GetColumnWidth(int index) {
+            if (index == 0) {
                 return TotalWidth - (NumColumns - 1) * _settings.NormalColumnWidth;
             }
 
             return _settings.NormalColumnWidth;
         }
 
-        void DrawContent(float width)
-        {
+        void DrawContent(float width) {
             DrawRowBackgrounds();
 
             var columnPos = 0.0f;
 
-            for (int i = 0; i < NumColumns; i++)
-            {
+            for (int i = 0; i < NumColumns; i++) {
                 var columnWidth = GetColumnWidth(i);
                 DrawColumn(i, columnPos, columnWidth);
                 columnPos += columnWidth;
@@ -373,12 +313,10 @@ namespace Zenject.MemoryPoolMonitor
         }
 
         void DrawColumn(
-            int index, float position, float width)
-        {
+            int index, float position, float width) {
             var columnHeight = _settings.HeaderHeight + _pools.Count() * _settings.RowHeight;
 
-            if (index < 4)
-            {
+            if (index < 4) {
                 GUI.DrawTexture(new Rect(
                     position + width - _settings.SplitterWidth * 0.5f, 0,
                     _settings.SplitterWidth, columnHeight), LineTexture);
@@ -389,8 +327,7 @@ namespace Zenject.MemoryPoolMonitor
 
             GUI.BeginGroup(columnBounds);
             {
-                for (int i = 0; i < _pools.Count; i++)
-                {
+                for (int i = 0; i < _pools.Count; i++) {
                     var pool = _pools[i];
 
                     var cellBounds = new Rect(
@@ -404,124 +341,98 @@ namespace Zenject.MemoryPoolMonitor
         }
 
         void DrawColumnContents(
-            int index, Rect bounds, IMemoryPool pool)
-        {
-            switch (index)
-            {
-                case 0:
-                {
-                    GUI.Label(bounds, GetName(pool), _settings.ContentNameTextStyle);
-                    break;
-                }
-                case 1:
-                {
-                    GUI.Label(bounds, pool.NumTotal.ToString(), _settings.ContentNumberTextStyle);
-                    break;
-                }
-                case 2:
-                {
-                    GUI.Label(bounds, pool.NumActive.ToString(), _settings.ContentNumberTextStyle);
-                    break;
-                }
-                case 3:
-                {
-                    GUI.Label(bounds, pool.NumInactive.ToString(), _settings.ContentNumberTextStyle);
-                    break;
-                }
-                case 4:
-                {
-                    var buttonBounds = new Rect(
-                        bounds.x + _settings.ButtonMargin, bounds.y, bounds.width - _settings.ButtonMargin, bounds.height);
-
-                    if (GUI.Button(buttonBounds, "Clear"))
-                    {
-                        pool.Clear();
+            int index, Rect bounds, IMemoryPool pool) {
+            switch (index) {
+                case 0: {
+                        GUI.Label(bounds, GetName(pool), _settings.ContentNameTextStyle);
+                        break;
                     }
-                    break;
-                }
-                case 5:
-                {
-                    var buttonBounds = new Rect(
-                        bounds.x, bounds.y, bounds.width - 15.0f, bounds.height);
-
-                    if (GUI.Button(buttonBounds, "Expand"))
-                    {
-                        pool.ExpandBy(5);
+                case 1: {
+                        GUI.Label(bounds, pool.NumTotal.ToString(), _settings.ContentNumberTextStyle);
+                        break;
                     }
-                    break;
-                }
-                default:
-                {
-                    throw Assert.CreateException();
-                }
+                case 2: {
+                        GUI.Label(bounds, pool.NumActive.ToString(), _settings.ContentNumberTextStyle);
+                        break;
+                    }
+                case 3: {
+                        GUI.Label(bounds, pool.NumInactive.ToString(), _settings.ContentNumberTextStyle);
+                        break;
+                    }
+                case 4: {
+                        var buttonBounds = new Rect(
+                            bounds.x + _settings.ButtonMargin, bounds.y, bounds.width - _settings.ButtonMargin, bounds.height);
+
+                        if (GUI.Button(buttonBounds, "Clear")) {
+                            pool.Clear();
+                        }
+                        break;
+                    }
+                case 5: {
+                        var buttonBounds = new Rect(
+                            bounds.x, bounds.y, bounds.width - 15.0f, bounds.height);
+
+                        if (GUI.Button(buttonBounds, "Expand")) {
+                            pool.ExpandBy(5);
+                        }
+                        break;
+                    }
+                default: {
+                        throw Assert.CreateException();
+                    }
             }
         }
 
-        void DrawColumnHeader(int index, Rect bounds, string text)
-        {
-            if (index > 3)
-            {
+        void DrawColumnHeader(int index, Rect bounds, string text) {
+            if (index > 3) {
                 return;
             }
 
-            if (_sortColumn == index)
-            {
+            if (_sortColumn == index) {
                 var offset = _settings.TriangleOffset;
                 var image = _sortDescending ? _settings.TriangleDown : _settings.TriangleUp;
 
                 GUI.DrawTexture(new Rect(bounds.x + offset.x, bounds.y + offset.y, image.width, image.height), image);
             }
 
-            if (GUI.Button(bounds, text, index == 0 ? _settings.HeaderTextStyleName : _settings.HeaderTextStyle))
-            {
-                if (_sortColumn == index)
-                {
+            if (GUI.Button(bounds, text, index == 0 ? _settings.HeaderTextStyleName : _settings.HeaderTextStyle)) {
+                if (_sortColumn == index) {
                     _sortDescending = !_sortDescending;
-                }
-                else
-                {
+                } else {
                     _sortColumn = index;
                 }
             }
         }
 
-        int ComparePools(IMemoryPool left, IMemoryPool right)
-        {
-            if (_sortDescending)
-            {
+        int ComparePools(IMemoryPool left, IMemoryPool right) {
+            if (_sortDescending) {
                 var temp = right;
                 right = left;
                 left = temp;
             }
 
-            switch (_sortColumn)
-            {
+            switch (_sortColumn) {
                 case 4:
                 case 5:
-                case 0:
-                {
-                    return GetName(left).CompareTo(GetName(right));
-                }
-                case 1:
-                {
-                    return left.NumTotal.CompareTo(right.NumTotal);
-                }
-                case 2:
-                {
-                    return left.NumActive.CompareTo(right.NumActive);
-                }
-                case 3:
-                {
-                    return left.NumInactive.CompareTo(right.NumInactive);
-                }
+                case 0: {
+                        return GetName(left).CompareTo(GetName(right));
+                    }
+                case 1: {
+                        return left.NumTotal.CompareTo(right.NumTotal);
+                    }
+                case 2: {
+                        return left.NumActive.CompareTo(right.NumActive);
+                    }
+                case 3: {
+                        return left.NumInactive.CompareTo(right.NumInactive);
+                    }
             }
 
             throw Assert.CreateException();
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public Texture2D TriangleUp;
             public Texture2D TriangleDown;
             public Vector2 TriangleOffset;

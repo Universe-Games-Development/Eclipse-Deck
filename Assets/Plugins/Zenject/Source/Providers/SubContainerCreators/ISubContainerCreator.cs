@@ -1,10 +1,8 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 
-namespace Zenject
-{
-    public interface ISubContainerCreator
-    {
+namespace Zenject {
+    public interface ISubContainerCreator {
         DiContainer CreateSubContainer(List<TypeValuePair> args, InjectContext context, out Action injectAction);
     }
 }

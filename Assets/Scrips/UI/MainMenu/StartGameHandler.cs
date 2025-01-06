@@ -1,5 +1,5 @@
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 using Zenject;
 
 public class StartGameHandler : MonoBehaviour {

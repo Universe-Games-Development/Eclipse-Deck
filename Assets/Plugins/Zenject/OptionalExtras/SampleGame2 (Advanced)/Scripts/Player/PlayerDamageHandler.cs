@@ -1,10 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
-    public class PlayerDamageHandler
-    {
+namespace Zenject.SpaceFighter {
+    public class PlayerDamageHandler {
         readonly AudioPlayer _audioPlayer;
         readonly Settings _settings;
         readonly Player _player;
@@ -12,15 +10,13 @@ namespace Zenject.SpaceFighter
         public PlayerDamageHandler(
             Player player,
             Settings settings,
-            AudioPlayer audioPlayer)
-        {
+            AudioPlayer audioPlayer) {
             _audioPlayer = audioPlayer;
             _settings = settings;
             _player = player;
         }
 
-        public void TakeDamage(Vector3 moveDirection)
-        {
+        public void TakeDamage(Vector3 moveDirection) {
             _audioPlayer.Play(_settings.HitSound, _settings.HitSoundVolume);
 
             _player.AddForce(-moveDirection * _settings.HitForce);
@@ -29,8 +25,7 @@ namespace Zenject.SpaceFighter
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public float HealthLoss;
             public float HitForce;
 

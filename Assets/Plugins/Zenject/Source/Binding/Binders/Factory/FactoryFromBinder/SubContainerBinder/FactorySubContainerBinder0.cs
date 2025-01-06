@@ -1,20 +1,15 @@
 using System;
-using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
     public class FactorySubContainerBinder<TContract>
-        : FactorySubContainerBinderBase<TContract>
-    {
+        : FactorySubContainerBinderBase<TContract> {
         public FactorySubContainerBinder(
             DiContainer bindContainer, BindInfo bindInfo, FactoryBindInfo factoryBindInfo, object subIdentifier)
-            : base(bindContainer, bindInfo, factoryBindInfo, subIdentifier)
-        {
+            : base(bindContainer, bindInfo, factoryBindInfo, subIdentifier) {
         }
 
-        public ScopeConcreteIdArgConditionCopyNonLazyBinder ByMethod(Action<DiContainer> installerMethod)
-        {
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder ByMethod(Action<DiContainer> installerMethod) {
             var subcontainerBindInfo = new SubContainerCreatorBindInfo();
 
             ProviderFunc =
@@ -28,8 +23,7 @@ namespace Zenject
 
 #if !NOT_UNITY3D
 
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewGameObjectMethod(Action<DiContainer> installerMethod)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewGameObjectMethod(Action<DiContainer> installerMethod) {
             var gameObjectInfo = new GameObjectCreationParameters();
 
             ProviderFunc =
@@ -42,8 +36,7 @@ namespace Zenject
         }
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabMethod(
-            Func<InjectContext, UnityEngine.Object> prefabGetter, Action<DiContainer> installerMethod)
-        {
+            Func<InjectContext, UnityEngine.Object> prefabGetter, Action<DiContainer> installerMethod) {
             var gameObjectInfo = new GameObjectCreationParameters();
 
             ProviderFunc =
@@ -58,8 +51,7 @@ namespace Zenject
         }
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabMethod(
-            UnityEngine.Object prefab, Action<DiContainer> installerMethod)
-        {
+            UnityEngine.Object prefab, Action<DiContainer> installerMethod) {
             BindingUtil.AssertIsValidPrefab(prefab);
 
             var gameObjectInfo = new GameObjectCreationParameters();
@@ -76,8 +68,7 @@ namespace Zenject
         }
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabResourceMethod(
-            string resourcePath, Action<DiContainer> installerMethod)
-        {
+            string resourcePath, Action<DiContainer> installerMethod) {
             BindingUtil.AssertIsValidResourcePath(resourcePath);
 
             var gameObjectInfo = new GameObjectCreationParameters();
@@ -94,13 +85,11 @@ namespace Zenject
         }
 
         [System.Obsolete("ByNewPrefab has been renamed to ByNewContextPrefab to avoid confusion with ByNewPrefabInstaller and ByNewPrefabMethod")]
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefab(UnityEngine.Object prefab)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefab(UnityEngine.Object prefab) {
             return ByNewContextPrefab(prefab);
         }
 
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewContextPrefab(UnityEngine.Object prefab)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewContextPrefab(UnityEngine.Object prefab) {
             BindingUtil.AssertIsValidPrefab(prefab);
 
             var gameObjectInfo = new GameObjectCreationParameters();
@@ -117,13 +106,11 @@ namespace Zenject
         }
 
         [System.Obsolete("ByNewPrefabResource has been renamed to ByNewContextPrefabResource to avoid confusion with ByNewPrefabResourceInstaller and ByNewPrefabResourceMethod")]
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabResource(string resourcePath)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabResource(string resourcePath) {
             return ByNewContextPrefabResource(resourcePath);
         }
 
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewContextPrefabResource(string resourcePath)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewContextPrefabResource(string resourcePath) {
             BindingUtil.AssertIsValidResourcePath(resourcePath);
 
             var gameObjectInfo = new GameObjectCreationParameters();

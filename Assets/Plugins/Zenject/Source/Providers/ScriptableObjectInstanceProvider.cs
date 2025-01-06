@@ -1,17 +1,15 @@
 ﻿#if !NOT_UNITY3D
 
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ModestTree;
 using UnityEngine;
 using Zenject.Internal;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class ScriptableObjectInstanceProvider : IProvider
-    {
+    public class ScriptableObjectInstanceProvider : IProvider {
         readonly DiContainer _container;
         readonly Type _resourceType;
         readonly List<TypeValuePair> _extraArguments;
@@ -24,8 +22,7 @@ namespace Zenject
             UnityEngine.Object resource, Type resourceType,
             DiContainer container, IEnumerable<TypeValuePair> extraArguments,
             bool createNew, object concreteIdentifier,
-            Action<InjectContext, object> instantiateCallback)
-        {
+            Action<InjectContext, object> instantiateCallback) {
             _container = container;
             Assert.DerivesFromOrEqual<ScriptableObject>(resourceType);
 
@@ -37,39 +34,30 @@ namespace Zenject
             _instantiateCallback = instantiateCallback;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return _resourceType;
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsNotNull(context);
 
-            if (_createNew)
-            {
+            if (_createNew) {
                 buffer.Add(UnityEngine.ScriptableObject.Instantiate(_resource));
-            }
-            else
-            {
+            } else {
                 buffer.Add(_resource);
             }
 
-            injectAction = () =>
-            {
-                for (int i = 0; i < buffer.Count; i++)
-                {
+            injectAction = () => {
+                for (int i = 0; i < buffer.Count; i++) {
                     var obj = buffer[i];
 
                     var extraArgs = ZenPools.SpawnList<TypeValuePair>();
@@ -82,8 +70,7 @@ namespace Zenject
 
                     ZenPools.DespawnList(extraArgs);
 
-                    if (_instantiateCallback != null)
-                    {
+                    if (_instantiateCallback != null) {
                         _instantiateCallback(context, obj);
                     }
                 }

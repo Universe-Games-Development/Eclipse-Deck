@@ -1,48 +1,39 @@
 #if !(UNITY_WSA && ENABLE_DOTNET)
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class ConventionSelectTypesBinder
-    {
+    public class ConventionSelectTypesBinder {
         readonly ConventionBindInfo _bindInfo;
 
-        public ConventionSelectTypesBinder(ConventionBindInfo bindInfo)
-        {
+        public ConventionSelectTypesBinder(ConventionBindInfo bindInfo) {
             _bindInfo = bindInfo;
         }
 
-        ConventionFilterTypesBinder CreateNextBinder()
-        {
+        ConventionFilterTypesBinder CreateNextBinder() {
             return new ConventionFilterTypesBinder(_bindInfo);
         }
 
-        public ConventionFilterTypesBinder AllTypes()
-        {
+        public ConventionFilterTypesBinder AllTypes() {
             // Do nothing (this is the default)
             return CreateNextBinder();
         }
 
-        public ConventionFilterTypesBinder AllClasses()
-        {
+        public ConventionFilterTypesBinder AllClasses() {
             _bindInfo.AddTypeFilter(t => t.IsClass);
             return CreateNextBinder();
         }
 
-        public ConventionFilterTypesBinder AllNonAbstractClasses()
-        {
+        public ConventionFilterTypesBinder AllNonAbstractClasses() {
             _bindInfo.AddTypeFilter(t => t.IsClass && !t.IsAbstract);
             return CreateNextBinder();
         }
 
-        public ConventionFilterTypesBinder AllAbstractClasses()
-        {
+        public ConventionFilterTypesBinder AllAbstractClasses() {
             _bindInfo.AddTypeFilter(t => t.IsClass && t.IsAbstract);
             return CreateNextBinder();
         }
 
-        public ConventionFilterTypesBinder AllInterfaces()
-        {
+        public ConventionFilterTypesBinder AllInterfaces() {
             _bindInfo.AddTypeFilter(t => t.IsInterface);
             return CreateNextBinder();
         }

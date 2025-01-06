@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 2806991567213247392}
   - component: {fileID: 7438461073323734047}
   - component: {fileID: -955673337774863412}
-  - component: {fileID: 1138894446959740891}
   - component: {fileID: 8480002835109476521}
   m_Layer: 0
   m_Name: BattleCreature
@@ -107,21 +106,6 @@ MonoBehaviour:
   originalRotation: {fileID: 0}
   health: {fileID: 0}
   Name: 
---- !u!114 &1138894446959740891
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5057081012966347309}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2314fb26a03299444b44c1d1a483c049, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHealth: 5
-  currentHealth: 5
-  damageThreshold: 1
 --- !u!82 &8480002835109476521
 AudioSource:
   m_ObjectHideFlags: 0

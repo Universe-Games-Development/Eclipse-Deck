@@ -1,17 +1,14 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Injection
-{
+namespace Zenject.Tests.Injection {
     [TestFixture]
-    public class TestAllInjectionTypes : ZenjectUnitTestFixture
-    {
+    public class TestAllInjectionTypes : ZenjectUnitTestFixture {
         static int InjectCounter;
 
         [Test]
         // Test all variations of injection
-        public void TestCase1()
-        {
+        public void TestCase1() {
             Container.Bind<Test0>().FromInstance(new Test0()).NonLazy();
             Container.Bind<IFoo>().To<FooDerived>().AsSingle().NonLazy();
 
@@ -29,45 +26,36 @@ namespace Zenject.Tests.Injection
             Assert.IsEqual(foo.DerivedTypeMethodInjectCount, 4);
         }
 
-        class Test0
-        {
+        class Test0 {
         }
 
-        interface IFoo
-        {
-            bool DidPostInjectBase
-            {
+        interface IFoo {
+            bool DidPostInjectBase {
                 get;
             }
 
-            bool DidPostInjectDerived
-            {
+            bool DidPostInjectDerived {
                 get;
             }
 
-            int BaseTypePropertyInjectCount
-            {
+            int BaseTypePropertyInjectCount {
                 get;
             }
 
-            int DerivedTypePropertyInjectCount
-            {
+            int DerivedTypePropertyInjectCount {
                 get;
             }
 
-            int BaseTypeMethodInjectCount
-            {
+            int BaseTypeMethodInjectCount {
                 get;
             }
 
-            int DerivedTypeMethodInjectCount
-            {
+            int DerivedTypeMethodInjectCount {
                 get;
             }
         }
 
-        abstract class FooBase : IFoo
-        {
+        abstract class FooBase : IFoo {
             bool _didPostInjectBase;
 
             [Inject]
@@ -80,22 +68,19 @@ namespace Zenject.Tests.Injection
             protected static Test0 BaseStaticFieldProtected = null;
 
             [Inject]
-            public static Test0 BaseStaticPropertyPublic
-            {
+            public static Test0 BaseStaticPropertyPublic {
                 get;
                 set;
             }
 
             [Inject]
-            static Test0 BaseStaticPropertyPrivate
-            {
+            static Test0 BaseStaticPropertyPrivate {
                 get;
                 set;
             }
 
             [Inject]
-            protected static Test0 BaseStaticPropertyProtected
-            {
+            protected static Test0 BaseStaticPropertyProtected {
                 get;
                 set;
             }
@@ -113,33 +98,28 @@ namespace Zenject.Tests.Injection
             Test0 _basePropertyPublicValue = null;
 
             [Inject]
-            public Test0 BasePropertyPublic
-            {
+            public Test0 BasePropertyPublic {
                 get { return _basePropertyPublicValue; }
-                set
-                {
+                set {
                     BaseTypePropertyInjectCount = InjectCounter++;
                     _basePropertyPublicValue = value;
                 }
             }
 
             [Inject]
-            Test0 BasePropertyPrivate
-            {
+            Test0 BasePropertyPrivate {
                 get;
                 set;
             }
 
             [Inject]
-            protected Test0 BasePropertyProtected
-            {
+            protected Test0 BasePropertyProtected {
                 get;
                 set;
             }
 
             [Inject]
-            public void PostInjectBase()
-            {
+            public void PostInjectBase() {
                 Assert.IsNull(BaseStaticFieldPublic);
                 Assert.IsNull(BaseStaticFieldPrivate);
                 Assert.IsNull(BaseStaticFieldProtected);
@@ -159,49 +139,39 @@ namespace Zenject.Tests.Injection
                 _didPostInjectBase = true;
             }
 
-            public bool DidPostInjectBase
-            {
-                get
-                {
+            public bool DidPostInjectBase {
+                get {
                     return _didPostInjectBase;
                 }
             }
 
-            public abstract bool DidPostInjectDerived
-            {
+            public abstract bool DidPostInjectDerived {
                 get;
             }
 
-            public int BaseTypePropertyInjectCount
-            {
+            public int BaseTypePropertyInjectCount {
                 get; set;
             }
 
-            public int BaseTypeMethodInjectCount
-            {
+            public int BaseTypeMethodInjectCount {
                 get; set;
             }
 
-            public abstract int DerivedTypeMethodInjectCount
-            {
+            public abstract int DerivedTypeMethodInjectCount {
                 get;
             }
 
-            public abstract int DerivedTypePropertyInjectCount
-            {
+            public abstract int DerivedTypePropertyInjectCount {
                 get;
             }
         }
 
-        class FooDerived : FooBase
-        {
+        class FooDerived : FooBase {
             public bool _didPostInject;
             public Test0 ConstructorParam;
 
-            public override bool DidPostInjectDerived
-            {
-                get
-                {
+            public override bool DidPostInjectDerived {
+                get {
                     return _didPostInject;
                 }
             }
@@ -216,35 +186,30 @@ namespace Zenject.Tests.Injection
             protected static Test0 DerivedStaticFieldProtected = null;
 
             [Inject]
-            public static Test0 DerivedStaticPropertyPublic
-            {
+            public static Test0 DerivedStaticPropertyPublic {
                 get;
                 set;
             }
 
             [Inject]
-            static Test0 DerivedStaticPropertyPrivate
-            {
+            static Test0 DerivedStaticPropertyPrivate {
                 get;
                 set;
             }
 
             [Inject]
-            protected static Test0 DerivedStaticPropertyProtected
-            {
+            protected static Test0 DerivedStaticPropertyProtected {
                 get;
                 set;
             }
 
             // Instance
-            public FooDerived(Test0 param)
-            {
+            public FooDerived(Test0 param) {
                 ConstructorParam = param;
             }
 
             [Inject]
-            public void PostInject()
-            {
+            public void PostInject() {
                 Assert.IsNull(DerivedStaticFieldPublic);
                 Assert.IsNull(DerivedStaticFieldPrivate);
                 Assert.IsNull(DerivedStaticFieldProtected);
@@ -277,41 +242,35 @@ namespace Zenject.Tests.Injection
             Test0 _derivedPropertyPublicValue;
 
             [Inject]
-            public Test0 DerivedPropertyPublic
-            {
+            public Test0 DerivedPropertyPublic {
                 get { return _derivedPropertyPublicValue; }
-                set
-                {
+                set {
                     _derivedTypePropertyInjectCount = InjectCounter++;
                     _derivedPropertyPublicValue = value;
                 }
             }
 
             [Inject]
-            Test0 DerivedPropertyPrivate
-            {
+            Test0 DerivedPropertyPrivate {
                 get;
                 set;
             }
 
             [Inject]
-            protected Test0 DerivedPropertyProtected
-            {
+            protected Test0 DerivedPropertyProtected {
                 get;
                 set;
             }
 
             int _derivedTypeMethodInjectCount;
 
-            public override int DerivedTypeMethodInjectCount
-            {
+            public override int DerivedTypeMethodInjectCount {
                 get { return _derivedTypeMethodInjectCount; }
             }
 
             int _derivedTypePropertyInjectCount;
 
-            public override int DerivedTypePropertyInjectCount
-            {
+            public override int DerivedTypePropertyInjectCount {
                 get { return _derivedTypePropertyInjectCount; }
             }
         }

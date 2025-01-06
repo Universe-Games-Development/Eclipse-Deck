@@ -11,11 +11,11 @@ public class TipItem : MonoBehaviour, ITipProvider {
     }
 
     void OnMouseEnter() {
-        uiManager.ShowInfo(this);
+        uiManager.ShowTip(this);
     }
 
     void OnMouseExit() {
-        uiManager.HideInfo(this);
+        uiManager.HideTip(this);
     }
 
     public virtual string GetInfo() {

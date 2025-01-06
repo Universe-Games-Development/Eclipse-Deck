@@ -1,39 +1,33 @@
-using System;
 using ModestTree.Util;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestTaskUpdater
-    {
+    public class TestTaskUpdater {
         DiContainer _container;
 
         [SetUp]
-        public void Setup()
-        {
+        public void Setup() {
             _container = new DiContainer();
 
             _container.Bind<TaskUpdater<ITickable>>().FromInstance(new TickablesTaskUpdater());
         }
 
-        public void BindTickable<TTickable>(int priority) where TTickable : ITickable
-        {
+        public void BindTickable<TTickable>(int priority) where TTickable : ITickable {
             _container.BindInterfacesAndSelfTo<TTickable>().AsSingle();
             _container.Bind<ValuePair<Type, int>>().FromInstance(ValuePair.New(typeof(TTickable), priority));
         }
 
         [Test]
-        public void TestTickablesAreOptional()
-        {
+        public void TestTickablesAreOptional() {
             Assert.IsNotNull(_container.Resolve<TaskUpdater<ITickable>>());
         }
 
         [Test]
         // Test that tickables get called in the correct order
-        public void TestOrder()
-        {
+        public void TestOrder() {
             BindTickable<Tickable3>(2);
             BindTickable<Tickable1>(0);
             BindTickable<Tickable2>(1);
@@ -46,20 +40,17 @@ namespace Zenject.Tests.Other
 
             int tickCount = 0;
 
-            tick1.TickCalled += delegate
-            {
+            tick1.TickCalled += delegate {
                 Assert.IsEqual(tickCount, 0);
                 tickCount++;
             };
 
-            tick2.TickCalled += delegate
-            {
+            tick2.TickCalled += delegate {
                 Assert.IsEqual(tickCount, 1);
                 tickCount++;
             };
 
-            tick3.TickCalled += delegate
-            {
+            tick3.TickCalled += delegate {
                 Assert.IsEqual(tickCount, 2);
                 tickCount++;
             };
@@ -67,32 +58,26 @@ namespace Zenject.Tests.Other
             taskUpdater.UpdateAll();
         }
 
-        class Tickable1 : ITickable
-        {
-            public event Action TickCalled = delegate {};
+        class Tickable1 : ITickable {
+            public event Action TickCalled = delegate { };
 
-            public void Tick()
-            {
+            public void Tick() {
                 TickCalled();
             }
         }
 
-        class Tickable2 : ITickable
-        {
-            public event Action TickCalled = delegate {};
+        class Tickable2 : ITickable {
+            public event Action TickCalled = delegate { };
 
-            public void Tick()
-            {
+            public void Tick() {
                 TickCalled();
             }
         }
 
-        class Tickable3 : ITickable
-        {
-            public event Action TickCalled = delegate {};
+        class Tickable3 : ITickable {
+            public event Action TickCalled = delegate { };
 
-            public void Tick()
-            {
+            public void Tick() {
                 TickCalled();
             }
         }

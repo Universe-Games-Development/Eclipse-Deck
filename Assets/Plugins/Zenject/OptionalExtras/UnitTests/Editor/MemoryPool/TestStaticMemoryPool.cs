@@ -1,22 +1,18 @@
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests
-{
+namespace Zenject.Tests {
     [TestFixture]
-    public class TestStaticMemoryPool : ZenjectUnitTestFixture
-    {
+    public class TestStaticMemoryPool : ZenjectUnitTestFixture {
         [SetUp]
-        public void CommonInstall()
-        {
+        public void CommonInstall() {
             Container.Inject(this);
         }
 
         [Test]
-        public void RunTest()
-        {
+        public void RunTest() {
             var pool = Foo.Pool;
 
             pool.Clear();
@@ -66,8 +62,7 @@ namespace Zenject.Tests
         }
 
         [Test]
-        public void TestListPool()
-        {
+        public void TestListPool() {
             var pool = ListPool<string>.Instance;
 
             pool.Clear();
@@ -120,8 +115,7 @@ namespace Zenject.Tests
         }
 
         [Test]
-        public void TestPoolWrapper()
-        {
+        public void TestPoolWrapper() {
             var pool = Foo.Pool;
 
             pool.Clear();
@@ -131,8 +125,7 @@ namespace Zenject.Tests
             Assert.IsEqual(pool.NumInactive, 0);
             Assert.IsEqual(pool.NumTotal, 0);
 
-            using (var block = DisposeBlock.Spawn())
-            {
+            using (var block = DisposeBlock.Spawn()) {
                 block.Spawn(pool, "asdf");
 
                 Assert.IsEqual(pool.NumActive, 1);
@@ -146,8 +139,7 @@ namespace Zenject.Tests
         }
 
         [Test]
-        public void TestResize()
-        {
+        public void TestResize() {
             var pool = Bar.Pool;
 
             pool.Clear();
@@ -211,42 +203,34 @@ namespace Zenject.Tests
             Assert.Throws(() => pool.ShrinkBy(1));
         }
 
-        public class Bar
-        {
+        public class Bar {
             public static readonly StaticMemoryPool<Bar> Pool =
                 new StaticMemoryPool<Bar>(OnSpawned, OnDespawned);
 
-            static void OnSpawned(Bar that)
-            {
+            static void OnSpawned(Bar that) {
             }
 
-            static void OnDespawned(Bar that)
-            {
+            static void OnDespawned(Bar that) {
             }
         }
 
-        public class Foo : IDisposable
-        {
+        public class Foo : IDisposable {
             public static readonly StaticMemoryPool<string, Foo> Pool =
                 new StaticMemoryPool<string, Foo>(OnSpawned, OnDespawned);
 
-            public string Value
-            {
+            public string Value {
                 get; private set;
             }
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 Pool.Despawn(this);
             }
 
-            static void OnSpawned(string value, Foo that)
-            {
+            static void OnSpawned(string value, Foo that) {
                 that.Value = value;
             }
 
-            static void OnDespawned(Foo that)
-            {
+            static void OnDespawned(Foo that) {
                 that.Value = null;
             }
         }

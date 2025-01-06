@@ -5,12 +5,10 @@ using System.Collections.Generic;
 using UnityEngine;
 #endif
 
-namespace Zenject
-{
+namespace Zenject {
     // You can optionally inject this interface into your classes/factories
     // rather than using DiContainer which contains many methods you might not need
-    public interface IInstantiator
-    {
+    public interface IInstantiator {
         // Use this method to create any non-monobehaviour
         // Any fields marked [Inject] will be set using the bindings on the container
         // Any methods marked with a [Inject] will be called

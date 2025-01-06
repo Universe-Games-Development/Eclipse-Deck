@@ -2,19 +2,16 @@
 
 using UnityEditor;
 
-namespace Zenject
-{
+namespace Zenject {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(SceneContext))]
     [NoReflectionBaking]
-    public class SceneContextEditor : RunnableContextEditor
-    {
+    public class SceneContextEditor : RunnableContextEditor {
         SerializedProperty _contractNameProperty;
         SerializedProperty _parentNamesProperty;
         SerializedProperty _parentNewObjectsUnderSceneContextProperty;
 
-        public override void OnEnable()
-        {
+        public override void OnEnable() {
             base.OnEnable();
 
             _contractNameProperty = serializedObject.FindProperty("_contractNames");
@@ -22,8 +19,7 @@ namespace Zenject
             _parentNewObjectsUnderSceneContextProperty = serializedObject.FindProperty("_parentNewObjectsUnderSceneContext");
         }
 
-        protected override void OnGui()
-        {
+        protected override void OnGui() {
             base.OnGui();
 
             EditorGUILayout.PropertyField(_contractNameProperty, true);

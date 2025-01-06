@@ -1,16 +1,14 @@
 #if !NOT_UNITY3D
 
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using ModestTree;
 using UnityEngine;
 using Zenject.Internal;
 
-namespace Zenject
-{
-    public class ProjectContext : Context
-    {
+namespace Zenject {
+    public class ProjectContext : Context {
         public static event Action PreInstall;
         public static event Action PostInstall;
         public static event Action PreResolve;
@@ -37,22 +35,17 @@ namespace Zenject
 
         DiContainer _container;
 
-        public override DiContainer Container
-        {
+        public override DiContainer Container {
             get { return _container; }
         }
 
-        public static bool HasInstance
-        {
+        public static bool HasInstance {
             get { return _instance != null; }
         }
 
-        public static ProjectContext Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
+        public static ProjectContext Instance {
+            get {
+                if (_instance == null) {
                     InstantiateAndInitialize();
                     Assert.IsNotNull(_instance);
                 }
@@ -61,23 +54,19 @@ namespace Zenject
             }
         }
 
-        public static bool ValidateOnNextRun
-        {
+        public static bool ValidateOnNextRun {
             get;
             set;
         }
 
-        public override IEnumerable<GameObject> GetRootGameObjects()
-        {
+        public override IEnumerable<GameObject> GetRootGameObjects() {
             return new[] { gameObject };
         }
 
-        public static GameObject TryGetPrefab()
-        {
+        public static GameObject TryGetPrefab() {
             var prefabs = Resources.LoadAll(ProjectContextResourcePath, typeof(GameObject));
 
-            if (prefabs.Length > 0)
-            {
+            if (prefabs.Length > 0) {
                 Assert.That(prefabs.Length == 1,
                     "Found multiple project context prefabs at resource path '{0}'", ProjectContextResourcePath);
                 return (GameObject)prefabs[0];
@@ -85,8 +74,7 @@ namespace Zenject
 
             prefabs = Resources.LoadAll(ProjectContextResourcePathOld, typeof(GameObject));
 
-            if (prefabs.Length > 0)
-            {
+            if (prefabs.Length > 0) {
                 Assert.That(prefabs.Length == 1,
                     "Found multiple project context prefabs at resource path '{0}'", ProjectContextResourcePathOld);
                 return (GameObject)prefabs[0];
@@ -95,8 +83,7 @@ namespace Zenject
             return null;
         }
 
-        static void InstantiateAndInitialize()
-        {
+        static void InstantiateAndInitialize() {
 #if UNITY_EDITOR
             ProfileBlock.UnityMainThread = Thread.CurrentThread;
 #endif
@@ -112,26 +99,20 @@ namespace Zenject
             using (ProfileTimers.CreateTimedBlock("GameObject.Instantiate"))
 #endif
             {
-                if (prefab == null)
-                {
+                if (prefab == null) {
                     _instance = new GameObject("ProjectContext")
                         .AddComponent<ProjectContext>();
-                }
-                else
-                {
+                } else {
                     prefabWasActive = prefab.activeSelf;
 
                     GameObject gameObjectInstance;
 #if UNITY_EDITOR
-                    if(prefabWasActive)
-                    {
+                    if (prefabWasActive) {
                         // This ensures the prefab's Awake() methods don't fire (and, if in the editor, that the prefab file doesn't get modified)
                         gameObjectInstance = GameObject.Instantiate(prefab, ZenUtilInternal.GetOrCreateInactivePrefabParent());
                         gameObjectInstance.SetActive(false);
                         gameObjectInstance.transform.SetParent(null, false);
-                    }
-                    else
-                    {
+                    } else {
                         gameObjectInstance = GameObject.Instantiate(prefab);
                     }
 #else
@@ -158,8 +139,7 @@ namespace Zenject
             // ProjectContext.Instance while ProjectContext is initializing
             _instance.Initialize();
 
-            if (prefabWasActive)
-            {
+            if (prefabWasActive) {
 #if ZEN_INTERNAL_PROFILING
                 using (ProfileTimers.CreateTimedBlock("User Code"))
 #endif
@@ -170,39 +150,32 @@ namespace Zenject
             }
         }
 
-        public bool ParentNewObjectsUnderContext
-        {
+        public bool ParentNewObjectsUnderContext {
             get { return _parentNewObjectsUnderContext; }
             set { _parentNewObjectsUnderContext = value; }
         }
 
-        public void EnsureIsInitialized()
-        {
+        public void EnsureIsInitialized() {
             // Do nothing - Initialize occurs in Instance property
         }
 
-        public void Awake()
-        {
+        public void Awake() {
             if (Application.isPlaying)
-                // DontDestroyOnLoad can only be called when in play mode and otherwise produces errors
-                // ProjectContext is created during design time (in an empty scene) when running validation
-                // and also when running unit tests
-                // In these cases we don't need DontDestroyOnLoad so just skip it
+            // DontDestroyOnLoad can only be called when in play mode and otherwise produces errors
+            // ProjectContext is created during design time (in an empty scene) when running validation
+            // and also when running unit tests
+            // In these cases we don't need DontDestroyOnLoad so just skip it
             {
                 DontDestroyOnLoad(gameObject);
             }
         }
 
-        void Initialize()
-        {
+        void Initialize() {
             Assert.IsNull(_container);
 
-            if (Application.isEditor)
-            {
+            if (Application.isEditor) {
                 TypeAnalyzer.ReflectionBakingCoverageMode = _editorReflectionBakingCoverageMode;
-            }
-            else
-            {
+            } else {
                 TypeAnalyzer.ReflectionBakingCoverageMode = _buildsReflectionBakingCoverageMode;
             }
 
@@ -215,62 +188,49 @@ namespace Zenject
                 new[] { StaticContext.Container }, isValidating);
 
             // Do this after creating DiContainer in case it's needed by the pre install logic
-            if (PreInstall != null)
-            {
+            if (PreInstall != null) {
                 PreInstall();
             }
 
             var injectableMonoBehaviours = new List<MonoBehaviour>();
             GetInjectableMonoBehaviours(injectableMonoBehaviours);
 
-            foreach (var instance in injectableMonoBehaviours)
-            {
+            foreach (var instance in injectableMonoBehaviours) {
                 _container.QueueForInject(instance);
             }
 
             _container.IsInstalling = true;
 
-            try
-            {
+            try {
                 InstallBindings(injectableMonoBehaviours);
-            }
-            finally
-            {
+            } finally {
                 _container.IsInstalling = false;
             }
 
-            if (PostInstall != null)
-            {
+            if (PostInstall != null) {
                 PostInstall();
             }
 
-            if (PreResolve != null)
-            {
+            if (PreResolve != null) {
                 PreResolve();
             }
 
             _container.ResolveRoots();
 
-            if (PostResolve != null)
-            {
+            if (PostResolve != null) {
                 PostResolve();
             }
         }
 
-        protected override void GetInjectableMonoBehaviours(List<MonoBehaviour> monoBehaviours)
-        {
+        protected override void GetInjectableMonoBehaviours(List<MonoBehaviour> monoBehaviours) {
             ZenUtilInternal.AddStateMachineBehaviourAutoInjectersUnderGameObject(gameObject);
             ZenUtilInternal.GetInjectableMonoBehavioursUnderGameObject(gameObject, monoBehaviours);
         }
 
-        void InstallBindings(List<MonoBehaviour> injectableMonoBehaviours)
-        {
-            if (_parentNewObjectsUnderContext)
-            {
+        void InstallBindings(List<MonoBehaviour> injectableMonoBehaviours) {
+            if (_parentNewObjectsUnderContext) {
                 _container.DefaultParent = transform;
-            }
-            else
-            {
+            } else {
                 _container.DefaultParent = null;
             }
 

@@ -1,13 +1,11 @@
-using System;
 using ModestTree;
+using System;
 using UnityEngine;
 
 #pragma warning disable 649
 
-namespace Zenject.Asteroids
-{
-    public class GuiHandler : MonoBehaviour, IDisposable, IInitializable
-    {
+namespace Zenject.Asteroids {
+    public class GuiHandler : MonoBehaviour, IDisposable, IInitializable {
         GameController _gameController;
 
         [SerializeField]
@@ -36,65 +34,51 @@ namespace Zenject.Asteroids
 
         [Inject]
         public void Construct(
-            GameController gameController, SignalBus signalBus)
-        {
+            GameController gameController, SignalBus signalBus) {
             _gameController = gameController;
             _signalBus = signalBus;
         }
 
-        void OnGUI()
-        {
+        void OnGUI() {
             GUILayout.BeginArea(new Rect(0, 0, Screen.width, Screen.height));
             {
-                switch (_gameController.State)
-                {
-                    case GameStates.WaitingToStart:
-                    {
-                        StartGui();
-                        break;
-                    }
-                    case GameStates.Playing:
-                    {
-                        PlayingGui();
-                        break;
-                    }
-                    case GameStates.GameOver:
-                    {
-                        PlayingGui();
-                        GameOverGui();
-                        break;
-                    }
-                    default:
-                    {
-                        Assert.That(false);
-                        break;
-                    }
+                switch (_gameController.State) {
+                    case GameStates.WaitingToStart: {
+                            StartGui();
+                            break;
+                        }
+                    case GameStates.Playing: {
+                            PlayingGui();
+                            break;
+                        }
+                    case GameStates.GameOver: {
+                            PlayingGui();
+                            GameOverGui();
+                            break;
+                        }
+                    default: {
+                            Assert.That(false);
+                            break;
+                        }
                 }
             }
             GUILayout.EndArea();
         }
 
-        void GameOverGui()
-        {
+        void GameOverGui() {
             _gameOverElapsed += Time.deltaTime;
 
-            if (_gameOverElapsed > _gameOverStartFadeTime)
-            {
+            if (_gameOverElapsed > _gameOverStartFadeTime) {
                 var px = Mathf.Min(1.0f, (_gameOverElapsed - _gameOverStartFadeTime) / _gameOverFadeInTime);
                 _titleStyle.normal.textColor = new Color(1, 1, 1, px);
-            }
-            else
-            {
+            } else {
                 _titleStyle.normal.textColor = new Color(1, 1, 1, 0);
             }
 
-            if (_gameOverElapsed > _restartTextStartFadeTime)
-            {
+            if (_gameOverElapsed > _restartTextStartFadeTime) {
                 var px = Mathf.Min(1.0f, (_gameOverElapsed - _restartTextStartFadeTime) / _restartTextFadeInTime);
                 _instructionsStyle.normal.textColor = new Color(1, 1, 1, px);
-            }
-            else
-            {
+            } else {
                 _instructionsStyle.normal.textColor = new Color(1, 1, 1, 0);
             }
 
@@ -139,8 +123,7 @@ namespace Zenject.Asteroids
             GUILayout.EndHorizontal();
         }
 
-        void PlayingGui()
-        {
+        void PlayingGui() {
             GUILayout.BeginVertical();
             {
                 GUILayout.Space(30);
@@ -155,8 +138,7 @@ namespace Zenject.Asteroids
             GUILayout.EndVertical();
         }
 
-        void StartGui()
-        {
+        void StartGui() {
             GUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
@@ -199,18 +181,15 @@ namespace Zenject.Asteroids
             GUILayout.EndHorizontal();
         }
 
-        public void Initialize()
-        {
+        public void Initialize() {
             _signalBus.Subscribe<ShipCrashedSignal>(OnShipCrashed);
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             _signalBus.Unsubscribe<ShipCrashedSignal>(OnShipCrashed);
         }
 
-        void OnShipCrashed()
-        {
+        void OnShipCrashed() {
             _gameOverElapsed = 0;
         }
     }

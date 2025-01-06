@@ -1,15 +1,12 @@
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Signals
-{
+namespace Zenject.Tests.Signals {
     [TestFixture]
-    public class TestSignals1 : ZenjectUnitTestFixture
-    {
+    public class TestSignals1 : ZenjectUnitTestFixture {
         [Test]
-        public void TestMissingDeclaration()
-        {
+        public void TestMissingDeclaration() {
             SignalBusInstaller.Install(Container);
 
             var signalBus = Container.Resolve<SignalBus>();
@@ -18,8 +15,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestSubscribeAndUnsubscribe()
-        {
+        public void TestSubscribeAndUnsubscribe() {
             SignalBusInstaller.Install(Container);
 
             Container.DeclareSignal<FooSignal>();
@@ -47,8 +43,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestWithArgs()
-        {
+        public void TestWithArgs() {
             SignalBusInstaller.Install(Container);
 
             Container.DeclareSignal<FooSignal>();
@@ -67,15 +62,14 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestUnsubscribeWithoutSubscribe()
-        {
+        public void TestUnsubscribeWithoutSubscribe() {
             SignalBusInstaller.Install(Container);
 
             Container.DeclareSignal<FooSignal>();
 
             var signalBus = Container.Resolve<SignalBus>();
 
-            Action callback = () => {};
+            Action callback = () => { };
 
             Assert.Throws(() => signalBus.Unsubscribe<FooSignal>(callback));
 
@@ -86,8 +80,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestUntypedSubscribe()
-        {
+        public void TestUntypedSubscribe() {
             SignalBusInstaller.Install(Container);
 
             Container.DeclareSignal<FooSignal>();
@@ -97,11 +90,10 @@ namespace Zenject.Tests.Signals
 
             object received = null;
 
-            signalBus.Subscribe(typeof(FooSignal), x =>
-                {
-                    Assert.That(x is FooSignal);
-                    received = x;
-                });
+            signalBus.Subscribe(typeof(FooSignal), x => {
+                Assert.That(x is FooSignal);
+                received = x;
+            });
 
             var data = new FooSignal();
 
@@ -112,12 +104,10 @@ namespace Zenject.Tests.Signals
             signalBus.Fire(new BarSignal());
         }
 
-        public class FooSignal
-        {
+        public class FooSignal {
         }
 
-        public class BarSignal
-        {
+        public class BarSignal {
             public string Value;
         }
     }

@@ -1,12 +1,10 @@
-using UnityEngine;
 using System.Collections;
-using System;
+using UnityEngine;
 using Zenject;
 
 
-public class BattleCreature : MonoBehaviour
-{
-    private Card card;
+public class BattleCreature : MonoBehaviour {
+    public Card card;
 
     private Field currentField;
     private Animator animator;
@@ -16,41 +14,38 @@ public class BattleCreature : MonoBehaviour
     [SerializeField] private AudioClip attackSound; // Звук атаки
     [SerializeField] private string attackAnimationTrigger = "Attack"; // Триггер анімації атаки
     [SerializeField] private Transform originalRotation; // Початкова орієнтація спрайта
-
-    public Health health;
     public string Name;
     private AttackStrategy attackStrategy;
 
-    private IEventManager eventManager;
+    [Inject] private IEventManager eventManager;
+    [Inject] private UIManager uIManager;
 
     private void Awake() {
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
-        health = GetComponent<Health>();
-        health.OnDeath += Death;
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private async void Death() {
-        GameContext gameContext = new GameContext();
+        GameContext gameContext = new();
         gameContext.sourceCreature = this;
         await eventManager.TriggerEventAsync(EventType.ON_CARD_DISCARDED, gameContext);
         card.ChangeState(CardState.Discarded);
     }
 
-    public async void Initialize(Card card, Field field, AttackStrategy newAttackStrategy) {
+    public async void Initialize(Card card, AttackStrategy newAttackStrategy, Field currentField) {
+        this.card = card;
         Name = card.Name;
-        health.SetHealth(card.Health);
         attackStrategy = newAttackStrategy;
-        currentField = field;
         originalRotation = transform; // зберігаємо початкову орієнтацію спрайта
         spriteRenderer.sprite = card.MainImage;
 
-        GameContext gameContext = new GameContext();
+        GameContext gameContext = new();
         gameContext.sourceCreature = this;
 
         eventManager = card.EventManager; ;
         await eventManager.TriggerEventAsync(EventType.ON_CREATURE_SUMMONED, gameContext);
+        uIManager.CreateCreatureUI(this, card);
 
         card.ChangeState(CardState.OnTable);
     }
@@ -78,7 +73,7 @@ public class BattleCreature : MonoBehaviour
         audioSource.PlayOneShot(attackSound);
 
         // Виконуємо атаку
-        attackStrategy.Attack(currentField, enemyFields, card.Attack);
+        attackStrategy.Attack(currentField, enemyFields, card.Attack.CurrentValue);
 
         // Повертаємось в початкову орієнтацію після завершення атаки
         yield return new WaitForSeconds(1f); // Дочекаємось завершення анімації атаки

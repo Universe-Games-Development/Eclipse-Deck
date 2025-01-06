@@ -1,14 +1,12 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ModestTree;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Zenject.Asteroids
-{
-    public class AsteroidManager : ITickable, IFixedTickable
-    {
+namespace Zenject.Asteroids {
+    public class AsteroidManager : ITickable, IFixedTickable {
         readonly List<Asteroid> _asteroids = new List<Asteroid>();
         readonly Queue<AsteroidAttributes> _cachedAttributes = new Queue<AsteroidAttributes>();
         readonly Settings _settings;
@@ -23,8 +21,7 @@ namespace Zenject.Asteroids
         bool _autoSpawn = true;
 
         public AsteroidManager(
-            Settings settings, Asteroid.Factory asteroidFactory, LevelHelper level)
-        {
+            Settings settings, Asteroid.Factory asteroidFactory, LevelHelper level) {
             _settings = settings;
             _timeIntervalBetweenSpawns = _settings.maxSpawnTime / (_settings.maxSpawns - _settings.startingSpawns);
             _timeToNextSpawn = _timeIntervalBetweenSpawns;
@@ -32,21 +29,18 @@ namespace Zenject.Asteroids
             _level = level;
         }
 
-        public IEnumerable<Asteroid> Asteroids
-        {
+        public IEnumerable<Asteroid> Asteroids {
             get { return _asteroids; }
         }
 
-        public void Start()
-        {
+        public void Start() {
             Assert.That(!_started);
             _started = true;
 
             ResetAll();
             GenerateRandomAttributes();
 
-            for (int i = 0; i < _settings.startingSpawns; i++)
-            {
+            for (int i = 0; i < _settings.startingSpawns; i++) {
                 SpawnNext();
             }
         }
@@ -55,15 +49,13 @@ namespace Zenject.Asteroids
         // this way we don't get wildly different difficulties each time the game is run
         // For example, if we just chose speed randomly each time we spawned an asteroid, in some
         // cases that might result in the first set of asteroids all going at max speed, or min speed
-        void GenerateRandomAttributes()
-        {
+        void GenerateRandomAttributes() {
             Assert.That(_cachedAttributes.Count == 0);
 
             var speedTotal = 0.0f;
             var sizeTotal = 0.0f;
 
-            for (int i = 0; i < _settings.maxSpawns; i++)
-            {
+            for (int i = 0; i < _settings.maxSpawns; i++) {
                 var sizePx = Random.Range(0.0f, 1.0f);
                 var speed = Random.Range(_settings.minSpeed, _settings.maxSpeed);
 
@@ -85,8 +77,7 @@ namespace Zenject.Asteroids
             var speedScaleFactor = desiredAverageSpeed / averageSpeed;
             var sizeScaleFactor = desiredAverageSize / averageSize;
 
-            foreach (var attributes in _cachedAttributes)
-            {
+            foreach (var attributes in _cachedAttributes) {
                 attributes.SizePx *= sizeScaleFactor;
                 attributes.InitialSpeed *= speedScaleFactor;
             }
@@ -95,10 +86,8 @@ namespace Zenject.Asteroids
             Assert.That(Mathf.Approximately(_cachedAttributes.Average(x => x.SizePx), desiredAverageSize));
         }
 
-        void ResetAll()
-        {
-            foreach (var asteroid in _asteroids)
-            {
+        void ResetAll() {
+            foreach (var asteroid in _asteroids) {
                 GameObject.Destroy(asteroid.gameObject);
             }
 
@@ -106,41 +95,33 @@ namespace Zenject.Asteroids
             _cachedAttributes.Clear();
         }
 
-        public void Stop()
-        {
+        public void Stop() {
             Assert.That(_started);
             _started = false;
         }
 
-        public void FixedTick()
-        {
-            for (int i = 0; i < _asteroids.Count; i++)
-            {
+        public void FixedTick() {
+            for (int i = 0; i < _asteroids.Count; i++) {
                 _asteroids[i].FixedTick();
             }
         }
 
-        public void Tick()
-        {
-            for (int i = 0; i < _asteroids.Count; i++)
-            {
+        public void Tick() {
+            for (int i = 0; i < _asteroids.Count; i++) {
                 _asteroids[i].Tick();
             }
 
-            if (_started && _autoSpawn)
-            {
+            if (_started && _autoSpawn) {
                 _timeToNextSpawn -= Time.deltaTime;
 
-                if (_timeToNextSpawn < 0 && _asteroids.Count < _settings.maxSpawns)
-                {
+                if (_timeToNextSpawn < 0 && _asteroids.Count < _settings.maxSpawns) {
                     _timeToNextSpawn = _timeIntervalBetweenSpawns;
                     SpawnNext();
                 }
             }
         }
 
-        public void SpawnNext()
-        {
+        public void SpawnNext() {
             var asteroid = _asteroidFactory.Create();
 
             var attributes = _cachedAttributes.Dequeue();
@@ -153,42 +134,34 @@ namespace Zenject.Asteroids
             _asteroids.Add(asteroid);
         }
 
-        Vector3 GetRandomDirection()
-        {
+        Vector3 GetRandomDirection() {
             var theta = Random.Range(0, Mathf.PI * 2.0f);
             return new Vector3(Mathf.Cos(theta), Mathf.Sin(theta), 0);
         }
 
-        Vector3 GetRandomStartPosition(float scale)
-        {
+        Vector3 GetRandomStartPosition(float scale) {
             var side = (Side)Random.Range(0, (int)Side.Count);
             var rand = Random.Range(0.0f, 1.0f);
 
-            switch (side)
-            {
-                case Side.Top:
-                {
-                    return new Vector3(_level.Left + rand * _level.Width, _level.Top + scale, 0);
-                }
-                case Side.Bottom:
-                {
-                    return new Vector3(_level.Left + rand * _level.Width, _level.Bottom - scale, 0);
-                }
-                case Side.Right:
-                {
-                    return new Vector3(_level.Right + scale, _level.Bottom + rand * _level.Height, 0);
-                }
-                case Side.Left:
-                {
-                    return new Vector3(_level.Left - scale, _level.Bottom + rand * _level.Height, 0);
-                }
+            switch (side) {
+                case Side.Top: {
+                        return new Vector3(_level.Left + rand * _level.Width, _level.Top + scale, 0);
+                    }
+                case Side.Bottom: {
+                        return new Vector3(_level.Left + rand * _level.Width, _level.Bottom - scale, 0);
+                    }
+                case Side.Right: {
+                        return new Vector3(_level.Right + scale, _level.Bottom + rand * _level.Height, 0);
+                    }
+                case Side.Left: {
+                        return new Vector3(_level.Left - scale, _level.Bottom + rand * _level.Height, 0);
+                    }
             }
 
             throw Assert.CreateException();
         }
 
-        enum Side
-        {
+        enum Side {
             Top,
             Bottom,
             Left,
@@ -197,8 +170,7 @@ namespace Zenject.Asteroids
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public float minSpeed;
             public float maxSpeed;
 
@@ -214,8 +186,7 @@ namespace Zenject.Asteroids
             public float minMass;
         }
 
-        class AsteroidAttributes
-        {
+        class AsteroidAttributes {
             public float SizePx;
             public float InitialSpeed;
         }

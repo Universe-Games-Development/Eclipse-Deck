@@ -1,15 +1,17 @@
 using UnityEngine;
 using Zenject;
 
-[RequireComponent (typeof(Health))]
-public class Opponent : MonoBehaviour
-{
+public class Opponent : MonoBehaviour {
     public string Name = "Opponent";
     protected CardCollection cardCollection;
     protected Deck deck;
     protected Deck discardDeck;
 
     protected CardHand hand;
+
+    [SerializeField] private int initHealth;
+    [SerializeField] private int maxHealth;
+
     public Health health;
 
     private ResourceManager resourceManager;
@@ -24,8 +26,7 @@ public class Opponent : MonoBehaviour
     }
 
     protected virtual void Awake() {
-        health = GetComponent<Health>();
-
+        health = new Health(maxHealth, initHealth);
         cardCollection = new CardCollection(resourceManager);
         cardCollection.GenerateTestDeck(20);
 

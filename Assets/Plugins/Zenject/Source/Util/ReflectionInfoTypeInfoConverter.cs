@@ -3,25 +3,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using ModestTree;
 #if !NOT_UNITY3D
 using UnityEngine;
 #endif
 
-namespace Zenject.Internal
-{
-    public static class ReflectionInfoTypeInfoConverter
-    {
+namespace Zenject.Internal {
+    public static class ReflectionInfoTypeInfoConverter {
         public static InjectTypeInfo.InjectMethodInfo ConvertMethod(
-            ReflectionTypeInfo.InjectMethodInfo injectMethod)
-        {
+            ReflectionTypeInfo.InjectMethodInfo injectMethod) {
             var methodInfo = injectMethod.MethodInfo;
             var action = TryCreateActionForMethod(methodInfo);
 
-            if (action == null)
-            {
+            if (action == null) {
                 action = (obj, args) => methodInfo.Invoke(obj, args);
             }
 
@@ -32,39 +27,33 @@ namespace Zenject.Internal
         }
 
         public static InjectTypeInfo.InjectConstructorInfo ConvertConstructor(
-            ReflectionTypeInfo.InjectConstructorInfo injectConstructor, Type type)
-        {
+            ReflectionTypeInfo.InjectConstructorInfo injectConstructor, Type type) {
             return new InjectTypeInfo.InjectConstructorInfo(
                 TryCreateFactoryMethod(type, injectConstructor),
                 injectConstructor.Parameters.Select(x => x.InjectableInfo).ToArray());
         }
 
         public static InjectTypeInfo.InjectMemberInfo ConvertField(
-            Type parentType, ReflectionTypeInfo.InjectFieldInfo injectField)
-        {
+            Type parentType, ReflectionTypeInfo.InjectFieldInfo injectField) {
             return new InjectTypeInfo.InjectMemberInfo(
                 GetSetter(parentType, injectField.FieldInfo), injectField.InjectableInfo);
         }
 
         public static InjectTypeInfo.InjectMemberInfo ConvertProperty(
-            Type parentType, ReflectionTypeInfo.InjectPropertyInfo injectProperty)
-        {
+            Type parentType, ReflectionTypeInfo.InjectPropertyInfo injectProperty) {
             return new InjectTypeInfo.InjectMemberInfo(
                 GetSetter(parentType, injectProperty.PropertyInfo), injectProperty.InjectableInfo);
         }
 
         static ZenFactoryMethod TryCreateFactoryMethod(
-            Type type, ReflectionTypeInfo.InjectConstructorInfo reflectionInfo)
-        {
+            Type type, ReflectionTypeInfo.InjectConstructorInfo reflectionInfo) {
 #if !NOT_UNITY3D
-            if (type.DerivesFromOrEqual<Component>())
-            {
+            if (type.DerivesFromOrEqual<Component>()) {
                 return null;
             }
 #endif
 
-            if (type.IsAbstract())
-            {
+            if (type.IsAbstract()) {
                 Assert.That(reflectionInfo.Parameters.IsEmpty());
                 return null;
             }
@@ -73,23 +62,18 @@ namespace Zenject.Internal
 
             var factoryMethod = TryCreateFactoryMethodCompiledLambdaExpression(type, constructor);
 
-            if (factoryMethod == null)
-            {
-                if (constructor == null)
-                {
+            if (factoryMethod == null) {
+                if (constructor == null) {
                     // No choice in this case except to use the slow Activator.CreateInstance
                     // as far as I know
                     // This should be rare though and only seems to occur when instantiating
                     // structs on platforms that don't support lambda expressions
                     // Non-structs should always have a default constructor
-                    factoryMethod = args =>
-                    {
+                    factoryMethod = args => {
                         Assert.That(args.Length == 0);
                         return Activator.CreateInstance(type, new object[0]);
                     };
-                }
-                else
-                {
+                } else {
                     factoryMethod = constructor.Invoke;
                 }
             }
@@ -98,8 +82,7 @@ namespace Zenject.Internal
         }
 
         static ZenFactoryMethod TryCreateFactoryMethodCompiledLambdaExpression(
-            Type type, ConstructorInfo constructor)
-        {
+            Type type, ConstructorInfo constructor) {
 #if NET_4_6 && !ENABLE_IL2CPP && !ZEN_DO_NOT_USE_COMPILED_EXPRESSIONS
 
             if (type.ContainsGenericParameters)
@@ -134,8 +117,7 @@ namespace Zenject.Internal
 #endif
         }
 
-        static ZenInjectMethod TryCreateActionForMethod(MethodInfo methodInfo)
-        {
+        static ZenInjectMethod TryCreateActionForMethod(MethodInfo methodInfo) {
 #if NET_4_6 && !ENABLE_IL2CPP && !ZEN_DO_NOT_USE_COMPILED_EXPRESSIONS
 
             if (methodInfo.DeclaringType.ContainsGenericParameters)
@@ -171,10 +153,8 @@ namespace Zenject.Internal
         }
 
 #if !(UNITY_WSA && ENABLE_DOTNET) || UNITY_EDITOR
-        static IEnumerable<FieldInfo> GetAllFields(Type t, BindingFlags flags)
-        {
-            if (t == null)
-            {
+        static IEnumerable<FieldInfo> GetAllFields(Type t, BindingFlags flags) {
+            if (t == null) {
                 return Enumerable.Empty<FieldInfo>();
             }
 
@@ -183,8 +163,7 @@ namespace Zenject.Internal
 
         static ZenMemberSetterMethod GetOnlyPropertySetter(
             Type parentType,
-            string propertyName)
-        {
+            string propertyName) {
             Assert.That(parentType != null);
             Assert.That(!string.IsNullOrEmpty(propertyName));
 
@@ -193,8 +172,7 @@ namespace Zenject.Internal
 
             var writeableFields = allFields.Where(f => f.Name == string.Format("<" + propertyName + ">k__BackingField", propertyName)).ToList();
 
-            if (!writeableFields.Any())
-            {
+            if (!writeableFields.Any()) {
                 throw new ZenjectException(string.Format(
                     "Can't find backing field for get only property {0} on {1}.\r\n{2}",
                     propertyName, parentType.FullName, string.Join(";", allFields.Select(f => f.Name).ToArray())));
@@ -204,20 +182,17 @@ namespace Zenject.Internal
         }
 #endif
 
-        static ZenMemberSetterMethod GetSetter(Type parentType, MemberInfo memInfo)
-        {
+        static ZenMemberSetterMethod GetSetter(Type parentType, MemberInfo memInfo) {
             var setterMethod = TryGetSetterAsCompiledExpression(parentType, memInfo);
 
-            if (setterMethod != null)
-            {
+            if (setterMethod != null) {
                 return setterMethod;
             }
 
             var fieldInfo = memInfo as FieldInfo;
             var propInfo = memInfo as PropertyInfo;
 
-            if (fieldInfo != null)
-            {
+            if (fieldInfo != null) {
                 return ((injectable, value) => fieldInfo.SetValue(injectable, value));
             }
 
@@ -226,8 +201,7 @@ namespace Zenject.Internal
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return ((object injectable, object value) => propInfo.SetValue(injectable, value, null));
 #else
-            if (propInfo.CanWrite)
-            {
+            if (propInfo.CanWrite) {
                 return ((injectable, value) => propInfo.SetValue(injectable, value, null));
             }
 
@@ -235,8 +209,7 @@ namespace Zenject.Internal
 #endif
         }
 
-        static ZenMemberSetterMethod TryGetSetterAsCompiledExpression(Type parentType, MemberInfo memInfo)
-        {
+        static ZenMemberSetterMethod TryGetSetterAsCompiledExpression(Type parentType, MemberInfo memInfo) {
 #if NET_4_6 && !ENABLE_IL2CPP && !ZEN_DO_NOT_USE_COMPILED_EXPRESSIONS
 
             if (parentType.ContainsGenericParameters)

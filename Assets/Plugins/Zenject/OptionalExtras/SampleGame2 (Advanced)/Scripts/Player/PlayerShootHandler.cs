@@ -1,10 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
-    public class PlayerShootHandler : ITickable
-    {
+namespace Zenject.SpaceFighter {
+    public class PlayerShootHandler : ITickable {
         readonly AudioPlayer _audioPlayer;
         readonly Player _player;
         readonly Settings _settings;
@@ -18,8 +16,7 @@ namespace Zenject.SpaceFighter
             Bullet.Factory bulletFactory,
             Settings settings,
             Player player,
-            AudioPlayer audioPlayer)
-        {
+            AudioPlayer audioPlayer) {
             _audioPlayer = audioPlayer;
             _player = player;
             _settings = settings;
@@ -27,22 +24,18 @@ namespace Zenject.SpaceFighter
             _inputState = inputState;
         }
 
-        public void Tick()
-        {
-            if (_player.IsDead)
-            {
+        public void Tick() {
+            if (_player.IsDead) {
                 return;
             }
 
-            if (_inputState.IsFiring && Time.realtimeSinceStartup - _lastFireTime > _settings.MaxShootInterval)
-            {
+            if (_inputState.IsFiring && Time.realtimeSinceStartup - _lastFireTime > _settings.MaxShootInterval) {
                 _lastFireTime = Time.realtimeSinceStartup;
                 Fire();
             }
         }
 
-        void Fire()
-        {
+        void Fire() {
             _audioPlayer.Play(_settings.Laser, _settings.LaserVolume);
 
             var bullet = _bulletFactory.Create(
@@ -53,8 +46,7 @@ namespace Zenject.SpaceFighter
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public AudioClip Laser;
             public float LaserVolume = 1.0f;
 

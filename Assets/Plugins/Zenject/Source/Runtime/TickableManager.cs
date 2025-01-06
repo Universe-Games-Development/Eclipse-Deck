@@ -1,16 +1,14 @@
+using ModestTree;
+using ModestTree.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ModestTree;
-using ModestTree.Util;
 #if ZEN_SIGNALS_ADD_UNIRX
 using UniRx;
 #endif
 
-namespace Zenject
-{
-    public class TickableManager
-    {
+namespace Zenject {
+    public class TickableManager {
         [Inject(Optional = true, Source = InjectSources.Local)]
         readonly List<ITickable> _tickables = null;
 
@@ -42,8 +40,7 @@ namespace Zenject
         bool _isPaused;
 
         [Inject]
-        public TickableManager()
-        {
+        public TickableManager() {
         }
 
 #if ZEN_SIGNALS_ADD_UNIRX
@@ -63,35 +60,29 @@ namespace Zenject
         }
 #endif
 
-        public IEnumerable<ITickable> Tickables
-        {
+        public IEnumerable<ITickable> Tickables {
             get { return _tickables; }
         }
 
-        public bool IsPaused
-        {
+        public bool IsPaused {
             get { return _isPaused; }
             set { _isPaused = value; }
         }
 
         [Inject]
-        public void Initialize()
-        {
+        public void Initialize() {
             InitTickables();
             InitFixedTickables();
             InitLateTickables();
         }
 
-        void InitFixedTickables()
-        {
-            foreach (var type in _fixedPriorities.Select(x => x.First))
-            {
+        void InitFixedTickables() {
+            foreach (var type in _fixedPriorities.Select(x => x.First)) {
                 Assert.That(type.DerivesFrom<IFixedTickable>(),
                     "Expected type '{0}' to drive from IFixedTickable while checking priorities in TickableHandler", type);
             }
 
-            foreach (var tickable in _fixedTickables)
-            {
+            foreach (var tickable in _fixedTickables) {
                 // Note that we use zero for unspecified priority
                 // This is nice because you can use negative or positive for before/after unspecified
                 var matches = _fixedPriorities.Where(x => tickable.GetType().DerivesFromOrEqual(x.First)).Select(x => x.Second).ToList();
@@ -101,16 +92,13 @@ namespace Zenject
             }
         }
 
-        void InitTickables()
-        {
-            foreach (var type in _priorities.Select(x => x.First))
-            {
+        void InitTickables() {
+            foreach (var type in _priorities.Select(x => x.First)) {
                 Assert.That(type.DerivesFrom<ITickable>(),
                     "Expected type '{0}' to drive from ITickable while checking priorities in TickableHandler", type);
             }
 
-            foreach (var tickable in _tickables)
-            {
+            foreach (var tickable in _tickables) {
                 // Note that we use zero for unspecified priority
                 // This is nice because you can use negative or positive for before/after unspecified
                 var matches = _priorities.Where(x => tickable.GetType().DerivesFromOrEqual(x.First)).Select(x => x.Second).ToList();
@@ -120,16 +108,13 @@ namespace Zenject
             }
         }
 
-        void InitLateTickables()
-        {
-            foreach (var type in _latePriorities.Select(x => x.First))
-            {
+        void InitLateTickables() {
+            foreach (var type in _latePriorities.Select(x => x.First)) {
                 Assert.That(type.DerivesFrom<ILateTickable>(),
                     "Expected type '{0}' to drive from ILateTickable while checking priorities in TickableHandler", type);
             }
 
-            foreach (var tickable in _lateTickables)
-            {
+            foreach (var tickable in _lateTickables) {
                 // Note that we use zero for unspecified priority
                 // This is nice because you can use negative or positive for before/after unspecified
                 var matches = _latePriorities.Where(x => tickable.GetType().DerivesFromOrEqual(x.First)).Select(x => x.Second).ToList();
@@ -139,55 +124,44 @@ namespace Zenject
             }
         }
 
-        public void Add(ITickable tickable, int priority)
-        {
+        public void Add(ITickable tickable, int priority) {
             _updater.AddTask(tickable, priority);
         }
 
-        public void Add(ITickable tickable)
-        {
+        public void Add(ITickable tickable) {
             Add(tickable, 0);
         }
 
-        public void AddLate(ILateTickable tickable, int priority)
-        {
+        public void AddLate(ILateTickable tickable, int priority) {
             _lateUpdater.AddTask(tickable, priority);
         }
 
-        public void AddLate(ILateTickable tickable)
-        {
+        public void AddLate(ILateTickable tickable) {
             AddLate(tickable, 0);
         }
 
-        public void AddFixed(IFixedTickable tickable, int priority)
-        {
+        public void AddFixed(IFixedTickable tickable, int priority) {
             _fixedUpdater.AddTask(tickable, priority);
         }
 
-        public void AddFixed(IFixedTickable tickable)
-        {
+        public void AddFixed(IFixedTickable tickable) {
             _fixedUpdater.AddTask(tickable, 0);
         }
 
-        public void Remove(ITickable tickable)
-        {
+        public void Remove(ITickable tickable) {
             _updater.RemoveTask(tickable);
         }
 
-        public void RemoveLate(ILateTickable tickable)
-        {
+        public void RemoveLate(ILateTickable tickable) {
             _lateUpdater.RemoveTask(tickable);
         }
 
-        public void RemoveFixed(IFixedTickable tickable)
-        {
+        public void RemoveFixed(IFixedTickable tickable) {
             _fixedUpdater.RemoveTask(tickable);
         }
 
-        public void Update()
-        {
-            if(IsPaused)
-            {
+        public void Update() {
+            if (IsPaused) {
                 return;
             }
 
@@ -199,10 +173,8 @@ namespace Zenject
 #endif
         }
 
-        public void FixedUpdate()
-        {
-            if(IsPaused)
-            {
+        public void FixedUpdate() {
+            if (IsPaused) {
                 return;
             }
 
@@ -214,10 +186,8 @@ namespace Zenject
 #endif
         }
 
-        public void LateUpdate()
-        {
-            if(IsPaused)
-            {
+        public void LateUpdate() {
+            if (IsPaused) {
                 return;
             }
 

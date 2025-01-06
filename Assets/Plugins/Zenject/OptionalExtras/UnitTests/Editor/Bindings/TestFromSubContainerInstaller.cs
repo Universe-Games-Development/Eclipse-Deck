@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromSubContainerInstaller : ZenjectUnitTestFixture
-    {
+    public class TestFromSubContainerInstaller : ZenjectUnitTestFixture {
         [Test]
-        public void TestInstallerSelfSingle()
-        {
+        public void TestInstallerSelfSingle() {
             Container.Bind<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             var foo = Container.Resolve<Foo>();
@@ -17,8 +14,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfTransient()
-        {
+        public void TestInstallerSelfTransient() {
             Container.Bind<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsTransient().NonLazy();
 
             var foo = Container.Resolve<Foo>();
@@ -27,8 +23,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfCached()
-        {
+        public void TestInstallerSelfCached() {
             Container.Bind<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             var foo = Container.Resolve<Foo>();
@@ -37,79 +32,65 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfSingleMultipleContracts()
-        {
+        public void TestInstallerSelfSingleMultipleContracts() {
             Container.Bind(typeof(Foo), typeof(Bar)).FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>().Bar, Container.Resolve<Bar>());
         }
 
         [Test]
-        public void TestInstallerSelfCachedMultipleContracts()
-        {
+        public void TestInstallerSelfCachedMultipleContracts() {
             Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<IFoo>());
         }
 
         [Test]
-        public void TestInstallerSelfSingleMultipleMatches()
-        {
+        public void TestInstallerSelfSingleMultipleMatches() {
             Container.Bind<Qux>().FromSubContainerResolveAll().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             Assert.IsEqual(Container.ResolveAll<Qux>().Count, 2);
         }
 
         [Test]
-        public void TestInstallerSelfIdentifiersFails()
-        {
+        public void TestInstallerSelfIdentifiersFails() {
             Container.Bind<Gorp>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             Assert.Throws(() => Container.Resolve<Gorp>());
         }
 
         [Test]
-        public void TestInstallerSelfIdentifiers()
-        {
+        public void TestInstallerSelfIdentifiers() {
             Container.Bind<Gorp>().FromSubContainerResolve("gorp").ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<Gorp>());
         }
 
-        public class Gorp
-        {
+        public class Gorp {
         }
 
-        public class Qux
-        {
+        public class Qux {
         }
 
-        public class Bar
-        {
+        public class Bar {
         }
 
-        public interface IFoo
-        {
+        public interface IFoo {
         }
 
-        public class Foo : IFoo
-        {
-            public Foo(Bar bar)
-            {
+        public class Foo : IFoo {
+            public Foo(Bar bar) {
                 Bar = bar;
             }
 
-            public Bar Bar
-            {
+            public Bar Bar {
                 get;
                 private set;
             }
         }
 
-        class FooInstaller : Installer<FooInstaller>
-        {
-            public override void InstallBindings()
-            {
+        class FooInstaller : Installer<FooInstaller> {
+            public override void InstallBindings() {
                 Container.Bind<Foo>().AsSingle();
                 Container.Bind<Bar>().AsSingle();
 

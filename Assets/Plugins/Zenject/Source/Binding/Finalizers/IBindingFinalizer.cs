@@ -1,9 +1,6 @@
-namespace Zenject
-{
-    public interface IBindingFinalizer
-    {
-        BindingInheritanceMethods BindingInheritanceMethod
-        {
+namespace Zenject {
+    public interface IBindingFinalizer {
+        BindingInheritanceMethods BindingInheritanceMethod {
             get;
         }
 

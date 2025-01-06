@@ -1,33 +1,26 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Conditions
-{
+namespace Zenject.Tests.Conditions {
     [TestFixture]
-    public class TestConditionsIdentifier : ZenjectUnitTestFixture
-    {
-        class Test0
-        {
+    public class TestConditionsIdentifier : ZenjectUnitTestFixture {
+        class Test0 {
         }
 
-        class Test1
-        {
+        class Test1 {
             public Test1(
                 [Inject(Id ="foo")]
-                Test0 name1)
-            {
+                Test0 name1) {
             }
         }
 
-        class Test2
-        {
-            [Inject(Id ="foo")]
+        class Test2 {
+            [Inject(Id = "foo")]
             public Test0 name2 = null;
         }
 
         [Test]
-        public void TestUnspecifiedNameConstructorInjection()
-        {
+        public void TestUnspecifiedNameConstructorInjection() {
             Container.Bind<Test1>().AsTransient().NonLazy();
             Container.Bind<Test0>().AsTransient().NonLazy();
 
@@ -36,8 +29,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestUnspecifiedNameFieldInjection()
-        {
+        public void TestUnspecifiedNameFieldInjection() {
             Container.Bind<Test1>().AsTransient().NonLazy();
             Container.Bind<Test2>().AsTransient().NonLazy();
 
@@ -48,8 +40,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestSuccessConstructorInjectionString()
-        {
+        public void TestSuccessConstructorInjectionString() {
             Container.Bind<Test1>().AsTransient().NonLazy();
             Container.Bind<Test2>().AsTransient().NonLazy();
 
@@ -63,8 +54,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestSuccessFieldInjectionString()
-        {
+        public void TestSuccessFieldInjectionString() {
             Container.Bind<Test1>().AsTransient().NonLazy();
             Container.Bind<Test2>().AsTransient().NonLazy();
 
@@ -74,23 +64,19 @@ namespace Zenject.Tests.Conditions
             Assert.IsNotNull(Container.Resolve<Test2>());
         }
 
-        class Test3
-        {
+        class Test3 {
             public Test3(
                 [Inject(Id ="TestValue2")]
-                Test0 test0)
-            {
+                Test0 test0) {
             }
         }
 
-        class Test4
-        {
+        class Test4 {
 
         }
 
         [Test]
-        public void TestFailConstructorInjectionEnum()
-        {
+        public void TestFailConstructorInjectionEnum() {
             Container.Bind<Test1>().AsTransient().NonLazy();
             Container.Bind<Test2>().AsTransient().NonLazy();
             Container.Bind<Test3>().AsTransient().NonLazy();
@@ -103,8 +89,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestSuccessConstructorInjectionEnum()
-        {
+        public void TestSuccessConstructorInjectionEnum() {
             Container.Bind<Test3>().AsTransient().NonLazy();
 
             Container.Bind<Test0>().FromInstance(new Test0()).NonLazy();
@@ -117,8 +102,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestFailFieldInjectionEnum()
-        {
+        public void TestFailFieldInjectionEnum() {
             Container.Bind<Test1>().AsTransient().NonLazy();
             Container.Bind<Test2>().AsTransient().NonLazy();
             Container.Bind<Test3>().AsTransient().NonLazy();
@@ -131,8 +115,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestSuccessFieldInjectionEnum()
-        {
+        public void TestSuccessFieldInjectionEnum() {
             Container.Bind<Test4>().AsTransient().NonLazy();
 
             Container.Bind<Test0>().FromInstance(new Test0()).NonLazy();

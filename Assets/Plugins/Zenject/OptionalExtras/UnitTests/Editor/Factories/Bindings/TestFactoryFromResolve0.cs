@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFactoryFromResolve0 : ZenjectUnitTestFixture
-    {
+    public class TestFactoryFromResolve0 : ZenjectUnitTestFixture {
         [Test]
-        public void TestSelf()
-        {
+        public void TestSelf() {
             var foo = new Foo();
 
             Container.BindInstance(foo).NonLazy();
@@ -19,8 +16,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcrete()
-        {
+        public void TestConcrete() {
             var foo = new Foo();
 
             Container.BindInstance(foo).NonLazy();
@@ -31,8 +27,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSelfIdentifier()
-        {
+        public void TestSelfIdentifier() {
             var foo = new Foo();
 
             Container.BindInstance(foo).WithId("foo").NonLazy();
@@ -43,8 +38,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcreteIdentifier()
-        {
+        public void TestConcreteIdentifier() {
             var foo = new Foo();
 
             Container.BindInstance(foo).WithId("foo").NonLazy();
@@ -54,18 +48,14 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(Container.Resolve<IFooFactory>().Create(), foo);
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class IFooFactory : PlaceholderFactory<IFoo>
-        {
+        class IFooFactory : PlaceholderFactory<IFoo> {
         }
 
-        class Foo : IFoo
-        {
-            public class Factory : PlaceholderFactory<Foo>
-            {
+        class Foo : IFoo {
+            public class Factory : PlaceholderFactory<Foo> {
             }
         }
     }

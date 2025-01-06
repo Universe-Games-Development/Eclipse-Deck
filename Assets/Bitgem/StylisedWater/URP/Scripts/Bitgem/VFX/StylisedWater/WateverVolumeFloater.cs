@@ -1,15 +1,11 @@
 ﻿#region Using statements
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 #endregion
 
-namespace Bitgem.VFX.StylisedWater
-{
-    public class WateverVolumeFloater : MonoBehaviour
-    {
+namespace Bitgem.VFX.StylisedWater {
+    public class WateverVolumeFloater : MonoBehaviour {
         #region Public fields
 
         public WaterVolumeHelper WaterVolumeHelper = null;
@@ -18,11 +14,9 @@ namespace Bitgem.VFX.StylisedWater
 
         #region MonoBehaviour events
 
-        void Update()
-        {
+        void Update() {
             var instance = WaterVolumeHelper ? WaterVolumeHelper : WaterVolumeHelper.Instance;
-            if (!instance)
-            {
+            if (!instance) {
                 return;
             }
 

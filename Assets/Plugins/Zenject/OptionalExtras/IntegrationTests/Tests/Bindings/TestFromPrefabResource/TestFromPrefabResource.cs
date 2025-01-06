@@ -1,18 +1,15 @@
 ﻿
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine.TestTools;
 using Zenject.Tests.Bindings.FromPrefabResource;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromPrefabResource : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromPrefabResource : ZenjectIntegrationTestFixture {
         const string PathPrefix = "TestFromPrefabResource/";
 
         [UnityTest]
-        public IEnumerator TestTransientError()
-        {
+        public IEnumerator TestTransientError() {
             PreInstall();
             // Validation should detect that it doesn't exist
             Container.Bind<Foo>().FromComponentInNewPrefabResource(PathPrefix + "asdfasdfas").AsTransient().NonLazy();
@@ -22,8 +19,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestTransient()
-        {
+        public IEnumerator TestTransient() {
             PreInstall();
             Container.Bind<Foo>().FromComponentInNewPrefabResource(PathPrefix + "Foo").AsTransient().NonLazy();
             Container.Bind<Foo>().FromComponentInNewPrefabResource(PathPrefix + "Foo").AsTransient().NonLazy();
@@ -35,8 +31,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestSingle()
-        {
+        public IEnumerator TestSingle() {
             PreInstall();
             Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().FromComponentInNewPrefabResource(PathPrefix + "Foo").AsSingle().NonLazy();
 
@@ -47,8 +42,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCached1()
-        {
+        public IEnumerator TestCached1() {
             PreInstall();
             Container.Bind(typeof(Foo), typeof(Bar)).FromComponentInNewPrefabResource(PathPrefix + "Foo")
                 .WithGameObjectName("Foo").AsSingle().NonLazy();
@@ -63,8 +57,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithArgumentsFail()
-        {
+        public IEnumerator TestWithArgumentsFail() {
             PreInstall();
             // They have required arguments
             Container.Bind(typeof(Gorp), typeof(Qux)).FromComponentInNewPrefabResource(PathPrefix + "GorpAndQux").AsSingle().NonLazy();
@@ -74,8 +67,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithArguments()
-        {
+        public IEnumerator TestWithArguments() {
             PreInstall();
             Container.Bind(typeof(Gorp))
                 .FromComponentInNewPrefabResource(PathPrefix + "Gorp").WithGameObjectName("Gorp").AsSingle()
@@ -90,8 +82,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithAbstractSearchSingleMatch()
-        {
+        public IEnumerator TestWithAbstractSearchSingleMatch() {
             PreInstall();
             // There are three components that implement INorf on this prefab
             Container.Bind<INorf>().FromComponentInNewPrefabResource(PathPrefix + "Norf").AsCached().NonLazy();
@@ -105,8 +96,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestWithAbstractSearchMultipleMatch()
-        {
+        public IEnumerator TestWithAbstractSearchMultipleMatch() {
             PreInstall();
             // There are three components that implement INorf on this prefab
             Container.Bind<INorf>().FromComponentsInNewPrefabResource(PathPrefix + "Norf").AsCached().NonLazy();
@@ -120,8 +110,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestAbstractBindingConcreteSearch()
-        {
+        public IEnumerator TestAbstractBindingConcreteSearch() {
             PreInstall();
             // Should ignore the Norf2 component on it
             Container.Bind<INorf>().To<Norf>().FromComponentsInNewPrefabResource(PathPrefix + "Norf").AsCached().NonLazy();
@@ -134,8 +123,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestMultipleMatchFailure()
-        {
+        public IEnumerator TestMultipleMatchFailure() {
             PreInstall();
             Container.Bind<INorf>().FromComponentsInNewPrefabResource(PathPrefix + "Foo").AsSingle().NonLazy();
             Assert.Throws(() => PostInstall());
@@ -143,8 +131,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestCircularDependencies()
-        {
+        public IEnumerator TestCircularDependencies() {
             PreInstall();
             // Jim and Bob both depend on each other
             Container.Bind(typeof(Jim), typeof(Bob)).FromComponentInNewPrefabResource(PathPrefix + "JimAndBob").AsSingle().NonLazy();
@@ -155,19 +142,16 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        public class JimAndBobRunner : IInitializable
-        {
+        public class JimAndBobRunner : IInitializable {
             readonly Bob _bob;
             readonly Jim _jim;
 
-            public JimAndBobRunner(Jim jim, Bob bob)
-            {
+            public JimAndBobRunner(Jim jim, Bob bob) {
                 _bob = bob;
                 _jim = jim;
             }
 
-            public void Initialize()
-            {
+            public void Initialize() {
                 Assert.IsNotNull(_jim.Bob);
                 Assert.IsNotNull(_bob.Jim);
 

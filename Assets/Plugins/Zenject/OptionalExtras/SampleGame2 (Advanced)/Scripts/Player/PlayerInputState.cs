@@ -1,33 +1,26 @@
-namespace Zenject.SpaceFighter
-{
-    public class PlayerInputState
-    {
-        public bool IsMovingLeft
-        {
+namespace Zenject.SpaceFighter {
+    public class PlayerInputState {
+        public bool IsMovingLeft {
             get;
             set;
         }
 
-        public bool IsMovingRight
-        {
+        public bool IsMovingRight {
             get;
             set;
         }
 
-        public bool IsMovingUp
-        {
+        public bool IsMovingUp {
             get;
             set;
         }
 
-        public bool IsMovingDown
-        {
+        public bool IsMovingDown {
             get;
             set;
         }
 
-        public bool IsFiring
-        {
+        public bool IsFiring {
             get;
             set;
         }

@@ -1,18 +1,16 @@
 #if !NOT_UNITY3D
 
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject.Internal;
 
 #pragma warning disable 649
 
-namespace Zenject
-{
-    public class GameObjectContext : RunnableContext
-    {
+namespace Zenject {
+    public class GameObjectContext : RunnableContext {
         public event Action PreInstall;
         public event Action PostInstall;
         public event Action PreResolve;
@@ -30,40 +28,34 @@ namespace Zenject
 
         bool _hasInstalled;
 
-        public override DiContainer Container
-        {
+        public override DiContainer Container {
             get { return _container; }
         }
 
-        public override IEnumerable<GameObject> GetRootGameObjects()
-        {
+        public override IEnumerable<GameObject> GetRootGameObjects() {
             return new[] { gameObject };
         }
 
         [Inject]
         public void Construct(
-            DiContainer parentContainer)
-        {
+            DiContainer parentContainer) {
             Assert.IsNull(_parentContainer);
             _parentContainer = parentContainer;
 
             Initialize();
         }
 
-        protected override void RunInternal()
-        {
+        protected override void RunInternal() {
             Install(_parentContainer);
             ResolveAndStart();
         }
 
-        public void Install(DiContainer parentContainer) 
-        {
+        public void Install(DiContainer parentContainer) {
             Assert.That(_parentContainer == null || _parentContainer == parentContainer);
 
             // We allow calling this explicitly instead of relying on the [Inject] event above
             // so that we can follow the two-pass construction-injection pattern in the providers
-            if (_hasInstalled) 
-            {
+            if (_hasInstalled) {
                 return;
             }
 
@@ -73,8 +65,7 @@ namespace Zenject
             _container = parentContainer.CreateSubContainer();
 
             // Do this after creating DiContainer in case it's needed by the pre install logic
-            if (PreInstall != null)
-            {
+            if (PreInstall != null) {
                 PreInstall();
             }
 
@@ -82,10 +73,8 @@ namespace Zenject
 
             GetInjectableMonoBehaviours(injectableMonoBehaviours);
 
-            foreach (var instance in injectableMonoBehaviours)
-            {
-                if (instance is MonoKernel)
-                {
+            foreach (var instance in injectableMonoBehaviours) {
+                if (instance is MonoKernel) {
                     Assert.That(ReferenceEquals(instance, _kernel),
                         "Found MonoKernel derived class that is not hooked up to GameObjectContext.  If you use MonoKernel, you must indicate this to GameObjectContext by dragging and dropping it to the Kernel field in the inspector");
                 }
@@ -95,32 +84,25 @@ namespace Zenject
 
             _container.IsInstalling = true;
 
-            try
-            {
+            try {
                 InstallBindings(injectableMonoBehaviours);
-            }
-            finally
-            {
+            } finally {
                 _container.IsInstalling = false;
             }
 
-            if (PostInstall != null)
-            {
+            if (PostInstall != null) {
                 PostInstall();
             }
         }
 
-        void ResolveAndStart() 
-        {
-            if (PreResolve != null)
-            {
+        void ResolveAndStart() {
+            if (PreResolve != null) {
                 PreResolve();
             }
 
             _container.ResolveRoots();
 
-            if (PostResolve != null)
-            {
+            if (PostResolve != null) {
                 PostResolve();
             }
 
@@ -134,65 +116,53 @@ namespace Zenject
             // immediately - but only when the GameObjectContext is created dynamically.  For any
             // GameObjectContext's that are placed in the scene, we still want to execute
             // IInitializable.Initialize during Start()
-            if (gameObject.scene.isLoaded && !_container.IsValidating)
-            {
+            if (gameObject.scene.isLoaded && !_container.IsValidating) {
                 _kernel = _container.Resolve<MonoKernel>();
                 _kernel.Initialize();
             }
         }
 
-        protected override void GetInjectableMonoBehaviours(List<MonoBehaviour> monoBehaviours)
-        {
+        protected override void GetInjectableMonoBehaviours(List<MonoBehaviour> monoBehaviours) {
             ZenUtilInternal.AddStateMachineBehaviourAutoInjectersUnderGameObject(gameObject);
 
             // We inject on all components on the root except ourself
-            foreach (var monoBehaviour in GetComponents<MonoBehaviour>())
-            {
-                if (monoBehaviour == null)
-                {
+            foreach (var monoBehaviour in GetComponents<MonoBehaviour>()) {
+                if (monoBehaviour == null) {
                     // Missing script
                     continue;
                 }
 
-                if (!ZenUtilInternal.IsInjectableMonoBehaviourType(monoBehaviour.GetType()))
-                {
+                if (!ZenUtilInternal.IsInjectableMonoBehaviourType(monoBehaviour.GetType())) {
                     continue;
                 }
 
-                if (monoBehaviour == this)
-                {
+                if (monoBehaviour == this) {
                     continue;
                 }
 
                 monoBehaviours.Add(monoBehaviour);
             }
 
-            for (int i = 0; i < transform.childCount; i++)
-            {
+            for (int i = 0; i < transform.childCount; i++) {
                 var child = transform.GetChild(i);
 
-                if (child != null)
-                {
+                if (child != null) {
                     ZenUtilInternal.GetInjectableMonoBehavioursUnderGameObject(
                         child.gameObject, monoBehaviours);
                 }
             }
         }
 
-        void InstallBindings(List<MonoBehaviour> injectableMonoBehaviours)
-        {
+        void InstallBindings(List<MonoBehaviour> injectableMonoBehaviours) {
             _container.DefaultParent = transform;
 
             _container.Bind<Context>().FromInstance(this);
             _container.Bind<GameObjectContext>().FromInstance(this);
 
-            if (_kernel == null)
-            {
+            if (_kernel == null) {
                 _container.Bind<MonoKernel>()
                     .To<DefaultGameObjectKernel>().FromNewComponentOn(gameObject).AsSingle().NonLazy();
-            }
-            else
-            {
+            } else {
                 _container.Bind<MonoKernel>().FromInstance(_kernel).AsSingle().NonLazy();
             }
 

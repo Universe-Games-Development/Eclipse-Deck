@@ -1,87 +1,68 @@
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests
-{
+namespace Zenject.Tests {
     [TestFixture]
-    public class TestDisposeBlock : ZenjectUnitTestFixture
-    {
-        class Foo : IDisposable
-        {
+    public class TestDisposeBlock : ZenjectUnitTestFixture {
+        class Foo : IDisposable {
             public static readonly StaticMemoryPool<string, Foo> Pool =
                 new StaticMemoryPool<string, Foo>(OnSpawned, OnDespawned);
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 Pool.Despawn(this);
             }
 
-            static void OnDespawned(Foo that)
-            {
+            static void OnDespawned(Foo that) {
                 that.Value = null;
             }
 
-            static void OnSpawned(string value, Foo that)
-            {
+            static void OnSpawned(string value, Foo that) {
                 that.Value = value;
             }
 
-            public string Value
-            {
+            public string Value {
                 get; private set;
             }
         }
 
-        public class Bar : IDisposable
-        {
+        public class Bar : IDisposable {
             readonly Pool _pool;
 
-            public Bar(Pool pool)
-            {
+            public Bar(Pool pool) {
                 _pool = pool;
             }
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 _pool.Despawn(this);
             }
 
-            public class Pool : MemoryPool<Bar>
-            {
+            public class Pool : MemoryPool<Bar> {
             }
         }
 
-        public class Qux : IDisposable
-        {
-            public bool WasDisposed
-            {
+        public class Qux : IDisposable {
+            public bool WasDisposed {
                 get; private set;
             }
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 WasDisposed = true;
             }
         }
 
         [Test]
-        public void TestExceptions()
-        {
+        public void TestExceptions() {
             var qux1 = new Qux();
             var qux2 = new Qux();
 
-            try
-            {
-                using (var block = DisposeBlock.Spawn())
-                {
+            try {
+                using (var block = DisposeBlock.Spawn()) {
                     block.Add(qux1);
                     block.Add(qux2);
                     throw new Exception();
                 }
-            }
-            catch
-            {
+            } catch {
             }
 
             Assert.That(qux1.WasDisposed);
@@ -89,8 +70,7 @@ namespace Zenject.Tests
         }
 
         [Test]
-        public void TestWithStaticMemoryPool()
-        {
+        public void TestWithStaticMemoryPool() {
             var pool = Foo.Pool;
 
             pool.Clear();
@@ -99,8 +79,7 @@ namespace Zenject.Tests
             Assert.IsEqual(pool.NumActive, 0);
             Assert.IsEqual(pool.NumInactive, 0);
 
-            using (var block = DisposeBlock.Spawn())
-            {
+            using (var block = DisposeBlock.Spawn()) {
                 block.Spawn(pool, "asdf");
 
                 Assert.IsEqual(pool.NumTotal, 1);
@@ -114,8 +93,7 @@ namespace Zenject.Tests
         }
 
         [Test]
-        public void TestWithNormalMemoryPool()
-        {
+        public void TestWithNormalMemoryPool() {
             Container.BindMemoryPool<Bar, Bar.Pool>();
 
             var pool = Container.Resolve<Bar.Pool>();
@@ -124,8 +102,7 @@ namespace Zenject.Tests
             Assert.IsEqual(pool.NumActive, 0);
             Assert.IsEqual(pool.NumInactive, 0);
 
-            using (var block = DisposeBlock.Spawn())
-            {
+            using (var block = DisposeBlock.Spawn()) {
                 block.Spawn(pool);
 
                 Assert.IsEqual(pool.NumTotal, 1);

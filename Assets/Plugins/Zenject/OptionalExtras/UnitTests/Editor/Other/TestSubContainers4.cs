@@ -1,17 +1,14 @@
-using System.Collections.Generic;
 using NUnit.Framework;
+using System.Collections.Generic;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestSubContainers4 : ZenjectUnitTestFixture
-    {
+    public class TestSubContainers4 : ZenjectUnitTestFixture {
         readonly Dictionary<object, DiContainer> _subContainers = new Dictionary<object, DiContainer>();
 
         [Test]
-        public void RunTest()
-        {
+        public void RunTest() {
             SetupContainer();
 
             var view1 = Container.Resolve<RotorView>();
@@ -26,8 +23,7 @@ namespace Zenject.Tests.Other
             Assert.IsNotEqual(view2, view1);
         }
 
-        void SetupContainer()
-        {
+        void SetupContainer() {
             Container.Bind<RotorController>().FromMethod(SubContainerResolve<RotorController>).AsTransient()
                 .WhenInjectedInto<RotorView>();
 
@@ -37,13 +33,11 @@ namespace Zenject.Tests.Other
             Container.Bind<RotorView>().AsTransient();
         }
 
-        T SubContainerResolve<T>(InjectContext context)
-        {
+        T SubContainerResolve<T>(InjectContext context) {
             Assert.IsNotNull(context.ObjectInstance);
             DiContainer subContainer;
 
-            if (!_subContainers.TryGetValue(context.ObjectInstance, out subContainer))
-            {
+            if (!_subContainers.TryGetValue(context.ObjectInstance, out subContainer)) {
                 subContainer = context.Container.CreateSubContainer();
                 _subContainers.Add(context.ObjectInstance, subContainer);
 
@@ -53,20 +47,17 @@ namespace Zenject.Tests.Other
             return (T)subContainer.Resolve(context);
         }
 
-        void InstallViewBindings(DiContainer subContainer)
-        {
+        void InstallViewBindings(DiContainer subContainer) {
             subContainer.Bind<RotorController>().AsSingle();
             subContainer.Bind<RotorModel>().AsSingle();
         }
 
-        public class RotorController
-        {
+        public class RotorController {
             [Inject]
             public RotorModel Model;
         }
 
-        public class RotorView
-        {
+        public class RotorView {
             [Inject]
             public RotorController Controller;
 
@@ -74,8 +65,7 @@ namespace Zenject.Tests.Other
             public RotorModel Model;
         }
 
-        public class RotorModel
-        {
+        public class RotorModel {
         }
     }
 }

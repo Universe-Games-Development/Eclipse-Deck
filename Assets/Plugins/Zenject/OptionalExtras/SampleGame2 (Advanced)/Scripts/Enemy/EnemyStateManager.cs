@@ -1,19 +1,16 @@
-using System.Collections.Generic;
 using ModestTree;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
-    public interface IEnemyState
-    {
+namespace Zenject.SpaceFighter {
+    public interface IEnemyState {
         void EnterState();
         void ExitState();
         void Update();
         void FixedUpdate();
     }
 
-    public enum EnemyStates
-    {
+    public enum EnemyStates {
         Idle,
         Attack,
         Follow,
@@ -25,8 +22,7 @@ namespace Zenject.SpaceFighter
     // - Attack
     // - Follow/Chase
     // - Idle
-    public class EnemyStateManager : ITickable, IFixedTickable, IInitializable
-    {
+    public class EnemyStateManager : ITickable, IFixedTickable, IInitializable {
         IEnemyState _currentStateHandler;
         EnemyStates _currentState = EnemyStates.None;
         EnemyView _view;
@@ -37,8 +33,7 @@ namespace Zenject.SpaceFighter
         [Inject]
         public void Construct(
             EnemyView view,
-            EnemyStateIdle idle, EnemyStateAttack attack, EnemyStateFollow follow)
-        {
+            EnemyStateIdle idle, EnemyStateAttack attack, EnemyStateFollow follow) {
             _view = view;
             _states = new List<IEnemyState>
             {
@@ -47,23 +42,19 @@ namespace Zenject.SpaceFighter
             };
         }
 
-        public EnemyStates CurrentState
-        {
+        public EnemyStates CurrentState {
             get { return _currentState; }
         }
 
-        public void Initialize()
-        {
+        public void Initialize() {
             Assert.IsEqual(_currentState, EnemyStates.None);
             Assert.IsNull(_currentStateHandler);
 
             ChangeState(EnemyStates.Follow);
         }
 
-        public void ChangeState(EnemyStates state)
-        {
-            if (_currentState == state)
-            {
+        public void ChangeState(EnemyStates state) {
+            if (_currentState == state) {
                 // Already in state
                 return;
             }
@@ -72,8 +63,7 @@ namespace Zenject.SpaceFighter
 
             _currentState = state;
 
-            if (_currentStateHandler != null)
-            {
+            if (_currentStateHandler != null) {
                 _currentStateHandler.ExitState();
                 _currentStateHandler = null;
             }
@@ -82,16 +72,14 @@ namespace Zenject.SpaceFighter
             _currentStateHandler.EnterState();
         }
 
-        public void Tick()
-        {
+        public void Tick() {
             // Always ensure we are on the main plane
             _view.Position = new Vector3(_view.Position.x, _view.Position.y, 0);
 
             _currentStateHandler.Update();
         }
 
-        public void FixedTick()
-        {
+        public void FixedTick() {
             _currentStateHandler.FixedUpdate();
         }
     }

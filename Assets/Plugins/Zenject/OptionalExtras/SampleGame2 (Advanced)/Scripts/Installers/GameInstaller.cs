@@ -1,16 +1,13 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
+namespace Zenject.SpaceFighter {
     // Main installer for our game
-    public class GameInstaller : MonoInstaller
-    {
+    public class GameInstaller : MonoInstaller {
         [Inject]
         Settings _settings = null;
 
-        public override void InstallBindings()
-        {
+        public override void InstallBindings() {
             Container.BindInterfacesAndSelfTo<EnemySpawner>().AsSingle();
 
             Container.BindFactory<float, float, EnemyFacade, EnemyFacade.Factory>()
@@ -56,8 +53,7 @@ namespace Zenject.SpaceFighter
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public GameObject EnemyFacadePrefab;
             public GameObject BulletPrefab;
             public GameObject ExplosionPrefab;
@@ -65,16 +61,13 @@ namespace Zenject.SpaceFighter
 
         // We could just use FromMonoPoolableMemoryPool above, but we have to use these instead
         // for IL2CPP to work
-        class EnemyFacadePool : MonoPoolableMemoryPool<float, float, IMemoryPool, EnemyFacade>
-        {
+        class EnemyFacadePool : MonoPoolableMemoryPool<float, float, IMemoryPool, EnemyFacade> {
         }
 
-        class BulletPool : MonoPoolableMemoryPool<float, float, BulletTypes, IMemoryPool, Bullet>
-        {
+        class BulletPool : MonoPoolableMemoryPool<float, float, BulletTypes, IMemoryPool, Bullet> {
         }
 
-        class ExplosionPool : MonoPoolableMemoryPool<IMemoryPool, Explosion>
-        {
+        class ExplosionPool : MonoPoolableMemoryPool<IMemoryPool, Explosion> {
         }
     }
 }

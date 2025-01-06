@@ -1,19 +1,15 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests
-{
+namespace Zenject.Tests {
     [TestFixture]
-    public class TestValidationSettings
-    {
-        DiContainer Container
-        {
+    public class TestValidationSettings {
+        DiContainer Container {
             get; set;
         }
 
         [SetUp]
-        public void Setup()
-        {
+        public void Setup() {
             Container = new DiContainer(true);
         }
 
@@ -21,15 +17,14 @@ namespace Zenject.Tests
         //[Test]
         //public void TestValidationErrorLogOnly()
         //{
-            //Container.Settings = new ZenjectSettings(ValidationErrorResponses.Log);
-            //Container.Bind<Bar>().AsSingle().NonLazy();
+        //Container.Settings = new ZenjectSettings(ValidationErrorResponses.Log);
+        //Container.Bind<Bar>().AsSingle().NonLazy();
 
-            //Container.ResolveRoots();
+        //Container.ResolveRoots();
         //}
 
         [Test]
-        public void TestValidationErrorThrows()
-        {
+        public void TestValidationErrorThrows() {
             Container.Settings = new ZenjectSettings(ValidationErrorResponses.Throw);
 
             Container.Bind<Bar>().AsSingle().NonLazy();
@@ -38,8 +33,7 @@ namespace Zenject.Tests
         }
 
         [Test]
-        public void TestOutsideObjectGraph1()
-        {
+        public void TestOutsideObjectGraph1() {
             Container.Settings = new ZenjectSettings(ValidationErrorResponses.Throw);
 
             Container.Bind<Bar>().AsSingle();
@@ -48,8 +42,7 @@ namespace Zenject.Tests
         }
 
         [Test]
-        public void TestOutsideObjectGraph2()
-        {
+        public void TestOutsideObjectGraph2() {
             Container.Settings = new ZenjectSettings(
                 ValidationErrorResponses.Throw, RootResolveMethods.All);
 
@@ -58,15 +51,12 @@ namespace Zenject.Tests
             Assert.Throws(() => Container.ResolveRoots());
         }
 
-        public class Bar
-        {
-            public Bar(Foo foo)
-            {
+        public class Bar {
+            public Bar(Foo foo) {
             }
         }
 
-        public class Foo
-        {
+        public class Foo {
         }
     }
 }

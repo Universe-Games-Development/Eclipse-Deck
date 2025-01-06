@@ -29,6 +29,6 @@ public class MaxHealthRewardSO : RewardSO {
     public int healthIncrease;
 
     public override void ApplyReward(Opponent opponent) {
-        opponent.health.IncreaseMaxHealth(healthIncrease);
+        opponent.health.SetMaxValue(healthIncrease);
     }
 }
