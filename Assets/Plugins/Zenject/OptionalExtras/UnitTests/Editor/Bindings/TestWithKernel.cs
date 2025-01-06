@@ -1,58 +1,46 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestWithKernel : ZenjectUnitTestFixture
-    {
+    public class TestWithKernel : ZenjectUnitTestFixture {
         static int GlobalInitializeCount;
 
-        public class Foo : IInitializable
-        {
-            public bool WasInitialized
-            {
+        public class Foo : IInitializable {
+            public bool WasInitialized {
                 get; private set;
             }
 
-            public int InitializeCount
-            {
+            public int InitializeCount {
                 get; private set;
             }
 
-            public void Initialize()
-            {
+            public void Initialize() {
                 InitializeCount = ++GlobalInitializeCount;
                 WasInitialized = true;
             }
         }
 
-        public class FooFacade
-        {
+        public class FooFacade {
             [Inject]
-            public Foo Foo
-            {
+            public Foo Foo {
                 get; private set;
             }
         }
 
-        public class FooInstaller : Installer<FooInstaller>
-        {
-            public override void InstallBindings()
-            {
+        public class FooInstaller : Installer<FooInstaller> {
+            public override void InstallBindings() {
                 InstallFoo(Container);
             }
         }
 
-        static void InstallFoo(DiContainer subContainer)
-        {
+        static void InstallFoo(DiContainer subContainer) {
             subContainer.Bind<FooFacade>().AsSingle();
             subContainer.BindInterfacesAndSelfTo<Foo>().AsSingle();
         }
 
         [Test]
-        public void TestByInstaller()
-        {
+        public void TestByInstaller() {
             Container.Bind<FooFacade>().FromSubContainerResolve()
                 .ByInstaller<FooInstaller>().WithKernel().AsSingle();
 
@@ -67,8 +55,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestByMethod()
-        {
+        public void TestByMethod() {
             Container.Bind<FooFacade>().FromSubContainerResolve()
                 .ByMethod(InstallFoo).WithKernel().AsSingle();
 
@@ -82,26 +69,21 @@ namespace Zenject.Tests.Bindings
             Assert.That(facade.Foo.WasInitialized);
         }
 
-        public class FooKernel : Kernel
-        {
+        public class FooKernel : Kernel {
         }
 
-        public class Bar : IInitializable
-        {
-            public int InitializeCount
-            {
+        public class Bar : IInitializable {
+            public int InitializeCount {
                 get; private set;
             }
 
-            public void Initialize()
-            {
+            public void Initialize() {
                 InitializeCount = ++GlobalInitializeCount;
             }
         }
 
         [Test]
-        public void TestByInstallerCustomOrder()
-        {
+        public void TestByInstallerCustomOrder() {
             GlobalInitializeCount = 0;
 
             Container.BindInterfacesAndSelfTo<Bar>().AsSingle();
@@ -122,8 +104,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestByInstallerCustomOrder2()
-        {
+        public void TestByInstallerCustomOrder2() {
             GlobalInitializeCount = 0;
 
             Container.BindInterfacesAndSelfTo<Bar>().AsSingle();

@@ -8,10 +8,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 #endif
 
-namespace Zenject.Internal
-{
-    public static class ZenUtilInternal
-    {
+namespace Zenject.Internal {
+    public static class ZenUtilInternal {
 #if UNITY_EDITOR
         static GameObject _disabledIndestructibleGameObject;
 #endif
@@ -21,8 +19,7 @@ namespace Zenject.Internal
         // expected
         // In those cases you can use this function which will also
         // work with non-unity objects
-        public static bool IsNull(System.Object obj)
-        {
+        public static bool IsNull(System.Object obj) {
             return obj == null || obj.Equals(null);
         }
 
@@ -30,31 +27,26 @@ namespace Zenject.Internal
         // This can be useful if you are running code outside unity
         // since in that case you have to make sure to avoid calling anything
         // inside Unity DLLs
-        public static bool IsOutsideUnity()
-        {
+        public static bool IsOutsideUnity() {
             return AppDomain.CurrentDomain.FriendlyName != "Unity Child Domain";
         }
 #endif
 
-        public static bool AreFunctionsEqual(Delegate left, Delegate right)
-        {
+        public static bool AreFunctionsEqual(Delegate left, Delegate right) {
             return left.Target == right.Target && left.Method() == right.Method();
         }
 
         // Taken from here:
         // http://stackoverflow.com/questions/28937324/in-c-how-could-i-get-a-classs-inheritance-distance-to-base-class/28937542#28937542
-        public static int GetInheritanceDelta(Type derived, Type parent)
-        {
+        public static int GetInheritanceDelta(Type derived, Type parent) {
             Assert.That(derived.DerivesFromOrEqual(parent));
 
-            if (parent.IsInterface())
-            {
+            if (parent.IsInterface()) {
                 // Not sure if we can calculate this so just return 1
                 return 1;
             }
 
-            if (derived == parent)
-            {
+            if (derived == parent) {
                 return 0;
             }
 
@@ -62,8 +54,7 @@ namespace Zenject.Internal
 
             Type child = derived;
 
-            while ((child = child.BaseType()) != parent)
-            {
+            while ((child = child.BaseType()) != parent) {
                 distance++;
             }
 
@@ -71,15 +62,12 @@ namespace Zenject.Internal
         }
 
 #if !NOT_UNITY3D
-        public static IEnumerable<SceneContext> GetAllSceneContexts()
-        {
-            foreach (var scene in UnityUtil.AllLoadedScenes)
-            {
+        public static IEnumerable<SceneContext> GetAllSceneContexts() {
+            foreach (var scene in UnityUtil.AllLoadedScenes) {
                 var contexts = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<SceneContext>()).ToList();
 
-                if (contexts.IsEmpty())
-                {
+                if (contexts.IsEmpty()) {
                     continue;
                 }
 
@@ -90,12 +78,9 @@ namespace Zenject.Internal
             }
         }
 
-        public static void AddStateMachineBehaviourAutoInjectersInScene(Scene scene)
-        {
-            foreach (var rootObj in GetRootGameObjects(scene))
-            {
-                if (rootObj != null)
-                {
+        public static void AddStateMachineBehaviourAutoInjectersInScene(Scene scene) {
+            foreach (var rootObj in GetRootGameObjects(scene)) {
+                if (rootObj != null) {
                     AddStateMachineBehaviourAutoInjectersUnderGameObject(rootObj);
                 }
             }
@@ -106,18 +91,15 @@ namespace Zenject.Internal
         // The StateMachineBehaviour's cannot be retrieved until after the Start() method so we
         // need to use ZenjectStateMachineBehaviourAutoInjecter to do the injection at that
         // time for us
-        public static void AddStateMachineBehaviourAutoInjectersUnderGameObject(GameObject root)
-        {
+        public static void AddStateMachineBehaviourAutoInjectersUnderGameObject(GameObject root) {
 #if ZEN_INTERNAL_PROFILING
             using (ProfileTimers.CreateTimedBlock("Searching Hierarchy"))
 #endif
             {
                 var animators = root.GetComponentsInChildren<Animator>(true);
 
-                foreach (var animator in animators)
-                {
-                    if (animator.gameObject.GetComponent<ZenjectStateMachineBehaviourAutoInjecter>() == null)
-                    {
+                foreach (var animator in animators) {
+                    if (animator.gameObject.GetComponent<ZenjectStateMachineBehaviourAutoInjecter>() == null) {
                         animator.gameObject.AddComponent<ZenjectStateMachineBehaviourAutoInjecter>();
                     }
                 }
@@ -125,16 +107,13 @@ namespace Zenject.Internal
         }
 
         public static void GetInjectableMonoBehavioursInScene(
-            Scene scene, List<MonoBehaviour> monoBehaviours)
-        {
+            Scene scene, List<MonoBehaviour> monoBehaviours) {
 #if ZEN_INTERNAL_PROFILING
             using (ProfileTimers.CreateTimedBlock("Searching Hierarchy"))
 #endif
             {
-                foreach (var rootObj in GetRootGameObjects(scene))
-                {
-                    if (rootObj != null)
-                    {
+                foreach (var rootObj in GetRootGameObjects(scene)) {
+                    if (rootObj != null) {
                         GetInjectableMonoBehavioursUnderGameObjectInternal(rootObj, monoBehaviours);
                     }
                 }
@@ -144,8 +123,7 @@ namespace Zenject.Internal
         // NOTE: This method will not return components that are within a GameObjectContext
         // It returns monobehaviours in a bottom-up order
         public static void GetInjectableMonoBehavioursUnderGameObject(
-            GameObject gameObject, List<MonoBehaviour> injectableComponents)
-        {
+            GameObject gameObject, List<MonoBehaviour> injectableComponents) {
 #if ZEN_INTERNAL_PROFILING
             using (ProfileTimers.CreateTimedBlock("Searching Hierarchy"))
 #endif
@@ -155,23 +133,19 @@ namespace Zenject.Internal
         }
 
         static void GetInjectableMonoBehavioursUnderGameObjectInternal(
-            GameObject gameObject, List<MonoBehaviour> injectableComponents)
-        {
-            if (gameObject == null)
-            {
+            GameObject gameObject, List<MonoBehaviour> injectableComponents) {
+            if (gameObject == null) {
                 return;
             }
 
             var monoBehaviours = gameObject.GetComponents<MonoBehaviour>();
 
-            for (int i = 0; i < monoBehaviours.Length; i++)
-            {
+            for (int i = 0; i < monoBehaviours.Length; i++) {
                 var monoBehaviour = monoBehaviours[i];
 
                 // Can be null for broken component references
                 if (monoBehaviour != null
-                        && monoBehaviour.GetType().DerivesFromOrEqual<GameObjectContext>())
-                {
+                        && monoBehaviour.GetType().DerivesFromOrEqual<GameObjectContext>()) {
                     // Need to make sure we don't inject on any MonoBehaviour's that are below a GameObjectContext
                     // Since that is the responsibility of the GameObjectContext
                     // BUT we do want to inject on the GameObjectContext itself
@@ -182,43 +156,36 @@ namespace Zenject.Internal
 
             // Recurse first so it adds components bottom up though it shouldn't really matter much
             // because it should always inject in the dependency order
-            for (int i = 0; i < gameObject.transform.childCount; i++)
-            {
+            for (int i = 0; i < gameObject.transform.childCount; i++) {
                 var child = gameObject.transform.GetChild(i);
 
-                if (child != null)
-                {
+                if (child != null) {
                     GetInjectableMonoBehavioursUnderGameObjectInternal(child.gameObject, injectableComponents);
                 }
             }
 
-            for (int i = 0; i < monoBehaviours.Length; i++)
-            {
+            for (int i = 0; i < monoBehaviours.Length; i++) {
                 var monoBehaviour = monoBehaviours[i];
 
                 // Can be null for broken component references
                 if (monoBehaviour != null
-                    && IsInjectableMonoBehaviourType(monoBehaviour.GetType()))
-                {
+                    && IsInjectableMonoBehaviourType(monoBehaviour.GetType())) {
                     injectableComponents.Add(monoBehaviour);
                 }
             }
         }
 
-        public static bool IsInjectableMonoBehaviourType(Type type)
-        {
+        public static bool IsInjectableMonoBehaviourType(Type type) {
             // Do not inject on installers since these are always injected before they are installed
             return type != null && !type.DerivesFrom<MonoInstaller>() && TypeAnalyzer.HasInfo(type);
         }
 
-        public static IEnumerable<GameObject> GetRootGameObjects(Scene scene)
-        {
+        public static IEnumerable<GameObject> GetRootGameObjects(Scene scene) {
 #if ZEN_INTERNAL_PROFILING
             using (ProfileTimers.CreateTimedBlock("Searching Hierarchy"))
 #endif
             {
-                if (scene.isLoaded)
-                {
+                if (scene.isLoaded) {
                     return scene.GetRootGameObjects()
                         .Where(x => x.GetComponent<ProjectContext>() == null);
                 }
@@ -247,16 +214,13 @@ namespace Zenject.Internal
         // Returns a Transform in the DontDestroyOnLoad scene (or, if we're not in play mode, within the current active scene)
         // whose GameObject is inactive, and whose hide flags are set to HideAndDontSave. We can instantiate prefabs in here
         // without any of their Awake() methods firing.
-        public static Transform GetOrCreateInactivePrefabParent()
-        {
-            if(_disabledIndestructibleGameObject == null || (!Application.isPlaying && _disabledIndestructibleGameObject.scene != SceneManager.GetActiveScene()))
-            {
+        public static Transform GetOrCreateInactivePrefabParent() {
+            if (_disabledIndestructibleGameObject == null || (!Application.isPlaying && _disabledIndestructibleGameObject.scene != SceneManager.GetActiveScene())) {
                 var go = new GameObject("ZenUtilInternal_PrefabParent");
                 go.hideFlags = HideFlags.HideAndDontSave;
                 go.SetActive(false);
 
-                if(Application.isPlaying)
-                {
+                if (Application.isPlaying) {
                     UnityEngine.Object.DontDestroyOnLoad(go);
                 }
 

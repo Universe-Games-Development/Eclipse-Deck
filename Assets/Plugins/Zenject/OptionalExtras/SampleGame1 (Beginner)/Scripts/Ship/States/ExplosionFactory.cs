@@ -1,9 +1,7 @@
 using UnityEngine;
 
-namespace Zenject.Asteroids
-{
-    public class ExplosionFactory : PlaceholderFactory<Transform>
-    {
+namespace Zenject.Asteroids {
+    public class ExplosionFactory : PlaceholderFactory<Transform> {
     }
 }
 

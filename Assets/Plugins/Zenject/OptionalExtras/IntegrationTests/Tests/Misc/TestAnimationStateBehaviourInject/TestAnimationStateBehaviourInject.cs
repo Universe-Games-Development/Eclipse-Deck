@@ -1,17 +1,14 @@
 ﻿
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.TestAnimationStateBehaviourInject
-{
-    public class TestAnimationStateBehaviourInject : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.TestAnimationStateBehaviourInject {
+    public class TestAnimationStateBehaviourInject : ZenjectIntegrationTestFixture {
         const string ResourcePrefix = "TestAnimationStateBehaviourInject/";
 
         [UnityTest]
-        public IEnumerator Test1()
-        {
+        public IEnumerator Test1() {
             PreInstall();
             var prefab = FixtureUtil.GetPrefab(ResourcePrefix + "Foo");
 
@@ -26,15 +23,12 @@ namespace Zenject.Tests.TestAnimationStateBehaviourInject
             Assert.IsEqual(StateBehaviour1.OnStateEnterCalls, 1);
         }
 
-        public class Foo : IInitializable
-        {
-            public bool HasInitialized
-            {
+        public class Foo : IInitializable {
+            public bool HasInitialized {
                 get; private set;
             }
 
-            public void Initialize()
-            {
+            public void Initialize() {
                 HasInitialized = true;
             }
         }

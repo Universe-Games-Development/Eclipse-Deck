@@ -1,17 +1,14 @@
 
+using ModestTree;
 using System.Collections;
 using System.Collections.Generic;
-using ModestTree;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromComponentSibling : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromComponentSibling : ZenjectIntegrationTestFixture {
         [UnityTest]
-        public IEnumerator RunTestSingleMatch()
-        {
+        public IEnumerator RunTestSingleMatch() {
             var foo = new GameObject().AddComponent<Foo>();
 
             var bar = foo.gameObject.AddComponent<Bar>();
@@ -35,8 +32,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunTestSingleMatchOptional1()
-        {
+        public IEnumerator RunTestSingleMatchOptional1() {
             var foo = new GameObject().AddComponent<FooOptional>();
 
             PreInstall();
@@ -50,8 +46,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunTestSingleMatchOptional2()
-        {
+        public IEnumerator RunTestSingleMatchOptional2() {
             var foo = new GameObject().AddComponent<FooOptional>();
             var bar = foo.gameObject.AddComponent<Bar>();
 
@@ -66,8 +61,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunTestSingleMatchOptional3()
-        {
+        public IEnumerator RunTestSingleMatchOptional3() {
             new GameObject().AddComponent<FooOptional2>();
 
             PreInstall();
@@ -79,8 +73,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunTestMultiple()
-        {
+        public IEnumerator RunTestMultiple() {
             var foo = new GameObject().AddComponent<Foo>();
 
             var bar = foo.gameObject.AddComponent<Bar>();
@@ -107,8 +100,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunTestMissingFailure()
-        {
+        public IEnumerator RunTestMissingFailure() {
             new GameObject().AddComponent<Gorp>();
 
             PreInstall();
@@ -120,8 +112,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunTestMissingSuccess()
-        {
+        public IEnumerator RunTestMissingSuccess() {
             var foo = new GameObject().AddComponent<Foo>();
             foo.gameObject.AddComponent<Bar>();
 
@@ -138,8 +129,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunTestMultipleNonGeneric()
-        {
+        public IEnumerator RunTestMultipleNonGeneric() {
             var foo = new GameObject().AddComponent<Foo>();
 
             var bar = foo.gameObject.AddComponent<Bar>();
@@ -166,8 +156,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunTestMissingFailureNonGeneric()
-        {
+        public IEnumerator RunTestMissingFailureNonGeneric() {
             new GameObject().AddComponent<Gorp>();
 
             PreInstall();
@@ -179,8 +168,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator RunTestMissingSuccessNonGeneric()
-        {
+        public IEnumerator RunTestMissingSuccessNonGeneric() {
             var foo = new GameObject().AddComponent<Foo>();
             foo.gameObject.AddComponent<Bar>();
 
@@ -196,34 +184,28 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        public class Qux : MonoBehaviour
-        {
+        public class Qux : MonoBehaviour {
             [Inject]
             public Qux OtherQux;
         }
 
-        public interface IBar
-        {
+        public interface IBar {
         }
 
-        public class Bar : MonoBehaviour, IBar
-        {
+        public class Bar : MonoBehaviour, IBar {
         }
 
-        public class FooOptional : MonoBehaviour
-        {
+        public class FooOptional : MonoBehaviour {
             [InjectOptional]
             public Bar Bar;
         }
 
-        public class FooOptional2 : MonoBehaviour
-        {
+        public class FooOptional2 : MonoBehaviour {
             [Inject]
             public Bar Bar;
         }
 
-        public class Foo : MonoBehaviour
-        {
+        public class Foo : MonoBehaviour {
             [Inject]
             public Bar Bar;
 
@@ -234,8 +216,7 @@ namespace Zenject.Tests.Bindings
             public List<Qux> Qux;
         }
 
-        public class Gorp : MonoBehaviour
-        {
+        public class Gorp : MonoBehaviour {
             [Inject]
             public Bar Bar;
         }

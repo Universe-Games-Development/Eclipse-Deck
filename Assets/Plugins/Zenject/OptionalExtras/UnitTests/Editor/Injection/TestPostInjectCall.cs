@@ -1,25 +1,19 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Injection
-{
+namespace Zenject.Tests.Injection {
     [TestFixture]
-    public class TestPostInjectCall : ZenjectUnitTestFixture
-    {
-        class Test0
-        {
+    public class TestPostInjectCall : ZenjectUnitTestFixture {
+        class Test0 {
         }
 
-        class Test1
-        {
+        class Test1 {
         }
 
-        class Test2
-        {
+        class Test2 {
         }
 
-        class Test3
-        {
+        class Test3 {
             public bool HasInitialized;
             public bool HasInitialized2;
 
@@ -31,14 +25,12 @@ namespace Zenject.Tests.Injection
 
             Test2 _test2;
 
-            public Test3(Test2 test2)
-            {
+            public Test3(Test2 test2) {
                 _test2 = test2;
             }
 
             [Inject]
-            public void Init()
-            {
+            public void Init() {
                 Assert.That(!HasInitialized);
                 Assert.IsNotNull(test1);
                 Assert.IsNotNull(test0);
@@ -47,15 +39,13 @@ namespace Zenject.Tests.Injection
             }
 
             [Inject]
-            void TestPrivatePostInject()
-            {
+            void TestPrivatePostInject() {
                 HasInitialized2 = true;
             }
         }
 
         [Test]
-        public void Test()
-        {
+        public void Test() {
             Container.Bind<Test0>().AsSingle().NonLazy();
             Container.Bind<Test1>().AsSingle().NonLazy();
             Container.Bind<Test2>().AsSingle().NonLazy();
@@ -66,24 +56,20 @@ namespace Zenject.Tests.Injection
             Assert.That(test3.HasInitialized2);
         }
 
-        public class SimpleBase
-        {
+        public class SimpleBase {
             public bool WasCalled;
 
             [Inject]
-            void Init()
-            {
+            void Init() {
                 WasCalled = true;
             }
         }
 
-        public class SimpleDerived : SimpleBase
-        {
+        public class SimpleDerived : SimpleBase {
         }
 
         [Test]
-        public void TestPrivateBaseClassPostInject()
-        {
+        public void TestPrivateBaseClassPostInject() {
             Container.Bind<SimpleBase>().To<SimpleDerived>().AsSingle().NonLazy();
 
             var simple = Container.Resolve<SimpleBase>();
@@ -92,8 +78,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void TestInheritance()
-        {
+        public void TestInheritance() {
             Container.Bind<IFoo>().To<FooDerived>().AsSingle().NonLazy();
 
             var foo = Container.Resolve<IFoo>();
@@ -105,8 +90,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void TestInheritanceOrder()
-        {
+        public void TestInheritanceOrder() {
             Container.Bind<IFoo>().To<FooDerived2>().AsSingle().NonLazy();
 
             // base post inject methods should be called first
@@ -127,62 +111,53 @@ namespace Zenject.Tests.Injection
 
         static int _initOrder;
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class FooBase : IFoo
-        {
+        class FooBase : IFoo {
             public bool WasBaseCalled;
             public bool WasBaseCalled2;
             public static int BaseCallOrder;
 
             [Inject]
-            void TestBase()
-            {
+            void TestBase() {
                 Assert.That(!WasBaseCalled);
                 WasBaseCalled = true;
                 BaseCallOrder = _initOrder++;
             }
 
             [Inject]
-            public virtual void TestVirtual1()
-            {
+            public virtual void TestVirtual1() {
                 Assert.That(!WasBaseCalled2);
                 WasBaseCalled2 = true;
             }
         }
 
-        class FooDerived : FooBase
-        {
+        class FooDerived : FooBase {
             public bool WasDerivedCalled;
             public bool WasDerivedCalled2;
             public static int DerivedCallOrder;
 
             [Inject]
-            void TestDerived()
-            {
+            void TestDerived() {
                 Assert.That(!WasDerivedCalled);
                 WasDerivedCalled = true;
                 DerivedCallOrder = _initOrder++;
             }
 
-            public override void TestVirtual1()
-            {
+            public override void TestVirtual1() {
                 base.TestVirtual1();
                 Assert.That(!WasDerivedCalled2);
                 WasDerivedCalled2 = true;
             }
         }
 
-        class FooDerived2 : FooDerived
-        {
+        class FooDerived2 : FooDerived {
             public bool WasDerived2Called;
             public static int Derived2CallOrder;
 
             [Inject]
-            public void TestVirtual2()
-            {
+            public void TestVirtual2() {
                 Assert.That(!WasDerived2Called);
                 WasDerived2Called = true;
                 Derived2CallOrder = _initOrder++;

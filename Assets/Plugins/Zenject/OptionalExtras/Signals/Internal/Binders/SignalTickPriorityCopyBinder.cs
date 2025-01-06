@@ -1,21 +1,16 @@
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class SignalTickPriorityCopyBinder : SignalCopyBinder
-    {
+    public class SignalTickPriorityCopyBinder : SignalCopyBinder {
         public SignalTickPriorityCopyBinder(
-            SignalDeclarationBindInfo signalBindInfo)
-        {
+            SignalDeclarationBindInfo signalBindInfo) {
             SignalBindInfo = signalBindInfo;
         }
 
-        protected SignalDeclarationBindInfo SignalBindInfo
-        {
+        protected SignalDeclarationBindInfo SignalBindInfo {
             get; private set;
         }
 
-        public SignalCopyBinder WithTickPriority(int priority)
-        {
+        public SignalCopyBinder WithTickPriority(int priority) {
             SignalBindInfo.TickPriority = priority;
             SignalBindInfo.RunAsync = true;
             return this;

@@ -1,23 +1,19 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class ConcreteBinderNonGeneric : FromBinderNonGeneric
-    {
+    public class ConcreteBinderNonGeneric : FromBinderNonGeneric {
         public ConcreteBinderNonGeneric(
             DiContainer bindContainer, BindInfo bindInfo,
             BindStatement bindStatement)
-            : base(bindContainer, bindInfo, bindStatement)
-        {
+            : base(bindContainer, bindInfo, bindStatement) {
             ToSelf();
         }
 
         // Note that this is the default, so not necessary to call
-        public FromBinderNonGeneric ToSelf()
-        {
+        public FromBinderNonGeneric ToSelf() {
             Assert.IsEqual(BindInfo.ToChoice, ToChoices.Self);
 
             BindInfo.RequireExplicitScope = true;
@@ -29,29 +25,23 @@ namespace Zenject
             return this;
         }
 
-        public FromBinderNonGeneric To<TConcrete>()
-        {
+        public FromBinderNonGeneric To<TConcrete>() {
             return To(typeof(TConcrete));
         }
 
-        public FromBinderNonGeneric To(params Type[] concreteTypes)
-        {
+        public FromBinderNonGeneric To(params Type[] concreteTypes) {
             return To((IEnumerable<Type>)concreteTypes);
         }
 
-        public FromBinderNonGeneric To(IEnumerable<Type> concreteTypes)
-        {
+        public FromBinderNonGeneric To(IEnumerable<Type> concreteTypes) {
             BindInfo.ToChoice = ToChoices.Concrete;
             BindInfo.ToTypes.Clear();
             BindInfo.ToTypes.AddRange(concreteTypes);
 
-            if (BindInfo.ToTypes.Count > 1 && BindInfo.ContractTypes.Count > 1)
-            {
+            if (BindInfo.ToTypes.Count > 1 && BindInfo.ContractTypes.Count > 1) {
                 // Be more lenient in this case to behave similar to convention based bindings
                 BindInfo.InvalidBindResponse = InvalidBindResponses.Skip;
-            }
-            else
-            {
+            } else {
                 BindingUtil.AssertIsDerivedFromTypes(concreteTypes, BindInfo.ContractTypes, BindInfo.InvalidBindResponse);
             }
 
@@ -60,8 +50,7 @@ namespace Zenject
 
 #if !(UNITY_WSA && ENABLE_DOTNET)
         public FromBinderNonGeneric To(
-            Action<ConventionSelectTypesBinder> generator)
-        {
+            Action<ConventionSelectTypesBinder> generator) {
             var bindInfo = new ConventionBindInfo();
 
             // This is nice because it allows us to do things like Bind(all interfaces).To(specific types)

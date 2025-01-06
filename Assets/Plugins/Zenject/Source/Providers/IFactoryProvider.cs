@@ -1,42 +1,34 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 
-namespace Zenject
-{
-    public abstract class IFactoryProviderBase<TContract> : IProvider
-    {
+namespace Zenject {
+    public abstract class IFactoryProviderBase<TContract> : IProvider {
         public IFactoryProviderBase(
-            DiContainer container, Guid factoryId)
-        {
+            DiContainer container, Guid factoryId) {
             Container = container;
             FactoryId = factoryId;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        protected Guid FactoryId
-        {
+        protected Guid FactoryId {
             get;
             private set;
         }
 
-        protected DiContainer Container
-        {
+        protected DiContainer Container {
             get;
             private set;
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TContract);
         }
 
@@ -47,17 +39,14 @@ namespace Zenject
     // Zero parameters
 
     [NoReflectionBaking]
-    public class IFactoryProvider<TContract> : IFactoryProviderBase<TContract>
-    {
+    public class IFactoryProvider<TContract> : IFactoryProviderBase<TContract> {
         public IFactoryProvider(
             DiContainer container, Guid factoryId)
-            : base(container, factoryId)
-        {
+            : base(container, factoryId) {
         }
 
         public override void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.That(args.IsEmpty());
 
             Assert.IsNotNull(context);
@@ -68,14 +57,11 @@ namespace Zenject
             var factory = Container.ResolveId(typeof(IFactory<TContract>), FactoryId);
 
             injectAction = null;
-            if (Container.IsValidating)
-            {
+            if (Container.IsValidating) {
                 // We assume here that we are creating a user-defined factory so there's
                 // nothing else we can validate here
                 buffer.Add(new ValidationMarker(typeof(TContract)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(((IFactory<TContract>)factory).Create());
             }
         }
@@ -84,16 +70,13 @@ namespace Zenject
     // One parameter
 
     [NoReflectionBaking]
-    public class IFactoryProvider<TParam1, TContract> : IFactoryProviderBase<TContract>
-    {
+    public class IFactoryProvider<TParam1, TContract> : IFactoryProviderBase<TContract> {
         public IFactoryProvider(DiContainer container, Guid factoryId)
-            : base(container, factoryId)
-        {
+            : base(container, factoryId) {
         }
 
         public override void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 1);
             Assert.IsNotNull(context);
 
@@ -104,15 +87,12 @@ namespace Zenject
             var factory = Container.ResolveId(typeof(IFactory<TParam1, TContract>), FactoryId);
 
             injectAction = null;
-            if (Container.IsValidating)
-            {
+            if (Container.IsValidating) {
                 // We assume here that we are creating a user-defined factory so there's
                 // nothing else we can validate here
 
                 buffer.Add(new ValidationMarker(typeof(TContract)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(((IFactory<TParam1, TContract>)factory).Create((TParam1)args[0].Value));
             }
         }
@@ -121,16 +101,13 @@ namespace Zenject
     // Two parameters
 
     [NoReflectionBaking]
-    public class IFactoryProvider<TParam1, TParam2, TContract> : IFactoryProviderBase<TContract>
-    {
+    public class IFactoryProvider<TParam1, TParam2, TContract> : IFactoryProviderBase<TContract> {
         public IFactoryProvider(DiContainer container, Guid factoryId)
-            : base(container, factoryId)
-        {
+            : base(container, factoryId) {
         }
 
         public override void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 2);
             Assert.IsNotNull(context);
 
@@ -142,14 +119,11 @@ namespace Zenject
             var factory = Container.ResolveId(typeof(IFactory<TParam1, TParam2, TContract>), FactoryId);
 
             injectAction = null;
-            if (Container.IsValidating)
-            {
+            if (Container.IsValidating) {
                 // We assume here that we are creating a user-defined factory so there's
                 // nothing else we can validate here
                 buffer.Add(new ValidationMarker(typeof(TContract)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     ((IFactory<TParam1, TParam2, TContract>)factory).Create(
                         (TParam1)args[0].Value,
@@ -161,16 +135,13 @@ namespace Zenject
     // Three parameters
 
     [NoReflectionBaking]
-    public class IFactoryProvider<TParam1, TParam2, TParam3, TContract> : IFactoryProviderBase<TContract>
-    {
+    public class IFactoryProvider<TParam1, TParam2, TParam3, TContract> : IFactoryProviderBase<TContract> {
         public IFactoryProvider(DiContainer container, Guid factoryId)
-            : base(container, factoryId)
-        {
+            : base(container, factoryId) {
         }
 
         public override void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 3);
             Assert.IsNotNull(context);
 
@@ -183,14 +154,11 @@ namespace Zenject
             var factory = Container.ResolveId(typeof(IFactory<TParam1, TParam2, TParam3, TContract>), FactoryId);
 
             injectAction = null;
-            if (Container.IsValidating)
-            {
+            if (Container.IsValidating) {
                 // We assume here that we are creating a user-defined factory so there's
                 // nothing else we can validate here
                 buffer.Add(new ValidationMarker(typeof(TContract)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     ((IFactory<TParam1, TParam2, TParam3, TContract>)factory).Create(
                         (TParam1)args[0].Value,
@@ -203,16 +171,13 @@ namespace Zenject
     // Four parameters
 
     [NoReflectionBaking]
-    public class IFactoryProvider<TParam1, TParam2, TParam3, TParam4, TContract> : IFactoryProviderBase<TContract>
-    {
+    public class IFactoryProvider<TParam1, TParam2, TParam3, TParam4, TContract> : IFactoryProviderBase<TContract> {
         public IFactoryProvider(DiContainer container, Guid factoryId)
-            : base(container, factoryId)
-        {
+            : base(container, factoryId) {
         }
 
         public override void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 4);
             Assert.IsNotNull(context);
 
@@ -226,14 +191,11 @@ namespace Zenject
             var factory = Container.ResolveId(typeof(IFactory<TParam1, TParam2, TParam3, TParam4, TContract>), FactoryId);
 
             injectAction = null;
-            if (Container.IsValidating)
-            {
+            if (Container.IsValidating) {
                 // We assume here that we are creating a user-defined factory so there's
                 // nothing else we can validate here
                 buffer.Add(new ValidationMarker(typeof(TContract)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     ((IFactory<TParam1, TParam2, TParam3, TParam4, TContract>)factory).Create(
                         (TParam1)args[0].Value,
@@ -247,16 +209,13 @@ namespace Zenject
     // Five parameters
 
     [NoReflectionBaking]
-    public class IFactoryProvider<TParam1, TParam2, TParam3, TParam4, TParam5, TContract> : IFactoryProviderBase<TContract>
-    {
+    public class IFactoryProvider<TParam1, TParam2, TParam3, TParam4, TParam5, TContract> : IFactoryProviderBase<TContract> {
         public IFactoryProvider(DiContainer container, Guid factoryId)
-            : base(container, factoryId)
-        {
+            : base(container, factoryId) {
         }
 
         public override void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 5);
             Assert.IsNotNull(context);
 
@@ -271,14 +230,11 @@ namespace Zenject
             var factory = Container.ResolveId(typeof(IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TContract>), FactoryId);
 
             injectAction = null;
-            if (Container.IsValidating)
-            {
+            if (Container.IsValidating) {
                 // We assume here that we are creating a user-defined factory so there's
                 // nothing else we can validate here
                 buffer.Add(new ValidationMarker(typeof(TContract)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     ((IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TContract>)factory).Create(
                         (TParam1)args[0].Value,
@@ -293,16 +249,13 @@ namespace Zenject
     // Six parameters
 
     [NoReflectionBaking]
-    public class IFactoryProvider<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TContract> : IFactoryProviderBase<TContract>
-    {
+    public class IFactoryProvider<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TContract> : IFactoryProviderBase<TContract> {
         public IFactoryProvider(DiContainer container, Guid factoryId)
-            : base(container, factoryId)
-        {
+            : base(container, factoryId) {
         }
 
         public override void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 6);
             Assert.IsNotNull(context);
 
@@ -318,14 +271,11 @@ namespace Zenject
             var factory = Container.ResolveId(typeof(IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TContract>), FactoryId);
 
             injectAction = null;
-            if (Container.IsValidating)
-            {
+            if (Container.IsValidating) {
                 // We assume here that we are creating a user-defined factory so there's
                 // nothing else we can validate here
                 buffer.Add(new ValidationMarker(typeof(TContract)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     ((IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TContract>)factory).Create(
                         (TParam1)args[0].Value,
@@ -341,16 +291,13 @@ namespace Zenject
     // Ten parameters
 
     [NoReflectionBaking]
-    public class IFactoryProvider<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TContract> : IFactoryProviderBase<TContract>
-    {
+    public class IFactoryProvider<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TContract> : IFactoryProviderBase<TContract> {
         public IFactoryProvider(DiContainer container, Guid factoryId)
-            : base(container, factoryId)
-        {
+            : base(container, factoryId) {
         }
 
         public override void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 10);
             Assert.IsNotNull(context);
 
@@ -370,14 +317,11 @@ namespace Zenject
             var factory = Container.ResolveId(typeof(IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TContract>), FactoryId);
 
             injectAction = null;
-            if (Container.IsValidating)
-            {
+            if (Container.IsValidating) {
                 // We assume here that we are creating a user-defined factory so there's
                 // nothing else we can validate here
                 buffer.Add(new ValidationMarker(typeof(TContract)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     ((IFactory<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TContract>)factory).Create(
                         (TParam1)args[0].Value,

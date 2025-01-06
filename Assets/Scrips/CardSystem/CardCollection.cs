@@ -27,7 +27,7 @@ public class CardCollection {
     }
 
     public void GenerateTestDeck(int count) {
-        
+
         for (int i = 0; i < count; i++) {
             AddCardToCollection(resourceManager.GetRandomResource<CardSO>(ResourceType.CARDS));
         }

@@ -1,52 +1,44 @@
 #if !NOT_UNITY3D
 
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 using UnityEngine;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class GetFromGameObjectComponentProvider : IProvider
-    {
+    public class GetFromGameObjectComponentProvider : IProvider {
         readonly GameObject _gameObject;
         readonly Type _componentType;
         readonly bool _matchSingle;
 
         // if concreteType is null we use the contract type from inject context
         public GetFromGameObjectComponentProvider(
-            Type componentType, GameObject gameObject, bool matchSingle)
-        {
+            Type componentType, GameObject gameObject, bool matchSingle) {
             _componentType = componentType;
             _matchSingle = matchSingle;
             _gameObject = gameObject;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return _componentType;
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsNotNull(context);
 
             injectAction = null;
 
-            if (_matchSingle)
-            {
+            if (_matchSingle) {
                 var match = _gameObject.GetComponent(_componentType);
 
                 Assert.IsNotNull(match, "Could not find component with type '{0}' on prefab '{1}'",

@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestFactoryMemoryPoolCustomInterface : ZenjectUnitTestFixture
-    {
+    public class TestFactoryMemoryPoolCustomInterface : ZenjectUnitTestFixture {
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             var foo = new Foo();
 
             Container.BindFactoryCustomInterface<Foo, Foo.Factory, Foo.IFooFactory>().FromInstance(foo);
@@ -17,8 +14,7 @@ namespace Zenject.Tests.Other
         }
 
         [Test]
-        public void Test2()
-        {
+        public void Test2() {
             var foo = new Foo();
 
             Container.BindMemoryPoolCustomInterface<Foo, Foo.Pool, Foo.IFooPool>().FromInstance(foo);
@@ -26,22 +22,17 @@ namespace Zenject.Tests.Other
             Assert.IsEqual(Container.Resolve<Foo.IFooPool>().Spawn(), foo);
         }
 
-        public class Foo
-        {
-            public interface IFooFactory : IFactory<Foo>
-            {
+        public class Foo {
+            public interface IFooFactory : IFactory<Foo> {
             }
 
-            public interface IFooPool : IMemoryPool<Foo>
-            {
+            public interface IFooPool : IMemoryPool<Foo> {
             }
 
-            public class Factory : PlaceholderFactory<Foo>, IFooFactory
-            {
+            public class Factory : PlaceholderFactory<Foo>, IFooFactory {
             }
 
-            public class Pool : MemoryPool<Foo>, IFooPool
-            {
+            public class Pool : MemoryPool<Foo>, IFooPool {
             }
         }
     }

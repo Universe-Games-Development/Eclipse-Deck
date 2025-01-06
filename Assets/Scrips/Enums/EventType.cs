@@ -1,5 +1,4 @@
-public enum EventType
-{
+public enum EventType {
     BATTLE_START, BATTLE_END,
     ON_TURN_START, ON_TURN_END,
 

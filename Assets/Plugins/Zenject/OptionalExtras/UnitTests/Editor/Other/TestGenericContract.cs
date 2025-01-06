@@ -1,24 +1,19 @@
-using System.Collections.Generic;
 using NUnit.Framework;
+using System.Collections.Generic;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Other
-{
+namespace Zenject.Tests.Other {
     [TestFixture]
-    public class TestGenericContract : ZenjectUnitTestFixture
-    {
-        class Test1<T>
-        {
+    public class TestGenericContract : ZenjectUnitTestFixture {
+        class Test1<T> {
             public T Data;
         }
 
-        class Test2
-        {
+        class Test2 {
         }
 
         [Test]
-        public void TestToSingle()
-        {
+        public void TestToSingle() {
             Container.Bind(typeof(Test1<>)).AsSingle().NonLazy();
 
             var test1 = Container.Resolve<Test1<int>>();
@@ -32,8 +27,7 @@ namespace Zenject.Tests.Other
         }
 
         [Test]
-        public void TestToTransient()
-        {
+        public void TestToTransient() {
             Container.Bind(typeof(Test1<>)).AsTransient().NonLazy();
 
             var test1 = Container.Resolve<Test1<int>>();
@@ -48,21 +42,17 @@ namespace Zenject.Tests.Other
             Container.Resolve<Test1<Test2>>();
         }
 
-        interface IFoo<T>
-        {
+        interface IFoo<T> {
         }
 
-        interface IBar<T>
-        {
+        interface IBar<T> {
         }
 
-        class Test2<T> : IFoo<T>, IBar<T>
-        {
+        class Test2<T> : IFoo<T>, IBar<T> {
         }
 
         [Test]
-        public void TestToSingleMultipleContracts()
-        {
+        public void TestToSingleMultipleContracts() {
             Container.Bind(typeof(IFoo<>), typeof(IBar<>)).To(typeof(Test2<>)).AsSingle();
 
             var foo = Container.Resolve<IFoo<int>>();
@@ -83,8 +73,7 @@ namespace Zenject.Tests.Other
         }
 
         [Test]
-        public void TestToSingleMultipleContractsMismatch()
-        {
+        public void TestToSingleMultipleContractsMismatch() {
             Container.Bind(typeof(IQux), typeof(IFoo<>), typeof(IBar<>)).To(typeof(Test2<>), typeof(Qux)).AsSingle();
 
             var foo = Container.Resolve<IFoo<int>>();

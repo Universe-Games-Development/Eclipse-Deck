@@ -1,21 +1,17 @@
+using ModestTree;
 using System.Collections;
 using System.Linq;
-using ModestTree;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.AutoInjecter
-{
-    public class TestZenAutoInjecter : ZenjectIntegrationTestFixture
-    {
-        GameObject GetPrefab(string name)
-        {
+namespace Zenject.Tests.AutoInjecter {
+    public class TestZenAutoInjecter : ZenjectIntegrationTestFixture {
+        GameObject GetPrefab(string name) {
             return FixtureUtil.GetPrefab("TestZenAutoInjecter/{0}".Fmt(name));
         }
 
         [UnityTest]
-        public IEnumerator TestAddComponent()
-        {
+        public IEnumerator TestAddComponent() {
             PreInstall();
 
             Container.Bind<Foo>().AsSingle();
@@ -34,8 +30,7 @@ namespace Zenject.Tests.AutoInjecter
         }
 
         [UnityTest]
-        public IEnumerator TestInstantiatePrefab()
-        {
+        public IEnumerator TestInstantiatePrefab() {
             PreInstall();
 
             Container.Bind<Foo>().AsSingle();
@@ -51,8 +46,7 @@ namespace Zenject.Tests.AutoInjecter
         }
 
         [UnityTest]
-        public IEnumerator TestInstantiatePrefabWithSearchContainerSourceInGameObjectContext()
-        {
+        public IEnumerator TestInstantiatePrefabWithSearchContainerSourceInGameObjectContext() {
             PreInstall();
             Container.Bind<Gorp>().FromSubContainerResolve().ByNewContextPrefab(GetPrefab("GorpContext")).AsSingle();
             PostInstall();
@@ -69,8 +63,7 @@ namespace Zenject.Tests.AutoInjecter
         }
 
         [UnityTest]
-        public IEnumerator TestInstantiatePrefabWithSearchContainerSourceInScene()
-        {
+        public IEnumerator TestInstantiatePrefabWithSearchContainerSourceInScene() {
             SkipInstall();
             yield return null;
 
@@ -81,8 +74,7 @@ namespace Zenject.Tests.AutoInjecter
         }
 
         [UnityTest]
-        public IEnumerator TestInstantiatePrefabWithSearchContainerSourceInDontDestroyOnLoad()
-        {
+        public IEnumerator TestInstantiatePrefabWithSearchContainerSourceInDontDestroyOnLoad() {
             SkipInstall();
             yield return null;
 
@@ -94,8 +86,7 @@ namespace Zenject.Tests.AutoInjecter
         }
 
         [UnityTest]
-        public IEnumerator TestInstantiatePrefabWithProjectContainerSourceInScene()
-        {
+        public IEnumerator TestInstantiatePrefabWithProjectContainerSourceInScene() {
             SkipInstall();
             yield return null;
 
@@ -105,8 +96,7 @@ namespace Zenject.Tests.AutoInjecter
         }
 
         [UnityTest]
-        public IEnumerator TestInstantiatePrefabWithSceneContainerSourceInScene()
-        {
+        public IEnumerator TestInstantiatePrefabWithSceneContainerSourceInScene() {
             SkipInstall();
             yield return null;
 
@@ -117,8 +107,7 @@ namespace Zenject.Tests.AutoInjecter
         }
 
         [UnityTest]
-        public IEnumerator TestInstantiatePrefabWithSceneContainerSourceInProject()
-        {
+        public IEnumerator TestInstantiatePrefabWithSceneContainerSourceInProject() {
             SkipInstall();
             yield return null;
 

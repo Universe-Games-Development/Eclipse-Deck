@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromGetter : ZenjectUnitTestFixture
-    {
+    public class TestFromGetter : ZenjectUnitTestFixture {
         [Test]
-        public void TestTransient()
-        {
+        public void TestTransient() {
             Container.Bind<Foo>().AsSingle();
             Container.Bind<Bar>().FromResolveGetter<Foo>(x => x.Bar);
 
@@ -17,8 +14,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSingleFailure()
-        {
+        public void TestSingleFailure() {
             Container.Bind<Foo>().AsCached();
             Container.Bind<Foo>().AsCached();
             Container.Bind<Bar>().FromResolveGetter<Foo>(x => x.Bar).AsSingle();
@@ -27,8 +23,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMultiple()
-        {
+        public void TestMultiple() {
             Container.Bind<Foo>().AsCached();
             Container.Bind<Foo>().AsCached();
             Container.Bind<Bar>().FromResolveAllGetter<Foo>(x => x.Bar).AsSingle();
@@ -37,8 +32,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInjectSource1()
-        {
+        public void TestInjectSource1() {
             Container.Bind<Foo>().AsCached();
             Container.Bind<Foo>().AsCached();
 
@@ -51,8 +45,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInjectSource2()
-        {
+        public void TestInjectSource2() {
             Container.Bind<Foo>().AsCached();
             Container.Bind<Foo>().AsCached();
 
@@ -65,8 +58,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInjectSource3()
-        {
+        public void TestInjectSource3() {
             Container.Bind<Foo>().AsCached();
             Container.Bind<Foo>().AsCached();
 
@@ -79,8 +71,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInjectSource4()
-        {
+        public void TestInjectSource4() {
             Container.Bind<Foo>().AsCached();
 
             var subContainer = Container.CreateSubContainer();
@@ -92,23 +83,18 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(subContainer.ResolveAll<Bar>().Count, 1);
         }
 
-        interface IBar
-        {
+        interface IBar {
         }
 
-        class Bar : IBar
-        {
+        class Bar : IBar {
         }
 
-        class Foo
-        {
-            public Foo()
-            {
+        class Foo {
+            public Foo() {
                 Bar = new Bar();
             }
 
-            public Bar Bar
-            {
+            public Bar Bar {
                 get; private set;
             }
         }

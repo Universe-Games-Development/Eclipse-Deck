@@ -1,16 +1,13 @@
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFrom : ZenjectUnitTestFixture
-    {
+    public class TestFrom : ZenjectUnitTestFixture {
         [Test]
-        public void TestSelfSingle()
-        {
+        public void TestSelfSingle() {
             Container.Bind<Foo>().AsSingle().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<Foo>());
@@ -18,8 +15,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSelfSingleExplicit()
-        {
+        public void TestSelfSingleExplicit() {
             Container.Bind<Foo>().ToSelf().FromNew().AsSingle().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<Foo>());
@@ -27,8 +23,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSelfTransient()
-        {
+        public void TestSelfTransient() {
             Container.Bind<Foo>().AsTransient().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<Foo>());
@@ -36,8 +31,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSelfCached()
-        {
+        public void TestSelfCached() {
             Container.Bind<Foo>().AsSingle().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<Foo>());
@@ -45,8 +39,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcreteSingle()
-        {
+        public void TestConcreteSingle() {
             Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().AsSingle().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<Foo>());
@@ -58,8 +51,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcreteTransient()
-        {
+        public void TestConcreteTransient() {
             Container.Bind<IFoo>().To<Foo>().AsTransient().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<IFoo>());
@@ -67,8 +59,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcreteTransient2()
-        {
+        public void TestConcreteTransient2() {
             Container.Bind<IFoo>().To<Foo>().AsTransient().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<IFoo>());
@@ -76,8 +67,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcreteCached()
-        {
+        public void TestConcreteCached() {
             Container.Bind<Foo>().AsCached().NonLazy();
             Container.Bind<IFoo>().To<Foo>().AsCached().NonLazy();
 
@@ -90,8 +80,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestDuplicateBindingsFail()
-        {
+        public void TestDuplicateBindingsFail() {
             Container.Bind<Foo>().AsSingle();
             Container.Bind<Foo>().AsSingle();
 
@@ -100,8 +89,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcreteMultipleTransient()
-        {
+        public void TestConcreteMultipleTransient() {
             Container.Bind<IFoo>().To(typeof(Foo), typeof(Bar)).AsTransient().NonLazy();
 
             var foos = Container.ResolveAll<IFoo>();
@@ -117,8 +105,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcreteMultipleSingle()
-        {
+        public void TestConcreteMultipleSingle() {
             Container.Bind<IFoo>().To(typeof(Foo), typeof(Bar)).AsSingle().NonLazy();
 
             var foos = Container.ResolveAll<IFoo>();
@@ -134,22 +121,19 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMultipleBindingsSingleFail1()
-        {
+        public void TestMultipleBindingsSingleFail1() {
             Container.Bind(typeof(IFoo), typeof(IBar)).AsSingle();
 
             Assert.Throws(() => Container.FlushBindings());
         }
 
         [Test]
-        public void TestMultipleBindingsSingleFail2()
-        {
+        public void TestMultipleBindingsSingleFail2() {
             Assert.Throws(() => Container.Bind(typeof(IFoo), typeof(IBar)).To<Qux>().AsSingle());
         }
 
         [Test]
-        public void TestMultipleBindingsSingle()
-        {
+        public void TestMultipleBindingsSingle() {
             Container.Bind(typeof(IFoo), typeof(IBar)).To<Foo>().AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<IFoo>(), Container.Resolve<IBar>());
@@ -157,8 +141,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMultipleBindingsTransient()
-        {
+        public void TestMultipleBindingsTransient() {
             Container.Bind(typeof(IFoo), typeof(IBar)).To<Foo>().AsTransient().NonLazy();
 
             Assert.That(Container.Resolve<IFoo>() is Foo);
@@ -169,8 +152,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMultipleBindingsCached()
-        {
+        public void TestMultipleBindingsCached() {
             Container.Bind(typeof(IFoo), typeof(IBar)).To<Foo>().AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<IFoo>(), Container.Resolve<IFoo>());
@@ -178,10 +160,9 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMultipleBindingsConcreteMultipleSingle()
-        {
+        public void TestMultipleBindingsConcreteMultipleSingle() {
             Container.Bind(typeof(IFoo), typeof(IBar))
-                .To(new List<Type> {typeof(Foo), typeof(Bar)}).AsSingle().NonLazy();
+                .To(new List<Type> { typeof(Foo), typeof(Bar) }).AsSingle().NonLazy();
 
             var foos = Container.ResolveAll<IFoo>();
             var bars = Container.ResolveAll<IBar>();
@@ -197,9 +178,8 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMultipleBindingsConcreteMultipleTransient()
-        {
-            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> {typeof(Foo), typeof(Bar)}).AsTransient().NonLazy();
+        public void TestMultipleBindingsConcreteMultipleTransient() {
+            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> { typeof(Foo), typeof(Bar) }).AsTransient().NonLazy();
 
             var foos = Container.ResolveAll<IFoo>();
             var bars = Container.ResolveAll<IBar>();
@@ -215,9 +195,8 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMultipleBindingsConcreteMultipleCached()
-        {
-            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> {typeof(Foo), typeof(Bar)}).AsCached().NonLazy();
+        public void TestMultipleBindingsConcreteMultipleCached() {
+            Container.Bind(typeof(IFoo), typeof(IBar)).To(new List<Type> { typeof(Foo), typeof(Bar) }).AsCached().NonLazy();
             Container.Bind<Foo>().AsCached().NonLazy();
             Container.Bind<Bar>().AsCached().NonLazy();
 
@@ -237,24 +216,19 @@ namespace Zenject.Tests.Bindings
             Assert.IsNotEqual(foos[1], Container.Resolve<Bar>());
         }
 
-        interface IBar
-        {
+        interface IBar {
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class Foo : IFoo, IBar
-        {
+        class Foo : IFoo, IBar {
         }
 
-        class Bar : IFoo, IBar
-        {
+        class Bar : IFoo, IBar {
         }
 
-        public class Qux
-        {
+        public class Qux {
         }
     }
 }

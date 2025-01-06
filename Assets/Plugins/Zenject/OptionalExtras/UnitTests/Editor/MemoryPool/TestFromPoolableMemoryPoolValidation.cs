@@ -1,59 +1,47 @@
 
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromPoolableMemoryPoolValidation
-    {
-        public class Bar
-        {
+    public class TestFromPoolableMemoryPoolValidation {
+        public class Bar {
         }
 
-        public class Foo : IPoolable<IMemoryPool>, IDisposable
-        {
+        public class Foo : IPoolable<IMemoryPool>, IDisposable {
             IMemoryPool _pool;
 
-            public Foo(Bar bar)
-            {
+            public Foo(Bar bar) {
             }
 
-            public IMemoryPool Pool
-            {
+            public IMemoryPool Pool {
                 get { return _pool; }
             }
 
-            void SetDefaults()
-            {
+            void SetDefaults() {
                 _pool = null;
             }
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 _pool.Despawn(this);
             }
 
-            public void OnDespawned()
-            {
+            public void OnDespawned() {
                 _pool = null;
                 SetDefaults();
             }
 
-            public void OnSpawned(IMemoryPool pool)
-            {
+            public void OnSpawned(IMemoryPool pool) {
                 _pool = pool;
             }
 
-            public class Factory : PlaceholderFactory<Foo>
-            {
+            public class Factory : PlaceholderFactory<Foo> {
             }
         }
 
         [Test]
-        public void TestFailure()
-        {
+        public void TestFailure() {
             var container = new DiContainer(true);
             container.Settings = new ZenjectSettings(
                 ValidationErrorResponses.Throw, RootResolveMethods.All);
@@ -65,8 +53,7 @@ namespace Zenject.Tests.Bindings
 
 
         [Test]
-        public void TestSuccess()
-        {
+        public void TestSuccess() {
             var container = new DiContainer(true);
             container.Settings = new ZenjectSettings(
                 ValidationErrorResponses.Throw, RootResolveMethods.All);

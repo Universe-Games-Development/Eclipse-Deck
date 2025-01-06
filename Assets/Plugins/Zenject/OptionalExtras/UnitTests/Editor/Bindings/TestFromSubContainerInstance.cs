@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromSubContainerInstance : ZenjectUnitTestFixture
-    {
+    public class TestFromSubContainerInstance : ZenjectUnitTestFixture {
         [Test]
-        public void TestInstallerSelfSingle()
-        {
+        public void TestInstallerSelfSingle() {
             Container.Bind<Foo>().FromSubContainerResolve()
                 .ByInstance(CreateFooSubContainer()).AsSingle().NonLazy();
 
@@ -16,8 +13,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfTransient()
-        {
+        public void TestInstallerSelfTransient() {
             Container.Bind<Foo>().FromSubContainerResolve().ByInstance(
                 CreateFooSubContainer()).AsTransient().NonLazy();
 
@@ -25,8 +21,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfCached()
-        {
+        public void TestInstallerSelfCached() {
             Container.Bind<Foo>().FromSubContainerResolve()
                 .ByInstance(CreateFooSubContainer()).AsSingle().NonLazy();
 
@@ -34,8 +29,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfSingleMultipleContracts()
-        {
+        public void TestInstallerSelfSingleMultipleContracts() {
             Container.Bind(typeof(Foo), typeof(Bar)).FromSubContainerResolve()
                 .ByInstance(CreateFooSubContainer()).AsSingle().NonLazy();
 
@@ -43,8 +37,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfCachedMultipleContracts()
-        {
+        public void TestInstallerSelfCachedMultipleContracts() {
             Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().FromSubContainerResolve()
                 .ByInstance(CreateFooSubContainer()).AsSingle().NonLazy();
 
@@ -52,8 +45,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfSingleMultipleMatches()
-        {
+        public void TestInstallerSelfSingleMultipleMatches() {
             Container.Bind<Qux>().FromSubContainerResolveAll()
                 .ByInstance(CreateFooSubContainer()).AsSingle().NonLazy();
 
@@ -61,8 +53,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfIdentifiersFails()
-        {
+        public void TestInstallerSelfIdentifiersFails() {
             Container.Bind<Gorp>().FromSubContainerResolve()
                 .ByInstance(CreateFooSubContainer()).AsSingle().NonLazy();
 
@@ -70,46 +61,37 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestInstallerSelfIdentifiers()
-        {
+        public void TestInstallerSelfIdentifiers() {
             Container.Bind<Gorp>().FromSubContainerResolve("gorp")
                 .ByInstance(CreateFooSubContainer()).AsSingle().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<Gorp>());
         }
 
-        public class Gorp
-        {
+        public class Gorp {
         }
 
-        public class Qux
-        {
+        public class Qux {
         }
 
-        public class Bar
-        {
+        public class Bar {
         }
 
-        public interface IFoo
-        {
+        public interface IFoo {
         }
 
-        public class Foo : IFoo
-        {
-            public Foo(Bar bar)
-            {
+        public class Foo : IFoo {
+            public Foo(Bar bar) {
                 Bar = bar;
             }
 
-            public Bar Bar
-            {
+            public Bar Bar {
                 get;
                 private set;
             }
         }
 
-        DiContainer CreateFooSubContainer()
-        {
+        DiContainer CreateFooSubContainer() {
             var subContainer = new DiContainer();
 
             subContainer.Bind<Foo>().AsSingle();

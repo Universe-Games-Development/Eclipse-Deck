@@ -1,24 +1,20 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class ConcreteBinderGeneric<TContract> : FromBinderGeneric<TContract>
-    {
+    public class ConcreteBinderGeneric<TContract> : FromBinderGeneric<TContract> {
         public ConcreteBinderGeneric(
             DiContainer bindContainer, BindInfo bindInfo,
             BindStatement bindStatement)
-            : base(bindContainer, bindInfo, bindStatement)
-        {
+            : base(bindContainer, bindInfo, bindStatement) {
             ToSelf();
         }
 
         // Note that this is the default, so not necessary to call
-        public FromBinderGeneric<TContract> ToSelf()
-        {
+        public FromBinderGeneric<TContract> ToSelf() {
             Assert.IsEqual(BindInfo.ToChoice, ToChoices.Self);
 
             BindInfo.RequireExplicitScope = true;
@@ -32,8 +28,7 @@ namespace Zenject
         }
 
         public FromBinderGeneric<TConcrete> To<TConcrete>()
-            where TConcrete : TContract
-        {
+            where TConcrete : TContract {
             BindInfo.ToChoice = ToChoices.Concrete;
             BindInfo.ToTypes.Clear();
             BindInfo.ToTypes.Add(typeof(TConcrete));
@@ -42,13 +37,11 @@ namespace Zenject
                 BindContainer, BindInfo, BindStatement);
         }
 
-        public FromBinderNonGeneric To(params Type[] concreteTypes)
-        {
+        public FromBinderNonGeneric To(params Type[] concreteTypes) {
             return To((IEnumerable<Type>)concreteTypes);
         }
 
-        public FromBinderNonGeneric To(IEnumerable<Type> concreteTypes)
-        {
+        public FromBinderNonGeneric To(IEnumerable<Type> concreteTypes) {
             BindingUtil.AssertIsDerivedFromTypes(
                 concreteTypes, BindInfo.ContractTypes, BindInfo.InvalidBindResponse);
 
@@ -62,8 +55,7 @@ namespace Zenject
 
 #if !(UNITY_WSA && ENABLE_DOTNET)
         public FromBinderNonGeneric To(
-            Action<ConventionSelectTypesBinder> generator)
-        {
+            Action<ConventionSelectTypesBinder> generator) {
             var bindInfo = new ConventionBindInfo();
 
             // Automatically filter by the given contract types

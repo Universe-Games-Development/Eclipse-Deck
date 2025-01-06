@@ -1,14 +1,11 @@
-using System;
 using ModestTree;
+using System;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class FactorySubContainerBinderBase<TContract>
-    {
+    public class FactorySubContainerBinderBase<TContract> {
         public FactorySubContainerBinderBase(
-            DiContainer bindContainer, BindInfo bindInfo, FactoryBindInfo factoryBindInfo, object subIdentifier)
-        {
+            DiContainer bindContainer, BindInfo bindInfo, FactoryBindInfo factoryBindInfo, object subIdentifier) {
             FactoryBindInfo = factoryBindInfo;
             SubIdentifier = subIdentifier;
             BindInfo = bindInfo;
@@ -18,47 +15,39 @@ namespace Zenject
             factoryBindInfo.ProviderFunc = null;
         }
 
-        protected DiContainer BindContainer
-        {
+        protected DiContainer BindContainer {
             get; private set;
         }
 
-        protected FactoryBindInfo FactoryBindInfo
-        {
+        protected FactoryBindInfo FactoryBindInfo {
             get; private set;
         }
 
-        protected Func<DiContainer, IProvider> ProviderFunc
-        {
+        protected Func<DiContainer, IProvider> ProviderFunc {
             get { return FactoryBindInfo.ProviderFunc; }
             set { FactoryBindInfo.ProviderFunc = value; }
         }
 
-        protected BindInfo BindInfo
-        {
+        protected BindInfo BindInfo {
             get;
             private set;
         }
 
-        protected object SubIdentifier
-        {
+        protected object SubIdentifier {
             get;
             private set;
         }
 
-        protected Type ContractType
-        {
+        protected Type ContractType {
             get { return typeof(TContract); }
         }
 
         public ScopeConcreteIdArgConditionCopyNonLazyBinder ByInstaller<TInstaller>()
-            where TInstaller : InstallerBase
-        {
+            where TInstaller : InstallerBase {
             return ByInstaller(typeof(TInstaller));
         }
 
-        public ScopeConcreteIdArgConditionCopyNonLazyBinder ByInstaller(Type installerType)
-        {
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder ByInstaller(Type installerType) {
             Assert.That(installerType.DerivesFrom<InstallerBase>(),
                 "Invalid installer type given during bind command.  Expected type '{0}' to derive from 'Installer<>'", installerType);
 
@@ -75,13 +64,11 @@ namespace Zenject
 
 #if !NOT_UNITY3D
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewGameObjectInstaller<TInstaller>()
-            where TInstaller : InstallerBase
-        {
+            where TInstaller : InstallerBase {
             return ByNewGameObjectInstaller(typeof(TInstaller));
         }
 
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewGameObjectInstaller(Type installerType)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewGameObjectInstaller(Type installerType) {
             Assert.That(installerType.DerivesFrom<InstallerBase>(),
                 "Invalid installer type given during bind command.  Expected type '{0}' to derive from 'Installer<>'", installerType);
 
@@ -98,14 +85,12 @@ namespace Zenject
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabInstaller<TInstaller>(
             Func<InjectContext, UnityEngine.Object> prefabGetter)
-            where TInstaller : InstallerBase
-        {
+            where TInstaller : InstallerBase {
             return ByNewPrefabInstaller(prefabGetter, typeof(TInstaller));
         }
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabInstaller(
-            Func<InjectContext, UnityEngine.Object> prefabGetter, Type installerType)
-        {
+            Func<InjectContext, UnityEngine.Object> prefabGetter, Type installerType) {
             Assert.That(installerType.DerivesFrom<InstallerBase>(),
                 "Invalid installer type given during bind command.  Expected type '{0}' to derive from 'Installer<>'", installerType);
 
@@ -124,14 +109,12 @@ namespace Zenject
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabInstaller<TInstaller>(
             UnityEngine.Object prefab)
-            where TInstaller : InstallerBase
-        {
+            where TInstaller : InstallerBase {
             return ByNewPrefabInstaller(prefab, typeof(TInstaller));
         }
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabInstaller(
-            UnityEngine.Object prefab, Type installerType)
-        {
+            UnityEngine.Object prefab, Type installerType) {
             Assert.That(installerType.DerivesFrom<InstallerBase>(),
                 "Invalid installer type given during bind command.  Expected type '{0}' to derive from 'Installer<>'", installerType);
 
@@ -150,14 +133,12 @@ namespace Zenject
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabResourceInstaller<TInstaller>(
             string resourcePath)
-            where TInstaller : InstallerBase
-        {
+            where TInstaller : InstallerBase {
             return ByNewPrefabResourceInstaller(resourcePath, typeof(TInstaller));
         }
 
         public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder ByNewPrefabResourceInstaller(
-            string resourcePath, Type installerType)
-        {
+            string resourcePath, Type installerType) {
             BindingUtil.AssertIsValidResourcePath(resourcePath);
             Assert.That(installerType.DerivesFrom<InstallerBase>(),
                 "Invalid installer type given during bind command.  Expected type '{0}' to derive from 'Installer<>'", installerType);

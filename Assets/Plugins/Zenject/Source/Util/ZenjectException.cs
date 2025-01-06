@@ -1,21 +1,17 @@
 using System;
 using System.Diagnostics;
 
-namespace Zenject
-{
+namespace Zenject {
     [DebuggerStepThrough]
     [NoReflectionBaking]
-    public class ZenjectException : Exception
-    {
+    public class ZenjectException : Exception {
         public ZenjectException(string message)
-            : base(message)
-        {
+            : base(message) {
         }
 
         public ZenjectException(
             string message, Exception innerException)
-            : base(message, innerException)
-        {
+            : base(message, innerException) {
         }
     }
 }

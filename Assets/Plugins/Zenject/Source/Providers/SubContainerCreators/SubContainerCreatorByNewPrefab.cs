@@ -1,30 +1,26 @@
 #if !NOT_UNITY3D
 
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class SubContainerCreatorByNewPrefab : ISubContainerCreator
-    {
+    public class SubContainerCreatorByNewPrefab : ISubContainerCreator {
         readonly GameObjectCreationParameters _gameObjectBindInfo;
         readonly IPrefabProvider _prefabProvider;
         readonly DiContainer _container;
 
         public SubContainerCreatorByNewPrefab(
             DiContainer container, IPrefabProvider prefabProvider,
-            GameObjectCreationParameters gameObjectBindInfo)
-        {
+            GameObjectCreationParameters gameObjectBindInfo) {
             _gameObjectBindInfo = gameObjectBindInfo;
             _prefabProvider = prefabProvider;
             _container = container;
         }
 
         public DiContainer CreateSubContainer(
-            List<TypeValuePair> args, InjectContext parentContext, out Action injectAction)
-        {
+            List<TypeValuePair> args, InjectContext parentContext, out Action injectAction) {
             Assert.That(args.IsEmpty());
 
             var prefab = _prefabProvider.GetPrefab(parentContext);
@@ -40,13 +36,11 @@ namespace Zenject
 
             context.Install(_container);
 
-            injectAction = () =>
-            {
+            injectAction = () => {
                 // Note: We don't need to call ResolveRoots here because GameObjectContext does this for us
                 _container.Inject(context);
 
-                if (shouldMakeActive && !_container.IsValidating)
-                {
+                if (shouldMakeActive && !_container.IsValidating) {
 #if ZEN_INTERNAL_PROFILING
                     using (ProfileTimers.CreateTimedBlock("User Code"))
 #endif

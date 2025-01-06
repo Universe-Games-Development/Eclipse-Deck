@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[RequireComponent (typeof(RayService))]
+[RequireComponent(typeof(RayService))]
 public class InteractionManager : MonoBehaviour {
     private GameObject hoveredInteractable;
 

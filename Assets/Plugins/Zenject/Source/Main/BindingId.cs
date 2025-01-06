@@ -1,45 +1,37 @@
+using ModestTree;
 using System;
 using System.Diagnostics;
-using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     [DebuggerStepThrough]
-    public struct BindingId : IEquatable<BindingId>
-    {
+    public struct BindingId : IEquatable<BindingId> {
         Type _type;
         object _identifier;
 
-        public BindingId(Type type, object identifier)
-        {
+        public BindingId(Type type, object identifier) {
             _type = type;
             _identifier = identifier;
         }
 
-        public Type Type
-        {
+        public Type Type {
             get { return _type; }
             set { _type = value; }
         }
 
-        public object Identifier
-        {
+        public object Identifier {
             get { return _identifier; }
             set { _identifier = value; }
         }
 
-        public override string ToString()
-        {
-            if (_identifier == null)
-            {
+        public override string ToString() {
+            if (_identifier == null) {
                 return _type.PrettyName();
             }
 
             return "{0} (ID: {1})".Fmt(_type, _identifier);
         }
 
-        public override int GetHashCode()
-        {
+        public override int GetHashCode() {
             unchecked // Overflow is fine, just wrap
             {
                 int hash = 17;
@@ -49,10 +41,8 @@ namespace Zenject
             }
         }
 
-        public override bool Equals(object other)
-        {
-            if (other is BindingId)
-            {
+        public override bool Equals(object other) {
+            if (other is BindingId) {
                 BindingId otherId = (BindingId)other;
                 return otherId == this;
             }
@@ -60,18 +50,15 @@ namespace Zenject
             return false;
         }
 
-        public bool Equals(BindingId that)
-        {
+        public bool Equals(BindingId that) {
             return this == that;
         }
 
-        public static bool operator ==(BindingId left, BindingId right)
-        {
+        public static bool operator ==(BindingId left, BindingId right) {
             return left.Type == right.Type && Equals(left.Identifier, right.Identifier);
         }
 
-        public static bool operator !=(BindingId left, BindingId right)
-        {
+        public static bool operator !=(BindingId left, BindingId right) {
             return !left.Equals(right);
         }
     }

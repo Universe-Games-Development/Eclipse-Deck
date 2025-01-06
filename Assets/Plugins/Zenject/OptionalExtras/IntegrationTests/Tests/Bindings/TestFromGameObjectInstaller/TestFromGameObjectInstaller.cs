@@ -1,16 +1,12 @@
 ﻿
-using System.Collections;
 using ModestTree;
-using UnityEngine;
+using System.Collections;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings.FromGameObjectInstaller
-{
-    public class TestFromGameObjectInstaller : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings.FromGameObjectInstaller {
+    public class TestFromGameObjectInstaller : ZenjectIntegrationTestFixture {
         [UnityTest]
-        public IEnumerator TestInstaller()
-        {
+        public IEnumerator TestInstaller() {
             PreInstall();
 
             Container.Bind<Qux>().FromSubContainerResolve()
@@ -23,8 +19,7 @@ namespace Zenject.Tests.Bindings.FromGameObjectInstaller
         }
 
         [UnityTest]
-        public IEnumerator TestMethod()
-        {
+        public IEnumerator TestMethod() {
             PreInstall();
 
             Container.Bind<Qux>().FromSubContainerResolve()
@@ -36,21 +31,17 @@ namespace Zenject.Tests.Bindings.FromGameObjectInstaller
             yield break;
         }
 
-        void InstallFoo(DiContainer subContainer)
-        {
+        void InstallFoo(DiContainer subContainer) {
             subContainer.Bind<Qux>().AsSingle().WithArguments("asdf");
         }
 
-        public class Qux
-        {
+        public class Qux {
             [Inject]
             public string Data;
         }
 
-        public class FooInstaller : Installer<FooInstaller>
-        {
-            public override void InstallBindings()
-            {
+        public class FooInstaller : Installer<FooInstaller> {
+            public override void InstallBindings() {
                 Container.Bind<Qux>().AsSingle().WithArguments("asdf");
             }
         }

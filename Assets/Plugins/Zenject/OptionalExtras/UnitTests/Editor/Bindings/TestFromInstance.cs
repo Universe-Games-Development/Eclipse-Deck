@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromInstance : ZenjectUnitTestFixture
-    {
+    public class TestFromInstance : ZenjectUnitTestFixture {
         [Test]
-        public void TestTransient()
-        {
+        public void TestTransient() {
             var foo = new Foo();
 
             Container.Bind<IFoo>().FromInstance(foo).NonLazy();
@@ -19,8 +16,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSingle()
-        {
+        public void TestSingle() {
             Container.Bind<Foo>().FromInstance(new Foo()).AsSingle().NonLazy();
             Container.Bind<Foo>().AsSingle().NonLazy();
 
@@ -29,8 +25,7 @@ namespace Zenject.Tests.Bindings
 
         // There's really no good reason to do this but it is part of the api
         [Test]
-        public void TestCached()
-        {
+        public void TestCached() {
             var foo = new Foo();
 
             Container.Bind<IFoo>().FromInstance(foo).AsSingle().NonLazy();
@@ -40,12 +35,10 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(Container.Resolve<Foo>(), foo);
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class Foo : IFoo
-        {
+        class Foo : IFoo {
         }
     }
 }

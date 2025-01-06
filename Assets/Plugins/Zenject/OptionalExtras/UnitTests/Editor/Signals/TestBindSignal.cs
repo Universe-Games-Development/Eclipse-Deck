@@ -1,21 +1,17 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Signals
-{
+namespace Zenject.Tests.Signals {
     [TestFixture]
-    public class TestBindSignal : ZenjectUnitTestFixture
-    {
+    public class TestBindSignal : ZenjectUnitTestFixture {
         [SetUp]
-        public void CommonInstall()
-        {
+        public void CommonInstall() {
             SignalBusInstaller.Install(Container);
             Container.Inject(this);
         }
 
         [Test]
-        public void TestIncompleteBinding()
-        {
+        public void TestIncompleteBinding() {
             Container.DeclareSignal<FooSignal>();
             Container.BindSignal<FooSignal>();
 
@@ -23,16 +19,14 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestBindWithoutDeclaration()
-        {
-            Container.BindSignal<FooSignal>().ToMethod(() => {});
+        public void TestBindWithoutDeclaration() {
+            Container.BindSignal<FooSignal>().ToMethod(() => { });
 
             Assert.Throws(() => Container.ResolveRoots());
         }
 
         [Test]
-        public void TestStaticMethodHandler()
-        {
+        public void TestStaticMethodHandler() {
             Container.DeclareSignal<FooSignal>();
 
             bool received = false;
@@ -48,8 +42,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestStaticMethodHandlerWithArgs()
-        {
+        public void TestStaticMethodHandlerWithArgs() {
             Container.DeclareSignal<FooSignal>();
 
             FooSignal received = null;
@@ -66,8 +59,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestInstanceMethodHandler()
-        {
+        public void TestInstanceMethodHandler() {
             Container.DeclareSignal<FooSignal>();
 
             var qux = new Qux();
@@ -83,8 +75,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestInstanceMethodHandler2()
-        {
+        public void TestInstanceMethodHandler2() {
             Container.DeclareSignal<FooSignal>();
 
             var gorp = new Gorp();
@@ -101,8 +92,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestMoveIntoDirectSubContainers()
-        {
+        public void TestMoveIntoDirectSubContainers() {
             Container.DeclareSignal<FooSignal>();
 
             var gorp = new Gorp();
@@ -128,34 +118,27 @@ namespace Zenject.Tests.Signals
             Assert.IsEqual(gorp.ReceivedValue, sent);
         }
 
-        public class Qux
-        {
-            public void OnFoo()
-            {
+        public class Qux {
+            public void OnFoo() {
                 HasRecievedSignal = true;
             }
 
-            public bool HasRecievedSignal
-            {
+            public bool HasRecievedSignal {
                 get; private set;
             }
         }
 
-        public class Gorp
-        {
-            public void OnFoo(FooSignal foo)
-            {
+        public class Gorp {
+            public void OnFoo(FooSignal foo) {
                 ReceivedValue = foo;
             }
 
-            public FooSignal ReceivedValue
-            {
+            public FooSignal ReceivedValue {
                 get; private set;
             }
         }
 
-        public class FooSignal
-        {
+        public class FooSignal {
         }
     }
 }

@@ -2,38 +2,30 @@
 
 using System;
 
-namespace Zenject.Tests.Convention
-{
-    public class ConventionTestAttribute : Attribute
-    {
-        public ConventionTestAttribute(int num)
-        {
+namespace Zenject.Tests.Convention {
+    public class ConventionTestAttribute : Attribute {
+        public ConventionTestAttribute(int num) {
             Num = num;
         }
 
-        public int Num
-        {
+        public int Num {
             get;
             private set;
         }
     }
 
-    public interface IFoo
-    {
+    public interface IFoo {
     }
 
-    public class Foo1 : IFoo
-    {
+    public class Foo1 : IFoo {
     }
 
     [ConventionTest(0)]
-    public class Foo2 : IFoo
-    {
+    public class Foo2 : IFoo {
     }
 
     [ConventionTest(1)]
-    public class Foo3 : IFoo
-    {
+    public class Foo3 : IFoo {
     }
 }
 

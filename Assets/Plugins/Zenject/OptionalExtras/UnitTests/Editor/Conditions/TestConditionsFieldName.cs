@@ -1,39 +1,30 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Conditions
-{
+namespace Zenject.Tests.Conditions {
     [TestFixture]
-    public class TestConditionsFieldName : ZenjectUnitTestFixture
-    {
-        class Test0
-        {
+    public class TestConditionsFieldName : ZenjectUnitTestFixture {
+        class Test0 {
 
         }
 
-        class Test1
-        {
-            public Test1(Test0 name1)
-            {
+        class Test1 {
+            public Test1(Test0 name1) {
             }
         }
 
-        class Test2
-        {
-            public Test2(Test0 name2)
-            {
+        class Test2 {
+            public Test2(Test0 name2) {
             }
         }
 
-        public override void Setup()
-        {
+        public override void Setup() {
             base.Setup();
             Container.Bind<Test0>().AsSingle().When(r => r.MemberName == "name1");
         }
 
         [Test]
-        public void TestNameConditionError()
-        {
+        public void TestNameConditionError() {
             Container.Bind<Test2>().AsSingle().NonLazy();
 
             Assert.Throws(
@@ -41,8 +32,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestNameConditionSuccess()
-        {
+        public void TestNameConditionSuccess() {
             Container.Bind<Test1>().AsSingle().NonLazy();
 
             var test1 = Container.Resolve<Test1>();

@@ -1,18 +1,15 @@
-using System.Linq;
 using ModestTree;
 using NUnit.Framework;
+using System.Linq;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromFactory : ZenjectUnitTestFixture
-    {
+    public class TestFromFactory : ZenjectUnitTestFixture {
         static Foo StaticFoo = new Foo();
 
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             FooFactory.InstanceCount = 0;
 
             Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached());
@@ -27,8 +24,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestOldVersion()
-        {
+        public void TestOldVersion() {
             FooFactory.InstanceCount = 0;
 
             Container.Bind<Foo>().FromFactory<FooFactory>();
@@ -43,8 +39,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestMoveIntoSubcontainers()
-        {
+        public void TestMoveIntoSubcontainers() {
             FooFactory.InstanceCount = 0;
 
             Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).MoveIntoDirectSubContainers();
@@ -67,8 +62,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void Test2()
-        {
+        public void Test2() {
             FooFactory.InstanceCount = 0;
 
             Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsTransient());
@@ -81,8 +75,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void Test3()
-        {
+        public void Test3() {
             FooFactory.InstanceCount = 0;
 
             Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsTransient()).AsCached();
@@ -95,8 +88,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcreteSingle()
-        {
+        public void TestConcreteSingle() {
             FooFactory.InstanceCount = 0;
 
             Container.Bind<IFoo>().To<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle().NonLazy();
@@ -111,8 +103,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSelfAndConcreteSingle()
-        {
+        public void TestSelfAndConcreteSingle() {
             FooFactory.InstanceCount = 0;
 
             Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle().NonLazy();
@@ -129,8 +120,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSelfCached()
-        {
+        public void TestSelfCached() {
             FooFactory.InstanceCount = 0;
 
             Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle().NonLazy();
@@ -145,8 +135,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestConcreteCached()
-        {
+        public void TestConcreteCached() {
             FooFactory.InstanceCount = 0;
 
             Container.Bind<IFoo>().To<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle().NonLazy();
@@ -160,27 +149,22 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(FooFactory.InstanceCount, 1);
         }
 
-        class FooFactory : IFactory<Foo>
-        {
+        class FooFactory : IFactory<Foo> {
             public static int InstanceCount;
 
-            public FooFactory()
-            {
+            public FooFactory() {
                 InstanceCount++;
             }
 
-            public Foo Create()
-            {
+            public Foo Create() {
                 return StaticFoo;
             }
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class Foo : IFoo
-        {
+        class Foo : IFoo {
         }
     }
 }

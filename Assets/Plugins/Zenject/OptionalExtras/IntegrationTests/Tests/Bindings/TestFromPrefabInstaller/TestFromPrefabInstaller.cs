@@ -1,26 +1,21 @@
 ﻿
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings.FromPrefabInstaller
-{
-    public class TestFromPrefabInstaller : ZenjectIntegrationTestFixture
-    {
-        GameObject FooPrefab
-        {
+namespace Zenject.Tests.Bindings.FromPrefabInstaller {
+    public class TestFromPrefabInstaller : ZenjectIntegrationTestFixture {
+        GameObject FooPrefab {
             get { return FixtureUtil.GetPrefab(FooPrefabResourcePath); }
         }
 
-        string FooPrefabResourcePath
-        {
+        string FooPrefabResourcePath {
             get { return "TestFromPrefabInstaller/Foo"; }
         }
 
         [UnityTest]
-        public IEnumerator TestInstaller()
-        {
+        public IEnumerator TestInstaller() {
             PreInstall();
 
             Container.Bind<Qux>().FromSubContainerResolve()
@@ -33,8 +28,7 @@ namespace Zenject.Tests.Bindings.FromPrefabInstaller
         }
 
         [UnityTest]
-        public IEnumerator TestInstallerGetter()
-        {
+        public IEnumerator TestInstallerGetter() {
             PreInstall();
 
             Container.Bind<Qux>().FromSubContainerResolve()
@@ -47,8 +41,7 @@ namespace Zenject.Tests.Bindings.FromPrefabInstaller
         }
 
         [UnityTest]
-        public IEnumerator TestMethod()
-        {
+        public IEnumerator TestMethod() {
             PreInstall();
 
             Container.Bind<Qux>().FromSubContainerResolve()
@@ -61,8 +54,7 @@ namespace Zenject.Tests.Bindings.FromPrefabInstaller
         }
 
         [UnityTest]
-        public IEnumerator TestMethodGetter()
-        {
+        public IEnumerator TestMethodGetter() {
             PreInstall();
 
             Container.Bind<Qux>().FromSubContainerResolve()
@@ -75,8 +67,7 @@ namespace Zenject.Tests.Bindings.FromPrefabInstaller
         }
 
         [UnityTest]
-        public IEnumerator TestResourceInstaller()
-        {
+        public IEnumerator TestResourceInstaller() {
             PreInstall();
 
             Container.Bind<Qux>().FromSubContainerResolve()
@@ -89,8 +80,7 @@ namespace Zenject.Tests.Bindings.FromPrefabInstaller
         }
 
         [UnityTest]
-        public IEnumerator TestResourceMethod()
-        {
+        public IEnumerator TestResourceMethod() {
             PreInstall();
 
             Container.Bind<Qux>().FromSubContainerResolve()
@@ -102,13 +92,11 @@ namespace Zenject.Tests.Bindings.FromPrefabInstaller
             yield break;
         }
 
-        void InstallFoo(DiContainer subContainer)
-        {
+        void InstallFoo(DiContainer subContainer) {
             subContainer.Bind<Qux>().AsSingle().WithArguments("asdf");
         }
 
-        public class Qux
-        {
+        public class Qux {
             [Inject]
             public string Data;
 
@@ -116,10 +104,8 @@ namespace Zenject.Tests.Bindings.FromPrefabInstaller
             public Foo Foo;
         }
 
-        public class FooInstaller : Installer<FooInstaller>
-        {
-            public override void InstallBindings()
-            {
+        public class FooInstaller : Installer<FooInstaller> {
+            public override void InstallBindings() {
                 Container.Bind<Qux>().AsSingle().WithArguments("asdf");
             }
         }

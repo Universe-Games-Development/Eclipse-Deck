@@ -1,32 +1,26 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Injection
-{
+namespace Zenject.Tests.Injection {
     [TestFixture]
-    public class TestPropertyInjection : ZenjectUnitTestFixture
-    {
-        class Test1
-        {
+    public class TestPropertyInjection : ZenjectUnitTestFixture {
+        class Test1 {
         }
 
-        class Test2
-        {
+        class Test2 {
             [Inject]
             public Test1 val2 { get; private set; }
 
             [Inject]
             Test1 val4 { get; set; }
 
-            public Test1 GetVal4()
-            {
+            public Test1 GetVal4() {
                 return val4;
             }
         }
 
         [Test]
-        public void TestPublicPrivate()
-        {
+        public void TestPublicPrivate() {
             var test1 = new Test1();
 
             Container.Bind<Test2>().AsSingle().NonLazy();
@@ -39,8 +33,7 @@ namespace Zenject.Tests.Injection
         }
 
         [Test]
-        public void TestCase2()
-        {
+        public void TestCase2() {
         }
     }
 }

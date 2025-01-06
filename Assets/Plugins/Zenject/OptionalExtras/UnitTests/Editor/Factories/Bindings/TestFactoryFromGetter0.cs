@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFactoryFromGetter0 : ZenjectUnitTestFixture
-    {
+    public class TestFactoryFromGetter0 : ZenjectUnitTestFixture {
         [Test]
-        public void TestSelf()
-        {
+        public void TestSelf() {
             Container.Bind<Foo>().AsSingle().NonLazy();
             Container.BindFactory<Bar, Bar.Factory>().FromResolveGetter<Foo>(x => x.Bar).NonLazy();
 
@@ -16,22 +13,17 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(Container.Resolve<Bar.Factory>().Create(), Container.Resolve<Foo>().Bar);
         }
 
-        class Bar
-        {
-            public class Factory : PlaceholderFactory<Bar>
-            {
+        class Bar {
+            public class Factory : PlaceholderFactory<Bar> {
             }
         }
 
-        class Foo
-        {
-            public Foo()
-            {
+        class Foo {
+            public Foo() {
                 Bar = new Bar();
             }
 
-            public Bar Bar
-            {
+            public Bar Bar {
                 get;
                 private set;
             }

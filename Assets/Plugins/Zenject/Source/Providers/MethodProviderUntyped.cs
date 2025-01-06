@@ -1,60 +1,47 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class MethodProviderUntyped : IProvider
-    {
+    public class MethodProviderUntyped : IProvider {
         readonly DiContainer _container;
         readonly Func<InjectContext, object> _method;
 
         public MethodProviderUntyped(
             Func<InjectContext, object> method,
-            DiContainer container)
-        {
+            DiContainer container) {
             _container = container;
             _method = method;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return context.MemberType;
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEmpty(args);
             Assert.IsNotNull(context);
 
             injectAction = null;
-            if (_container.IsValidating && !TypeAnalyzer.ShouldAllowDuringValidation(context.MemberType))
-            {
+            if (_container.IsValidating && !TypeAnalyzer.ShouldAllowDuringValidation(context.MemberType)) {
                 buffer.Add(new ValidationMarker(context.MemberType));
-            }
-            else
-            {
+            } else {
                 var result = _method(context);
 
-                if (result == null)
-                {
+                if (result == null) {
                     Assert.That(!context.MemberType.IsPrimitive(),
                         "Invalid value returned from FromMethod.  Expected non-null.");
-                }
-                else
-                {
+                } else {
                     Assert.That(result.GetType().DerivesFromOrEqual(context.MemberType));
                 }
 

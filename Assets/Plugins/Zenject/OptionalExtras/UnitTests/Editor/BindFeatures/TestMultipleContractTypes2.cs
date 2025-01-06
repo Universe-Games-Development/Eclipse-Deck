@@ -1,30 +1,23 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.BindFeatures
-{
+namespace Zenject.Tests.BindFeatures {
     [TestFixture]
-    public class TestMultipleContractTypes2 : ZenjectUnitTestFixture
-    {
-        public class Bar
-        {
+    public class TestMultipleContractTypes2 : ZenjectUnitTestFixture {
+        public class Bar {
         }
 
-        public interface IFoo
-        {
+        public interface IFoo {
         }
 
-        public interface IQux
-        {
+        public interface IQux {
         }
 
-        public class Foo : IQux, IFoo
-        {
+        public class Foo : IQux, IFoo {
         }
 
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             var types = new[]
             {
                 typeof(Bar),
@@ -38,16 +31,14 @@ namespace Zenject.Tests.BindFeatures
         }
 
         [Test]
-        public void TestInterfaces()
-        {
+        public void TestInterfaces() {
             Container.Bind<IFoo>().AsSingle().NonLazy();
 
             Assert.Throws(() => Container.FlushBindings());
         }
 
         [Test]
-        public void TestAllInterfacesMistake()
-        {
+        public void TestAllInterfacesMistake() {
             Container.BindInterfacesTo<Foo>();
 
             // Should require setting scope
@@ -55,8 +46,7 @@ namespace Zenject.Tests.BindFeatures
         }
 
         [Test]
-        public void TestAllInterfaces()
-        {
+        public void TestAllInterfaces() {
             Container.BindInterfacesTo<Foo>().AsSingle().NonLazy();
 
             Assert.IsNull(Container.TryResolve<Foo>());
@@ -66,8 +56,7 @@ namespace Zenject.Tests.BindFeatures
         }
 
         [Test]
-        public void TestAllInterfacesAndSelf()
-        {
+        public void TestAllInterfacesAndSelf() {
             Container.BindInterfacesAndSelfTo<Foo>().AsSingle().NonLazy();
 
             Assert.IsNotNull(Container.Resolve<Foo>());
@@ -76,8 +65,7 @@ namespace Zenject.Tests.BindFeatures
         }
 
         [Test]
-        public void TestAllInterfacesAndSelfMistake()
-        {
+        public void TestAllInterfacesAndSelfMistake() {
             Container.BindInterfacesAndSelfTo<Foo>();
 
             // Should require setting scope

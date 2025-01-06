@@ -1,15 +1,12 @@
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromMethod : ZenjectUnitTestFixture
-    {
+    public class TestFromMethod : ZenjectUnitTestFixture {
         [Test]
-        public void TestSingle()
-        {
+        public void TestSingle() {
             var foo = new Foo();
 
             Container.Bind<Foo>().FromMethod(ctx => foo).AsSingle().NonLazy();
@@ -18,8 +15,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestTransient()
-        {
+        public void TestTransient() {
             var foo = new Foo();
 
             Container.Bind<Foo>().FromMethod(ctx => foo).AsTransient().NonLazy();
@@ -28,8 +24,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestCached()
-        {
+        public void TestCached() {
             var foo = new Foo();
 
             Container.Bind<Foo>().FromMethod(ctx => foo).AsSingle().NonLazy();
@@ -37,18 +32,15 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(Container.Resolve<Foo>(), foo);
         }
 
-        Foo CreateFoo(InjectContext ctx)
-        {
+        Foo CreateFoo(InjectContext ctx) {
             return new Foo();
         }
 
         [Test]
-        public void TestTransient2()
-        {
+        public void TestTransient2() {
             int numCalls = 0;
 
-            Func<InjectContext, Foo> method = ctx =>
-            {
+            Func<InjectContext, Foo> method = ctx => {
                 numCalls++;
                 return null;
             };
@@ -65,20 +57,17 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestCached2()
-        {
+        public void TestCached2() {
             Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().FromMethod(ctx => new Foo()).AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<Foo>());
             Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<IFoo>());
         }
 
-        interface IFoo
-        {
+        interface IFoo {
         }
 
-        class Foo : IFoo
-        {
+        class Foo : IFoo {
         }
     }
 }

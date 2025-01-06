@@ -1,17 +1,15 @@
 #if !NOT_UNITY3D
 
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ModestTree;
 using UnityEngine;
 using Zenject.Internal;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public abstract class AddToGameObjectComponentProviderBase : IProvider
-    {
+    public abstract class AddToGameObjectComponentProviderBase : IProvider {
         readonly Type _componentType;
         readonly DiContainer _container;
         readonly List<TypeValuePair> _extraArguments;
@@ -21,8 +19,7 @@ namespace Zenject
         public AddToGameObjectComponentProviderBase(
             DiContainer container, Type componentType,
             IEnumerable<TypeValuePair> extraArguments, object concreteIdentifier,
-            Action<InjectContext, object> instantiateCallback)
-        {
+            Action<InjectContext, object> instantiateCallback) {
             Assert.That(componentType.DerivesFrom<Component>());
 
             _extraArguments = extraArguments.ToList();
@@ -32,39 +29,32 @@ namespace Zenject
             _instantiateCallback = instantiateCallback;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        protected DiContainer Container
-        {
+        protected DiContainer Container {
             get { return _container; }
         }
 
-        protected Type ComponentType
-        {
+        protected Type ComponentType {
             get { return _componentType; }
         }
 
-        protected abstract bool ShouldToggleActive
-        {
+        protected abstract bool ShouldToggleActive {
             get;
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return _componentType;
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsNotNull(context);
 
             object instance;
@@ -74,39 +64,31 @@ namespace Zenject
 
             var wasActive = gameObj.activeSelf;
 
-            if (wasActive && ShouldToggleActive)
-            {
+            if (wasActive && ShouldToggleActive) {
                 // We need to do this in some cases to ensure that [Inject] always gets
                 // called before awake / start
                 gameObj.SetActive(false);
             }
 
-            if (!_container.IsValidating || TypeAnalyzer.ShouldAllowDuringValidation(_componentType))
-            {
+            if (!_container.IsValidating || TypeAnalyzer.ShouldAllowDuringValidation(_componentType)) {
                 if (_componentType == typeof(Transform))
-                    // Treat transform as a special case because it's the one component that's always automatically added
-                    // Otherwise, calling AddComponent below will fail and return null
-                    // This is nice to allow doing things like
-                    //      Container.Bind<Transform>().FromNewComponentOnNewGameObject();
+                // Treat transform as a special case because it's the one component that's always automatically added
+                // Otherwise, calling AddComponent below will fail and return null
+                // This is nice to allow doing things like
+                //      Container.Bind<Transform>().FromNewComponentOnNewGameObject();
                 {
                     instance = gameObj.transform;
-                }
-                else
-                {
+                } else {
                     instance = gameObj.AddComponent(_componentType);
                 }
 
                 Assert.IsNotNull(instance);
-            }
-            else
-            {
+            } else {
                 instance = new ValidationMarker(_componentType);
             }
 
-            injectAction = () =>
-            {
-                try
-                {
+            injectAction = () => {
+                try {
                     var extraArgs = ZenPools.SpawnList<TypeValuePair>();
 
                     extraArgs.AllocFreeAddRange(_extraArguments);
@@ -118,15 +100,11 @@ namespace Zenject
 
                     ZenPools.DespawnList(extraArgs);
 
-                    if (_instantiateCallback != null)
-                    {
+                    if (_instantiateCallback != null) {
                         _instantiateCallback(context, instance);
                     }
-                }
-                finally
-                {
-                    if (wasActive && ShouldToggleActive)
-                    {
+                } finally {
+                    if (wasActive && ShouldToggleActive) {
                         gameObj.SetActive(true);
                     }
                 }

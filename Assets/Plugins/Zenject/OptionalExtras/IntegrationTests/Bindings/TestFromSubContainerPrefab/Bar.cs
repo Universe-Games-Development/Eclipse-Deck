@@ -1,9 +1,7 @@
 using UnityEngine;
 
-namespace Zenject.Tests.Bindings.FromSubContainerPrefab
-{
-    public class Bar : MonoBehaviour
-    {
+namespace Zenject.Tests.Bindings.FromSubContainerPrefab {
+    public class Bar : MonoBehaviour {
     }
 }
 

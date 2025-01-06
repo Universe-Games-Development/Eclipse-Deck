@@ -2,10 +2,8 @@ using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Zenject.Asteroids
-{
-    public class ShipStateDead : ShipState
-    {
+namespace Zenject.Asteroids {
+    public class ShipStateDead : ShipState {
         readonly SignalBus _signalBus;
         readonly BrokenShipFactory _brokenShipFactory;
         readonly ExplosionFactory _explosionFactory;
@@ -19,8 +17,7 @@ namespace Zenject.Asteroids
             Settings settings, Ship ship,
             ExplosionFactory explosionFactory,
             BrokenShipFactory brokenShipFactory,
-            SignalBus signalBus)
-        {
+            SignalBus signalBus) {
             _signalBus = signalBus;
             _brokenShipFactory = brokenShipFactory;
             _explosionFactory = explosionFactory;
@@ -28,8 +25,7 @@ namespace Zenject.Asteroids
             _ship = ship;
         }
 
-        public override void Start()
-        {
+        public override void Start() {
             _ship.MeshRenderer.enabled = false;
 
             _ship.ParticleEmitter.gameObject.SetActive(false);
@@ -41,8 +37,7 @@ namespace Zenject.Asteroids
             _shipBroken.transform.position = _ship.Position;
             _shipBroken.transform.rotation = _ship.Rotation;
 
-            foreach (var rigidBody in _shipBroken.GetComponentsInChildren<Rigidbody>())
-            {
+            foreach (var rigidBody in _shipBroken.GetComponentsInChildren<Rigidbody>()) {
                 var randomTheta = Random.Range(0, Mathf.PI * 2.0f);
                 var randomDir = new Vector3(Mathf.Cos(randomTheta), Mathf.Sin(randomTheta), 0);
                 rigidBody.AddForce(randomDir * _settings.explosionForce);
@@ -51,8 +46,7 @@ namespace Zenject.Asteroids
             _signalBus.Fire<ShipCrashedSignal>();
         }
 
-        public override void Dispose()
-        {
+        public override void Dispose() {
             _ship.MeshRenderer.enabled = true;
 
             _ship.ParticleEmitter.gameObject.SetActive(true);
@@ -61,18 +55,15 @@ namespace Zenject.Asteroids
             GameObject.Destroy(_shipBroken);
         }
 
-        public override void Update()
-        {
+        public override void Update() {
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public float explosionForce;
         }
 
-        public class Factory : PlaceholderFactory<ShipStateDead>
-        {
+        public class Factory : PlaceholderFactory<ShipStateDead> {
         }
     }
 }

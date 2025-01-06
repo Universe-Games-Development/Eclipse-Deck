@@ -1,52 +1,42 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     // Zero params
 
     [NoReflectionBaking]
-    public class MethodProviderWithContainer<TValue> : IProvider
-    {
+    public class MethodProviderWithContainer<TValue> : IProvider {
         readonly Func<DiContainer, TValue> _method;
 
-        public MethodProviderWithContainer(Func<DiContainer, TValue> method)
-        {
+        public MethodProviderWithContainer(Func<DiContainer, TValue> method) {
             _method = method;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TValue);
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEmpty(args);
             Assert.IsNotNull(context);
 
             Assert.That(typeof(TValue).DerivesFromOrEqual(context.MemberType));
 
             injectAction = null;
-            if (context.Container.IsValidating)
-            {
+            if (context.Container.IsValidating) {
                 // Don't do anything when validating, we can't make any assumptions on the given method
                 buffer.Add(new ValidationMarker(typeof(TValue)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(_method(context.Container));
             }
         }
@@ -55,33 +45,27 @@ namespace Zenject
     // One params
 
     [NoReflectionBaking]
-    public class MethodProviderWithContainer<TParam1, TValue> : IProvider
-    {
+    public class MethodProviderWithContainer<TParam1, TValue> : IProvider {
         readonly Func<DiContainer, TParam1, TValue> _method;
 
-        public MethodProviderWithContainer(Func<DiContainer, TParam1, TValue> method)
-        {
+        public MethodProviderWithContainer(Func<DiContainer, TParam1, TValue> method) {
             _method = method;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TValue);
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 1);
             Assert.IsNotNull(context);
 
@@ -89,13 +73,10 @@ namespace Zenject
             Assert.That(args[0].Type.DerivesFromOrEqual(typeof(TParam1)));
 
             injectAction = null;
-            if (context.Container.IsValidating)
-            {
+            if (context.Container.IsValidating) {
                 // Don't do anything when validating, we can't make any assumptions on the given method
                 buffer.Add(new ValidationMarker(typeof(TValue)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     _method(
                         context.Container,
@@ -107,33 +88,27 @@ namespace Zenject
     // Two params
 
     [NoReflectionBaking]
-    public class MethodProviderWithContainer<TParam1, TParam2, TValue> : IProvider
-    {
+    public class MethodProviderWithContainer<TParam1, TParam2, TValue> : IProvider {
         readonly Func<DiContainer, TParam1, TParam2, TValue> _method;
 
-        public MethodProviderWithContainer(Func<DiContainer, TParam1, TParam2, TValue> method)
-        {
+        public MethodProviderWithContainer(Func<DiContainer, TParam1, TParam2, TValue> method) {
             _method = method;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TValue);
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 2);
             Assert.IsNotNull(context);
 
@@ -142,13 +117,10 @@ namespace Zenject
             Assert.That(args[1].Type.DerivesFromOrEqual(typeof(TParam2)));
 
             injectAction = null;
-            if (context.Container.IsValidating)
-            {
+            if (context.Container.IsValidating) {
                 // Don't do anything when validating, we can't make any assumptions on the given method
                 buffer.Add(new ValidationMarker(typeof(TValue)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     _method(
                         context.Container,
@@ -161,33 +133,27 @@ namespace Zenject
     // Three params
 
     [NoReflectionBaking]
-    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TValue> : IProvider
-    {
+    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TValue> : IProvider {
         readonly Func<DiContainer, TParam1, TParam2, TParam3, TValue> _method;
 
-        public MethodProviderWithContainer(Func<DiContainer, TParam1, TParam2, TParam3, TValue> method)
-        {
+        public MethodProviderWithContainer(Func<DiContainer, TParam1, TParam2, TParam3, TValue> method) {
             _method = method;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TValue);
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 3);
             Assert.IsNotNull(context);
 
@@ -197,13 +163,10 @@ namespace Zenject
             Assert.That(args[2].Type.DerivesFromOrEqual(typeof(TParam3)));
 
             injectAction = null;
-            if (context.Container.IsValidating)
-            {
+            if (context.Container.IsValidating) {
                 // Don't do anything when validating, we can't make any assumptions on the given method
                 buffer.Add(new ValidationMarker(typeof(TValue)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     _method(
                         context.Container,
@@ -217,8 +180,7 @@ namespace Zenject
     // Four params
 
     [NoReflectionBaking]
-    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TParam4, TValue> : IProvider
-    {
+    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TParam4, TValue> : IProvider {
         readonly
 #if !NET_4_6
             ModestTree.Util.
@@ -229,29 +191,24 @@ namespace Zenject
 #if !NET_4_6
             ModestTree.Util.
 #endif
-            Func<DiContainer, TParam1, TParam2, TParam3, TParam4, TValue> method)
-        {
+            Func<DiContainer, TParam1, TParam2, TParam3, TParam4, TValue> method) {
             _method = method;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TValue);
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 4);
             Assert.IsNotNull(context);
 
@@ -262,13 +219,10 @@ namespace Zenject
             Assert.That(args[3].Type.DerivesFromOrEqual(typeof(TParam4)));
 
             injectAction = null;
-            if (context.Container.IsValidating)
-            {
+            if (context.Container.IsValidating) {
                 // Don't do anything when validating, we can't make any assumptions on the given method
                 buffer.Add(new ValidationMarker(typeof(TValue)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     _method(
                         context.Container,
@@ -283,8 +237,7 @@ namespace Zenject
     // Five params
 
     [NoReflectionBaking]
-    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TParam4, TParam5, TValue> : IProvider
-    {
+    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TParam4, TParam5, TValue> : IProvider {
         readonly
 #if !NET_4_6
             ModestTree.Util.
@@ -295,29 +248,24 @@ namespace Zenject
 #if !NET_4_6
             ModestTree.Util.
 #endif
-            Func<DiContainer, TParam1, TParam2, TParam3, TParam4, TParam5, TValue> method)
-        {
+            Func<DiContainer, TParam1, TParam2, TParam3, TParam4, TParam5, TValue> method) {
             _method = method;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TValue);
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 5);
             Assert.IsNotNull(context);
 
@@ -329,13 +277,10 @@ namespace Zenject
             Assert.That(args[4].Type.DerivesFromOrEqual(typeof(TParam5)));
 
             injectAction = null;
-            if (context.Container.IsValidating)
-            {
+            if (context.Container.IsValidating) {
                 // Don't do anything when validating, we can't make any assumptions on the given method
                 buffer.Add(new ValidationMarker(typeof(TValue)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     _method(
                         context.Container,
@@ -351,8 +296,7 @@ namespace Zenject
     // Six params
 
     [NoReflectionBaking]
-    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> : IProvider
-    {
+    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> : IProvider {
         readonly
 #if !NET_4_6
             ModestTree.Util.
@@ -363,29 +307,24 @@ namespace Zenject
 #if !NET_4_6
             ModestTree.Util.
 #endif
-            Func<DiContainer, TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> method)
-        {
+            Func<DiContainer, TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> method) {
             _method = method;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TValue);
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 5);
             Assert.IsNotNull(context);
 
@@ -398,13 +337,10 @@ namespace Zenject
             Assert.That(args[5].Type.DerivesFromOrEqual(typeof(TParam6)));
 
             injectAction = null;
-            if (context.Container.IsValidating)
-            {
+            if (context.Container.IsValidating) {
                 // Don't do anything when validating, we can't make any assumptions on the given method
                 buffer.Add(new ValidationMarker(typeof(TValue)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     _method(
                         context.Container,
@@ -421,8 +357,7 @@ namespace Zenject
     // Ten params
 
     [NoReflectionBaking]
-    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue> : IProvider
-    {
+    public class MethodProviderWithContainer<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue> : IProvider {
         readonly
 #if !NET_4_6
             ModestTree.Util.
@@ -433,29 +368,24 @@ namespace Zenject
 #if !NET_4_6
             ModestTree.Util.
 #endif
-            Func<DiContainer, TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue> method)
-        {
+            Func<DiContainer, TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TValue> method) {
             _method = method;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TValue);
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEqual(args.Count, 10);
             Assert.IsNotNull(context);
 
@@ -472,13 +402,10 @@ namespace Zenject
             Assert.That(args[9].Type.DerivesFromOrEqual(typeof(TParam10)));
 
             injectAction = null;
-            if (context.Container.IsValidating)
-            {
+            if (context.Container.IsValidating) {
                 // Don't do anything when validating, we can't make any assumptions on the given method
                 buffer.Add(new ValidationMarker(typeof(TValue)));
-            }
-            else
-            {
+            } else {
                 buffer.Add(
                     _method(
                         context.Container,

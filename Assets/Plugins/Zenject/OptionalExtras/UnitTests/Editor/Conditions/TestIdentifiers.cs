@@ -1,18 +1,14 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Conditions
-{
+namespace Zenject.Tests.Conditions {
     [TestFixture]
-    public class TestIdentifiers : ZenjectUnitTestFixture
-    {
-        class Test0
-        {
+    public class TestIdentifiers : ZenjectUnitTestFixture {
+        class Test0 {
         }
 
         [Test]
-        public void TestBasic()
-        {
+        public void TestBasic() {
             Container.Bind<Test0>().WithId("foo").AsTransient().NonLazy();
 
             Assert.Throws(
@@ -22,8 +18,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestBasic2()
-        {
+        public void TestBasic2() {
             Container.Bind<Test0>().WithId("foo").AsSingle().NonLazy();
 
             Assert.Throws(
@@ -33,8 +28,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestBasic3()
-        {
+        public void TestBasic3() {
             Container.Bind<Test0>().WithId("foo").FromMethod(ctx => new Test0()).NonLazy();
 
             Assert.Throws(
@@ -44,8 +38,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestBasic4()
-        {
+        public void TestBasic4() {
             Container.Bind<Test0>().WithId("foo").AsTransient().NonLazy();
             Container.Bind<Test0>().WithId("foo").AsTransient().NonLazy();
 
@@ -59,8 +52,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestFromMethodUntyped()
-        {
+        public void TestFromMethodUntyped() {
             Container.Bind(typeof(Test0)).FromMethod(ctx => new Test0()).NonLazy();
 
             Container.Resolve<Test0>();

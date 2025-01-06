@@ -1,9 +1,6 @@
-﻿namespace Zenject.SpaceFighter
-{
-    public class EnemyInstaller : Installer<EnemyInstaller>
-    {
-        public override void InstallBindings()
-        {
+﻿namespace Zenject.SpaceFighter {
+    public class EnemyInstaller : Installer<EnemyInstaller> {
+        public override void InstallBindings() {
             Container.Bind<EnemyTunables>().AsSingle();
 
             Container.BindInterfacesAndSelfTo<EnemyStateManager>().AsSingle();

@@ -4,14 +4,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Convention.Names
-{
+namespace Zenject.Tests.Convention.Names {
     [TestFixture]
-    public class TestConventionNames : ZenjectUnitTestFixture
-    {
+    public class TestConventionNames : ZenjectUnitTestFixture {
         [Test]
-        public void TestWithSuffix()
-        {
+        public void TestWithSuffix() {
             Container.Bind<IController>()
                 .To(x => x.AllNonAbstractClasses().InNamespace("Zenject.Tests.Convention.Names").WithSuffix("Controller")).AsTransient();
 
@@ -19,8 +16,7 @@ namespace Zenject.Tests.Convention.Names
         }
 
         [Test]
-        public void TestWithPrefix()
-        {
+        public void TestWithPrefix() {
             Container.Bind<IController>()
                 .To(x => x.AllTypes().InNamespace("Zenject.Tests.Convention.Names").WithPrefix("Controller")).AsTransient();
 
@@ -28,36 +24,29 @@ namespace Zenject.Tests.Convention.Names
         }
 
         [Test]
-        public void TestMatchingRegex()
-        {
+        public void TestMatchingRegex() {
             Container.Bind<IController>()
                 .To(x => x.AllNonAbstractClasses().InNamespace("Zenject.Tests.Convention.Names").MatchingRegex("Controller$")).AsTransient();
 
             Assert.That(Container.Resolve<IController>() is FooController);
         }
 
-        interface IController
-        {
+        interface IController {
         }
 
-        class FooController : IController
-        {
+        class FooController : IController {
         }
 
-        class ControllerBar : IController
-        {
+        class ControllerBar : IController {
         }
 
-        class QuxControllerAsdf : IController
-        {
+        class QuxControllerAsdf : IController {
         }
 
-        class IgnoredFooController
-        {
+        class IgnoredFooController {
         }
 
-        class ControllerBarIgnored
-        {
+        class ControllerBarIgnored {
         }
     }
 }

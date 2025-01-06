@@ -1,12 +1,10 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class GetterProvider<TObj, TResult> : IProvider
-    {
+    public class GetterProvider<TObj, TResult> : IProvider {
         readonly DiContainer _container;
         readonly object _identifier;
         readonly Func<TObj, TResult> _method;
@@ -15,8 +13,7 @@ namespace Zenject
 
         public GetterProvider(
             object identifier, Func<TObj, TResult> method,
-            DiContainer container, InjectSources sourceType, bool matchAll)
-        {
+            DiContainer container, InjectSources sourceType, bool matchAll) {
             _container = container;
             _identifier = identifier;
             _method = method;
@@ -24,23 +21,19 @@ namespace Zenject
             _sourceType = sourceType;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(TResult);
         }
 
-        InjectContext GetSubContext(InjectContext parent)
-        {
+        InjectContext GetSubContext(InjectContext parent) {
             var subContext = parent.CreateSubContext(
                 typeof(TObj), _identifier);
 
@@ -51,8 +44,7 @@ namespace Zenject
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsEmpty(args);
             Assert.IsNotNull(context);
 
@@ -60,15 +52,11 @@ namespace Zenject
 
             injectAction = null;
 
-            if (_container.IsValidating)
-            {
+            if (_container.IsValidating) {
                 // All we can do is validate that the getter object can be resolved
-                if (_matchAll)
-                {
+                if (_matchAll) {
                     _container.ResolveAll(GetSubContext(context));
-                }
-                else
-                {
+                } else {
                     _container.Resolve(GetSubContext(context));
                 }
 
@@ -76,18 +64,14 @@ namespace Zenject
                 return;
             }
 
-            if (_matchAll)
-            {
+            if (_matchAll) {
                 Assert.That(buffer.Count == 0);
                 _container.ResolveAll(GetSubContext(context), buffer);
 
-                for (int i = 0; i < buffer.Count; i++)
-                {
+                for (int i = 0; i < buffer.Count; i++) {
                     buffer[i] = _method((TObj)buffer[i]);
                 }
-            }
-            else
-            {
+            } else {
                 buffer.Add(_method(
                     (TObj)_container.Resolve(GetSubContext(context))));
             }

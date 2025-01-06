@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Zenject;
-using System.Collections.Generic;
 
 public class MapManager : MonoBehaviour {
     [SerializeField] private MapSO firstLevelMap; // Построенная карта для первого уровня

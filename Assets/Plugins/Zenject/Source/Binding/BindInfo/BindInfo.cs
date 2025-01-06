@@ -3,29 +3,24 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Zenject.Internal;
 
-namespace Zenject
-{
-    public enum ScopeTypes
-    {
+namespace Zenject {
+    public enum ScopeTypes {
         Unset,
         Transient,
         Singleton
     }
 
-    public enum ToChoices
-    {
+    public enum ToChoices {
         Self,
         Concrete
     }
 
-    public enum InvalidBindResponses
-    {
+    public enum InvalidBindResponses {
         Assert,
         Skip
     }
 
-    public enum BindingInheritanceMethods
-    {
+    public enum BindingInheritanceMethods {
         None,
         CopyIntoAll,
         CopyDirectOnly,
@@ -34,8 +29,7 @@ namespace Zenject
     }
 
     [NoReflectionBaking]
-    public class BindInfo : IDisposable
-    {
+    public class BindInfo : IDisposable {
         public bool MarkAsCreationBinding;
         public bool MarkAsUniqueSingleton;
         public object ConcreteIdentifier;
@@ -55,8 +49,7 @@ namespace Zenject
         public readonly List<TypeValuePair> Arguments;
         public Action<InjectContext, object> InstantiatedCallback;
 
-        public BindInfo()
-        {
+        public BindInfo() {
             ContractTypes = new List<Type>();
             ToTypes = new List<Type>();
             Arguments = new List<TypeValuePair>();
@@ -64,19 +57,16 @@ namespace Zenject
             Reset();
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             ZenPools.DespawnBindInfo(this);
         }
 
         [Conditional("UNITY_EDITOR")]
-        public void SetContextInfo(string contextInfo)
-        {
+        public void SetContextInfo(string contextInfo) {
             ContextInfo = contextInfo;
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             MarkAsCreationBinding = true;
             MarkAsUniqueSingleton = false;
             ConcreteIdentifier = null;

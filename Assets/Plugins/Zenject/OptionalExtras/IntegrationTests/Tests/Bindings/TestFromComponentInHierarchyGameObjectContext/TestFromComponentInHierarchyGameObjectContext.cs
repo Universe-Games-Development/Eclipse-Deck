@@ -1,33 +1,27 @@
 
+using NUnit.Framework;
 using System.Collections;
 using System.Linq;
-using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings.FromComponentInHierarchyGameObjectContext
-{
-    public class TestFromComponentInHierarchyGameObjectContext : ZenjectIntegrationTestFixture
-    {
-        GameObject FooPrefab
-        {
-            get
-            {
+namespace Zenject.Tests.Bindings.FromComponentInHierarchyGameObjectContext {
+    public class TestFromComponentInHierarchyGameObjectContext : ZenjectIntegrationTestFixture {
+        GameObject FooPrefab {
+            get {
                 return FixtureUtil.GetPrefab("TestFromComponentInHierarchyGameObjectContext/Foo");
             }
         }
 
         [SetUp]
-        public void SetUp()
-        {
+        public void SetUp() {
             new GameObject().AddComponent<Gorp>();
             new GameObject().AddComponent<Gorp>();
         }
 
         [UnityTest]
-        public IEnumerator TestCorrectHierarchy()
-        {
+        public IEnumerator TestCorrectHierarchy() {
             PreInstall();
 
             Container.Bind<Foo>().FromSubContainerResolve()

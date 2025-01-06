@@ -1,20 +1,16 @@
 using System;
 using System.Collections.Generic;
-using ModestTree;
 
 #if !NOT_UNITY3D
 using UnityEngine;
 #endif
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class FactoryFromBinderBase : ScopeConcreteIdArgConditionCopyNonLazyBinder
-    {
+    public class FactoryFromBinderBase : ScopeConcreteIdArgConditionCopyNonLazyBinder {
         public FactoryFromBinderBase(
             DiContainer bindContainer, Type contractType, BindInfo bindInfo, FactoryBindInfo factoryBindInfo)
-            : base(bindInfo)
-        {
+            : base(bindInfo) {
             FactoryBindInfo = factoryBindInfo;
             BindContainer = bindContainer;
             ContractType = contractType;
@@ -25,57 +21,47 @@ namespace Zenject
         }
 
         // Don't use this
-        internal DiContainer BindContainer
-        {
+        internal DiContainer BindContainer {
             get; private set;
         }
 
-        protected FactoryBindInfo FactoryBindInfo
-        {
+        protected FactoryBindInfo FactoryBindInfo {
             get; private set;
         }
 
         // Don't use this
-        internal Func<DiContainer, IProvider> ProviderFunc
-        {
+        internal Func<DiContainer, IProvider> ProviderFunc {
             get { return FactoryBindInfo.ProviderFunc; }
             set { FactoryBindInfo.ProviderFunc = value; }
         }
 
-        protected Type ContractType
-        {
+        protected Type ContractType {
             get; private set;
         }
 
-        public IEnumerable<Type> AllParentTypes
-        {
-            get
-            {
+        public IEnumerable<Type> AllParentTypes {
+            get {
                 yield return ContractType;
 
-                foreach (var type in BindInfo.ToTypes)
-                {
+                foreach (var type in BindInfo.ToTypes) {
                     yield return type;
                 }
             }
         }
 
         // Note that this isn't necessary to call since it's the default
-        public ConditionCopyNonLazyBinder FromNew()
-        {
+        public ConditionCopyNonLazyBinder FromNew() {
             BindingUtil.AssertIsNotComponent(ContractType);
             BindingUtil.AssertIsNotAbstract(ContractType);
 
             return this;
         }
 
-        public ConditionCopyNonLazyBinder FromResolve()
-        {
+        public ConditionCopyNonLazyBinder FromResolve() {
             return FromResolve(null);
         }
 
-        public ConditionCopyNonLazyBinder FromInstance(object instance)
-        {
+        public ConditionCopyNonLazyBinder FromInstance(object instance) {
             BindingUtil.AssertInstanceDerivesFromOrEqual(instance, AllParentTypes);
 
             ProviderFunc =
@@ -84,8 +70,7 @@ namespace Zenject
             return this;
         }
 
-        public ConditionCopyNonLazyBinder FromResolve(object subIdentifier)
-        {
+        public ConditionCopyNonLazyBinder FromResolve(object subIdentifier) {
             ProviderFunc =
                 (container) => new ResolveProvider(
                     ContractType, container,
@@ -95,8 +80,7 @@ namespace Zenject
         }
 
         // Don't use this
-        internal ConcreteBinderGeneric<T> CreateIFactoryBinder<T>(out Guid factoryId)
-        {
+        internal ConcreteBinderGeneric<T> CreateIFactoryBinder<T>(out Guid factoryId) {
             // Use a random ID so that our provider is the only one that can find it and so it doesn't
             // conflict with anything else
             factoryId = Guid.NewGuid();
@@ -107,8 +91,7 @@ namespace Zenject
 
 #if !NOT_UNITY3D
 
-        public ConditionCopyNonLazyBinder FromComponentOn(GameObject gameObject)
-        {
+        public ConditionCopyNonLazyBinder FromComponentOn(GameObject gameObject) {
             BindingUtil.AssertIsValidGameObject(gameObject);
             BindingUtil.AssertIsComponent(ContractType);
             BindingUtil.AssertIsNotAbstract(ContractType);
@@ -120,8 +103,7 @@ namespace Zenject
             return this;
         }
 
-        public ConditionCopyNonLazyBinder FromComponentOn(Func<InjectContext, GameObject> gameObjectGetter)
-        {
+        public ConditionCopyNonLazyBinder FromComponentOn(Func<InjectContext, GameObject> gameObjectGetter) {
             BindingUtil.AssertIsComponent(ContractType);
             BindingUtil.AssertIsNotAbstract(ContractType);
 
@@ -132,14 +114,12 @@ namespace Zenject
             return this;
         }
 
-        public ConditionCopyNonLazyBinder FromComponentOnRoot()
-        {
+        public ConditionCopyNonLazyBinder FromComponentOnRoot() {
             return FromComponentOn(
                 ctx => BindContainer.Resolve<Context>().gameObject);
         }
 
-        public ConditionCopyNonLazyBinder FromNewComponentOn(GameObject gameObject)
-        {
+        public ConditionCopyNonLazyBinder FromNewComponentOn(GameObject gameObject) {
             BindingUtil.AssertIsValidGameObject(gameObject);
             BindingUtil.AssertIsComponent(ContractType);
             BindingUtil.AssertIsNotAbstract(ContractType);
@@ -153,8 +133,7 @@ namespace Zenject
         }
 
         public ConditionCopyNonLazyBinder FromNewComponentOn(
-            Func<InjectContext, GameObject> gameObjectGetter)
-        {
+            Func<InjectContext, GameObject> gameObjectGetter) {
             BindingUtil.AssertIsComponent(ContractType);
             BindingUtil.AssertIsNotAbstract(ContractType);
 
@@ -166,8 +145,7 @@ namespace Zenject
             return this;
         }
 
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromNewComponentOnNewGameObject()
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromNewComponentOnNewGameObject() {
             BindingUtil.AssertIsComponent(ContractType);
             BindingUtil.AssertIsNotAbstract(ContractType);
 
@@ -181,8 +159,7 @@ namespace Zenject
             return new NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder(BindInfo, gameObjectInfo);
         }
 
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromNewComponentOnNewPrefab(UnityEngine.Object prefab)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromNewComponentOnNewPrefab(UnityEngine.Object prefab) {
             BindingUtil.AssertIsValidPrefab(prefab);
             BindingUtil.AssertIsComponent(ContractType);
             BindingUtil.AssertIsNotAbstract(ContractType);
@@ -194,14 +171,13 @@ namespace Zenject
                     ContractType,
                     new PrefabInstantiator(
                         container, gameObjectInfo,
-                        ContractType, new [] { ContractType }, new List<TypeValuePair>(),
+                        ContractType, new[] { ContractType }, new List<TypeValuePair>(),
                         new PrefabProvider(prefab), BindInfo.InstantiatedCallback));
 
             return new NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder(BindInfo, gameObjectInfo);
         }
 
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromComponentInNewPrefab(UnityEngine.Object prefab)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromComponentInNewPrefab(UnityEngine.Object prefab) {
             BindingUtil.AssertIsValidPrefab(prefab);
             BindingUtil.AssertIsInterfaceOrComponent(ContractType);
 
@@ -212,15 +188,14 @@ namespace Zenject
                     ContractType,
                     new PrefabInstantiator(
                         container, gameObjectInfo,
-                        ContractType, new [] { ContractType }, new List<TypeValuePair>(),
+                        ContractType, new[] { ContractType }, new List<TypeValuePair>(),
                         new PrefabProvider(prefab),
                         BindInfo.InstantiatedCallback), true);
 
             return new NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder(BindInfo, gameObjectInfo);
         }
 
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromComponentInNewPrefabResource(string resourcePath)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromComponentInNewPrefabResource(string resourcePath) {
             BindingUtil.AssertIsValidResourcePath(resourcePath);
             BindingUtil.AssertIsInterfaceOrComponent(ContractType);
 
@@ -231,14 +206,13 @@ namespace Zenject
                     ContractType,
                     new PrefabInstantiator(
                         container, gameObjectInfo,
-                        ContractType, new [] { ContractType }, new List<TypeValuePair>(),
+                        ContractType, new[] { ContractType }, new List<TypeValuePair>(),
                         new PrefabProviderResource(resourcePath), BindInfo.InstantiatedCallback), true);
 
             return new NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder(BindInfo, gameObjectInfo);
         }
 
-        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromNewComponentOnNewPrefabResource(string resourcePath)
-        {
+        public NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder FromNewComponentOnNewPrefabResource(string resourcePath) {
             BindingUtil.AssertIsValidResourcePath(resourcePath);
             BindingUtil.AssertIsComponent(ContractType);
             BindingUtil.AssertIsNotAbstract(ContractType);
@@ -250,15 +224,14 @@ namespace Zenject
                     ContractType,
                     new PrefabInstantiator(
                         container, gameObjectInfo,
-                        ContractType, new [] { ContractType }, new List<TypeValuePair>(),
+                        ContractType, new[] { ContractType }, new List<TypeValuePair>(),
                         new PrefabProviderResource(resourcePath),
                         BindInfo.InstantiatedCallback));
 
             return new NameTransformScopeConcreteIdArgConditionCopyNonLazyBinder(BindInfo, gameObjectInfo);
         }
 
-        public ConditionCopyNonLazyBinder FromNewScriptableObjectResource(string resourcePath)
-        {
+        public ConditionCopyNonLazyBinder FromNewScriptableObjectResource(string resourcePath) {
             BindingUtil.AssertIsValidResourcePath(resourcePath);
             BindingUtil.AssertIsInterfaceOrScriptableObject(ContractType);
 
@@ -270,8 +243,7 @@ namespace Zenject
             return this;
         }
 
-        public ConditionCopyNonLazyBinder FromScriptableObjectResource(string resourcePath)
-        {
+        public ConditionCopyNonLazyBinder FromScriptableObjectResource(string resourcePath) {
             BindingUtil.AssertIsValidResourcePath(resourcePath);
             BindingUtil.AssertIsInterfaceOrScriptableObject(ContractType);
 
@@ -283,8 +255,7 @@ namespace Zenject
             return this;
         }
 
-        public ConditionCopyNonLazyBinder FromResource(string resourcePath)
-        {
+        public ConditionCopyNonLazyBinder FromResource(string resourcePath) {
             BindingUtil.AssertDerivesFromUnityObject(ContractType);
 
             ProviderFunc =

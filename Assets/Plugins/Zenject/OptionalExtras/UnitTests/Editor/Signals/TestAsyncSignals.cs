@@ -1,11 +1,9 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Signals
-{
+namespace Zenject.Tests.Signals {
     [TestFixture]
-    public class TestAsyncSignals : ZenjectUnitTestFixture
-    {
+    public class TestAsyncSignals : ZenjectUnitTestFixture {
         static int CallCount;
 
         [Inject]
@@ -23,8 +21,7 @@ namespace Zenject.Tests.Signals
         [InjectOptional]
         Foo _foo = null;
 
-        public override void Setup()
-        {
+        public override void Setup() {
             base.Setup();
 
             SignalBusInstaller.Install(Container);
@@ -32,8 +29,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestBasicAsync()
-        {
+        public void TestBasicAsync() {
             Container.DeclareSignal<Signal1>().RunAsync();
             Container.DeclareSignal<Signal2>().RunAsync();
 
@@ -65,8 +61,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestTickPriority()
-        {
+        public void TestTickPriority() {
             Container.DeclareSignal<Signal1>().WithTickPriority(1);
             Container.DeclareSignal<Signal2>().WithTickPriority(-4);
 
@@ -102,49 +97,38 @@ namespace Zenject.Tests.Signals
             Assert.IsEqual(_receiver1.CallIndex, 3);
         }
 
-        public class Foo : ITickable
-        {
-            public int CallIndex
-            {
+        public class Foo : ITickable {
+            public int CallIndex {
                 get; set;
             }
 
-            public void Tick()
-            {
+            public void Tick() {
                 CallIndex = CallCount++;
             }
         }
 
-        public class Signal1
-        {
+        public class Signal1 {
         }
 
-        public class Signal2
-        {
+        public class Signal2 {
         }
 
-        public class Receiver1
-        {
-            public int CallIndex
-            {
+        public class Receiver1 {
+            public int CallIndex {
                 get; set;
             }
 
-            public void OnSignal()
-            {
+            public void OnSignal() {
                 CallIndex = CallCount++;
             }
         }
 
-        public class Receiver2
-        {
-            public int CallIndex
-            {
+        public class Receiver2 {
+            public int CallIndex {
                 get; set;
             }
 
-            public void OnSignal()
-            {
+            public void OnSignal() {
                 CallIndex = CallCount++;
             }
         }

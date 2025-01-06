@@ -1,15 +1,13 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ModestTree;
 using Zenject.Internal;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class InjectContext : IDisposable
-    {
+    public class InjectContext : IDisposable {
         BindingId _bindingId;
         Type _objectType;
         InjectContext _parentContext;
@@ -21,38 +19,32 @@ namespace Zenject
         object _concreteIdentifier;
         DiContainer _container;
 
-        public InjectContext()
-        {
+        public InjectContext() {
             _bindingId = new BindingId();
             Reset();
         }
 
         public InjectContext(DiContainer container, Type memberType)
-            : this()
-        {
+            : this() {
             Container = container;
             MemberType = memberType;
         }
 
         public InjectContext(DiContainer container, Type memberType, object identifier)
-            : this(container, memberType)
-        {
+            : this(container, memberType) {
             Identifier = identifier;
         }
 
         public InjectContext(DiContainer container, Type memberType, object identifier, bool optional)
-            : this(container, memberType, identifier)
-        {
+            : this(container, memberType, identifier) {
             Optional = optional;
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             ZenPools.DespawnInjectContext(this);
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             _objectType = null;
             _parentContext = null;
             _objectInstance = null;
@@ -65,15 +57,13 @@ namespace Zenject
             _bindingId.Identifier = null;
         }
 
-        public BindingId BindingId
-        {
+        public BindingId BindingId {
             get { return _bindingId; }
         }
 
         // The type of the object which is having its members injected
         // NOTE: This is null for root calls to Resolve<> or Instantiate<>
-        public Type ObjectType
-        {
+        public Type ObjectType {
             get { return _objectType; }
             set { _objectType = value; }
         }
@@ -82,16 +72,14 @@ namespace Zenject
         // This can be used for very complex conditions using parent info such as identifiers, types, etc.
         // Note that ParentContext.MemberType is not necessarily the same as ObjectType,
         // since the ObjectType could be a derived type from ParentContext.MemberType
-        public InjectContext ParentContext
-        {
+        public InjectContext ParentContext {
             get { return _parentContext; }
             set { _parentContext = value; }
         }
 
         // The instance which is having its members injected
         // Note that this is null when injecting into the constructor
-        public object ObjectInstance
-        {
+        public object ObjectInstance {
             get { return _objectInstance; }
             set { _objectInstance = value; }
         }
@@ -103,87 +91,72 @@ namespace Zenject
         //      ...
         //      ... In a constructor:
         //          public Foo([Inject(Id = "foo") Foo foo)
-        public object Identifier
-        {
+        public object Identifier {
             get { return _bindingId.Identifier; }
             set { _bindingId.Identifier = value; }
         }
 
         // The constructor parameter name, or field name, or property name
-        public string MemberName
-        {
+        public string MemberName {
             get { return _memberName; }
             set { _memberName = value; }
         }
 
         // The type of the constructor parameter, field or property
-        public Type MemberType
-        {
+        public Type MemberType {
             get { return _bindingId.Type; }
             set { _bindingId.Type = value; }
         }
 
         // When optional, null is a valid value to be returned
-        public bool Optional
-        {
+        public bool Optional {
             get { return _optional; }
             set { _optional = value; }
         }
 
         // When set to true, this will only look up dependencies in the local container and will not
         // search in parent containers
-        public InjectSources SourceType
-        {
+        public InjectSources SourceType {
             get { return _sourceType; }
             set { _sourceType = value; }
         }
 
-        public object ConcreteIdentifier
-        {
+        public object ConcreteIdentifier {
             get { return _concreteIdentifier; }
             set { _concreteIdentifier = value; }
         }
 
         // When optional, this is used to provide the value
-        public object FallBackValue
-        {
+        public object FallBackValue {
             get { return _fallBackValue; }
             set { _fallBackValue = value; }
         }
 
         // The container used for this injection
-        public DiContainer Container
-        {
+        public DiContainer Container {
             get { return _container; }
             set { _container = value; }
         }
 
-        public IEnumerable<InjectContext> ParentContexts
-        {
-            get
-            {
-                if (ParentContext == null)
-                {
+        public IEnumerable<InjectContext> ParentContexts {
+            get {
+                if (ParentContext == null) {
                     yield break;
                 }
 
                 yield return ParentContext;
 
-                foreach (var context in ParentContext.ParentContexts)
-                {
+                foreach (var context in ParentContext.ParentContexts) {
                     yield return context;
                 }
             }
         }
 
-        public IEnumerable<InjectContext> ParentContextsAndSelf
-        {
-            get
-            {
+        public IEnumerable<InjectContext> ParentContextsAndSelf {
+            get {
                 yield return this;
 
-                foreach (var context in ParentContexts)
-                {
+                foreach (var context in ParentContexts) {
                     yield return context;
                 }
             }
@@ -192,27 +165,21 @@ namespace Zenject
         // This will return the types of all the objects that are being injected
         // So if you have class Foo which has constructor parameter of type IBar,
         // and IBar resolves to Bar, this will be equal to (Bar, Foo)
-        public IEnumerable<Type> AllObjectTypes
-        {
-            get
-            {
-                foreach (var context in ParentContextsAndSelf)
-                {
-                    if (context.ObjectType != null)
-                    {
+        public IEnumerable<Type> AllObjectTypes {
+            get {
+                foreach (var context in ParentContextsAndSelf) {
+                    if (context.ObjectType != null) {
                         yield return context.ObjectType;
                     }
                 }
             }
         }
 
-        public InjectContext CreateSubContext(Type memberType)
-        {
+        public InjectContext CreateSubContext(Type memberType) {
             return CreateSubContext(memberType, null);
         }
 
-        public InjectContext CreateSubContext(Type memberType, object identifier)
-        {
+        public InjectContext CreateSubContext(Type memberType, object identifier) {
             var subContext = new InjectContext();
 
             subContext.ParentContext = this;
@@ -234,8 +201,7 @@ namespace Zenject
             return subContext;
         }
 
-        public InjectContext Clone()
-        {
+        public InjectContext Clone() {
             var clone = new InjectContext();
 
             clone.ObjectType = ObjectType;
@@ -254,14 +220,11 @@ namespace Zenject
         }
 
         // This is very useful to print out for debugging purposes
-        public string GetObjectGraphString()
-        {
+        public string GetObjectGraphString() {
             var result = new StringBuilder();
 
-            foreach (var context in ParentContextsAndSelf.Reverse())
-            {
-                if (context.ObjectType == null)
-                {
+            foreach (var context in ParentContextsAndSelf.Reverse()) {
+                if (context.ObjectType == null) {
                     continue;
                 }
 

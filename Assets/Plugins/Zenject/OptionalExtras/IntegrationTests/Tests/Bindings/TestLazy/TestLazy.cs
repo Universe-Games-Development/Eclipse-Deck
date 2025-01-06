@@ -1,15 +1,12 @@
 
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestLazy : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestLazy : ZenjectIntegrationTestFixture {
         [UnityTest]
-        public IEnumerator Test1()
-        {
+        public IEnumerator Test1() {
             PreInstall();
             Bar.InstanceCount = 0;
 
@@ -29,8 +26,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator Test2()
-        {
+        public IEnumerator Test2() {
             PreInstall();
             Container.Bind<Foo>().AsSingle().NonLazy();
 
@@ -43,8 +39,7 @@ namespace Zenject.Tests.Bindings
 
         [UnityTest]
         [ValidateOnly]
-        public IEnumerator Test3()
-        {
+        public IEnumerator Test3() {
             PreInstall();
 
             Container.Settings = new ZenjectSettings(ValidationErrorResponses.Throw);
@@ -56,8 +51,7 @@ namespace Zenject.Tests.Bindings
 
         [UnityTest]
         [ValidateOnly]
-        public IEnumerator Test4()
-        {
+        public IEnumerator Test4() {
             PreInstall();
             Container.Bind<Foo>().AsSingle().NonLazy();
             Container.Bind<Bar>().AsSingle();
@@ -66,8 +60,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestOptional1()
-        {
+        public IEnumerator TestOptional1() {
             PreInstall();
             Container.Bind<Bar>().AsSingle();
             Container.Bind<Qux>().AsSingle();
@@ -78,8 +71,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestOptional2()
-        {
+        public IEnumerator TestOptional2() {
             PreInstall();
             Container.Bind<Qux>().AsSingle();
             PostInstall();
@@ -89,8 +81,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestOptional3()
-        {
+        public IEnumerator TestOptional3() {
             PreInstall();
             Container.Bind<Gorp>().AsSingle();
             PostInstall();
@@ -101,43 +92,35 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        public class Bar
-        {
+        public class Bar {
             public static int InstanceCount;
 
-            public Bar()
-            {
+            public Bar() {
                 InstanceCount++;
             }
 
-            public void DoIt()
-            {
+            public void DoIt() {
             }
         }
 
-        public class Foo
-        {
+        public class Foo {
             readonly LazyInject<Bar> _bar;
 
-            public Foo(LazyInject<Bar> bar)
-            {
+            public Foo(LazyInject<Bar> bar) {
                 _bar = bar;
             }
 
-            public void DoIt()
-            {
+            public void DoIt() {
                 _bar.Value.DoIt();
             }
         }
 
-        public class Qux
-        {
+        public class Qux {
             [Inject(Optional = true)]
             public LazyInject<Bar> Bar;
         }
 
-        public class Gorp
-        {
+        public class Gorp {
             public LazyInject<Bar> Bar;
         }
     }

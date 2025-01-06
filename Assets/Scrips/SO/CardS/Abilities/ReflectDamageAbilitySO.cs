@@ -9,9 +9,9 @@ public class ReflectDamageAbilitySO : CardAbilitySO {
             Debug.Log($"Reflecting {reflectedDamage} damage back to {gameContext.sourceCard.Name}");
 
             // Викликаємо метод TakeDamage для нанесення шкоди назад до карти-нападника
-            gameContext.sourceCard.TakeDamage(reflectedDamage);
+            gameContext.sourceCard.Health.ApplyDamage(reflectedDamage);
         }
         return true;
     }
-    
+
 }

@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings.Singletons
-{
+namespace Zenject.Tests.Bindings.Singletons {
     [TestFixture]
-    public class TestLazy : ZenjectUnitTestFixture
-    {
+    public class TestLazy : ZenjectUnitTestFixture {
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             Bar.InstanceCount = 0;
 
             Container.Bind<Bar>().AsSingle();
@@ -24,8 +21,7 @@ namespace Zenject.Tests.Bindings.Singletons
         }
 
         [Test]
-        public void TestOptional1()
-        {
+        public void TestOptional1() {
             Container.Bind<Bar>().AsSingle();
             Container.Bind<Qux>().AsSingle();
 
@@ -33,16 +29,14 @@ namespace Zenject.Tests.Bindings.Singletons
         }
 
         [Test]
-        public void TestOptional2()
-        {
+        public void TestOptional2() {
             Container.Bind<Qux>().AsSingle();
 
             Assert.IsNull(Container.Resolve<Qux>().Bar.Value);
         }
 
         [Test]
-        public void TestOptional3()
-        {
+        public void TestOptional3() {
             Container.Bind<Gorp>().AsSingle();
 
             var gorp = Container.Resolve<Gorp>();
@@ -50,43 +44,35 @@ namespace Zenject.Tests.Bindings.Singletons
             Assert.Throws(() => temp = gorp.Bar.Value);
         }
 
-        public class Bar
-        {
+        public class Bar {
             public static int InstanceCount;
 
-            public Bar()
-            {
+            public Bar() {
                 InstanceCount++;
             }
 
-            public void DoIt()
-            {
+            public void DoIt() {
             }
         }
 
-        public class Foo
-        {
+        public class Foo {
             readonly LazyInject<Bar> _bar;
 
-            public Foo(LazyInject<Bar> bar)
-            {
+            public Foo(LazyInject<Bar> bar) {
                 _bar = bar;
             }
 
-            public void DoIt()
-            {
+            public void DoIt() {
                 _bar.Value.DoIt();
             }
         }
 
-        public class Qux
-        {
+        public class Qux {
             [Inject(Optional = true)]
             public LazyInject<Bar> Bar;
         }
 
-        public class Gorp
-        {
+        public class Gorp {
             public LazyInject<Bar> Bar;
         }
     }

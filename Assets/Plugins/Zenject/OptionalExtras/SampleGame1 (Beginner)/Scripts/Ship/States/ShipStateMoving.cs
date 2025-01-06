@@ -1,11 +1,9 @@
-using System;
 using ModestTree;
+using System;
 using UnityEngine;
 
-namespace Zenject.Asteroids
-{
-    public class ShipStateMoving : ShipState
-    {
+namespace Zenject.Asteroids {
+    public class ShipStateMoving : ShipState {
         readonly Settings _settings;
         readonly Camera _mainCamera;
         readonly Ship _ship;
@@ -16,22 +14,19 @@ namespace Zenject.Asteroids
         public ShipStateMoving(
             Settings settings, Ship ship,
             [Inject(Id = "Main")]
-            Camera mainCamera)
-        {
+            Camera mainCamera) {
             _ship = ship;
             _settings = settings;
             _mainCamera = mainCamera;
         }
 
-        public override void Update()
-        {
+        public override void Update() {
             UpdateThruster();
             Move();
             ApplyOscillation();
         }
 
-        void ApplyOscillation()
-        {
+        void ApplyOscillation() {
             var obj = _ship.MeshRenderer.gameObject;
 
             var cycleInterval = 1.0f / _settings.oscillationFrequency;
@@ -42,8 +37,7 @@ namespace Zenject.Asteroids
             obj.transform.position = obj.transform.parent.position + new Vector3(0, _settings.oscillationAmplitude * Mathf.Sin(_oscillationTheta), 0);
         }
 
-        void UpdateThruster()
-        {
+        void UpdateThruster() {
             var speed = (_ship.Position - _lastPosition).magnitude / Time.deltaTime;
             var speedPx = Mathf.Clamp(speed / _settings.speedForMaxEmisssion, 0.0f, 1.0f);
 
@@ -55,8 +49,7 @@ namespace Zenject.Asteroids
 #endif
         }
 
-        void Move()
-        {
+        void Move() {
             var mouseRay = _mainCamera.ScreenPointToRay(Input.mousePosition);
             var mousePos = mouseRay.origin;
             mousePos.z = 0;
@@ -67,34 +60,29 @@ namespace Zenject.Asteroids
             var moveDelta = _ship.Position - _lastPosition;
             var moveDistance = moveDelta.magnitude;
 
-            if (moveDistance > 0.01f)
-            {
+            if (moveDistance > 0.01f) {
                 var moveDir = moveDelta / moveDistance;
                 _ship.Rotation = Quaternion.LookRotation(-moveDir);
             }
         }
 
-        public override void Start()
-        {
+        public override void Start() {
             _lastPosition = _ship.Position;
 
             _ship.ParticleEmitter.gameObject.SetActive(true);
         }
 
-        public override void Dispose()
-        {
+        public override void Dispose() {
             _ship.ParticleEmitter.gameObject.SetActive(false);
         }
 
-        public override void OnTriggerEnter(Collider other)
-        {
+        public override void OnTriggerEnter(Collider other) {
             Assert.That(other.GetComponent<Asteroid>() != null);
             _ship.ChangeState(ShipStates.Dead);
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public float moveSpeed;
             public float rotateSpeed;
 
@@ -105,8 +93,7 @@ namespace Zenject.Asteroids
             public float oscillationAmplitude;
         }
 
-        public class Factory : PlaceholderFactory<ShipStateMoving>
-        {
+        public class Factory : PlaceholderFactory<ShipStateMoving> {
         }
     }
 }

@@ -1,35 +1,29 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestNonGeneric : ZenjectUnitTestFixture
-    {
+    public class TestNonGeneric : ZenjectUnitTestFixture {
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             Assert.Throws(() =>
                 Container.Bind(typeof(IFoo), typeof(IBar)).To(typeof(Foo)).AsCached());
         }
 
         [Test]
-        public void Test2()
-        {
+        public void Test2() {
             Assert.Throws(() =>
                 Container.Bind<IFoo>().To(typeof(Bar)).AsCached());
         }
 
         [Test]
-        public void Test3()
-        {
+        public void Test3() {
             Assert.Throws(() =>
                 Container.Bind(typeof(IFoo)).To(typeof(Bar), typeof(Foo)).AsCached());
         }
 
         [Test]
-        public void Test4()
-        {
+        public void Test4() {
             // This case is more lenient and just ignores invalid bindings
             Container.Bind(typeof(IFoo), typeof(IBar)).To(typeof(Foo), typeof(Bar)).AsCached();
 
@@ -37,20 +31,16 @@ namespace Zenject.Tests.Bindings
             Assert.IsNotNull(Container.Resolve<IBar>());
         }
 
-        public interface IBar
-        {
+        public interface IBar {
         }
 
-        public interface IFoo
-        {
+        public interface IFoo {
         }
 
-        public class Bar : IBar
-        {
+        public class Bar : IBar {
         }
 
-        public class Foo : IFoo
-        {
+        public class Foo : IFoo {
         }
     }
 }

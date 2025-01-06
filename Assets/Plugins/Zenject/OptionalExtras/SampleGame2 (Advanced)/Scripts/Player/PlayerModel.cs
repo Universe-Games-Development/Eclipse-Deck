@@ -1,9 +1,7 @@
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
-    public class Player
-    {
+namespace Zenject.SpaceFighter {
+    public class Player {
         readonly Rigidbody _rigidBody;
         readonly MeshRenderer _renderer;
 
@@ -11,56 +9,46 @@ namespace Zenject.SpaceFighter
 
         public Player(
             Rigidbody rigidBody,
-            MeshRenderer renderer)
-        {
+            MeshRenderer renderer) {
             _rigidBody = rigidBody;
             _renderer = renderer;
         }
 
-        public MeshRenderer Renderer
-        {
+        public MeshRenderer Renderer {
             get { return _renderer; }
         }
 
-        public bool IsDead
-        {
+        public bool IsDead {
             get; set;
         }
 
-        public float Health
-        {
+        public float Health {
             get { return _health; }
         }
 
-        public Vector3 LookDir
-        {
+        public Vector3 LookDir {
             get { return -_rigidBody.transform.right; }
         }
 
-        public Quaternion Rotation
-        {
+        public Quaternion Rotation {
             get { return _rigidBody.rotation; }
             set { _rigidBody.rotation = value; }
         }
 
-        public Vector3 Position
-        {
+        public Vector3 Position {
             get { return _rigidBody.position; }
             set { _rigidBody.position = value; }
         }
 
-        public Vector3 Velocity
-        {
+        public Vector3 Velocity {
             get { return _rigidBody.linearVelocity; }
         }
 
-        public void TakeDamage(float healthLoss)
-        {
+        public void TakeDamage(float healthLoss) {
             _health = Mathf.Max(0.0f, _health - healthLoss);
         }
 
-        public void AddForce(Vector3 force)
-        {
+        public void AddForce(Vector3 force) {
             _rigidBody.AddForce(force);
         }
     }

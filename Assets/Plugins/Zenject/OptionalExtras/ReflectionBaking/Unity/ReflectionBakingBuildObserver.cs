@@ -1,26 +1,21 @@
+using ModestTree;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using ModestTree;
 using UnityEditor;
 using UnityEditor.Compilation;
-using UnityEngine;
 using Zenject.ReflectionBaking.Mono.Cecil;
 using Debug = UnityEngine.Debug;
 
-namespace Zenject.ReflectionBaking
-{
-    public static class ReflectionBakingBuildObserver
-    {
+namespace Zenject.ReflectionBaking {
+    public static class ReflectionBakingBuildObserver {
         [InitializeOnLoadMethod]
-        public static void Initialize()
-        {
+        public static void Initialize() {
             CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompiled;
         }
 
-        static void OnAssemblyCompiled(string assemblyAssetPath, CompilerMessage[] messages)
-        {
+        static void OnAssemblyCompiled(string assemblyAssetPath, CompilerMessage[] messages) {
 #if !UNITY_2018_1_OR_NEWER
             if (Application.isEditor && !BuildPipeline.isBuildingPlayer)
             {
@@ -28,32 +23,25 @@ namespace Zenject.ReflectionBaking
             }
 #endif
 
-            if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.WSAPlayer)
-            {
+            if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.WSAPlayer) {
                 Log.Warn("Zenject reflection baking skipped because it is not currently supported on WSA platform!");
-            }
-            else
-            {
+            } else {
                 TryWeaveAssembly(assemblyAssetPath);
             }
         }
 
-        static void TryWeaveAssembly(string assemblyAssetPath)
-        {
+        static void TryWeaveAssembly(string assemblyAssetPath) {
             var settings = ReflectionBakingInternalUtil.TryGetEnabledSettingsInstance();
 
-            if (settings == null)
-            {
+            if (settings == null) {
                 return;
             }
 
-            if (settings.AllGeneratedAssemblies && settings.ExcludeAssemblies.Contains(assemblyAssetPath))
-            {
+            if (settings.AllGeneratedAssemblies && settings.ExcludeAssemblies.Contains(assemblyAssetPath)) {
                 return;
             }
 
-            if (!settings.AllGeneratedAssemblies && !settings.IncludeAssemblies.Contains(assemblyAssetPath))
-            {
+            if (!settings.AllGeneratedAssemblies && !settings.IncludeAssemblies.Contains(assemblyAssetPath)) {
                 return;
             }
 
@@ -62,8 +50,7 @@ namespace Zenject.ReflectionBaking
 
             var assemblyFullPath = ReflectionBakingInternalUtil.ConvertAssetPathToSystemPath(assemblyAssetPath);
 
-            var readerParameters = new ReaderParameters
-            {
+            var readerParameters = new ReaderParameters {
                 AssemblyResolver = new UnityAssemblyResolver(),
                 // Is this necessary?
                 //ReadSymbols = true,
@@ -73,8 +60,7 @@ namespace Zenject.ReflectionBaking
 
             var assemblyRefNames = module.AssemblyReferences.Select(x => x.Name.ToLower()).ToList();
 
-            if (!assemblyRefNames.Contains("zenject-usage"))
-            {
+            if (!assemblyRefNames.Contains("zenject-usage")) {
                 // Zenject-usage is used by the generated methods
                 // Important that we do this check otherwise we can corrupt some dlls that don't have access to it
                 return;
@@ -89,10 +75,8 @@ namespace Zenject.ReflectionBaking
             int numTypesChanged = ReflectionBakingModuleEditor.WeaveAssembly(
                 module, assembly, settings.NamespacePatterns);
 
-            if (numTypesChanged > 0)
-            {
-                var writerParams = new WriterParameters()
-                {
+            if (numTypesChanged > 0) {
+                var writerParams = new WriterParameters() {
                     // Is this necessary?
                     //WriteSymbols = true
                 };

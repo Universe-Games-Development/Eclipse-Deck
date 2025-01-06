@@ -3,51 +3,42 @@
 using System;
 using UnityEngine;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class GameObjectCreationParameters
-    {
-        public string Name
-        {
+    public class GameObjectCreationParameters {
+        public string Name {
             get;
             set;
         }
 
-        public string GroupName
-        {
+        public string GroupName {
             get;
             set;
         }
 
-        public Transform ParentTransform
-        {
+        public Transform ParentTransform {
             get;
             set;
         }
 
-        public Func<InjectContext, Transform> ParentTransformGetter
-        {
+        public Func<InjectContext, Transform> ParentTransformGetter {
             get;
             set;
         }
 
-        public Vector3? Position
-        {
+        public Vector3? Position {
             get;
             set;
         }
 
-        public Quaternion? Rotation
-        {
+        public Quaternion? Rotation {
             get;
             set;
         }
 
         public static readonly GameObjectCreationParameters Default = new GameObjectCreationParameters();
 
-        public override int GetHashCode()
-        {
+        public override int GetHashCode() {
             unchecked // Overflow is fine, just wrap
             {
                 int hash = 17;
@@ -61,10 +52,8 @@ namespace Zenject
             }
         }
 
-        public override bool Equals(object other)
-        {
-            if (other is GameObjectCreationParameters)
-            {
+        public override bool Equals(object other) {
+            if (other is GameObjectCreationParameters) {
                 GameObjectCreationParameters otherId = (GameObjectCreationParameters)other;
                 return otherId == this;
             }
@@ -72,19 +61,16 @@ namespace Zenject
             return false;
         }
 
-        public bool Equals(GameObjectCreationParameters that)
-        {
+        public bool Equals(GameObjectCreationParameters that) {
             return this == that;
         }
 
-        public static bool operator ==(GameObjectCreationParameters left, GameObjectCreationParameters right)
-        {
+        public static bool operator ==(GameObjectCreationParameters left, GameObjectCreationParameters right) {
             return Equals(left.Name, right.Name)
                 && Equals(left.GroupName, right.GroupName);
         }
 
-        public static bool operator !=(GameObjectCreationParameters left, GameObjectCreationParameters right)
-        {
+        public static bool operator !=(GameObjectCreationParameters left, GameObjectCreationParameters right) {
             return !left.Equals(right);
         }
     }

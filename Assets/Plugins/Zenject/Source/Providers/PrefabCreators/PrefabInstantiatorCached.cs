@@ -1,52 +1,43 @@
 #if !NOT_UNITY3D
 
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 using UnityEngine;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class PrefabInstantiatorCached : IPrefabInstantiator
-    {
+    public class PrefabInstantiatorCached : IPrefabInstantiator {
         readonly IPrefabInstantiator _subInstantiator;
 
         GameObject _gameObject;
 
-        public PrefabInstantiatorCached(IPrefabInstantiator subInstantiator)
-        {
+        public PrefabInstantiatorCached(IPrefabInstantiator subInstantiator) {
             _subInstantiator = subInstantiator;
         }
 
-        public List<TypeValuePair> ExtraArguments
-        {
+        public List<TypeValuePair> ExtraArguments {
             get { return _subInstantiator.ExtraArguments; }
         }
 
-        public Type ArgumentTarget
-        {
+        public Type ArgumentTarget {
             get { return _subInstantiator.ArgumentTarget; }
         }
 
-        public GameObjectCreationParameters GameObjectCreationParameters
-        {
+        public GameObjectCreationParameters GameObjectCreationParameters {
             get { return _subInstantiator.GameObjectCreationParameters; }
         }
 
-        public UnityEngine.Object GetPrefab(InjectContext context)
-        {
+        public UnityEngine.Object GetPrefab(InjectContext context) {
             return _subInstantiator.GetPrefab(context);
         }
 
-        public GameObject Instantiate(InjectContext context, List<TypeValuePair> args, out Action injectAction)
-        {
+        public GameObject Instantiate(InjectContext context, List<TypeValuePair> args, out Action injectAction) {
             // We can't really support arguments if we are using the cached value since
             // the arguments might change when called after the first time
             Assert.IsEmpty(args);
 
-            if (_gameObject != null)
-            {
+            if (_gameObject != null) {
                 injectAction = null;
                 return _gameObject;
             }

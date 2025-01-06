@@ -1,15 +1,12 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
-    public class PlayerInstaller : MonoInstaller
-    {
+namespace Zenject.SpaceFighter {
+    public class PlayerInstaller : MonoInstaller {
         [SerializeField]
         Settings _settings = null;
 
-        public override void InstallBindings()
-        {
+        public override void InstallBindings() {
             Container.Bind<Player>().AsSingle()
                 .WithArguments(_settings.Rigidbody, _settings.MeshRenderer);
 
@@ -25,8 +22,7 @@ namespace Zenject.SpaceFighter
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public Rigidbody Rigidbody;
             public MeshRenderer MeshRenderer;
         }

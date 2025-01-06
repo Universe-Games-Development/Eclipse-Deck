@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests
-{
+namespace Zenject.Tests {
     [TestFixture]
-    public class TestArrayPool : ZenjectUnitTestFixture
-    {
+    public class TestArrayPool : ZenjectUnitTestFixture {
         [Test]
-        public void RunTest()
-        {
+        public void RunTest() {
             var pool = ArrayPool<string>.GetPool(2);
 
             pool.Clear();

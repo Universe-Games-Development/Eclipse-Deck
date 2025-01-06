@@ -2,11 +2,9 @@
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace Zenject.ReflectionBaking
-{
+namespace Zenject.ReflectionBaking {
     [CustomEditor(typeof(ZenjectReflectionBakingSettings))]
-    public class ZenjectReflectionBakingSettingsEditor : Editor
-    {
+    public class ZenjectReflectionBakingSettingsEditor : Editor {
         SerializedProperty _includeAssemblies;
         SerializedProperty _excludeAssemblies;
         SerializedProperty _namespacePatterns;
@@ -25,26 +23,22 @@ namespace Zenject.ReflectionBaking
 
         bool _hasModifiedProperties;
 
-        static GUIContent _includeAssembliesListHeaderContent = new GUIContent
-        {
+        static GUIContent _includeAssembliesListHeaderContent = new GUIContent {
             text = "Include Assemblies",
             tooltip = "The list of all the assemblies that will be editted to have reflection information directly embedded"
         };
 
-        static GUIContent _excludeAssembliesListHeaderContent = new GUIContent
-        {
+        static GUIContent _excludeAssembliesListHeaderContent = new GUIContent {
             text = "Exclude Assemblies",
             tooltip = "The list of all the assemblies that will not be editted"
         };
 
-        static GUIContent _namespacePatternListHeaderContent = new GUIContent
-        {
+        static GUIContent _namespacePatternListHeaderContent = new GUIContent {
             text = "Namespace Patterns",
             tooltip = "This list of Regex patterns will be compared to the name of each type in the given assemblies, and when a match is found that type will be editting to directly contain reflection information"
         };
 
-        void OnEnable()
-        {
+        void OnEnable() {
             _includeAssemblies = serializedObject.FindProperty("_includeAssemblies");
             _excludeAssemblies = serializedObject.FindProperty("_excludeAssemblies");
             _namespacePatterns = serializedObject.FindProperty("_namespacePatterns");
@@ -67,41 +61,34 @@ namespace Zenject.ReflectionBaking
             _excludeAssembliesList.drawElementCallback += OnExcludeAssemblyListDrawElement;
         }
 
-        void OnNamespacePatternsDrawElement(Rect rect, int index, bool isActive, bool isFocused)
-        {
+        void OnNamespacePatternsDrawElement(Rect rect, int index, bool isActive, bool isFocused) {
             SerializedProperty indexProperty = _namespacePatterns.GetArrayElementAtIndex(index);
             indexProperty.stringValue = EditorGUI.TextField(rect, indexProperty.stringValue);
         }
 
-        void OnExcludeAssemblyListDrawElement(Rect rect, int index, bool isActive, bool isFocused)
-        {
+        void OnExcludeAssemblyListDrawElement(Rect rect, int index, bool isActive, bool isFocused) {
             SerializedProperty indexProperty = _excludeAssemblies.GetArrayElementAtIndex(index);
             EditorGUI.LabelField(rect, indexProperty.stringValue, EditorStyles.textArea);
         }
 
-        void OnIncludeAssemblyListDrawElement(Rect rect, int index, bool isActive, bool isFocused)
-        {
+        void OnIncludeAssemblyListDrawElement(Rect rect, int index, bool isActive, bool isFocused) {
             SerializedProperty indexProperty = _includeAssemblies.GetArrayElementAtIndex(index);
             EditorGUI.LabelField(rect, indexProperty.stringValue, EditorStyles.textArea);
         }
 
-        void OnNamespacePatternsDrawHeader(Rect rect)
-        {
+        void OnNamespacePatternsDrawHeader(Rect rect) {
             GUI.Label(rect, _namespacePatternListHeaderContent);
         }
 
-        void OnExcludeWeavedAssemblyDrawHeader(Rect rect)
-        {
+        void OnExcludeWeavedAssemblyDrawHeader(Rect rect) {
             GUI.Label(rect, _excludeAssembliesListHeaderContent);
         }
 
-        void OnIncludeWeavedAssemblyDrawHeader(Rect rect)
-        {
+        void OnIncludeWeavedAssemblyDrawHeader(Rect rect) {
             GUI.Label(rect, _includeAssembliesListHeaderContent);
         }
 
-        public override void OnInspectorGUI()
-        {
+        public override void OnInspectorGUI() {
             EditorGUI.BeginChangeCheck();
             {
                 GUILayout.Label("Settings", EditorStyles.boldLabel);
@@ -111,8 +98,7 @@ namespace Zenject.ReflectionBaking
                 var oldIsEnabledInEditorValue = _isEnabledInEditor.boolValue;
                 EditorGUILayout.PropertyField(_isEnabledInEditor, true);
 
-                if (oldIsEnabledInEditorValue != _isEnabledInEditor.boolValue)
-                {
+                if (oldIsEnabledInEditorValue != _isEnabledInEditor.boolValue) {
                     ReflectionBakingInternalUtil.TryForceUnityFullCompile();
                 }
 
@@ -125,31 +111,22 @@ namespace Zenject.ReflectionBaking
 #endif
                 EditorGUILayout.PropertyField(_allGeneratedAssemblies, true);
 
-                if (_allGeneratedAssemblies.boolValue)
-                {
+                if (_allGeneratedAssemblies.boolValue) {
                     _excludeAssembliesList.DoLayoutList();
 
                     GUI.enabled = false;
 
-                    try
-                    {
+                    try {
                         _includeAssembliesList.DoLayoutList();
-                    }
-                    finally
-                    {
+                    } finally {
                         GUI.enabled = true;
                     }
-                }
-                else
-                {
+                } else {
                     GUI.enabled = false;
 
-                    try
-                    {
+                    try {
                         _excludeAssembliesList.DoLayoutList();
-                    }
-                    finally
-                    {
+                    } finally {
                         GUI.enabled = true;
                     }
 
@@ -159,74 +136,62 @@ namespace Zenject.ReflectionBaking
                 _namespacePatternsList.DoLayoutList();
             }
 
-            if (EditorGUI.EndChangeCheck())
-            {
+            if (EditorGUI.EndChangeCheck()) {
                 _hasModifiedProperties = true;
             }
 
-            if (_hasModifiedProperties)
-            {
+            if (_hasModifiedProperties) {
                 _hasModifiedProperties = false;
                 ApplyModifiedProperties();
             }
         }
 
-        void ApplyModifiedProperties()
-        {
+        void ApplyModifiedProperties() {
             serializedObject.ApplyModifiedProperties();
             serializedObject.Update();
         }
 
-        void OnExcludeWeavedAssemblyElementAdded(ReorderableList list)
-        {
+        void OnExcludeWeavedAssemblyElementAdded(ReorderableList list) {
             OnAssemblyElementAdded(_excludeAssemblies, list);
         }
 
-        void OnIncludeWeavedAssemblyElementAdded(ReorderableList list)
-        {
+        void OnIncludeWeavedAssemblyElementAdded(ReorderableList list) {
             OnAssemblyElementAdded(_includeAssemblies, list);
         }
 
-        void OnAssemblyElementAdded(SerializedProperty listProperty, ReorderableList list)
-        {
+        void OnAssemblyElementAdded(SerializedProperty listProperty, ReorderableList list) {
             GenericMenu menu = new GenericMenu();
 
             var paths = AssemblyPathRegistry.GetAllGeneratedAssemblyRelativePaths();
 
-            for (int i = 0; i < paths.Count; i++)
-            {
+            for (int i = 0; i < paths.Count; i++) {
                 var path = paths[i];
 
                 bool foundMatch = false;
 
-                for (int k = 0; k < listProperty.arraySize; k++)
-                {
+                for (int k = 0; k < listProperty.arraySize; k++) {
                     SerializedProperty current = listProperty.GetArrayElementAtIndex(k);
 
-                    if (path == current.stringValue)
-                    {
+                    if (path == current.stringValue) {
                         foundMatch = true;
                         break;
                     }
                 }
 
-                if (!foundMatch)
-                {
+                if (!foundMatch) {
                     GUIContent content = new GUIContent(path);
                     menu.AddItem(content, false, p => OnWeavedAssemblyAdded(listProperty, p), path);
                 }
             }
 
-            if (menu.GetItemCount() == 0)
-            {
+            if (menu.GetItemCount() == 0) {
                 menu.AddDisabledItem(new GUIContent("[All Assemblies Added]"));
             }
 
             menu.ShowAsContext();
         }
 
-        void OnWeavedAssemblyAdded(SerializedProperty listProperty, object path)
-        {
+        void OnWeavedAssemblyAdded(SerializedProperty listProperty, object path) {
             listProperty.arraySize++;
             SerializedProperty weaved = listProperty.GetArrayElementAtIndex(listProperty.arraySize - 1);
             weaved.stringValue = ((string)path).Replace("\\", "/");

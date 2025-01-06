@@ -1,22 +1,18 @@
 using UnityEngine;
 
-namespace Zenject.SpaceFighter
-{
-    public class PlayerDirectionHandler : ITickable
-    {
+namespace Zenject.SpaceFighter {
+    public class PlayerDirectionHandler : ITickable {
         readonly Player _player;
         readonly Camera _mainCamera;
 
         public PlayerDirectionHandler(
             Camera mainCamera,
-            Player player)
-        {
+            Player player) {
             _player = player;
             _mainCamera = mainCamera;
         }
 
-        public void Tick()
-        {
+        public void Tick() {
             var mouseRay = _mainCamera.ScreenPointToRay(Input.mousePosition);
 
             var mousePos = mouseRay.origin;

@@ -15,7 +15,7 @@ public class MainMenuUI : MonoBehaviour {
 
     private LevelManager levelManager;
 
-    
+
     private StartGameHandler startGameHandler;
     [Inject]
     public void Contruct(LevelManager levelManager) {

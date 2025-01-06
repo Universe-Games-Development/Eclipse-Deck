@@ -1,7 +1,7 @@
 using System;
-using UnityEngine;
 using System.Collections;
 using Unity.Cinemachine;
+using UnityEngine;
 
 public class CameraSplineMover : MonoBehaviour {
     public float duration = 5f;       // Тривалість руху

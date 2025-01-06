@@ -1,12 +1,10 @@
 using System;
 
-namespace Zenject
-{
+namespace Zenject {
     // Note that there's a reason we don't just have a generic
     // argument for signal type - because when using struct type signals it throws
     // exceptions on AOT platforms
-    public class SignalCallbackWithLookupWrapper : IDisposable
-    {
+    public class SignalCallbackWithLookupWrapper : IDisposable {
         readonly DiContainer _container;
         readonly SignalBus _signalBus;
         readonly Guid _lookupId;
@@ -21,8 +19,7 @@ namespace Zenject
             Guid lookupId,
             Func<object, Action<object>> methodGetter,
             SignalBus signalBus,
-            DiContainer container)
-        {
+            DiContainer container) {
             _objectType = objectType;
             _signalType = signalBindInfo.SignalType;
             _identifier = signalBindInfo.Identifier;
@@ -34,18 +31,15 @@ namespace Zenject
             signalBus.SubscribeId(signalBindInfo.SignalType, _identifier, OnSignalFired);
         }
 
-        void OnSignalFired(object signal)
-        {
+        void OnSignalFired(object signal) {
             var objects = _container.ResolveIdAll(_objectType, _lookupId);
 
-            for (int i = 0; i < objects.Count; i++)
-            {
+            for (int i = 0; i < objects.Count; i++) {
                 _methodGetter(objects[i])(signal);
             }
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             _signalBus.UnsubscribeId(_signalType, _identifier, OnSignalFired);
         }
     }

@@ -1,32 +1,26 @@
 ﻿
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Zenject.Tests.Factories.BindFactory;
 
-namespace Zenject.Tests.Factories
-{
-    public class TestBindFactory : ZenjectIntegrationTestFixture
-    {
-        GameObject FooPrefab
-        {
+namespace Zenject.Tests.Factories {
+    public class TestBindFactory : ZenjectIntegrationTestFixture {
+        GameObject FooPrefab {
             get { return FixtureUtil.GetPrefab("TestBindFactory/Foo"); }
         }
 
-        GameObject CameraPrefab
-        {
+        GameObject CameraPrefab {
             get { return FixtureUtil.GetPrefab("TestBindFactory/Camera"); }
         }
 
-        GameObject FooSubContainerPrefab
-        {
+        GameObject FooSubContainerPrefab {
             get { return FixtureUtil.GetPrefab("TestBindFactory/FooSubContainer"); }
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewScriptableObjectResource()
-        {
+        public IEnumerator TestFromNewScriptableObjectResource() {
             PreInstall();
             Container.BindFactory<Bar, Bar.Factory>()
                 .FromNewScriptableObjectResource("TestBindFactory/Bar");
@@ -41,8 +35,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromComponentInHierarchy()
-        {
+        public IEnumerator TestFromComponentInHierarchy() {
             PreInstall();
             var foo = new GameObject().AddComponent<Foo>();
 
@@ -59,8 +52,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromComponentInHierarchyErrors()
-        {
+        public IEnumerator TestFromComponentInHierarchyErrors() {
             PreInstall();
             Container.BindFactory<Foo, Foo.Factory>().FromComponentInHierarchy();
 
@@ -83,8 +75,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOn()
-        {
+        public IEnumerator TestFromNewComponentOn() {
             PreInstall();
             var go = new GameObject();
 
@@ -111,8 +102,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOnNewGameObject()
-        {
+        public IEnumerator TestFromNewComponentOnNewGameObject() {
             PreInstall();
             Container.BindFactory<Foo, Foo.Factory>().FromNewComponentOnNewGameObject();
 
@@ -125,8 +115,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOnNewGameObjectComponent()
-        {
+        public IEnumerator TestFromNewComponentOnNewGameObjectComponent() {
             PreInstall();
             Container.BindFactory<Camera, CameraFactory>().FromNewComponentOnNewGameObject();
 
@@ -139,8 +128,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOnNewGameObjectComponentFailure()
-        {
+        public IEnumerator TestFromNewComponentOnNewGameObjectComponentFailure() {
             PreInstall();
             Container.BindFactory<string, Camera, CameraFactory2>().FromNewComponentOnNewGameObject();
 
@@ -151,8 +139,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOnNewGameObjectWithParamsSuccess()
-        {
+        public IEnumerator TestFromNewComponentOnNewGameObjectWithParamsSuccess() {
             PreInstall();
             Container.BindFactory<int, Foo2, Foo2.Factory2>().FromNewComponentOnNewGameObject();
 
@@ -166,8 +153,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOnNewGameObjectWithParamsFailure()
-        {
+        public IEnumerator TestFromNewComponentOnNewGameObjectWithParamsFailure() {
             PreInstall();
             Container.BindFactory<Foo2, Foo2.Factory>().FromNewComponentOnNewGameObject();
 
@@ -178,8 +164,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOnNewGameObjectConcrete()
-        {
+        public IEnumerator TestFromNewComponentOnNewGameObjectConcrete() {
             PreInstall();
             Container.BindFactory<IFoo, IFooFactory>().To<Foo>().FromNewComponentOnNewGameObject();
 
@@ -192,8 +177,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOnSelf()
-        {
+        public IEnumerator TestFromNewComponentOnSelf() {
             PreInstall();
             var gameObject = Container.CreateEmptyGameObject("foo");
 
@@ -208,8 +192,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOnSelfFail()
-        {
+        public IEnumerator TestFromNewComponentOnSelfFail() {
             PreInstall();
             Assert.Throws(() => Container.BindFactory<Foo2, Foo2.Factory>().FromNewComponentOn((GameObject)null));
 
@@ -218,8 +201,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromNewComponentOnConcrete()
-        {
+        public IEnumerator TestFromNewComponentOnConcrete() {
             PreInstall();
             var gameObject = Container.CreateEmptyGameObject("foo");
 
@@ -234,8 +216,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromComponentInNewPrefab()
-        {
+        public IEnumerator TestFromComponentInNewPrefab() {
             PreInstall();
             Container.BindFactory<Foo, Foo.Factory>().FromComponentInNewPrefab(FooPrefab).WithGameObjectName("asdf");
 
@@ -250,8 +231,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestFromComponentInPrefabComponent()
-        {
+        public IEnumerator TestFromComponentInPrefabComponent() {
             PreInstall();
             Container.BindFactory<Camera, CameraFactory>().FromComponentInNewPrefab(CameraPrefab).WithGameObjectName("asdf");
 
@@ -266,8 +246,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToPrefabSelfFail()
-        {
+        public IEnumerator TestToPrefabSelfFail() {
             PreInstall();
             // Foo3 is not on the prefab
             Container.BindFactory<Foo3, Foo3.Factory>().FromComponentInNewPrefab(FooPrefab);
@@ -279,8 +258,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToPrefabConcrete()
-        {
+        public IEnumerator TestToPrefabConcrete() {
             PreInstall();
             Container.BindFactory<IFoo, IFooFactory>().To<Foo>().FromComponentInNewPrefab(FooPrefab).WithGameObjectName("asdf");
 
@@ -295,8 +273,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToResourceSelf()
-        {
+        public IEnumerator TestToResourceSelf() {
             PreInstall();
             Container.BindFactory<Texture, PlaceholderFactory<Texture>>()
                 .FromResource("TestBindFactory/TestTexture").NonLazy();
@@ -308,8 +285,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToResource()
-        {
+        public IEnumerator TestToResource() {
             PreInstall();
             Container.BindFactory<Object, PlaceholderFactory<Object>>()
                 .To<Texture>().FromResource("TestBindFactory/TestTexture").NonLazy();
@@ -319,8 +295,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToPrefabResourceSelf()
-        {
+        public IEnumerator TestToPrefabResourceSelf() {
             PreInstall();
             Container.BindFactory<Foo, Foo.Factory>().FromComponentInNewPrefabResource("TestBindFactory/Foo").WithGameObjectName("asdf");
 
@@ -335,8 +310,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToPrefabResourceConcrete()
-        {
+        public IEnumerator TestToPrefabResourceConcrete() {
             PreInstall();
             Container.BindFactory<Foo, Foo.Factory>().To<Foo>().FromComponentInNewPrefabResource("TestBindFactory/Foo").WithGameObjectName("asdf");
 
@@ -351,8 +325,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToSubContainerPrefabSelf()
-        {
+        public IEnumerator TestToSubContainerPrefabSelf() {
             PreInstall();
             Container.BindFactory<Foo, Foo.Factory>().FromSubContainerResolve().ByNewContextPrefab(FooSubContainerPrefab);
 
@@ -366,8 +339,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToSubContainerPrefabConcrete()
-        {
+        public IEnumerator TestToSubContainerPrefabConcrete() {
             PreInstall();
             Container.BindFactory<IFoo, IFooFactory>()
                 .To<Foo>().FromSubContainerResolve().ByNewContextPrefab(FooSubContainerPrefab);
@@ -381,8 +353,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToSubContainerPrefabResourceSelf()
-        {
+        public IEnumerator TestToSubContainerPrefabResourceSelf() {
             PreInstall();
             Container.BindFactory<Foo, Foo.Factory>()
                 .FromSubContainerResolve().ByNewContextPrefabResource("TestBindFactory/FooSubContainer");
@@ -397,8 +368,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestToSubContainerPrefabResourceConcrete()
-        {
+        public IEnumerator TestToSubContainerPrefabResourceConcrete() {
             PreInstall();
             Container.BindFactory<IFoo, IFooFactory>()
                 .To<Foo>().FromSubContainerResolve().ByNewContextPrefabResource("TestBindFactory/FooSubContainer");
@@ -412,8 +382,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestUnderTransformGroup()
-        {
+        public IEnumerator TestUnderTransformGroup() {
             PreInstall();
             Container.BindFactory<Foo, Foo.Factory>()
                 .FromNewComponentOnNewGameObject().UnderTransformGroup("Foos");
@@ -429,8 +398,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestUnderTransform()
-        {
+        public IEnumerator TestUnderTransform() {
             PreInstall();
             var tempGameObject = new GameObject("Foo");
 
@@ -446,8 +414,7 @@ namespace Zenject.Tests.Factories
         }
 
         [UnityTest]
-        public IEnumerator TestUnderTransformGetter()
-        {
+        public IEnumerator TestUnderTransformGetter() {
             PreInstall();
             var tempGameObject = new GameObject("Foo");
 
@@ -462,35 +429,27 @@ namespace Zenject.Tests.Factories
             yield break;
         }
 
-        public class CameraFactory2 : PlaceholderFactory<string, Camera>
-        {
+        public class CameraFactory2 : PlaceholderFactory<string, Camera> {
         }
 
-        public class CameraFactory : PlaceholderFactory<Camera>
-        {
+        public class CameraFactory : PlaceholderFactory<Camera> {
         }
 
-        public class Foo3 : MonoBehaviour
-        {
-            public class Factory : PlaceholderFactory<Foo3>
-            {
+        public class Foo3 : MonoBehaviour {
+            public class Factory : PlaceholderFactory<Foo3> {
             }
         }
 
-        public class Foo2 : MonoBehaviour
-        {
+        public class Foo2 : MonoBehaviour {
             [Inject]
-            public int Value
-            {
+            public int Value {
                 get; private set;
             }
 
-            public class Factory : PlaceholderFactory<Foo2>
-            {
+            public class Factory : PlaceholderFactory<Foo2> {
             }
 
-            public class Factory2 : PlaceholderFactory<int, Foo2>
-            {
+            public class Factory2 : PlaceholderFactory<int, Foo2> {
             }
         }
     }

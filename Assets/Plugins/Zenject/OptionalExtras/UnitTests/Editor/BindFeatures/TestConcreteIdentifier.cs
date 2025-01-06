@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.BindFeatures
-{
+namespace Zenject.Tests.BindFeatures {
     [TestFixture]
-    public class TestConcreteIdentifier : ZenjectUnitTestFixture
-    {
+    public class TestConcreteIdentifier : ZenjectUnitTestFixture {
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             Container.Bind<IFoo>().To<Foo>().AsCached().WithConcreteId("asdf");
             Container.Bind<IFoo>().To<Foo>().AsCached();
 
@@ -21,23 +18,18 @@ namespace Zenject.Tests.BindFeatures
             Assert.IsEqual(foos[1].Value, "b");
         }
 
-        interface IFoo
-        {
-            string Value
-            {
+        interface IFoo {
+            string Value {
                 get;
             }
         }
 
-        class Foo : IFoo
-        {
-            public Foo(string data)
-            {
+        class Foo : IFoo {
+            public Foo(string data) {
                 Value = data;
             }
 
-            public string Value
-            {
+            public string Value {
                 get; private set;
             }
         }

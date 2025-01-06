@@ -1,29 +1,23 @@
-using System.Linq;
 using NUnit.Framework;
+using System.Linq;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Conditions
-{
+namespace Zenject.Tests.Conditions {
     [TestFixture]
-    public class TestConditionsComplex : ZenjectUnitTestFixture
-    {
-        class Foo
-        {
+    public class TestConditionsComplex : ZenjectUnitTestFixture {
+        class Foo {
         }
 
-        class Bar
-        {
+        class Bar {
             public Foo Foo;
 
-            public Bar(Foo foo)
-            {
+            public Bar(Foo foo) {
                 Foo = foo;
             }
         }
 
         [Test]
-        public void TestCorrespondingIdentifiers()
-        {
+        public void TestCorrespondingIdentifiers() {
             var foo1 = new Foo();
             var foo2 = new Foo();
 

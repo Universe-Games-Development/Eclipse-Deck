@@ -3,22 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace ModestTree
-{
-    public static class ReflectionUtil
-    {
-        public static Array CreateArray(Type elementType, List<object> instances)
-        {
+namespace ModestTree {
+    public static class ReflectionUtil {
+        public static Array CreateArray(Type elementType, List<object> instances) {
             var array = Array.CreateInstance(elementType, instances.Count);
 
-            for (int i = 0; i < instances.Count; i++)
-            {
+            for (int i = 0; i < instances.Count; i++) {
                 var instance = instances[i];
 
-                if (instance != null)
-                {
+                if (instance != null) {
                     Assert.That(instance.GetType().DerivesFromOrEqual(elementType),
-                        "Wrong type when creating array, expected something assignable from '"+ elementType +"', but found '" + instance.GetType() + "'");
+                        "Wrong type when creating array, expected something assignable from '" + elementType + "', but found '" + instance.GetType() + "'");
                 }
 
                 array.SetValue(instance, i);
@@ -27,20 +22,17 @@ namespace ModestTree
             return array;
         }
 
-        public static IList CreateGenericList(Type elementType, List<object> instances)
-        {
+        public static IList CreateGenericList(Type elementType, List<object> instances) {
             var genericType = typeof(List<>).MakeGenericType(elementType);
 
             var list = (IList)Activator.CreateInstance(genericType);
 
-            for (int i = 0; i < instances.Count; i++)
-            {
+            for (int i = 0; i < instances.Count; i++) {
                 var instance = instances[i];
 
-                if (instance != null)
-                {
+                if (instance != null) {
                     Assert.That(instance.GetType().DerivesFromOrEqual(elementType),
-                        "Wrong type when creating generic list, expected something assignable from '"+ elementType +"', but found '" + instance.GetType() + "'");
+                        "Wrong type when creating generic list, expected something assignable from '" + elementType + "', but found '" + instance.GetType() + "'");
                 }
 
                 list.Add(instance);
@@ -49,13 +41,11 @@ namespace ModestTree
             return list;
         }
 
-        public static string ToDebugString(this MethodInfo method)
-        {
+        public static string ToDebugString(this MethodInfo method) {
             return "{0}.{1}".Fmt(method.DeclaringType.PrettyName(), method.Name);
         }
 
-        public static string ToDebugString(this Action action)
-        {
+        public static string ToDebugString(this Action action) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return action.ToString();
 #else
@@ -63,8 +53,7 @@ namespace ModestTree
 #endif
         }
 
-        public static string ToDebugString<TParam1>(this Action<TParam1> action)
-        {
+        public static string ToDebugString<TParam1>(this Action<TParam1> action) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return action.ToString();
 #else
@@ -72,8 +61,7 @@ namespace ModestTree
 #endif
         }
 
-        public static string ToDebugString<TParam1, TParam2>(this Action<TParam1, TParam2> action)
-        {
+        public static string ToDebugString<TParam1, TParam2>(this Action<TParam1, TParam2> action) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return action.ToString();
 #else
@@ -81,8 +69,7 @@ namespace ModestTree
 #endif
         }
 
-        public static string ToDebugString<TParam1, TParam2, TParam3>(this Action<TParam1, TParam2, TParam3> action)
-        {
+        public static string ToDebugString<TParam1, TParam2, TParam3>(this Action<TParam1, TParam2, TParam3> action) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return action.ToString();
 #else
@@ -90,8 +77,7 @@ namespace ModestTree
 #endif
         }
 
-        public static string ToDebugString<TParam1, TParam2, TParam3, TParam4>(this Action<TParam1, TParam2, TParam3, TParam4> action)
-        {
+        public static string ToDebugString<TParam1, TParam2, TParam3, TParam4>(this Action<TParam1, TParam2, TParam3, TParam4> action) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return action.ToString();
 #else
@@ -127,8 +113,7 @@ namespace ModestTree
 #endif
         }
 
-        public static string ToDebugString<TParam1>(this Func<TParam1> func)
-        {
+        public static string ToDebugString<TParam1>(this Func<TParam1> func) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return func.ToString();
 #else
@@ -136,8 +121,7 @@ namespace ModestTree
 #endif
         }
 
-        public static string ToDebugString<TParam1, TParam2>(this Func<TParam1, TParam2> func)
-        {
+        public static string ToDebugString<TParam1, TParam2>(this Func<TParam1, TParam2> func) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return func.ToString();
 #else
@@ -145,8 +129,7 @@ namespace ModestTree
 #endif
         }
 
-        public static string ToDebugString<TParam1, TParam2, TParam3>(this Func<TParam1, TParam2, TParam3> func)
-        {
+        public static string ToDebugString<TParam1, TParam2, TParam3>(this Func<TParam1, TParam2, TParam3> func) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return func.ToString();
 #else
@@ -154,8 +137,7 @@ namespace ModestTree
 #endif
         }
 
-        public static string ToDebugString<TParam1, TParam2, TParam3, TParam4>(this Func<TParam1, TParam2, TParam3, TParam4> func)
-        {
+        public static string ToDebugString<TParam1, TParam2, TParam3, TParam4>(this Func<TParam1, TParam2, TParam3, TParam4> func) {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return func.ToString();
 #else

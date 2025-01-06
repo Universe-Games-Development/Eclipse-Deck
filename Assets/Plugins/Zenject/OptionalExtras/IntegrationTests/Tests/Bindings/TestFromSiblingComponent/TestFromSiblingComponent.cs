@@ -1,16 +1,13 @@
 ﻿
-using System.Collections;
 using ModestTree;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Zenject.Tests.Bindings
-{
-    public class TestFromSiblingComponent : ZenjectIntegrationTestFixture
-    {
+namespace Zenject.Tests.Bindings {
+    public class TestFromSiblingComponent : ZenjectIntegrationTestFixture {
         [UnityTest]
-        public IEnumerator TestBasic()
-        {
+        public IEnumerator TestBasic() {
             PreInstall();
             Container.Bind<Bar>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
             Container.Bind<Foo>().FromNewComponentSibling();
@@ -22,8 +19,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestInvalidUse()
-        {
+        public IEnumerator TestInvalidUse() {
             PreInstall();
             Container.Bind<Qux>().AsSingle().NonLazy();
             Container.Bind<Foo>().FromNewComponentSibling();
@@ -33,8 +29,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestBasic2()
-        {
+        public IEnumerator TestBasic2() {
             PreInstall();
             var gameObject = Container.CreateEmptyGameObject("Test");
 
@@ -54,8 +49,7 @@ namespace Zenject.Tests.Bindings
         }
 
         [UnityTest]
-        public IEnumerator TestOptional()
-        {
+        public IEnumerator TestOptional() {
             var gameObject = new GameObject("Test");
 
             PreInstall();
@@ -70,31 +64,25 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
-        public class Qux
-        {
-            public Qux(Foo foo)
-            {
+        public class Qux {
+            public Qux(Foo foo) {
             }
         }
 
-        public class Foo : MonoBehaviour
-        {
+        public class Foo : MonoBehaviour {
         }
 
-        public class Bar : MonoBehaviour
-        {
+        public class Bar : MonoBehaviour {
             [Inject]
             public Foo Foo;
         }
 
-        public class Gorp : MonoBehaviour
-        {
+        public class Gorp : MonoBehaviour {
             [Inject]
             public Foo Foo;
         }
 
-        public class Qiv : MonoBehaviour
-        {
+        public class Qiv : MonoBehaviour {
             [InjectOptional]
             public Foo Foo;
         }

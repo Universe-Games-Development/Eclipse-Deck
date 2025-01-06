@@ -3,10 +3,8 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Zenject
-{
-    public class ZenjectBinding : MonoBehaviour
-    {
+namespace Zenject {
+    public class ZenjectBinding : MonoBehaviour {
         [Tooltip("The component to add to the Zenject container")]
         [SerializeField]
         Component[] _components = null;
@@ -28,39 +26,32 @@ namespace Zenject
         [SerializeField]
         BindTypes _bindType = BindTypes.Self;
 
-        public bool UseSceneContext
-        {
+        public bool UseSceneContext {
             get { return _useSceneContext; }
         }
 
-        public Context Context
-        {
+        public Context Context {
             get { return _context; }
             set { _context = value; }
         }
 
-        public Component[] Components
-        {
+        public Component[] Components {
             get { return _components; }
         }
 
-        public string Identifier
-        {
+        public string Identifier {
             get { return _identifier; }
         }
 
-        public BindTypes BindType
-        {
+        public BindTypes BindType {
             get { return _bindType; }
         }
 
-        public void Start()
-        {
+        public void Start() {
             // Define this method so we expose the enabled check box
         }
 
-        public enum BindTypes
-        {
+        public enum BindTypes {
             Self,
             AllInterfaces,
             AllInterfacesAndSelf,

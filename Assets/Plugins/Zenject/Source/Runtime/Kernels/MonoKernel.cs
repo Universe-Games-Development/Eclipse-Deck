@@ -4,12 +4,9 @@
 
 using ModestTree;
 using UnityEngine;
-using UnityEngine.Analytics;
 
-namespace Zenject
-{
-    public abstract class MonoKernel : MonoBehaviour
-    {
+namespace Zenject {
+    public abstract class MonoKernel : MonoBehaviour {
         [InjectLocal]
         TickableManager _tickableManager = null;
 
@@ -19,106 +16,78 @@ namespace Zenject
         [InjectLocal]
         DisposableManager _disposablesManager = null;
 
-        [InjectOptional] 
+        [InjectOptional]
         private IDecoratableMonoKernel decoratableMonoKernel;
 
         bool _hasInitialized;
         bool _isDestroyed;
 
-        protected bool IsDestroyed
-        {
+        protected bool IsDestroyed {
             get { return _isDestroyed; }
         }
 
-        public virtual void Start()
-        {
-            if (decoratableMonoKernel?.ShouldInitializeOnStart()??true)
-            {
+        public virtual void Start() {
+            if (decoratableMonoKernel?.ShouldInitializeOnStart() ?? true) {
                 Initialize();
             }
         }
 
-        public void Initialize()
-        {
+        public void Initialize() {
             // We don't put this in start in case Start is overridden
-            if (!_hasInitialized)
-            {
+            if (!_hasInitialized) {
                 _hasInitialized = true;
 
-                if (decoratableMonoKernel != null)
-                {
+                if (decoratableMonoKernel != null) {
                     decoratableMonoKernel.Initialize();
-                }
-                else
-                {
+                } else {
                     _initializableManager.Initialize();
                 }
             }
         }
 
-        public virtual void Update()
-        {
+        public virtual void Update() {
             // Don't spam the log every frame if initialization fails and leaves it as null
-            if (_tickableManager != null)
-            {
-                if (decoratableMonoKernel != null)
-                {
+            if (_tickableManager != null) {
+                if (decoratableMonoKernel != null) {
                     decoratableMonoKernel.Update();
-                }
-                else
-                {
+                } else {
                     _tickableManager.Update();
                 }
             }
         }
 
-        public virtual void FixedUpdate()
-        {
+        public virtual void FixedUpdate() {
             // Don't spam the log every frame if initialization fails and leaves it as null
-            if (_tickableManager != null)
-            {
-                if (decoratableMonoKernel != null)
-                {
+            if (_tickableManager != null) {
+                if (decoratableMonoKernel != null) {
                     decoratableMonoKernel.FixedUpdate();
-                }
-                else
-                {
+                } else {
                     _tickableManager.FixedUpdate();
                 }
             }
         }
 
-        public virtual void LateUpdate()
-        {
+        public virtual void LateUpdate() {
             // Don't spam the log every frame if initialization fails and leaves it as null
-            if (_tickableManager != null)
-            {
-                if (decoratableMonoKernel != null)
-                {
+            if (_tickableManager != null) {
+                if (decoratableMonoKernel != null) {
                     decoratableMonoKernel.LateUpdate();
-                }
-                else
-                {
+                } else {
                     _tickableManager.LateUpdate();
                 }
             }
         }
 
-        public virtual void OnDestroy()
-        {
+        public virtual void OnDestroy() {
             // _disposablesManager can be null if we get destroyed before the Start event
-            if (_disposablesManager != null)
-            {
+            if (_disposablesManager != null) {
                 Assert.That(!_isDestroyed);
                 _isDestroyed = true;
 
-                if (decoratableMonoKernel != null)
-                {
+                if (decoratableMonoKernel != null) {
                     decoratableMonoKernel.Dispose();
                     decoratableMonoKernel.LateDispose();
-                }
-                else
-                {
+                } else {
                     _disposablesManager.Dispose();
                     _disposablesManager.LateDispose();
                 }

@@ -1,46 +1,36 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Conditions
-{
+namespace Zenject.Tests.Conditions {
     [TestFixture]
-    public class TestConditionsBasic : ZenjectUnitTestFixture
-    {
-        public interface IFoo
-        {
+    public class TestConditionsBasic : ZenjectUnitTestFixture {
+        public interface IFoo {
         }
 
-        class Foo1 : IFoo
-        {
+        class Foo1 : IFoo {
         }
 
-        class Foo2 : IFoo
-        {
+        class Foo2 : IFoo {
         }
 
-        class Bar1
-        {
+        class Bar1 {
             public IFoo Foo;
 
-            public Bar1(IFoo foo)
-            {
+            public Bar1(IFoo foo) {
                 Foo = foo;
             }
         }
 
-        class Bar2
-        {
+        class Bar2 {
             public IFoo Foo;
 
-            public Bar2(IFoo foo)
-            {
+            public Bar2(IFoo foo) {
                 Foo = foo;
             }
         }
 
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             Container.Bind<Bar1>().AsSingle().NonLazy();
             Container.Bind<Bar2>().AsSingle().NonLazy();
             Container.Bind<IFoo>().To<Foo1>().AsSingle().NonLazy();
@@ -51,8 +41,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void Test2()
-        {
+        public void Test2() {
             Container.Bind<Bar1>().AsSingle().NonLazy();
             Container.Bind<Bar2>().AsSingle().NonLazy();
             Container.Bind<IFoo>().To<Foo1>().AsSingle().NonLazy();

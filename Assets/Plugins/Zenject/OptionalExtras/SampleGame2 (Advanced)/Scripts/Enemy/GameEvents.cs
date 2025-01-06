@@ -1,10 +1,7 @@
-namespace Zenject.SpaceFighter
-{
-    public struct PlayerDiedSignal
-    {
+namespace Zenject.SpaceFighter {
+    public struct PlayerDiedSignal {
     }
 
-    public struct EnemyKilledSignal
-    {
+    public struct EnemyKilledSignal {
     }
 }

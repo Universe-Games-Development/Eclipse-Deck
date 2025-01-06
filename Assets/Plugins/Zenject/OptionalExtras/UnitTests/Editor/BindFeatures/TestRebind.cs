@@ -1,26 +1,20 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.BindFeatures
-{
+namespace Zenject.Tests.BindFeatures {
     [TestFixture]
-    public class TestRebind : ZenjectUnitTestFixture
-    {
-        interface ITest
-        {
+    public class TestRebind : ZenjectUnitTestFixture {
+        interface ITest {
         }
 
-        class Test2 : ITest
-        {
+        class Test2 : ITest {
         }
 
-        class Test3 : ITest
-        {
+        class Test3 : ITest {
         }
 
         [Test]
-        public void Run()
-        {
+        public void Run() {
             Container.Bind<ITest>().To<Test2>().AsSingle();
 
             Assert.That(Container.Resolve<ITest>() is Test2);

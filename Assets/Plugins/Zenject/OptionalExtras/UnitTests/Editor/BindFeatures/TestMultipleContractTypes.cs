@@ -1,43 +1,34 @@
-using System.Collections.Generic;
 using NUnit.Framework;
+using System.Collections.Generic;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.BindFeatures
-{
+namespace Zenject.Tests.BindFeatures {
     [TestFixture]
-    public class TestMultipleContractTypes : ZenjectUnitTestFixture
-    {
-        class Test1
-        {
+    public class TestMultipleContractTypes : ZenjectUnitTestFixture {
+        class Test1 {
         }
 
-        class Test2 : Test1
-        {
+        class Test2 : Test1 {
         }
 
-        class Test3 : Test1
-        {
+        class Test3 : Test1 {
         }
 
-        class TestImpl1
-        {
+        class TestImpl1 {
             public List<Test1> tests;
 
-            public TestImpl1(List<Test1> tests)
-            {
+            public TestImpl1(List<Test1> tests) {
                 this.tests = tests;
             }
         }
 
-        class TestImpl2
-        {
+        class TestImpl2 {
             [Inject]
             public List<Test1> tests = null;
         }
 
         [Test]
-        public void TestMultiBind1()
-        {
+        public void TestMultiBind1() {
             Container.Bind<Test1>().To<Test2>().AsSingle().NonLazy();
             Container.Bind<Test1>().To<Test3>().AsSingle().NonLazy();
             Container.Bind<TestImpl1>().AsSingle().NonLazy();
@@ -48,8 +39,7 @@ namespace Zenject.Tests.BindFeatures
         }
 
         [Test]
-        public void TestMultiBindListInjection()
-        {
+        public void TestMultiBindListInjection() {
             Container.Bind<Test1>().To<Test2>().AsSingle().NonLazy();
             Container.Bind<Test1>().To<Test3>().AsSingle().NonLazy();
             Container.Bind<TestImpl2>().AsSingle().NonLazy();

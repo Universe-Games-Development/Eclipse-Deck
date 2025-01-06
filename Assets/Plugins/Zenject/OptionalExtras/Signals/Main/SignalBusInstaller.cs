@@ -1,12 +1,9 @@
 using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     // Note that you only need to install this once
-    public class SignalBusInstaller : Installer<SignalBusInstaller>
-    {
-        public override void InstallBindings()
-        {
+    public class SignalBusInstaller : Installer<SignalBusInstaller> {
+        public override void InstallBindings() {
             Assert.That(!Container.HasBinding<SignalBus>(), "Detected multiple SignalBus bindings.  SignalBusInstaller should only be installed once");
 
             Container.BindInterfacesAndSelfTo<SignalBus>().AsSingle().CopyIntoAllSubContainers();

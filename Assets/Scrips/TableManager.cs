@@ -2,6 +2,9 @@ using UnityEngine;
 using Zenject;
 
 public class TableManager : MonoBehaviour {
+    [SerializeField] private GameObject battleCreaturePrefab;
+    [SerializeField] private Canvas tableCanvas;
+
     [SerializeField] private GameObject fieldPrefab;
     [SerializeField] private Transform fieldsOrigin;
     [Header("Grid Settings")]
@@ -13,7 +16,8 @@ public class TableManager : MonoBehaviour {
 
     private Field[,] fieldGrid;
 
-    [Inject] protected DiContainer diContainer;
+    [Inject] private DiContainer diContainer;
+    [Inject] private UIManager uiManager;
 
     private void Awake() {
         if (fieldGrid == null) {
@@ -37,7 +41,7 @@ public class TableManager : MonoBehaviour {
         GameObject newFieldObj = diContainer.InstantiatePrefab(fieldPrefab, spawnPosition, fieldsOrigin.rotation, fieldsOrigin);
 
         Field createdField = newFieldObj.GetComponent<Field>();
-        
+
 
         createdField.Index = col + 1;
 
@@ -62,7 +66,7 @@ public class TableManager : MonoBehaviour {
         Debug.Log($"Row {rowIndex} has been assigned to {player.Name}.");
     }
 
-    public bool SummonCreature(Opponent player, Card selectedCard, Field field) {
+    public bool SummonCreature(Opponent player, Card card, Field field) {
         Field gridField = GetFieldFromGrid(field);
         if (gridField == null) {
             Debug.LogError("Поле не знайдено в grid!");
@@ -70,15 +74,18 @@ public class TableManager : MonoBehaviour {
         }
 
         if (gridField.Owner == player) {
-            bool isSummoned = gridField.SummonCreature(selectedCard);
-            if (isSummoned) {
-                Debug.Log($"{player.Name} викликав створіння на полі.");
-                return true;
-            } else {
-                Debug.Log($"{player.Name} викликав але поле не змогло прийняти істоту");
-                return false;
+            if (gridField.OccupiedCreature != null) {
+                Debug.Log($"{name} вже зайняте");
+                return false; // Поле вже зайняте
             }
-            
+
+            GameObject battleCreatureObj = diContainer.InstantiatePrefab(battleCreaturePrefab, gridField.spawnPoint);
+            BattleCreature battleCreature = battleCreatureObj.GetComponent<BattleCreature>();
+            battleCreature.Initialize(card, new SingleAttack(), field);
+            uiManager.CreateCreatureUI(battleCreature, card);
+
+            gridField.AssignCreature(battleCreature);
+            return true;
         } else {
             Debug.LogWarning("Це поле належить іншому гравцеві! Не можна зіграти карту тут.");
             return false;

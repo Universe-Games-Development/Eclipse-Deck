@@ -1,14 +1,12 @@
 #if !NOT_UNITY3D
 
-using System;
 using ModestTree;
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Zenject
-{
-    public enum LoadSceneRelationship
-    {
+namespace Zenject {
+    public enum LoadSceneRelationship {
         // This will use the ProjectContext container as parent for the new scene
         // This is similar to just running the new scene normally
         None,
@@ -20,16 +18,14 @@ namespace Zenject
         Sibling
     }
 
-    public class ZenjectSceneLoader
-    {
+    public class ZenjectSceneLoader {
         readonly ProjectKernel _projectKernel;
         readonly DiContainer _sceneContainer;
 
         public ZenjectSceneLoader(
             [InjectOptional]
             SceneContext sceneRoot,
-            ProjectKernel projectKernel)
-        {
+            ProjectKernel projectKernel) {
             _projectKernel = projectKernel;
             _sceneContainer = sceneRoot == null ? null : sceneRoot.Container;
         }
@@ -39,8 +35,7 @@ namespace Zenject
             LoadSceneMode loadMode = LoadSceneMode.Single,
             Action<DiContainer> extraBindings = null,
             LoadSceneRelationship containerMode = LoadSceneRelationship.None,
-            Action<DiContainer> extraBindingsLate = null)
-        {
+            Action<DiContainer> extraBindingsLate = null) {
             PrepareForLoadScene(loadMode, extraBindings, extraBindingsLate, containerMode);
 
             Assert.That(Application.CanStreamedLevelBeLoaded(sceneName),
@@ -53,13 +48,12 @@ namespace Zenject
             // we can't do that in this case since the scene isn't loaded until the next frame
         }
 
-            public AsyncOperation LoadSceneAsync(
-            string sceneName,
-            LoadSceneMode loadMode = LoadSceneMode.Single,
-            Action<DiContainer> extraBindings = null,
-            LoadSceneRelationship containerMode = LoadSceneRelationship.None,
-            Action<DiContainer> extraBindingsLate = null)
-        {
+        public AsyncOperation LoadSceneAsync(
+        string sceneName,
+        LoadSceneMode loadMode = LoadSceneMode.Single,
+        Action<DiContainer> extraBindings = null,
+        LoadSceneRelationship containerMode = LoadSceneRelationship.None,
+        Action<DiContainer> extraBindingsLate = null) {
             PrepareForLoadScene(loadMode, extraBindings, extraBindingsLate, containerMode);
 
             Assert.That(Application.CanStreamedLevelBeLoaded(sceneName),
@@ -72,10 +66,8 @@ namespace Zenject
             LoadSceneMode loadMode,
             Action<DiContainer> extraBindings,
             Action<DiContainer> extraBindingsLate,
-            LoadSceneRelationship containerMode)
-        {
-            if (loadMode == LoadSceneMode.Single)
-            {
+            LoadSceneRelationship containerMode) {
+            if (loadMode == LoadSceneMode.Single) {
                 Assert.IsEqual(containerMode, LoadSceneRelationship.None);
 
                 // Here we explicitly unload all existing scenes rather than relying on Unity to
@@ -85,23 +77,15 @@ namespace Zenject
                 _projectKernel.ForceUnloadAllScenes();
             }
 
-            if (containerMode == LoadSceneRelationship.None)
-            {
+            if (containerMode == LoadSceneRelationship.None) {
                 SceneContext.ParentContainers = null;
-            }
-            else if (containerMode == LoadSceneRelationship.Child)
-            {
-                if (_sceneContainer == null)
-                {
+            } else if (containerMode == LoadSceneRelationship.Child) {
+                if (_sceneContainer == null) {
                     SceneContext.ParentContainers = null;
-                }
-                else
-                {
+                } else {
                     SceneContext.ParentContainers = new[] { _sceneContainer };
                 }
-            }
-            else
-            {
+            } else {
                 Assert.IsNotNull(_sceneContainer,
                     "Cannot use LoadSceneRelationship.Sibling when loading scenes from ProjectContext");
                 Assert.IsEqual(containerMode, LoadSceneRelationship.Sibling);
@@ -117,8 +101,7 @@ namespace Zenject
             LoadSceneMode loadMode = LoadSceneMode.Single,
             Action<DiContainer> extraBindings = null,
             LoadSceneRelationship containerMode = LoadSceneRelationship.None,
-            Action<DiContainer> extraBindingsLate = null)
-        {
+            Action<DiContainer> extraBindingsLate = null) {
             PrepareForLoadScene(loadMode, extraBindings, extraBindingsLate, containerMode);
 
             Assert.That(Application.CanStreamedLevelBeLoaded(sceneIndex),
@@ -136,8 +119,7 @@ namespace Zenject
             LoadSceneMode loadMode = LoadSceneMode.Single,
             Action<DiContainer> extraBindings = null,
             LoadSceneRelationship containerMode = LoadSceneRelationship.None,
-            Action<DiContainer> extraBindingsLate = null)
-        {
+            Action<DiContainer> extraBindingsLate = null) {
             PrepareForLoadScene(loadMode, extraBindings, extraBindingsLate, containerMode);
 
             Assert.That(Application.CanStreamedLevelBeLoaded(sceneIndex),

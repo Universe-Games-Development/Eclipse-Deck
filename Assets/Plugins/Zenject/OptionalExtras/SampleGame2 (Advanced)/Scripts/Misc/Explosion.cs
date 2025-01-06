@@ -2,10 +2,8 @@ using UnityEngine;
 
 #pragma warning disable 649
 
-namespace Zenject.SpaceFighter
-{
-    public class Explosion : MonoBehaviour, IPoolable<IMemoryPool>
-    {
+namespace Zenject.SpaceFighter {
+    public class Explosion : MonoBehaviour, IPoolable<IMemoryPool> {
         [SerializeField]
         float _lifeTime;
 
@@ -16,20 +14,16 @@ namespace Zenject.SpaceFighter
 
         IMemoryPool _pool;
 
-        public void Update()
-        {
-            if (Time.realtimeSinceStartup - _startTime > _lifeTime)
-            {
+        public void Update() {
+            if (Time.realtimeSinceStartup - _startTime > _lifeTime) {
                 _pool.Despawn(this);
             }
         }
 
-        public void OnDespawned()
-        {
+        public void OnDespawned() {
         }
 
-        public void OnSpawned(IMemoryPool pool)
-        {
+        public void OnSpawned(IMemoryPool pool) {
             _particleSystem.Clear();
             _particleSystem.Play();
 
@@ -37,8 +31,7 @@ namespace Zenject.SpaceFighter
             _pool = pool;
         }
 
-        public class Factory : PlaceholderFactory<Explosion>
-        {
+        public class Factory : PlaceholderFactory<Explosion> {
         }
     }
 }

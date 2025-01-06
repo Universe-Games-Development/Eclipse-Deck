@@ -1,23 +1,19 @@
-using System;
 using NUnit.Framework;
+using System;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Signals
-{
+namespace Zenject.Tests.Signals {
     [TestFixture]
-    public class TestSignalsAdvanced : ZenjectUnitTestFixture
-    {
+    public class TestSignalsAdvanced : ZenjectUnitTestFixture {
         [SetUp]
-        public void CommonInstall()
-        {
+        public void CommonInstall() {
             ZenjectManagersInstaller.Install(Container);
             SignalBusInstaller.Install(Container);
             Container.Inject(this);
         }
 
         [Test]
-        public void TestSubscribeDeterministicOrder()
-        {
+        public void TestSubscribeDeterministicOrder() {
             Container.DeclareSignal<FooSignal>();
 
             var signalBus = Container.Resolve<SignalBus>();
@@ -45,8 +41,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestSubscribeUnsubscribeInsideHandler()
-        {
+        public void TestSubscribeUnsubscribeInsideHandler() {
             Container.DeclareSignal<FooSignal>();
 
             var signalBus = Container.Resolve<SignalBus>();
@@ -55,13 +50,11 @@ namespace Zenject.Tests.Signals
 
             Action handler2 = () => received = true;
 
-            Action handler = () =>
-            {
+            Action handler = () => {
                 signalBus.Subscribe<FooSignal>(handler2);
             };
 
-            Action handler3 = () =>
-            {
+            Action handler3 = () => {
                 signalBus.Unsubscribe<FooSignal>(handler2);
             };
 
@@ -97,8 +90,7 @@ namespace Zenject.Tests.Signals
             // Now test unsubscribing ourself in our own handler
 
             Action handler4 = null;
-            handler4 = () =>
-            {
+            handler4 = () => {
                 received = true;
                 signalBus.Unsubscribe<FooSignal>(handler4);
             };
@@ -114,8 +106,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestSubcontainers1()
-        {
+        public void TestSubcontainers1() {
             Container.DeclareSignal<FooSignal>();
 
             var signalBus1 = Container.Resolve<SignalBus>();
@@ -142,8 +133,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestSignalDeclarationSettingsRequireHandlerMissing()
-        {
+        public void TestSignalDeclarationSettingsRequireHandlerMissing() {
             Container.DeclareSignal<FooSignal>();
 
             var signalBus = Container.Resolve<SignalBus>();
@@ -152,8 +142,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestSignalDeclarationSettingsRequireHandler()
-        {
+        public void TestSignalDeclarationSettingsRequireHandler() {
             Container.DeclareSignal<FooSignal>().RequireSubscriber();
 
             var signalBus = Container.Resolve<SignalBus>();
@@ -162,8 +151,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestSignalDeclarationSettingsRunAsync1()
-        {
+        public void TestSignalDeclarationSettingsRunAsync1() {
             Container.DeclareSignal<FooSignal>().RunAsync();
             Container.ResolveRoots();
             Container.Resolve<InitializableManager>().Initialize();
@@ -182,8 +170,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestIsDeclared1()
-        {
+        public void TestIsDeclared1() {
             Container.DeclareSignal<FooSignal>();
             Container.ResolveRoots();
 
@@ -192,8 +179,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestIsDeclared2()
-        {
+        public void TestIsDeclared2() {
             Container.ResolveRoots();
 
             var signalBus = Container.Resolve<SignalBus>();
@@ -201,8 +187,7 @@ namespace Zenject.Tests.Signals
         }
 
         [Test]
-        public void TestSignalDeclarationSettingsRunAsync2()
-        {
+        public void TestSignalDeclarationSettingsRunAsync2() {
             Container.DeclareSignal<FooSignal>().RunAsync();
             Container.ResolveRoots();
             Container.Resolve<InitializableManager>().Initialize();
@@ -211,8 +196,7 @@ namespace Zenject.Tests.Signals
 
             int callCount = 0;
 
-            Action handler = () =>
-            {
+            Action handler = () => {
                 callCount++;
                 signalBus.Fire<FooSignal>();
             };
@@ -229,12 +213,10 @@ namespace Zenject.Tests.Signals
             Assert.IsEqual(callCount, 2);
         }
 
-        public class FooSignal
-        {
+        public class FooSignal {
         }
 
-        public class BarSignal
-        {
+        public class BarSignal {
             public string Value;
         }
     }

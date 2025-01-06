@@ -1,14 +1,12 @@
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ModestTree;
 using Zenject.Internal;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class TransientProvider : IProvider
-    {
+    public class TransientProvider : IProvider {
         readonly DiContainer _container;
         readonly Type _concreteType;
         readonly List<TypeValuePair> _extraArguments;
@@ -19,8 +17,7 @@ namespace Zenject
             Type concreteType, DiContainer container,
             IEnumerable<TypeValuePair> extraArguments, string bindingContext,
             object concreteIdentifier,
-            Action<InjectContext, object> instantiateCallback)
-        {
+            Action<InjectContext, object> instantiateCallback) {
             Assert.That(!concreteType.IsAbstract(),
                 "Expected non-abstract type for given binding but instead found type '{0}'{1}",
                 concreteType, bindingContext == null ? "" : " when binding '{0}'".Fmt(bindingContext));
@@ -32,20 +29,16 @@ namespace Zenject
             _instantiateCallback = instantiateCallback;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return _concreteType.IsOpenGenericType(); }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
-            if (!_concreteType.DerivesFromOrEqual(context.MemberType))
-            {
+        public Type GetInstanceType(InjectContext context) {
+            if (!_concreteType.DerivesFromOrEqual(context.MemberType)) {
                 return null;
             }
 
@@ -53,8 +46,7 @@ namespace Zenject
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsNotNull(context);
 
             var instanceType = GetTypeToCreate(context.MemberType);
@@ -66,16 +58,14 @@ namespace Zenject
 
             var instance = _container.InstantiateExplicit(instanceType, false, extraArgs, context, _concreteIdentifier);
 
-            injectAction = () =>
-            {
+            injectAction = () => {
                 _container.InjectExplicit(
                     instance, instanceType, extraArgs, context, _concreteIdentifier);
 
                 Assert.That(extraArgs.Count == 0);
                 ZenPools.DespawnList(extraArgs);
 
-                if (_instantiateCallback != null)
-                {
+                if (_instantiateCallback != null) {
                     _instantiateCallback(context, instance);
                 }
             };
@@ -83,8 +73,7 @@ namespace Zenject
             buffer.Add(instance);
         }
 
-        Type GetTypeToCreate(Type contractType)
-        {
+        Type GetTypeToCreate(Type contractType) {
             return ProviderUtil.GetTypeToInstantiate(contractType, _concreteType);
         }
     }

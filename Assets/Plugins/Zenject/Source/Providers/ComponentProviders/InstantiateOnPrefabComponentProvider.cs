@@ -1,44 +1,37 @@
 #if !NOT_UNITY3D
 
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using ModestTree;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class InstantiateOnPrefabComponentProvider : IProvider
-    {
+    public class InstantiateOnPrefabComponentProvider : IProvider {
         readonly IPrefabInstantiator _prefabInstantiator;
         readonly Type _componentType;
 
         // if concreteType is null we use the contract type from inject context
         public InstantiateOnPrefabComponentProvider(
             Type componentType,
-            IPrefabInstantiator prefabInstantiator)
-        {
+            IPrefabInstantiator prefabInstantiator) {
             _prefabInstantiator = prefabInstantiator;
             _componentType = componentType;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return _componentType;
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             Assert.IsNotNull(context);
 
             var gameObject = _prefabInstantiator.Instantiate(context, args, out injectAction);

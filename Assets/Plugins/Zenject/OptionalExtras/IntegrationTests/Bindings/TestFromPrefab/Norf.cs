@@ -1,12 +1,9 @@
 using UnityEngine;
 
-namespace Zenject.Tests.Bindings.FromPrefab
-{
-    public interface INorf
-    {
+namespace Zenject.Tests.Bindings.FromPrefab {
+    public interface INorf {
     }
 
-    public class Norf : MonoBehaviour, INorf
-    {
+    public class Norf : MonoBehaviour, INorf {
     }
 }

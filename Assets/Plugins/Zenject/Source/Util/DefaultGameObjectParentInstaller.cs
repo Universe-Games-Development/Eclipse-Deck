@@ -3,19 +3,15 @@
 using System;
 using UnityEngine;
 
-namespace Zenject
-{
-    public class DefaultGameObjectParentInstaller : Installer<string, DefaultGameObjectParentInstaller>
-    {
+namespace Zenject {
+    public class DefaultGameObjectParentInstaller : Installer<string, DefaultGameObjectParentInstaller> {
         readonly string _name;
 
-        public DefaultGameObjectParentInstaller(string name)
-        {
+        public DefaultGameObjectParentInstaller(string name) {
             _name = name;
         }
 
-        public override void InstallBindings()
-        {
+        public override void InstallBindings() {
 #if !ZEN_TESTS_OUTSIDE_UNITY
             var defaultParent = new GameObject(_name);
 
@@ -33,17 +29,14 @@ namespace Zenject
 #endif
         }
 
-        class DefaultParentObjectDestroyer : IDisposable
-        {
+        class DefaultParentObjectDestroyer : IDisposable {
             readonly GameObject _gameObject;
 
-            public DefaultParentObjectDestroyer(GameObject gameObject)
-            {
+            public DefaultParentObjectDestroyer(GameObject gameObject) {
                 _gameObject = gameObject;
             }
 
-            public void Dispose()
-            {
+            public void Dispose() {
                 GameObject.Destroy(_gameObject);
             }
         }

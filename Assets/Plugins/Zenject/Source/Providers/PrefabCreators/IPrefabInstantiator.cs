@@ -4,22 +4,17 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Zenject
-{
-    public interface IPrefabInstantiator
-    {
-        Type ArgumentTarget
-        {
+namespace Zenject {
+    public interface IPrefabInstantiator {
+        Type ArgumentTarget {
             get;
         }
 
-        List<TypeValuePair> ExtraArguments
-        {
+        List<TypeValuePair> ExtraArguments {
             get;
         }
 
-        GameObjectCreationParameters GameObjectCreationParameters
-        {
+        GameObjectCreationParameters GameObjectCreationParameters {
             get;
         }
 

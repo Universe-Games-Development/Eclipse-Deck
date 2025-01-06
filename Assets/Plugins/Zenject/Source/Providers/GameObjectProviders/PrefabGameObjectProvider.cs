@@ -4,37 +4,30 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Zenject
-{
+namespace Zenject {
     [NoReflectionBaking]
-    public class PrefabGameObjectProvider : IProvider
-    {
+    public class PrefabGameObjectProvider : IProvider {
         readonly IPrefabInstantiator _prefabCreator;
 
         public PrefabGameObjectProvider(
-            IPrefabInstantiator prefabCreator)
-        {
+            IPrefabInstantiator prefabCreator) {
             _prefabCreator = prefabCreator;
         }
 
-        public bool IsCached
-        {
+        public bool IsCached {
             get { return false; }
         }
 
-        public bool TypeVariesBasedOnMemberType
-        {
+        public bool TypeVariesBasedOnMemberType {
             get { return false; }
         }
 
-        public Type GetInstanceType(InjectContext context)
-        {
+        public Type GetInstanceType(InjectContext context) {
             return typeof(GameObject);
         }
 
         public void GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
-        {
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer) {
             var instance = _prefabCreator.Instantiate(context, args, out injectAction);
 
             buffer.Add(instance);

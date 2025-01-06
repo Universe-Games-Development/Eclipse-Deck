@@ -1,14 +1,11 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Bindings
-{
+namespace Zenject.Tests.Bindings {
     [TestFixture]
-    public class TestFromIFactory2 : ZenjectUnitTestFixture
-    {
+    public class TestFromIFactory2 : ZenjectUnitTestFixture {
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
             Container.BindFactory<int, Foo, Foo.Factory>().WithId("foo1")
                 .FromIFactory(x => x.To<FooFactory>().AsCached().WithArguments("asdf"));
 
@@ -28,45 +25,37 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(foo2.Value2, 2);
         }
 
-        public class Foo
-        {
-            public Foo(string value, int value2)
-            {
+        public class Foo {
+            public Foo(string value, int value2) {
                 Value = value;
                 Value2 = value2;
             }
 
-            public int Value2
-            {
+            public int Value2 {
                 get; private set;
             }
 
-            public string Value
-            {
+            public string Value {
                 get; private set;
             }
 
-            public class Factory : PlaceholderFactory<int, Foo>
-            {
+            public class Factory : PlaceholderFactory<int, Foo> {
             }
         }
 
-        public class FooFactory : IFactory<int, Foo>
-        {
+        public class FooFactory : IFactory<int, Foo> {
             readonly string _value;
             readonly DiContainer _container;
 
             public FooFactory(
                 DiContainer container,
-                string value)
-            {
+                string value) {
                 _value = value;
                 _container = container;
             }
 
-            public Foo Create(int value)
-            {
-                return _container.Instantiate<Foo>(new object [] { value, _value });
+            public Foo Create(int value) {
+                return _container.Instantiate<Foo>(new object[] { value, _value });
             }
         }
     }

@@ -2,10 +2,8 @@ using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Zenject.SpaceFighter
-{
-    public class EnemyStateIdle : IEnemyState
-    {
+namespace Zenject.SpaceFighter {
+    public class EnemyStateIdle : IEnemyState {
         readonly EnemyRotationHandler _rotationHandler;
         readonly Settings _settings;
         readonly EnemyView _view;
@@ -16,27 +14,23 @@ namespace Zenject.SpaceFighter
 
         public EnemyStateIdle(
             EnemyView view, Settings settings,
-            EnemyRotationHandler rotationHandler)
-        {
+            EnemyRotationHandler rotationHandler) {
             _rotationHandler = rotationHandler;
             _settings = settings;
             _view = view;
         }
 
-        public void EnterState()
-        {
+        public void EnterState() {
             _startPos = _view.Position;
             _theta = Random.Range(0, 2.0f * Mathf.PI);
             _startLookDir = _view.LookDir;
         }
 
-        public void ExitState()
-        {
+        public void ExitState() {
         }
 
         // Just add a bit of subtle movement
-        public void Update()
-        {
+        public void Update() {
             _theta += Time.deltaTime * _settings.Frequency;
 
             _view.Position = _startPos + _view.RightDir * _settings.Amplitude * Mathf.Sin(_theta);
@@ -44,13 +38,11 @@ namespace Zenject.SpaceFighter
             _rotationHandler.DesiredLookDir = _startLookDir;
         }
 
-        public void FixedUpdate()
-        {
+        public void FixedUpdate() {
         }
 
         [Serializable]
-        public class Settings
-        {
+        public class Settings {
             public float Amplitude;
             public float Frequency;
         }

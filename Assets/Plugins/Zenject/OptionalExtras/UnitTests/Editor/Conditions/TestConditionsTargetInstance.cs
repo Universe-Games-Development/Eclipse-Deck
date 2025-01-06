@@ -1,25 +1,20 @@
 using NUnit.Framework;
 using Assert = ModestTree.Assert;
 
-namespace Zenject.Tests.Conditions
-{
+namespace Zenject.Tests.Conditions {
     [TestFixture]
-    public class TestConditionsTargetInstance : ZenjectUnitTestFixture
-    {
-        class Test0
-        {
+    public class TestConditionsTargetInstance : ZenjectUnitTestFixture {
+        class Test0 {
         }
 
-        class Test1
-        {
+        class Test1 {
             [Inject]
             public Test0 test0 = null;
         }
 
         Test1 _test1;
 
-        public override void Setup()
-        {
+        public override void Setup() {
             base.Setup();
 
             _test1 = new Test1();
@@ -28,8 +23,7 @@ namespace Zenject.Tests.Conditions
         }
 
         [Test]
-        public void TestTargetConditionError()
-        {
+        public void TestTargetConditionError() {
             Container.Inject(_test1);
 
             Assert.That(_test1.test0 != null);
