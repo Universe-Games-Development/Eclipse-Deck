@@ -45,7 +45,6 @@ public class BattleCreature : MonoBehaviour {
 
         eventManager = card.EventManager; ;
         await eventManager.TriggerEventAsync(EventType.ON_CREATURE_SUMMONED, gameContext);
-        uIManager.CreateCreatureUI(this, card);
 
         card.ChangeState(CardState.OnTable);
     }

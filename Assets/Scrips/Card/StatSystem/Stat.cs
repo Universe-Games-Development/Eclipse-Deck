@@ -9,7 +9,6 @@ public class Stat : IStat {
         get => initialValue;
         private set {
             initialValue = Math.Clamp(value, 0, MaxValue);
-            OnValueChanged?.Invoke(initialValue, MaxValue);
         }
     }
 
@@ -17,7 +16,7 @@ public class Stat : IStat {
         get => currentValue;
         private set {
             currentValue = Math.Clamp(value, 0, MaxValue);
-            OnValueChanged?.Invoke(currentValue, MaxValue);
+            OnValueChanged?.Invoke(currentValue, InitialValue);
         }
     }
 
@@ -30,7 +29,6 @@ public class Stat : IStat {
     }
 
     public event Action<int, int> OnValueChanged;
-    public event Action<int, int> OnInitialValueChanged;
 
     public Stat(int maxValue, int initialValue) {
         this.maxValue = Math.Max(0, maxValue);

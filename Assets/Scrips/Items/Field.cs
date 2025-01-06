@@ -33,7 +33,7 @@ public class Field : TipItem {
             // Якщо поле порожнє, шкоду отримує власник поля
             if (Owner) {
                 Owner.health.ApplyDamage(damage);
-                Debug.Log($"{Owner.Name} отримує {damage} шкоди, тому що поле {Owner} порожнє.");
+                Debug.Log($"{Owner.Name} takes {damage} damage, because field {Owner} empty.");
             } else {
                 Debug.Log($"Nobody takes {damage} damage");
             }
@@ -45,14 +45,16 @@ public class Field : TipItem {
     }
 
     public override string GetInfo() {
-        string info = $"Поле #{Index}\nВласник: {Owner?.Name}";
+        string info = $"Field #{Index}" +
+            $"\nOwner: {Owner?.Name}";
 
         if (OccupiedCreature != null) {
-            info += $"\nІстота: {OccupiedCreature.Name}" +
-                $"\nHp: {OccupiedCreature.card.Health.CurrentValue} " +
-                $" Atk: {OccupiedCreature.GetAttack()}";
+            info += $"\n" +
+                $"Creature: {OccupiedCreature.Name} + \n" +
+                $"Hp: {OccupiedCreature.card.Health.CurrentValue} / " +
+                $"Atk: {OccupiedCreature.GetAttack()}";
         } else {
-            info += "\nПоле порожнє.";
+            info += "\nEmpty field.";
         }
 
         return info;

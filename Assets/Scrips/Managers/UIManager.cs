@@ -31,13 +31,12 @@ public class UIManager : MonoBehaviour {
         OnInfoItemEnter?.Invoke(tipItem);
     }
 
-    public void CreateCreatureUI(BattleCreature creature, Card card) {
+    public void CreateCreatureUI(BattleCreature creature, Field field) {
         // Создаем панель
         var panelObj = panelDistributer.CreatePanel();
 
         // Привязываем панель к данным
         var creatureUI = panelObj.GetComponent<CreatureUI>();
-        creatureUI.Initialize(panelDistributer, creature);
+        creatureUI.Initialize(panelDistributer, creature, field);
     }
-
 }

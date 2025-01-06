@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Android.Gradle.Manifest;
 using UnityEngine;
 
 public class Card {
@@ -10,6 +11,7 @@ public class Card {
     public string ResourseId { get; private set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
+    public Rarity Rarity { get; private set; }
     public Opponent Owner { get; private set; }
     public Cost Cost { get; private set; }
     public Attack Attack { get; private set; }
@@ -25,7 +27,7 @@ public class Card {
     public Card(CardSO cardSO, Opponent owner, IEventManager eventManager) {
         Id = Guid.NewGuid().ToString();
         ResourseId = cardSO.id;
-
+        Rarity = cardSO.rarity;
         EventManager = eventManager;
         Owner = owner;
         Name = cardSO.cardName;
