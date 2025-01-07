@@ -1,20 +1,22 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public class CardHandUI : MonoBehaviour {
-    public Transform cardParent;
-    public Transform layoutParent;
-    public GameObject layoutElementPrefab;
-    [SerializeField] private GameObject cardPrefab;
 
     private Dictionary<string, CardUI> idToCardUIMap = new();
     private Dictionary<CardUI, RectTransform> cardToLayoutMap = new();
     public CardUI SelectedCard { get; private set; }
+    [Inject] private UIManager uiManager;
+
+    [SerializeField] private ObjectDistributer cardDistributer;
+    [SerializeField] private ObjectDistributer layoutDistributer;  // Новий дистриб'ютор для layout
 
     private void Awake() {
-        if (!cardParent || !layoutParent) {
-            Debug.LogError("CardParent or LayoutParent не задано!");
+        if (cardDistributer == null || layoutDistributer == null) {
+            Debug.LogError("Object distributors are not set!");
+            return; // Ensure distributors are set
         }
     }
 
@@ -27,6 +29,10 @@ public class CardHandUI : MonoBehaviour {
     public void AddCard(Card card) {
         var cardUI = CreateCardUI(card);
         var emptyLayoutCopy = CreateLayoutElement();
+        if (idToCardUIMap.ContainsKey(card.Id)) {
+            Debug.LogWarning($"Card with ID {card.Id} already exists in UI.");
+            return;
+        }
 
         idToCardUIMap[card.Id] = cardUI; // Зберігаємо зв’язок між id та CardUI
         LinkCardToLayoutElement(cardUI, emptyLayoutCopy);
@@ -35,7 +41,7 @@ public class CardHandUI : MonoBehaviour {
 
     public void RemoveCard(Card card) {
         if (!idToCardUIMap.TryGetValue(card.Id, out CardUI cardUI)) {
-            Debug.LogWarning($"Card з ID {card.Id} не знайдено в UI!");
+            Debug.LogWarning($"Card з ID {card.Id} can`t find in UI!");
             return;
         }
 
@@ -56,15 +62,17 @@ public class CardHandUI : MonoBehaviour {
 
     #region ASSIST Methods
     private CardUI CreateCardUI(Card card) {
-        var cardUIObj = Instantiate(cardPrefab, cardParent);
+        var cardUIObj = cardDistributer.CreateObject();  // Використовуємо дистриб'ютор карт
+
+        // Прив'язуємо панель до даних
         var cardUI = cardUIObj.GetComponent<CardUI>();
-        cardUI.Initialize(card);
-        cardUI.transform.SetParent(cardParent);
+        cardUI.Initialize(cardDistributer, card);
+
         return cardUI;
     }
 
     private RectTransform CreateLayoutElement() {
-        GameObject layoutElementObject = Instantiate(layoutElementPrefab, layoutParent);
+        GameObject layoutElementObject = layoutDistributer.CreateObject();  // Використовуємо дистриб'ютор для розмітки
         return layoutElementObject.GetComponent<RectTransform>();
     }
 
@@ -91,7 +99,11 @@ public class CardHandUI : MonoBehaviour {
 
     #region SELECT / DESELECT
     private void OnCardSelected(CardUI clickedCard) {
-        if (SelectedCard != null && SelectedCard != clickedCard) {
+        if (SelectedCard == clickedCard) {
+            return; // Do nothing if the clicked card is already selected
+        }
+
+        if (SelectedCard != null) {
             SelectedCard.DeselectCard();
         }
 

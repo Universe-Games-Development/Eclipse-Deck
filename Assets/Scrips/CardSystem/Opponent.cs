@@ -17,7 +17,7 @@ public class Opponent : MonoBehaviour {
     private ResourceManager resourceManager;
     private IEventManager eventManager;
 
-    [SerializeField] protected TableManager tableManager;
+    [SerializeField] protected GameBoard tableManager;
 
     [Inject]
     public void Construct(IEventManager eventManager, ResourceManager resourceManager) {
@@ -34,5 +34,9 @@ public class Opponent : MonoBehaviour {
         Debug.Log("deck initialized with cards : " + deck.GetCount());
 
         hand = new CardHand(this, eventManager);
+    }
+
+    protected virtual void Start() {
+        tableManager.AssignFieldsToPlayer(this);
     }
 }

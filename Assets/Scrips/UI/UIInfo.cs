@@ -22,20 +22,24 @@ public class UIInfo : MonoBehaviour {
 
     private void OnEnable() {
         uiManager.OnInfoItemEnter += ShowInfo;
-        uiManager.OnInfoItemExit += HideInfo;
     }
 
     private void OnDisable() {
         uiManager.OnInfoItemEnter -= ShowInfo;
-        uiManager.OnInfoItemExit -= HideInfo;
     }
 
     public void ShowInfo(ITipProvider tipProvider) {
         if (tipProvider == null) return;
 
-        // «упин€Їмо попередню корутину, €кщо така ≥снуЇ
-        if (hideCoroutine != null) {
-            StopCoroutine(hideCoroutine);
+        // якщо поточний постачальник не такий, €к новий Ч ховаЇмо попередн≥й ≥ показуЇмо новий
+        if (currentTipProvider != tipProvider) {
+            // «упин€Їмо попередню корутину, €кщо вона ≥снуЇ
+            if (hideCoroutine != null) {
+                StopCoroutine(hideCoroutine);
+            }
+
+            // ¬икликаЇмо HideInfo дл€ очищенн€ попереднього тексту
+            HideInfo(currentTipProvider);
         }
 
         // «бер≥гаЇмо поточного постачальника та в≥дображаЇмо текст

@@ -14,10 +14,6 @@ public class TipItem : MonoBehaviour, ITipProvider {
         uiManager.ShowTip(this);
     }
 
-    void OnMouseExit() {
-        uiManager.HideTip(this);
-    }
-
     public virtual string GetInfo() {
         return tipData != null ? tipData.tipText : "No tip available";
     }

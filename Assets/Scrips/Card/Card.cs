@@ -1,51 +1,43 @@
 using System;
 using System.Collections.Generic;
-using Unity.Android.Gradle.Manifest;
-using UnityEngine;
+using System.Linq;
 
 public class Card {
     private const int MAX_CARD_HEALTH = 100;
     private const int MAX_CARD_ATTACK = 100;
     private const int MAX_CARD_COST = 30;
-    public string Id { get; private set; }
+    public string Id;
     public string ResourseId { get; private set; }
-    public string Name { get; private set; }
-    public string Description { get; private set; }
-    public Rarity Rarity { get; private set; }
     public Opponent Owner { get; private set; }
     public Cost Cost { get; private set; }
     public Attack Attack { get; private set; }
     public Health Health { get; private set; }
     public CardState CurrentState { get; private set; }
-    public List<string> AbilityDescriptions { get; private set; }
     public IEventManager EventManager { get; private set; }
-    public Sprite MainImage { get; private set; }
     public Action<CardState> OnStateChanged { get; internal set; }
 
     public List<CardAbility> abilities;
 
+    public CardSO data;
+
     public Card(CardSO cardSO, Opponent owner, IEventManager eventManager) {
-        Id = Guid.NewGuid().ToString();
+        data = cardSO;
+
+        Id = Guid.NewGuid().ToString(); // generate own uni id
         ResourseId = cardSO.id;
-        Rarity = cardSO.rarity;
         EventManager = eventManager;
         Owner = owner;
-        Name = cardSO.cardName;
-        Description = cardSO.description;
 
         Cost = new(MAX_CARD_COST, cardSO.cost);
         Attack = new(MAX_CARD_ATTACK, cardSO.attack);
         Health = new(MAX_CARD_HEALTH, cardSO.health);
-        MainImage = cardSO.mainImage;
 
         abilities = new List<CardAbility>();
-        AbilityDescriptions = new List<string>();
-
         foreach (var abilitySO in cardSO.abilities) {
             var ability = new CardAbility(abilitySO, this, eventManager);
             abilities.Add(ability);
-            AbilityDescriptions.Add(abilitySO.abilityDescription);
         }
+
 
         ChangeState(CardState.InDeck);
     }
@@ -56,7 +48,24 @@ public class Card {
         OnStateChanged?.Invoke(CurrentState);
     }
 
-    public void Reset() {
+    public void RemoveRandomAbility() {
+        if (abilities == null || abilities.Count == 0) {
+            return;
+        }
+
+        // Вибір випадкової здібності
+        int randomIndex = UnityEngine.Random.Range(0, abilities.Count);
+        var abilityToRemove = abilities[randomIndex];
+
+        // Виклик Reset для здібності, якщо потрібно очистити стан
+        abilityToRemove.Reset();
+
+        // Видалення здібності зі списку
+        abilities.RemoveAt(randomIndex);
+    }
+
+
+public void Reset() {
         ChangeState(CardState.InDeck);
         Cost.Reset();
         Attack.Reset();

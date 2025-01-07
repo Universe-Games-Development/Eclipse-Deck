@@ -1,36 +1,71 @@
 using UnityEngine;
+using Zenject;
+
+public enum FieldType {
+    Support,
+    Attack
+}
 
 public class Field : TipItem {
-    public Opponent Owner { get; private set; } // Власник цього поля
-    public BattleCreature OccupiedCreature { get; private set; } // Істота на полі (якщо є)
+    private FieldType type;
+    public Opponent Owner { get; private set; }
+    public bool IsPlayerField;
+    public BattleCreature OccupiedCreature { get; private set; }
 
     public int Index = 0;
     [SerializeField] public Transform spawnPoint;
     [SerializeField] public Transform uiPoint;
+    [SerializeField] private MeshRenderer meshRenderer;
 
-    internal bool AssignCreature(BattleCreature creature) {
+    [Inject] UIManager uIManager;
+
+    [SerializeField] private Material defaultMaterial;
+    [SerializeField] private Material transparentMaterial;
+
+    private void Awake() {
+        meshRenderer = GetComponent<MeshRenderer>();
+        if (meshRenderer != null) {
+            defaultMaterial = meshRenderer.material;
+        }
+    }
+
+    // Property Type with logic for setting
+    public FieldType Type {
+        get => type;
+        set {
+            type = value;
+            UpdateMaterialBasedOnType();
+        }
+    }
+
+    private void UpdateMaterialBasedOnType() {
+        if (meshRenderer != null) {
+            if (Type == FieldType.Support) {
+                if (transparentMaterial)
+                meshRenderer.material = transparentMaterial;
+            } else {
+                meshRenderer.material = defaultMaterial;
+            }
+        }
+    }
+
+    public bool AssignCreature(BattleCreature creature) {
         if (OccupiedCreature != null) {
             Debug.Log($"{name} вже зайняте");
-            return false; // Поле вже зайняте
+            return false;
         }
         OccupiedCreature = creature;
         return true;
     }
 
-
-    // Метод для видалення істоти з поля
     public void RemoveCreature() {
-        // TO DO : Death
         OccupiedCreature = null;
     }
 
-    // Метод обробки атаки
     public void ReceiveAttack(int damage) {
         if (OccupiedCreature != null) {
-            // Якщо на полі є істота, вона отримує шкоду
             OccupiedCreature.card.Health.ApplyDamage(damage);
         } else {
-            // Якщо поле порожнє, шкоду отримує власник поля
             if (Owner) {
                 Owner.health.ApplyDamage(damage);
                 Debug.Log($"{Owner.Name} takes {damage} damage, because field {Owner} empty.");
@@ -46,13 +81,14 @@ public class Field : TipItem {
 
     public override string GetInfo() {
         string info = $"Field #{Index}" +
-            $"\nOwner: {Owner?.Name}";
+                      $"\nType: {Type}" +
+                      $"\nOwner: {Owner?.Name}";
 
         if (OccupiedCreature != null) {
             info += $"\n" +
-                $"Creature: {OccupiedCreature.Name} + \n" +
-                $"Hp: {OccupiedCreature.card.Health.CurrentValue} / " +
-                $"Atk: {OccupiedCreature.GetAttack()}";
+                      $"Creature: {OccupiedCreature.Name} + \n" +
+                      $"Hp: {OccupiedCreature.card.Health.CurrentValue} / " +
+                      $"Atk: {OccupiedCreature.GetAttack()}";
         } else {
             info += "\nEmpty field.";
         }
@@ -60,10 +96,10 @@ public class Field : TipItem {
         return info;
     }
 
-    internal void AssignOwner(Opponent player1) {
+    public void AssignOwner(Opponent player1) {
         Owner = player1;
     }
 
-    internal void SetFieldOwnerIndicator(Opponent owner) {
+    public void SetFieldOwnerIndicator(Opponent owner) {
     }
 }
