@@ -16,7 +16,7 @@ MonoBehaviour:
   description: Sharp ROse
   mainImage: {fileID: 21300000, guid: b33c1f3b820a26f48a20a7f6adbe060c, type: 3}
   id: 7bb0ab6a-76fd-4696-92ee-e46434148d35
-  rarity: 0
+  rarity: 2
   cardType: 1
   cost: 0
   attack: 1

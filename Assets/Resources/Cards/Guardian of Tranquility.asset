@@ -16,7 +16,7 @@ MonoBehaviour:
   description: 
   mainImage: {fileID: 0}
   id: b7ec408c-c235-47f8-8684-8368f30e5631
-  rarity: 0
+  rarity: 1
   cardType: 1
   cost: 1
   attack: 0

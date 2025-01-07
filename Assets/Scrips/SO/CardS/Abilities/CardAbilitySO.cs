@@ -3,6 +3,7 @@ using UnityEngine;
 public abstract class CardAbilitySO : ScriptableObject {
     public string abilityName;
     public string abilityDescription;
+    public Sprite abilitySprite;
     public CardState activationState;
     public EventType eventTrigger;
 

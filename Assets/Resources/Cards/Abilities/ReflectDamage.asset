@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f85b6ed63c489b641a9da493017f240e, type: 3}
   m_Name: ReflectDamage
   m_EditorClassIdentifier: 
-  abilityName: 
+  abilityName: ReflectDamageAbilitySO
   abilityDescription: 
+  abilitySprite: {fileID: 21300000, guid: 2b7d2a616cc83db44a9bd278b17c3c14, type: 3}
   activationState: 0
-  deactivationState: 0
+  eventTrigger: 0

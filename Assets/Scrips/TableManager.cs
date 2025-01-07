@@ -82,7 +82,7 @@ public class TableManager : MonoBehaviour {
             GameObject battleCreatureObj = diContainer.InstantiatePrefab(battleCreaturePrefab, gridField.spawnPoint);
             BattleCreature battleCreature = battleCreatureObj.GetComponent<BattleCreature>();
             battleCreature.Initialize(card, new SingleAttack(), field);
-            uiManager.CreateCreatureUI(battleCreature, card);
+            uiManager.CreateCreatureUI(battleCreature, field);
 
             gridField.AssignCreature(battleCreature);
             return true;

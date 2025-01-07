@@ -2,17 +2,20 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Splines;
 
 public class CardAbility : IEventListener {
     private CardAbilitySO abilitySO;
     private Card card;
     private bool isRegistered = false;
     private IEventManager eventManager;
+    public Sprite sprite;
 
     public CardAbility(CardAbilitySO abilitySO, Card card, IEventManager eventManager) {
         this.abilitySO = abilitySO;
         this.card = card;
         this.eventManager = eventManager;
+        sprite = abilitySO.abilitySprite;
 
         // Підписка на подію зміни стану карти
         card.OnStateChanged += OnCardStateChanged;
