@@ -1,9 +1,9 @@
 using UnityEngine;
 
 public abstract class CardAbilitySO : ScriptableObject {
-    public string abilityName;
-    public string abilityDescription;
-    public Sprite abilitySprite;
+    public string Name;
+    public string Description;
+    public Sprite Sprite;
     public CardState activationState;
     public EventType eventTrigger;
 
@@ -14,8 +14,8 @@ public abstract class CardAbilitySO : ScriptableObject {
 
     // Викликається щоразу, коли об'єкт змінюється в редакторі
     private void OnValidate() {
-        if (string.IsNullOrEmpty(abilityName)) {
-            abilityName = GetType().Name;
+        if (string.IsNullOrEmpty(Name)) {
+            Name = GetType().Name;
         }
     }
 }

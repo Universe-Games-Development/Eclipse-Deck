@@ -125,9 +125,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tipData: {fileID: 11400000, guid: 3e284876c3079624b93366aee1a3b5de, type: 2}
+  IsPlayerField: 0
   Index: 0
   spawnPoint: {fileID: 3417977091324475684}
   uiPoint: {fileID: 2154121170430105736}
+  meshRenderer: {fileID: 0}
+  defaultMaterial: {fileID: 0}
+  transparentMaterial: {fileID: 2100000, guid: 700894dec30412149a8b831756e8133c, type: 2}
 --- !u!1 &768611609889918951
 GameObject:
   m_ObjectHideFlags: 0
@@ -153,7 +157,7 @@ Transform:
   m_GameObject: {fileID: 768611609889918951}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.254, z: 0}
+  m_LocalPosition: {x: 0, y: 0.358, z: 0}
   m_LocalScale: {x: 0.08, y: 0.08, z: 0.08}
   m_ConstrainProportionsScale: 1
   m_Children: []

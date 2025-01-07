@@ -5,7 +5,7 @@ public class TargetSilenceAbilitySO : CardAbilitySO {
     public Card targetCard;
 
     public override bool ActivateAbility(GameContext gameContext) {
-        Debug.Log($"Removing ability from card: {targetCard.Name}");
+        Debug.Log($"Removing ability from card: {targetCard.data.Name}");
         return gameContext.targetCreature.Silence();
     }
 }

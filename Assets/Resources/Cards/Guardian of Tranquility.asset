@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee7b91f193b2fe04cbfec8248c9a7259, type: 3}
   m_Name: Guardian of Tranquility
   m_EditorClassIdentifier: 
-  cardName: Guardian
+  Name: Guardian of Tranquility
   description: 
-  mainImage: {fileID: 0}
+  characterSprite: {fileID: 21300000, guid: edf52a9f298937c499dcc0f7a8348c4e, type: 3}
+  biomeIamge: {fileID: 0}
+  AuthorName: 
   id: b7ec408c-c235-47f8-8684-8368f30e5631
   rarity: 1
   cardType: 1

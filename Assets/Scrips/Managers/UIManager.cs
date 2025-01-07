@@ -3,12 +3,11 @@ using System.Linq;
 using UnityEngine;
 
 public class UIManager : MonoBehaviour {
-    [SerializeField] private CreaturePanelDistributer panelDistributer;
+
     [SerializeField] private GameObject worldSpaceCanvasPrefab; // Префаб World Space Canvas
     public Canvas WorldSpaceCanvas { get; private set; }
 
     public Action<ITipProvider> OnInfoItemEnter;
-    public Action<ITipProvider> OnInfoItemExit;
 
     private void Awake() {
         // Перевіряємо чи вже існує World Space Canvas
@@ -20,23 +19,31 @@ public class UIManager : MonoBehaviour {
             GameObject canvasObject = Instantiate(worldSpaceCanvasPrefab);
             WorldSpaceCanvas = canvasObject.GetComponent<Canvas>();
         }
-        panelDistributer.Initialize(WorldSpaceCanvas);
-    }
-
-    public void HideTip(ITipProvider tipItem) {
-        OnInfoItemExit.Invoke(tipItem);
     }
 
     public void ShowTip(ITipProvider tipItem) {
         OnInfoItemEnter?.Invoke(tipItem);
     }
 
-    public void CreateCreatureUI(BattleCreature creature, Field field) {
+    /*
+     public CreatureUI CreateCreatureUI(Card card) {
         // Создаем панель
-        var panelObj = panelDistributer.CreatePanel();
+        var panelObj = panelDistributer.CreateObject();
 
         // Привязываем панель к данным
         var creatureUI = panelObj.GetComponent<CreatureUI>();
-        creatureUI.Initialize(panelDistributer, creature, field);
+        creatureUI.Initialize(panelDistributer, card);
+        return creatureUI;
     }
+
+    public CardUI CreateCardUI(Card card) {
+        // Создаем панель
+        var panelObj = cardDistributer.CreateObject();
+
+        // Привязываем панель к данным
+        var cardUI = panelObj.GetComponent<CardUI>();
+        cardUI.Initialize(cardDistributer, card);
+        return cardUI;
+    }
+     */
 }

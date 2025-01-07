@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f64da9d112d4c84ba841aec48eb0bd3, type: 3}
   m_Name: TestAbility
   m_EditorClassIdentifier: 
-  abilityName: Debug
-  abilityDescription: I dont want to set the world on fire
-  abilitySprite: {fileID: 21300000, guid: ff48765ad2f14c34eae38c3f36d5489d, type: 3}
+  Name: TestAbilitySO
+  Description: Debugs in logs
+  Sprite: {fileID: 0}
   activationState: 1
   eventTrigger: 5

@@ -2,7 +2,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(RayService))]
 public class InteractionManager : MonoBehaviour {
-    private GameObject hoveredInteractable;
+    [SerializeField] private GameObject hoveredInteractable;
 
     public GameObject HoveredInteractable => hoveredInteractable;
 
@@ -15,6 +15,8 @@ public class InteractionManager : MonoBehaviour {
         GameObject gameObject = rayService.GetRayObject();
         if (gameObject && gameObject != hoveredInteractable) {
             hoveredInteractable = gameObject;
+        } else {
+            hoveredInteractable = null;
         }
     }
 }

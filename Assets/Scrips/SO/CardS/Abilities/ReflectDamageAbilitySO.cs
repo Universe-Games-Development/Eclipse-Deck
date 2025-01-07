@@ -6,7 +6,7 @@ public class ReflectDamageAbilitySO : CardAbilitySO {
         if (gameContext.sourceCard != null && gameContext.targetCard != null) {
             // Відбиваємо шкоду назад до нападника
             int reflectedDamage = gameContext.damage;
-            Debug.Log($"Reflecting {reflectedDamage} damage back to {gameContext.sourceCard.Name}");
+            Debug.Log($"Reflecting {reflectedDamage} damage back to {gameContext.sourceCard.data.Name}");
 
             // Викликаємо метод TakeDamage для нанесення шкоди назад до карти-нападника
             gameContext.sourceCard.Health.ApplyDamage(reflectedDamage);

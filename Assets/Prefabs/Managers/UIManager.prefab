@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5926793847367029630}
   - component: {fileID: 9135850187714465879}
-  - component: {fileID: 4060137507084453625}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -45,18 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc9a9b8aaf6c58a4e856770535ef6ad3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  panelDistributer: {fileID: 4060137507084453625}
+  panelDistributer: {fileID: 0}
+  cardDistributer: {fileID: 0}
   worldSpaceCanvasPrefab: {fileID: 4950960942053463047, guid: eee216200b2fcdb47b7ff80a2e05b134, type: 3}
---- !u!114 &4060137507084453625
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6696143888716681345}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8a7da10525c1314aa6dc9cbfe6cf96b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  panelPrefab: {fileID: 5947056477227401689, guid: 564f4c8c8dd0e074481a074487de7f1d, type: 3}
+  cardHandUI: {fileID: 0}
