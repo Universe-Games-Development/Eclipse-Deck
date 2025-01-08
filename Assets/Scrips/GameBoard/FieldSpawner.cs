@@ -73,6 +73,10 @@ public class FieldSpawner : MonoBehaviour {
         return fieldGrid;
     }
 
+    public void GetFieldDictionary() {
+
+    }
+
     private void OnDrawGizmos() {
         if (fieldsOrigin == null || fieldTypeFormat.Length == 0) return;
 

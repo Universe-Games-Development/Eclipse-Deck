@@ -859,7 +859,7 @@ MonoBehaviour:
   Name: Player
   initHealth: 0
   maxHealth: 0
-  tableManager: {fileID: 1253212644}
+  gameBoard: {fileID: 1253212644}
   handUI: {fileID: 376870063}
 --- !u!114 &432073391
 MonoBehaviour:
@@ -1018,6 +1018,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 69464364}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!1 &625277294
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 625277296}
+  - component: {fileID: 625277295}
+  m_Layer: 0
+  m_Name: Cell (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &625277295
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625277294}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c32bd03e40c68d47b9f10068ba0cebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &625277296
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625277294}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.506884, y: 2.7901545, z: 0.14262104}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1088063864}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &634577915
 GameObject:
   m_ObjectHideFlags: 0
@@ -1446,6 +1490,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1958477722}
+  - {fileID: 625277296}
   - {fileID: 7810699607212888472}
   - {fileID: 421484679925958571}
   - {fileID: 2076723792}
@@ -1501,6 +1547,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5564ecbdce0ba2d45baec1aa147cb7ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerCell: {fileID: 1958477723}
+  enemyCell: {fileID: 625277295}
   battleCreaturePrefab: {fileID: 5057081012966347309, guid: cfd7bc964292aaa498b79a32111aed4e, type: 3}
   tableCanvas: {fileID: 0}
   creatureUIDistributor: {fileID: 1253212646}
@@ -1906,7 +1954,7 @@ MonoBehaviour:
   Name: Opponent
   initHealth: 0
   maxHealth: 0
-  tableManager: {fileID: 1253212644}
+  gameBoard: {fileID: 1253212644}
 --- !u!4 &1929906660
 Transform:
   m_ObjectHideFlags: 0
@@ -1922,6 +1970,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1958477721
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1958477722}
+  - component: {fileID: 1958477723}
+  m_Layer: 0
+  m_Name: Cell
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1958477722
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958477721}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.506884, y: 2.7901545, z: 0.14262104}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1088063864}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1958477723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958477721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c32bd03e40c68d47b9f10068ba0cebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2076723791
 GameObject:
   m_ObjectHideFlags: 0
