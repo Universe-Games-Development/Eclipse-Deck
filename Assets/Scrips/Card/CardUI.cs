@@ -13,6 +13,7 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
 
     [Header("Middle Layer")]
     [SerializeField] private TextMeshProUGUI authorTMP;
+    [SerializeField] private TextMeshProUGUI descriptionText;
 
     [Header("Top Layer")]
     [SerializeField] private Image rarity;
@@ -41,7 +42,7 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
         
         rarity.color = card.data.GetRarityColor();
         authorTMP.text = card.data.AuthorName;
-
+        
         characterImage.sprite = card.data.characterSprite;
         UpdateAbilities(card.abilities);
 
@@ -51,7 +52,15 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
 
 
     protected override void UpdateAbilities(List<CardAbility> abilities) {
-        if (abilities == null) return;
+        if (abilities == null || abilities.Count == 0) {
+            EnableCardDescription();
+            return;
+        }
+
+        // якщо Ї зд≥бност≥, приховуЇмо опис
+        if (descriptionText != null) {
+            descriptionText.gameObject.SetActive(false);
+        }
 
         ClearAbilities();
         foreach (var ability in abilities) {
@@ -71,6 +80,14 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
                 abilityUI.CreateUISets(ability, true);
                 abilityUIs.Add(abilityUI);
             }
+        }
+    }
+
+    private void EnableCardDescription() {
+        // якщо немаЇ зд≥бностей, показуЇмо опис карти
+        if (descriptionText != null && card != null) {
+            descriptionText.text = card.data.description;
+            descriptionText.gameObject.SetActive(true);  // јктивуЇмо descriptionText
         }
     }
 
@@ -116,8 +133,25 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
     }
     #endregion
 
+    protected override void Reset() {
+        if (card != null) {
+            card.Health.OnValueChanged -= UpdateHealth;
+            card.Health.OnDeath -= OnCardDiscarded;
+            card.Attack.OnValueChanged -= UpdateAttack;
+        }
+
+        if (descriptionText != null) {
+            descriptionText.text = string.Empty;
+            descriptionText.gameObject.SetActive(false);
+        }
+        ClearAbilities();
+        card = null;
+    }
     protected override void OnDestroy() {
         base.OnDestroy();
+
+        
+
         OnCardClicked = null;
     }
 }
