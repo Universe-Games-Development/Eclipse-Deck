@@ -1,11 +1,15 @@
-public class TurnButton : TipItem {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start() {
+using UnityEngine;
+using Zenject;
 
+public class TurnButton : MonoBehaviour, ITipProvider {
+    [Inject] protected UIManager uiManager;
+    [SerializeField] private TipDataSO tipData;
+
+    void OnMouseEnter() {
+        uiManager.ShowTip(this);
     }
 
-    // Update is called once per frame
-    void Update() {
-
+    public virtual string GetInfo() {
+        return tipData != null ? tipData.tipText : "No tip available";
     }
 }

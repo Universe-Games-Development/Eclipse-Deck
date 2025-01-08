@@ -6,7 +6,7 @@ public enum FieldType {
     Attack
 }
 
-public class Field : TipItem {
+public class Field : MonoBehaviour, ITipProvider {
     private FieldType type;
     public Opponent Owner { get; private set; }
     public bool IsPlayerField;
@@ -79,7 +79,8 @@ public class Field : TipItem {
         return OccupiedCreature == null;
     }
 
-    public override string GetInfo() {
+    // ITipProvider
+    public string GetInfo() {
         string info = $"Field #{Index}" +
                       $"\nType: {Type}" +
                       $"\nOwner: {Owner?.Name}";
@@ -94,6 +95,12 @@ public class Field : TipItem {
         }
 
         return info;
+    }
+
+    [Inject] protected UIManager uiManager;
+
+    void OnMouseEnter() {
+        uiManager.ShowTip(this);
     }
 
     public void AssignOwner(Opponent player1) {
