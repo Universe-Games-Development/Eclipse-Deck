@@ -1,3 +1,3 @@
 public interface ITipProvider {
-    string GetInfo();
+    public string GetInfo();
 }

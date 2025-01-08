@@ -12,7 +12,7 @@ public class ManagerInstaller : MonoInstaller {
 
     public override void InstallBindings() {
         Container.Bind<IEventManager>().FromComponentInNewPrefab(eventManagerPrefab).AsSingle().NonLazy();
-        Container.Bind<InteractionManager>().FromComponentInNewPrefab(interactionManagerPrefab).AsSingle().NonLazy();
+        //Container.Bind<InteractionManager>().FromComponentInNewPrefab(interactionManagerPrefab).AsSingle().NonLazy();
         Container.Bind<ResourceManager>().FromComponentInNewPrefab(resourseManagerPrefab).AsSingle().NonLazy();
         Container.Bind<AudioManager>().FromComponentInNewPrefab(audioManagerPrefab).AsSingle().NonLazy();
         Container.Bind<MapManager>().FromComponentInNewPrefab(mapManagerPrefab).AsSingle().NonLazy();

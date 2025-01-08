@@ -14,28 +14,22 @@ public class CardAbility : IEventListener {
         this.card = card;
         this.eventManager = eventManager;
 
-        // Підписка на подію зміни стану карти
         card.OnStateChanged += OnCardStateChanged;
 
-        // Перевірка стану при ініціалізації
         CheckAndRegisterAbility();
 
         Debug.Log($"CardAbility created for card: {card.data.name} in state: {card.CurrentState}");
     }
 
-    // Деструктор для відписки від події при знищенні об'єкта
     ~CardAbility() {
         card.OnStateChanged -= OnCardStateChanged;
         UnregisterActivation();
     }
 
-    // Обробка зміни стану картки
     private void OnCardStateChanged(CardState newState) {
-        Debug.Log($"Card state changed from {card.CurrentState} to {newState} for card: {card.data.name}");
         CheckAndRegisterAbility();
     }
 
-    // Перевірка і реєстрація здібності, якщо стан підходить
     private void CheckAndRegisterAbility() {
         if (card.CurrentState == data.activationState) {
             if (!isRegistered) {
@@ -48,7 +42,6 @@ public class CardAbility : IEventListener {
         }
     }
 
-    // Реєстрація здібності
     public virtual void RegisterActivation() {
         if (isRegistered) {
             Debug.LogWarning($"Ability for card {card.data.name} is already registered.");
@@ -60,7 +53,6 @@ public class CardAbility : IEventListener {
         isRegistered = true;
     }
 
-    // Відписка від здібності
     public virtual void UnregisterActivation() {
         Debug.Log($"Unregistering ability for card: {card.data.name}");
         eventManager.UnregisterListener(this, data.eventTrigger);
@@ -74,9 +66,9 @@ public class CardAbility : IEventListener {
         Debug.Log($"Event received: {eventType} for card: {card.data.name}");
 
         try {
-            // Викликаємо ActivateAbility з CardAbilitySO
-            data.ActivateAbility(gameContext);  // Виклик метода ActivateAbility
+            data.ActivateAbility(gameContext);
 
+            // wait for effects
             await UniTask.Delay(1000, cancellationToken: cancellationToken);
 
             if (cancellationToken.IsCancellationRequested) {
@@ -90,15 +82,11 @@ public class CardAbility : IEventListener {
         }
     }
 
-    // Додавання методу Reset
     public void Reset() {
-        // Скидання реєстрації здібності
         if (isRegistered) {
             UnregisterActivation();
         }
 
-        // Тут можна додати додаткові логіки для скидання стану здібності,
-        // наприклад, скидання змінних, що зберігають стан здібності.
         Debug.Log($"Ability for card {card.data.name} has been reset.");
     }
 }

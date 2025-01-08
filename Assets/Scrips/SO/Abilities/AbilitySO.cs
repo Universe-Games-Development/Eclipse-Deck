@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public abstract class CardAbilitySO : ScriptableObject {
+public abstract class AbilitySO : ScriptableObject {
     public string Name;
     public string Description;
     public Sprite Sprite;

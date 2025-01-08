@@ -1,13 +1,12 @@
 using UnityEngine;
-using Zenject;
 
 public class Player : Opponent {
     [SerializeField] private CardHandUI handUI;
-    private InteractionManager interactionManager;
 
-    [Inject]
-    public void Construct(InteractionManager interactionManager) {
-        this.interactionManager = interactionManager;
+    private RayService rayService;
+    private void Awake() {
+        base.Awake();
+        rayService = GetComponent<RayService>();
     }
 
     protected override void Start() {
@@ -29,7 +28,8 @@ public class Player : Opponent {
     }
 
     private void TrySummonCard() {
-        if (interactionManager.HoveredInteractable && interactionManager.HoveredInteractable.TryGetComponent(out Field field)) {
+        GameObject gameObject = rayService.GetRayObject();
+        if (gameObject && gameObject.TryGetComponent(out Field field)) {
             CardUI selectedUICard = handUI.SelectedCard;
             if (selectedUICard == null) {
                 Debug.Log("No card selected to summon.");
