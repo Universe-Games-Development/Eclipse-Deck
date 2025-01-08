@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RoseSO
   m_EditorClassIdentifier: 
   Name: Rose
-  description: Sharp ROse
+  description: Sharp Rose
   characterSprite: {fileID: 21300000, guid: fec5dd7359041ff43b6c4465087d1e7f, type: 3}
   biomeIamge: {fileID: 21300000, guid: 7888acd02a647e94eab785656df8d04c, type: 3}
   AuthorName: 
