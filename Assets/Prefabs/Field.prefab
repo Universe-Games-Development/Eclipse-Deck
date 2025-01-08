@@ -18,7 +18,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &7558755173839148818
 Transform:
@@ -124,7 +124,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccba54aceae8b2a4fa95b02964daedef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tipData: {fileID: 11400000, guid: 3e284876c3079624b93366aee1a3b5de, type: 2}
   IsPlayerField: 0
   Index: 0
   spawnPoint: {fileID: 3417977091324475684}
@@ -146,7 +145,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &3417977091324475684
 Transform:
@@ -177,7 +176,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &2154121170430105736
 Transform:
