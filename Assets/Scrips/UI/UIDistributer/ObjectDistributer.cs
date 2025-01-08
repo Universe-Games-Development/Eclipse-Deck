@@ -35,7 +35,6 @@ public class ObjectDistributer : MonoBehaviour, IObjectDistributer {
 
     public virtual GameObject CreateObject() {
         if (objectPool == null) {
-            Debug.LogWarning("Object pool is not initialized! Initializing now...");
             CreateObjectPool();  // Ініціалізуємо пул, якщо він не був створений
         }
 
@@ -45,7 +44,6 @@ public class ObjectDistributer : MonoBehaviour, IObjectDistributer {
 
     public virtual void ReleaseObject(GameObject obj) {
         if (objectPool == null) {
-            Debug.LogWarning("Object pool is not initialized! Initializing now...");
             CreateObjectPool();  // Ініціалізуємо пул, якщо він не був створений
         }
 
