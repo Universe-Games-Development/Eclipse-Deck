@@ -67,6 +67,7 @@ public class GameBoard : MonoBehaviour {
 
             GameObject creatureUIObj = creatureUIDistributor.CreateObject();
             CreatureUI creatureUI = creatureUIObj.GetComponent<CreatureUI>();
+            creatureUI.Initialize(creatureUIDistributor, card);
             creatureUI.PositionPanelInWorld(field.uiPoint);
 
             gridField.AssignCreature(battleCreature);

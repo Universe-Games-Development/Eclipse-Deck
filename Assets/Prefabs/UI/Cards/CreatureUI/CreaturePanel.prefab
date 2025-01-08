@@ -147,7 +147,7 @@ GameObject:
   - component: {fileID: 2366577523561081529}
   - component: {fileID: 3700855052464689287}
   m_Layer: 0
-  m_Name: Abilities
+  m_Name: AbilitiesGrid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -617,6 +617,7 @@ GameObject:
   - component: {fileID: 2057987690823994402}
   - component: {fileID: 1342014725115517094}
   - component: {fileID: 3084439135683527195}
+  - component: {fileID: 6486070494867402193}
   m_Layer: 0
   m_Name: CreaturePanel
   m_TagString: Untagged
@@ -691,12 +692,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e8a384e698abc0469e11601c23dfedd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  id: 
+  Id: 
   nameText: {fileID: 7504551437526957796}
-  characterArt: {fileID: 0}
   healthText: {fileID: 6629816172155021436}
   attackText: {fileID: 6966344413086286281}
+  abilityUIDisctibuter: {fileID: 6486070494867402193}
   abilitieFiller: {fileID: 2366577523561081529}
+--- !u!114 &6486070494867402193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5947056477227401689}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2fef4cbfb6de0944af89ab95925a6e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectPrefab: {fileID: 5168075067611191693, guid: fe7913100e7bd9e48bd7e00f0a6f62b6, type: 3}
+  poolParent: {fileID: 2366577523561081529}
 --- !u!1 &6309955599438569389
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f64da9d112d4c84ba841aec48eb0bd3, type: 3}
   m_Name: Flying
   m_EditorClassIdentifier: 
-  Name: TestAbilitySO
+  Name: Flying
   Description: Cannot be targeted by non-flying creatures.
-  Sprite: {fileID: 0}
+  Sprite: {fileID: 21300000, guid: 8c1948be2e92a394da726075e9b647fe, type: 3}
   activationState: 2
   eventTrigger: 4
