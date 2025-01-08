@@ -12,4 +12,8 @@ public class TurnButton : MonoBehaviour, ITipProvider {
     public virtual string GetInfo() {
         return tipData != null ? tipData.tipText : "No tip available";
     }
+
+    private void OnMouseUpAsButton() {
+        Debug.Log("Turn changed!");
+    }
 }

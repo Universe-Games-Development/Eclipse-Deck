@@ -17,7 +17,7 @@ public class Opponent : MonoBehaviour {
     private ResourceManager resourceManager;
     private IEventManager eventManager;
 
-    [SerializeField] protected GameBoard tableManager;
+    [SerializeField] protected GameBoard gameBoard;
 
     [Inject]
     public void Construct(IEventManager eventManager, ResourceManager resourceManager) {
@@ -37,6 +37,6 @@ public class Opponent : MonoBehaviour {
     }
 
     protected virtual void Start() {
-        tableManager.AssignFieldsToPlayer(this);
+        gameBoard.AssignOpponent(this);
     }
 }

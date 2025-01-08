@@ -42,7 +42,7 @@ public class Player : Opponent {
                 return;
             }
 
-            bool isPlayed = tableManager.SummonCreature(this, selectedCard, field);
+            bool isPlayed = gameBoard.SummonCreature(this, selectedCard, field);
             if (isPlayed) {
                 hand.RemoveCard(selectedCard);
                 Debug.Log($"Card {selectedCard.data.Name} summoned to field!");

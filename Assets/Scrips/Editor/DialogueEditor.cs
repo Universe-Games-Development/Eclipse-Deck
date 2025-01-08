@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,13 +9,22 @@ public class DialogueSOEditor : Editor {
 
         DialogueSO dialogue = (DialogueSO)target;
 
+        if (dialogue.pages == null) {
+            dialogue.pages = new List<string>();
+        }
+
         EditorGUILayout.BeginVertical();
         EditorGUILayout.LabelField("Сторінки діалогу:");
 
         for (int i = 0; i < dialogue.pages.Count; i++) {
+            if (dialogue.pages[i] == null) {
+                EditorGUILayout.LabelField($"Сторінка {i + 1}: (Null)");
+                continue;
+            }
+
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"Сторінка {i + 1}:", GUILayout.Width(80)); // Заголовок з номером сторінки
-            dialogue.pages[i] = EditorGUILayout.TextArea(dialogue.pages[i], GUILayout.Height(100)); // Поле для тексту сторінки
+            EditorGUILayout.LabelField($"Сторінка {i + 1}:", GUILayout.Width(80));
+            dialogue.pages[i] = EditorGUILayout.TextArea(dialogue.pages[i], GUILayout.Height(100));
 
             if (GUILayout.Button("X", GUILayout.Width(20))) {
                 dialogue.pages.RemoveAt(i);
@@ -23,6 +33,14 @@ public class DialogueSOEditor : Editor {
             EditorGUILayout.EndHorizontal();
         }
 
+        if (GUILayout.Button("Add Page")) {
+            dialogue.pages.Add("New Page");
+        }
+
         EditorGUILayout.EndVertical();
+
+        if (GUI.changed) {
+            EditorUtility.SetDirty(dialogue);
+        }
     }
 }
