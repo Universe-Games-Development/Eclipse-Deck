@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7438461073323734047}
   - component: {fileID: -955673337774863412}
   - component: {fileID: 8480002835109476521}
+  - component: {fileID: 8778731891856882124}
   m_Layer: 0
   m_Name: BattleCreature
   m_TagString: Untagged
@@ -103,8 +104,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackSound: {fileID: 0}
   attackAnimationTrigger: Attack
-  originalRotation: {fileID: 0}
-  health: {fileID: 0}
+  uiPoint: {fileID: 0}
   Name: 
 --- !u!82 &8480002835109476521
 AudioSource:
@@ -203,3 +203,25 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!95 &8778731891856882124
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5057081012966347309}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 2928aeb39c7b6c5489a6fc50905ea90b, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
