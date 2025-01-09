@@ -476,12 +476,16 @@ MonoBehaviour:
   RealChannelSettings: []
   Plugins: []
   MasterBanks:
-  - Master
+  - MasterBank
   Banks:
-  - Ambient
+  - Cave
   - Characters
+  - Flooded Cave
   - FX
+  - Hell
+  - Lab
   - Music
+  - Sewers
   BanksToLoad: []
   LiveUpdatePort: 9264
   EnableMemoryTracking: 0

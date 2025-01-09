@@ -494,3 +494,79 @@ Memory consumption went from 168.6 MB to 164.0 MB.
 Total: 8.558900 ms (FindLiveObjects: 0.631500 ms CreateObjectMapping: 0.919000 ms MarkObjects: 4.371700 ms  DeleteObjects: 2.635900 ms)
 
 Prepare: number of updated asset objects reloaded= 0
+========================================================================
+Received Import Request.
+  Time since last request: 9140.190548 seconds.
+  path: Assets/Art/Icons/Abilities/game-icons/lorc/aubergine.png
+  artifactKey: Guid(2e829821797afde429f688c1cd1ea725) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Art/Icons/Abilities/game-icons/lorc/aubergine.png using Guid(2e829821797afde429f688c1cd1ea725) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'b298929a8bf2f38ba5c4a4200ad8b7a7') in 0.185805 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000116 seconds.
+  path: Assets/Art/Icons/Abilities/game-icons/lorc/dinosaur-bones.png
+  artifactKey: Guid(837c80d5275e546459ceb5af8a5c62a0) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Art/Icons/Abilities/game-icons/lorc/dinosaur-bones.png using Guid(837c80d5275e546459ceb5af8a5c62a0) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'd0053cc0f4ab0cce4a498c39f7af20bb') in 0.0080405 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000027 seconds.
+  path: Assets/Art/Icons/Abilities/game-icons/lorc/automatic-sas.png
+  artifactKey: Guid(b8e3408327119d54b99ac6618f00ea69) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Art/Icons/Abilities/game-icons/lorc/automatic-sas.png using Guid(b8e3408327119d54b99ac6618f00ea69) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '803001f4780e258179bad3a684555a61') in 0.0089475 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000017 seconds.
+  path: Assets/Art/Icons/Abilities/game-icons/lorc/beams-aura.png
+  artifactKey: Guid(598e34e9ae7eea64e9b028dc5c733f48) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Art/Icons/Abilities/game-icons/lorc/beams-aura.png using Guid(598e34e9ae7eea64e9b028dc5c733f48) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'b27d0ed48f6ae7da1afd87e967901df6') in 0.0082026 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000019 seconds.
+  path: Assets/Art/Icons/Abilities/game-icons/darkzaitzev/cauldron.png
+  artifactKey: Guid(9b2c8f113c33fa64fbe79b6d7378da97) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Art/Icons/Abilities/game-icons/darkzaitzev/cauldron.png using Guid(9b2c8f113c33fa64fbe79b6d7378da97) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '511fd2d682d11ecba7c520de8f180669') in 0.0074404 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000016 seconds.
+  path: Assets/Art/Icons/Abilities/game-icons/delapouite/australia.png
+  artifactKey: Guid(f9efdebe14b7b384bb823ec64256e38b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Art/Icons/Abilities/game-icons/delapouite/australia.png using Guid(f9efdebe14b7b384bb823ec64256e38b) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '49001006bad8434d027366e36402df99') in 0.008144 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000017 seconds.
+  path: Assets/Plugins/Zenject/OptionalExtras/SampleGame1 (Beginner)/Media/Physics/Default.physicMaterial
+  artifactKey: Guid(19e1775e0162387408a846a5e92cc2c2) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Plugins/Zenject/OptionalExtras/SampleGame1 (Beginner)/Media/Physics/Default.physicMaterial using Guid(19e1775e0162387408a846a5e92cc2c2) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'a58b85a4d5bf7a3f6c043e3ee9d293d7') in 0.0018266 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000020 seconds.
+  path: Assets/Art/Icons/Abilities/game-icons/delapouite/centaur.png
+  artifactKey: Guid(e6f613aeba0efc245ab836221bde2093) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Art/Icons/Abilities/game-icons/delapouite/centaur.png using Guid(e6f613aeba0efc245ab836221bde2093) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '5eaf9713945b8a5a529f113198a021a7') in 0.0075059 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000019 seconds.
+  path: Assets/Art/Icons/Abilities/game-icons/lorc/book-aura.png
+  artifactKey: Guid(5f46d3ab4bf18664f94bcc790b4b36a3) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Art/Icons/Abilities/game-icons/lorc/book-aura.png using Guid(5f46d3ab4bf18664f94bcc790b4b36a3) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'e46566a845f6f14002a918af291287a5') in 0.0076762 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+Editor requested this worker to shutdown with reason: Scaling down because of idle timeout
+AssetImportWorker is now disconnected from the server
+Process exiting
+Exiting without the bug reporter. Application will terminate with return code 0
