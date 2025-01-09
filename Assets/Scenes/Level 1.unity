@@ -166,7 +166,7 @@ MonoBehaviour:
   LoadEvent: 1
   UnloadEvent: 2
   Banks:
-  - Music
+  - Master
   CollisionTag: 
   PreloadSamples: 0
 --- !u!1 &35613888
@@ -1351,10 +1351,10 @@ MonoBehaviour:
   CollisionTag: 
   EventReference:
     Guid:
-      Data1: 1090075618
-      Data2: 1146052254
-      Data3: -1665223747
-      Data4: 667418824
+      Data1: -569188899
+      Data2: 1180260371
+      Data3: 824663731
+      Data4: 1713761456
     Path: event:/TestMusicEvent
   Event: 
   EventPlayTrigger: 1
