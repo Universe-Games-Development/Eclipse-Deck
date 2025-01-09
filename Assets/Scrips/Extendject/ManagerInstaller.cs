@@ -14,7 +14,7 @@ public class ManagerInstaller : MonoInstaller {
         Container.Bind<IEventManager>().FromComponentInNewPrefab(eventManagerPrefab).AsSingle().NonLazy();
         //Container.Bind<InteractionManager>().FromComponentInNewPrefab(interactionManagerPrefab).AsSingle().NonLazy();
         Container.Bind<ResourceManager>().FromComponentInNewPrefab(resourseManagerPrefab).AsSingle().NonLazy();
-        //Container.Bind<AudioManager>().FromComponentInNewPrefab(audioManagerPrefab).AsSingle().NonLazy();
+        Container.Bind<AudioManager>().FromComponentInNewPrefab(audioManagerPrefab).AsSingle().NonLazy();
         Container.Bind<MapManager>().FromComponentInNewPrefab(mapManagerPrefab).AsSingle().NonLazy();
         Container.Bind<LevelManager>().FromComponentInNewPrefab(levelManagerPrefab).AsSingle().NonLazy();
         Container.Bind<UIManager>().FromComponentInNewPrefab(uiManagerPrefab).AsSingle().NonLazy();
