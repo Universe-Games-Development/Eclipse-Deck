@@ -3,8 +3,8 @@ using UnityEngine;
 using Zenject;
 
 public class StartGameHandler : MonoBehaviour {
-    private CameraSplineMover cameraSplineMover;
-    private Animator uiAnimator;
+    [SerializeField] private CameraSplineMover cameraSplineMover;
+    [SerializeField] private Animator monitorAnimator;
     [SerializeField] private AnimationClip monitorMoveUp;
 
     private LevelManager levelManager;
@@ -14,18 +14,8 @@ public class StartGameHandler : MonoBehaviour {
     }
 
     private void Awake() {
-        cameraSplineMover = GetComponent<CameraSplineMover>();
-
         if (cameraSplineMover != null) {
             cameraSplineMover.OnMovementComplete += OnCameraMovementComplete;
-        }
-
-        uiAnimator = GetComponent<Animator>();
-    }
-
-    private void OnDestroy() {
-        if (cameraSplineMover != null) {
-            cameraSplineMover.OnMovementComplete -= OnCameraMovementComplete;
         }
     }
 
@@ -35,9 +25,8 @@ public class StartGameHandler : MonoBehaviour {
 
     private IEnumerator StartGameCoroutine() {
         // Виконуємо анімацію
-        uiAnimator.SetTrigger("Lift");
+        monitorAnimator.SetTrigger("Lift");
 
-        // Чекаємо завершення анімації
         yield return new WaitForSeconds(monitorMoveUp.length);
 
         // Починаємо рух камери після завершення анімації
@@ -46,5 +35,11 @@ public class StartGameHandler : MonoBehaviour {
 
     private void OnCameraMovementComplete() {
         levelManager.StartGame();
+    }
+
+    private void OnDestroy() {
+        if (cameraSplineMover != null) {
+            cameraSplineMover.OnMovementComplete -= OnCameraMovementComplete;
+        }
     }
 }

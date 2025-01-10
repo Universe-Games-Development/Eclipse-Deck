@@ -3,7 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using Zenject;
 
 public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
 
@@ -39,10 +38,10 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
         }
 
         // Top Layer
-        
+
         rarity.color = card.data.GetRarityColor();
         authorTMP.text = card.data.AuthorName;
-        
+
         characterImage.sprite = card.data.characterSprite;
         UpdateAbilities(card.abilities);
 
@@ -150,7 +149,7 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
     protected override void OnDestroy() {
         base.OnDestroy();
 
-        
+
 
         OnCardClicked = null;
     }

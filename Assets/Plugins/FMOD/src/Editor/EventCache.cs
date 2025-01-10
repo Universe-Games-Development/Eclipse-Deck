@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FMODUnity
-{
-    public class EventCache : ScriptableObject
-    {
+namespace FMODUnity {
+    public class EventCache : ScriptableObject {
         [SerializeField]
         public List<EditorBankRef> EditorBanks;
         [SerializeField]
@@ -21,14 +19,12 @@ namespace FMODUnity
         [SerializeField]
         public int cacheVersion;
 
-        public DateTime CacheTime
-        {
+        public DateTime CacheTime {
             get { return new DateTime(cacheTime); }
             set { cacheTime = value.Ticks; }
         }
 
-        public EventCache()
-        {
+        public EventCache() {
             EditorBanks = new List<EditorBankRef>();
             EditorEvents = new List<EditorEventRef>();
             EditorParameters = new List<EditorParamRef>();

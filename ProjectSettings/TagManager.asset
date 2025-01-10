@@ -12,9 +12,9 @@ TagManager:
   - Water
   - UI
   - UIWorld
-  - 3DUI
+  - RenderedUI
   - Items
-  - 
+  - RenderTextureUI
   - 
   - 
   - 

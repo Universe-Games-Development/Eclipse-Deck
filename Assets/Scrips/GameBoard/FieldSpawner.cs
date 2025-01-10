@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using Zenject;
 
@@ -37,7 +36,7 @@ public class FieldSpawner : MonoBehaviour {
             }
 
             if (rowType == FieldType.Attack && isPlayerField) {
-                isPlayerField = false; 
+                isPlayerField = false;
             }
         }
     }

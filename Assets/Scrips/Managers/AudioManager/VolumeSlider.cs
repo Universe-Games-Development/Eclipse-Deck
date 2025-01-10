@@ -1,6 +1,6 @@
 using UnityEngine;
-using Zenject;
 using UnityEngine.UI;
+using Zenject;
 
 public class VolumeSlider : MonoBehaviour {
     [Header("Audio Settings")]

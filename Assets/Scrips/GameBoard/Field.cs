@@ -42,7 +42,7 @@ public class Field : MonoBehaviour, ITipProvider {
         if (meshRenderer != null) {
             if (Type == FieldType.Support) {
                 if (transparentMaterial)
-                meshRenderer.material = transparentMaterial;
+                    meshRenderer.material = transparentMaterial;
             } else {
                 meshRenderer.material = defaultMaterial;
             }
