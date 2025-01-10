@@ -4,15 +4,15 @@ using Unity.Cinemachine;
 using UnityEngine;
 
 public class CameraSplineMover : MonoBehaviour {
-    public float duration = 5f;       // Тривалість руху
-    public bool StartOnAwake = false; // Чи починати рух при запуску скрипта
+    public float duration = 5f;
+    public bool StartOnAwake = false;
 
     [SerializeField] private CinemachineSplineDolly dolly;
     [SerializeField] private float delayToMove;
     [SerializeField] private float endTime = 0f;
 
-    public Action OnMovementStart;    // Делегат для початку руху
-    public Action OnMovementComplete; // Делегат для завершення руху
+    public Action OnMovementStart;
+    public Action OnMovementComplete;
 
     private void Awake() {
         if (StartOnAwake) {
@@ -26,7 +26,7 @@ public class CameraSplineMover : MonoBehaviour {
             return;
         }
 
-        OnMovementStart?.Invoke(); // Викликаємо дію перед початком руху
+        OnMovementStart?.Invoke();
 
         StartCoroutine(StartCoroutineWithDelay(dolly, delayToMove));
     }
@@ -42,17 +42,12 @@ public class CameraSplineMover : MonoBehaviour {
         while (elapsedTime < duration) {
             elapsedTime += Time.deltaTime;
             float progress = Mathf.Clamp01(elapsedTime / duration);
-
-            // Рух камери по сплайну
             dolly.CameraPosition = progress;
 
             yield return null;
         }
 
-        // Додатковий час перед завершенням
         yield return new WaitForSeconds(endTime);
-
-        // Викликаємо дію після завершення руху
         OnMovementComplete?.Invoke();
     }
 }

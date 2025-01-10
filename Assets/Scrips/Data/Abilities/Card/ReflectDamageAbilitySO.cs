@@ -3,9 +3,9 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "ReflectDamage", menuName = "Cards/Abilities/ReflectDamage")]
 public class ReflectDamageAbilitySO : CardAbilitySO {
     public enum ReflectMode {
-        FixedAmount,    
-        Percentage,     
-        FullDamage,     
+        FixedAmount,
+        Percentage,
+        FullDamage,
         KillAttacker
     }
 

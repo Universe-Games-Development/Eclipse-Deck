@@ -12,18 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using UnityEngine;
 using UnityEditor;
-using System.Collections;
+using UnityEngine;
 
-namespace FMODUnityResonance
-{
+namespace FMODUnityResonance {
     /// A custom editor for properties on the FmodResonanceAudioRoom script. This appears in the
     /// Inspector window of a FmodResonanceAudioRoom object.
     [CustomEditor(typeof(FmodResonanceAudioRoom))]
     [CanEditMultipleObjects]
-    public class FmodResonanceAudioRoomEditor : Editor
-    {
+    public class FmodResonanceAudioRoomEditor : Editor {
         private SerializedProperty leftWall = null;
         private SerializedProperty rightWall = null;
         private SerializedProperty floor = null;
@@ -54,8 +51,7 @@ namespace FMODUnityResonance
           "Adjusts the overall duration of the reverb by a positive scaling factor.");
         private GUIContent sizeLabel = new GUIContent("Size", "Sets the room dimensions.");
 
-        private void OnEnable()
-        {
+        private void OnEnable() {
             leftWall = serializedObject.FindProperty("LeftWall");
             rightWall = serializedObject.FindProperty("RightWall");
             floor = serializedObject.FindProperty("Floor");
@@ -70,8 +66,7 @@ namespace FMODUnityResonance
         }
 
         /// @cond
-        public override void OnInspectorGUI()
-        {
+        public override void OnInspectorGUI() {
             serializedObject.Update();
 
             // Add clickable script field, as would have been provided by DrawDefaultInspector()
@@ -113,8 +108,7 @@ namespace FMODUnityResonance
         }
         /// @endcond
 
-        private void DrawSurfaceMaterial(SerializedProperty surfaceMaterial)
-        {
+        private void DrawSurfaceMaterial(SerializedProperty surfaceMaterial) {
             surfaceMaterialLabel.text = surfaceMaterial.displayName;
             EditorGUILayout.PropertyField(surfaceMaterial, surfaceMaterialLabel);
         }

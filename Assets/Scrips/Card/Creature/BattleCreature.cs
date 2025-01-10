@@ -19,7 +19,7 @@ public class BattleCreature : MonoBehaviour {
 
     [Inject] private IEventManager eventManager;
     [Inject] private UIManager uIManager;
-    
+
 
     private void Awake() {
         animator = GetComponent<Animator>();

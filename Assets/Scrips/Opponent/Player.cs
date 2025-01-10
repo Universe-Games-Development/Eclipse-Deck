@@ -4,7 +4,7 @@ public class Player : Opponent {
     [SerializeField] private CardHandUI handUI;
 
     private RayService rayService;
-    private void Awake() {
+    protected override void Awake() {
         base.Awake();
         rayService = GetComponent<RayService>();
     }

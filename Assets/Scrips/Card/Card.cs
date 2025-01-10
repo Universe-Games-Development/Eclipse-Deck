@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 public class Card {
     private const int MAX_CARD_HEALTH = 100;
@@ -65,7 +64,7 @@ public class Card {
     }
 
 
-public void Reset() {
+    public void Reset() {
         ChangeState(CardState.InDeck);
         Cost.Reset();
         Attack.Reset();

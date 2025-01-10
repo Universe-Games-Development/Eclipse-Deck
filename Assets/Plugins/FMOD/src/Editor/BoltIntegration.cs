@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.Build;
 
 #if (UNITY_VISUALSCRIPTING_EXIST)
 using Unity.VisualScripting;
@@ -14,13 +12,10 @@ using Ludiq;
 using Bolt;
 #endif
 
-namespace FMODUnity
-{
-    public class BoltIntegration : MonoBehaviour
-    {
+namespace FMODUnity {
+    public class BoltIntegration : MonoBehaviour {
         [MenuItem("FMOD/Generate Visual Scripting Units")]
-        public static void GenerateBoltUnitOptions()
-        {
+        public static void GenerateBoltUnitOptions() {
 #if (UNITY_BOLT_EXIST || UNITY_VISUALSCRIPTING_EXIST)
             BuildBoltUnitOptions();
 #else
@@ -72,8 +67,7 @@ namespace FMODUnity
         }
 
 #else
-        private static void BuildBoltUnitOptions()
-        {
+        private static void BuildBoltUnitOptions() {
 #if (UNITY_BOLT_EXIST)
             DictionaryAsset projectSettings = AssetDatabase.LoadAssetAtPath(PathUtility.FromProject(LudiqCore.Paths.projectSettings), typeof(DictionaryAsset)) as DictionaryAsset;
             List<LooseAssemblyName> assemblyOptions = projectSettings.dictionary["assemblyOptions"] as List<LooseAssemblyName>;
@@ -81,13 +75,11 @@ namespace FMODUnity
             List<LooseAssemblyName> assemblyOptions = BoltCore.Configuration.assemblyOptions;
 #endif
 
-            if (!assemblyOptions.Contains("FMODUnity"))
-            {
+            if (!assemblyOptions.Contains("FMODUnity")) {
                 assemblyOptions.Add("FMODUnity");
             }
 
-            if (!assemblyOptions.Contains("FMODUnityResonance"))
-            {
+            if (!assemblyOptions.Contains("FMODUnityResonance")) {
                 assemblyOptions.Add("FMODUnityResonance");
             }
 #if (UNITY_BOLT_EXIST)
@@ -103,10 +95,8 @@ namespace FMODUnity
             allTypes.AddRange(GetTypesForNamespace(fmodUnityAssembly, "FMODUnity"));
             allTypes.AddRange(GetTypesForNamespace(fmodUnityResonanceAssembly, "FMODUnityResonance"));
 
-            foreach (Type type in allTypes)
-            {
-                if (!typeOptions.Contains(type))
-                {
+            foreach (Type type in allTypes) {
+                if (!typeOptions.Contains(type)) {
                     typeOptions.Add(type);
                 }
             }
@@ -120,18 +110,15 @@ namespace FMODUnity
 #endif
         }
 
-        private static IEnumerable<Type> GetTypesForNamespace(Assembly assembly, string requestedNamespace)
-        {
+        private static IEnumerable<Type> GetTypesForNamespace(Assembly assembly, string requestedNamespace) {
             return assembly.GetTypes()
                     .Where(t => string.Equals(t.Namespace, requestedNamespace, StringComparison.Ordinal));
         }
 #endif
 
-        public static void Startup()
-        {
+        public static void Startup() {
 #if (UNITY_BOLT_EXIST || UNITY_VISUALSCRIPTING_EXIST)
-            if (Settings.Instance.BoltUnitOptionsBuildPending)
-            {
+            if (Settings.Instance.BoltUnitOptionsBuildPending) {
                 Settings.Instance.BoltUnitOptionsBuildPending = false;
                 BuildBoltUnitOptions();
             }

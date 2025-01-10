@@ -28,21 +28,17 @@ namespace FMOD.Studio
 }
 #endif
 
-namespace FMODUnity
-{
+namespace FMODUnity {
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
-    public class PlatformWindows : Platform
-    {
-        static PlatformWindows()
-        {
+    public class PlatformWindows : Platform {
+        static PlatformWindows() {
             Settings.AddPlatformTemplate<PlatformWindows>("2c5177b11d81d824dbb064f9ac8527da");
         }
 
         internal override string DisplayName { get { return "Windows"; } }
-        internal override void DeclareRuntimePlatforms(Settings settings)
-        {
+        internal override void DeclareRuntimePlatforms(Settings settings) {
             settings.DeclareRuntimePlatform(RuntimePlatform.WindowsPlayer, this);
             settings.DeclareRuntimePlatform(RuntimePlatform.WSAPlayerX86, this);
             settings.DeclareRuntimePlatform(RuntimePlatform.WSAPlayerX64, this);
@@ -50,8 +46,7 @@ namespace FMODUnity
         }
 
 #if UNITY_EDITOR
-        internal override IEnumerable<BuildTarget> GetBuildTargets()
-        {
+        internal override IEnumerable<BuildTarget> GetBuildTargets() {
             yield return BuildTarget.StandaloneWindows;
             yield return BuildTarget.StandaloneWindows64;
             yield return BuildTarget.WSAPlayer;
@@ -68,10 +63,8 @@ namespace FMODUnity
 #endif
 
 #if UNITY_EDITOR
-        protected override BinaryAssetFolderInfo GetBinaryAssetFolder(BuildTarget buildTarget)
-        {
-            switch (buildTarget)
-            {
+        protected override BinaryAssetFolderInfo GetBinaryAssetFolder(BuildTarget buildTarget) {
+            switch (buildTarget) {
                 case BuildTarget.StandaloneWindows:
                 case BuildTarget.StandaloneWindows64:
                     return new BinaryAssetFolderInfo("win", "Plugins");
@@ -82,12 +75,10 @@ namespace FMODUnity
             }
         }
 
-        protected override IEnumerable<FileRecord> GetBinaryFiles(BuildTarget buildTarget, bool allVariants, string suffix)
-        {
+        protected override IEnumerable<FileRecord> GetBinaryFiles(BuildTarget buildTarget, bool allVariants, string suffix) {
             string dllSuffix = suffix + ".dll";
 
-            switch (buildTarget)
-            {
+            switch (buildTarget) {
                 case BuildTarget.StandaloneWindows:
                     yield return new FileRecord("x86/fmodstudio" + dllSuffix);
                     break;
@@ -95,8 +86,7 @@ namespace FMODUnity
                     yield return new FileRecord("x86_64/fmodstudio" + dllSuffix);
                     break;
                 case BuildTarget.WSAPlayer:
-                    foreach (string architecture in new[] { "arm", "x64", "x86" })
-                    {
+                    foreach (string architecture in new[] { "arm", "x64", "x86" }) {
                         yield return new FileRecord(string.Format("{0}/fmod{1}", architecture, dllSuffix));
                         yield return new FileRecord(string.Format("{0}/fmodstudio{1}", architecture, dllSuffix));
                     }
@@ -106,10 +96,8 @@ namespace FMODUnity
             }
         }
 
-        protected override IEnumerable<FileRecord> GetOptionalBinaryFiles(BuildTarget buildTarget, bool allVariants)
-        {
-            switch (buildTarget)
-            {
+        protected override IEnumerable<FileRecord> GetOptionalBinaryFiles(BuildTarget buildTarget, bool allVariants) {
+            switch (buildTarget) {
                 case BuildTarget.StandaloneWindows:
                     yield return new FileRecord("x86/gvraudio.dll");
                     yield return new FileRecord("x86/resonanceaudio.dll");
@@ -125,29 +113,25 @@ namespace FMODUnity
             }
         }
 
-        internal override bool SupportsAdditionalCPP(BuildTarget target)
-        {
+        internal override bool SupportsAdditionalCPP(BuildTarget target) {
             return target != BuildTarget.WSAPlayer;
         }
 #endif
 
-        internal override string GetPluginPath(string pluginName)
-        {
+        internal override string GetPluginPath(string pluginName) {
 #if UNITY_STANDALONE_WIN
-        #if UNITY_64
+#if UNITY_64
             return string.Format("{0}/X86_64/{1}.dll", GetPluginBasePath(), pluginName);
-        #else
+#else
             return string.Format("{0}/X86/{1}.dll", GetPluginBasePath(), pluginName);
-        #endif
+#endif
 #else // UNITY_WSA
             return string.Format("{0}.dll", pluginName);
 #endif
         }
 #if UNITY_EDITOR
-        internal override OutputType[] ValidOutputTypes
-        {
-            get
-            {
+        internal override OutputType[] ValidOutputTypes {
+            get {
                 return sValidOutputTypes;
             }
         }
