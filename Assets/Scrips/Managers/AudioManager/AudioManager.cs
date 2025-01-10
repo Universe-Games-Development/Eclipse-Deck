@@ -27,7 +27,7 @@ public class AudioManager : MonoBehaviour {
         audioBuses[AudioType.AMBIENCE] = RuntimeManager.GetBus("bus:/Ambience");
         audioBuses[AudioType.SFX] = RuntimeManager.GetBus("bus:/SFX");
 
-        volumes[AudioType.MASTER] = 0.4f;
+        volumes[AudioType.MASTER] = 0.01f;
         volumes[AudioType.MUSIC] = 1f;
         volumes[AudioType.AMBIENCE] = 1f;
         volumes[AudioType.SFX] = 1f;
