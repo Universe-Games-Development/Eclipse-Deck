@@ -13,7 +13,6 @@ public abstract class CardRepresentative : MonoBehaviour {
     [SerializeField] protected TextMeshProUGUI attackText;
 
     protected Card card;
-    protected IObjectDistributer distributor;
 
     [SerializeField] protected ObjectDistributer abilityUIDisctibuter;
     protected List<AbilityUI> abilityUIs = new List<AbilityUI>();
@@ -35,9 +34,8 @@ public abstract class CardRepresentative : MonoBehaviour {
         }
     }
 
-    public virtual void Initialize(IObjectDistributer distributor, Card card) {
+    public virtual void Initialize(Card card) {
         this.card = card;
-        this.distributor = distributor;
         Id = card.Id;
 
         AttachmentToCard(card);
@@ -52,7 +50,6 @@ public abstract class CardRepresentative : MonoBehaviour {
         if (card == null) return;
 
         card.Health.OnValueChanged += UpdateHealth;
-        card.Health.OnDeath += OnCardDiscarded;
         card.Attack.OnValueChanged += UpdateAttack;
     }
 
@@ -114,15 +111,9 @@ public abstract class CardRepresentative : MonoBehaviour {
         abilityUIs.Clear();
     }
 
-    protected void OnCardDiscarded() {
-        Reset();
-        distributor.ReleaseObject(gameObject);
-    }
-
-    protected virtual void Reset() {
+    public virtual void Reset() {
         if (card != null) {
             card.Health.OnValueChanged -= UpdateHealth;
-            card.Health.OnDeath -= OnCardDiscarded;
             card.Attack.OnValueChanged -= UpdateAttack;
         }
 

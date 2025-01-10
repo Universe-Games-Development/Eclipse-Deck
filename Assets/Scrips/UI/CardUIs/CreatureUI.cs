@@ -1,8 +1,8 @@
 using UnityEngine;
 
 public class CreatureUI : CardRepresentative {
-    public override void Initialize(IObjectDistributer distributer, Card card) {
-        base.Initialize(distributer, card);
+    public override void Initialize(Card card) {
+        base.Initialize(card);
         UpdateAbilities(card.abilities);
     }
 
