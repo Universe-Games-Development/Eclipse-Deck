@@ -16,4 +16,4 @@ MonoBehaviour:
   Description: Cannot be targeted by non-flying creatures.
   Sprite: {fileID: 21300000, guid: 8c1948be2e92a394da726075e9b647fe, type: 3}
   activationState: 2
-  eventTrigger: 4
+  eventTriggers: 0c000000

@@ -6,7 +6,7 @@ public class TurnButton : MonoBehaviour, ITipProvider {
     [SerializeField] private TipDataSO tipData;
 
     void OnMouseEnter() {
-        uiManager.ShowTip(this);
+        uiManager.ShowTip("Turn Button");
     }
 
     public virtual string GetInfo() {

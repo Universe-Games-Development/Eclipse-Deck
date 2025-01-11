@@ -1,33 +1,42 @@
+using Cysharp.Threading.Tasks.Triggers;
+using System.Linq;
 using UnityEngine;
 
-[RequireComponent(typeof(FieldManager), typeof(CreatureSummoner))]
 public class GameBoard : MonoBehaviour {
     [SerializeField] private HealthCell playerCell;
     [SerializeField] private HealthCell enemyCell;
 
-    private FieldManager fieldManager;
-    private CreatureSummoner summoningManager;
-
+    private FieldOverseer _fieldOverseer;
+    [SerializeField] private BoardSettings _boardSettings;
     private void Awake() {
-        if (TryGetComponent(out fieldManager)) {
-            fieldManager.GenerateGrid();
+        if (_boardSettings == null) {
+            _boardSettings = new BoardSettings();
+            _boardSettings.rowTypes[0] = FieldType.Attack;
+            _boardSettings.rowTypes[1] = FieldType.Attack;
+            _boardSettings.columns = 4;
         }
-        summoningManager = GetComponent<CreatureSummoner>();
+        _fieldOverseer = new FieldOverseer(_boardSettings);
+        _fieldOverseer.InitializeBoardGrids();
     }
 
     public void AssignOpponent(Opponent opponent) {
         AssignHPCellToOpponent(opponent);
-        fieldManager.AssignFieldsToOpponent(opponent);
+        _fieldOverseer.AssignFieldsToOpponent(opponent);
+
+
+
+        //DEBUG
+        int totalElements = _fieldOverseer.GetFieldGrid(opponent)
+            .Where(row => row != null)
+            .Sum(row => row.Count);
+
+        Debug.Log(totalElements);
+
     }
 
     private void AssignHPCellToOpponent(Opponent opponent) {
         if (opponent is Player) {
             playerCell.AssignOwner(opponent);
         } else { enemyCell.AssignOwner(opponent); }
-    }
-
-
-    public bool SummonCreature(Opponent player, Card card, Field field) {
-        return summoningManager.SummonCreature(player, card, field, fieldManager);
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Zenject;
 
@@ -18,6 +19,8 @@ public class Opponent : MonoBehaviour {
     private IEventManager eventManager;
 
     [SerializeField] protected GameBoard gameBoard;
+
+    public Action<Opponent> OnDefeat { get; internal set; }
 
     [Inject]
     public void Construct(IEventManager eventManager, ResourceManager resourceManager) {

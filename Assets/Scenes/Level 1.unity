@@ -1714,9 +1714,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1253212643}
   - component: {fileID: 1253212644}
-  - component: {fileID: 1253212646}
-  - component: {fileID: 1253212649}
-  - component: {fileID: 1253212648}
   - component: {fileID: 1253212647}
   - component: {fileID: 1253212650}
   m_Layer: 0
@@ -1763,20 +1760,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerCell: {fileID: 1958477723}
   enemyCell: {fileID: 625277295}
---- !u!114 &1253212646
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1253212642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2fef4cbfb6de0944af89ab95925a6e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectPrefab: {fileID: 5947056477227401689, guid: 564f4c8c8dd0e074481a074487de7f1d, type: 3}
-  poolParent: {fileID: 35613889}
+  _boardSettings:
+    rowTypes: 00000000010000000100000000000000
+    columns: 5
 --- !u!114 &1253212647
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1791,41 +1777,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectPrefab: {fileID: 5057081012966347309, guid: cfd7bc964292aaa498b79a32111aed4e, type: 3}
   poolParent: {fileID: 885230739}
---- !u!114 &1253212648
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1253212642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea728337e712890438ff1b25d4650b9f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  battleCreatureDistributor: {fileID: 1253212647}
-  creatureUIDistributor: {fileID: 1253212650}
---- !u!114 &1253212649
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1253212642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b147e8c33c63794b8075e2b6dfb3326, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  boardConfig:
-    FieldsOrigin: {fileID: 2875565043564269430}
-    VerticalOffset: 0.87
-    HorizontalOffset: 0.87
-    NumberOfColumns: 6
-    FieldSize: {x: 0.87, y: 0.5, z: 0.87}
-    FieldTypeFormat: 000000000000000001000000010000000000000000000000
-  fieldPrefab: {fileID: 7025480052318313972, guid: b335380be08b2fe48a40fd6efc1a9e25, type: 3}
-  boardCenter: {fileID: 2875565043564269430}
 --- !u!114 &1253212650
 MonoBehaviour:
   m_ObjectHideFlags: 0

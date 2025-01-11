@@ -18,7 +18,7 @@ public class CardAbility : IEventListener {
 
         CheckAndRegisterAbility();
 
-        Debug.Log($"CardAbility created for card: {card.data.name} in state: {card.CurrentState}");
+        //Debug.Log($"CardAbility created for card: {card.data.name} in state: {card.CurrentState}");
     }
 
     ~CardAbility() {
@@ -48,7 +48,7 @@ public class CardAbility : IEventListener {
             return;
         }
 
-        Debug.Log($"Registering ability for card: {card.data.name}");
+        //Debug.Log($"Registering ability for card: {card.data.name}");
         foreach(var abilityTrigger in data.eventTriggers) {
             eventManager.RegisterListener(this, abilityTrigger, ExecutionType.Parallel);
         }
@@ -57,7 +57,7 @@ public class CardAbility : IEventListener {
     }
 
     public virtual void UnregisterActivation() {
-        Debug.Log($"Unregistering ability for card: {card.data.name}");
+        //Debug.Log($"Unregistering ability for card: {card.data.name}");
         foreach (var abilityTrigger in data.eventTriggers) {
             eventManager.UnregisterListener(this, abilityTrigger);
         }
@@ -69,7 +69,7 @@ public class CardAbility : IEventListener {
     public async UniTask OnEventAsync(EventType eventType, GameContext gameContext, CancellationToken cancellationToken = default) {
         if (!isRegistered) return; // Перевірка перед виконанням
 
-        Debug.Log($"Event received: {eventType} for card: {card.data.name}");
+        //Debug.Log($"Event received: {eventType} for card: {card.data.name}");
 
         try {
             data.ActivateAbility(gameContext);
@@ -82,7 +82,7 @@ public class CardAbility : IEventListener {
                 return;
             }
 
-            Debug.Log("Ability executed.");
+            //Debug.Log("Ability executed.");
         } catch (Exception e) {
             Debug.LogError($"Error during ability execution for card {card.data.name}: {e.Message}\n{e.StackTrace}");
         }

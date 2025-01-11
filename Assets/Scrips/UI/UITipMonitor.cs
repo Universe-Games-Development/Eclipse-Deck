@@ -12,7 +12,7 @@ public class UITimMonitor : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI tipTextField;
 
     private UIManager uiManager;
-    private ITipProvider currentTipProvider;
+    private string currentInfo;
     private Coroutine hideCoroutine;
 
     [Inject]
@@ -21,36 +21,33 @@ public class UITimMonitor : MonoBehaviour {
     }
 
     private void OnEnable() {
-        uiManager.OnInfoItemEnter += ShowInfo;
+        uiManager.OnInfoRequested += ShowInfo;
     }
 
     private void OnDisable() {
-        uiManager.OnInfoItemEnter -= ShowInfo;
+        uiManager.OnInfoRequested -= ShowInfo;
     }
 
-    public void ShowInfo(ITipProvider tipProvider) {
-        if (tipProvider == null) return;
+    public void ShowInfo(string info) {
 
-        if (currentTipProvider != tipProvider) {
+        if (currentInfo.Equals(info)) {
             if (hideCoroutine != null) {
                 StopCoroutine(hideCoroutine);
             }
 
-            HideInfo(currentTipProvider);
+            HideInfo();
         }
 
-        currentTipProvider = tipProvider;
-        tipTextField.text = tipProvider.GetInfo();
+        currentInfo = info;
+        tipTextField.text = info;
 
-        float displayDuration = CalculateDisplayDuration(tipProvider.GetInfo());
+        float displayDuration = CalculateDisplayDuration(info);
         hideCoroutine = StartCoroutine(HideInfoAfterDelay(displayDuration));
     }
 
-    public void HideInfo(ITipProvider tipProvider) {
-        if (tipProvider != currentTipProvider) return;
-
+    public void HideInfo() {
         tipTextField.text = string.Empty;
-        currentTipProvider = null;
+        currentInfo = null;
 
         if (hideCoroutine != null) {
             StopCoroutine(hideCoroutine);
@@ -60,7 +57,7 @@ public class UITimMonitor : MonoBehaviour {
 
     private IEnumerator HideInfoAfterDelay(float duration) {
         yield return new WaitForSeconds(duration);
-        HideInfo(currentTipProvider);
+        HideInfo();
     }
 
     private float CalculateDisplayDuration(string text) {
