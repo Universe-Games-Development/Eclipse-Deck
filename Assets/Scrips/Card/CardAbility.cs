@@ -44,18 +44,24 @@ public class CardAbility : IEventListener {
 
     public virtual void RegisterActivation() {
         if (isRegistered) {
-            Debug.LogWarning($"Ability for card {card.data.name} is already registered.");
+            Debug.LogWarning($"Abilities for card {card.data.name} is already registered.");
             return;
         }
 
         Debug.Log($"Registering ability for card: {card.data.name}");
-        eventManager.RegisterListener(this, data.eventTrigger, ExecutionType.Parallel);
+        foreach(var abilityTrigger in data.eventTriggers) {
+            eventManager.RegisterListener(this, abilityTrigger, ExecutionType.Parallel);
+        }
+        
         isRegistered = true;
     }
 
     public virtual void UnregisterActivation() {
         Debug.Log($"Unregistering ability for card: {card.data.name}");
-        eventManager.UnregisterListener(this, data.eventTrigger);
+        foreach (var abilityTrigger in data.eventTriggers) {
+            eventManager.UnregisterListener(this, abilityTrigger);
+        }
+        
         isRegistered = false;
     }
 

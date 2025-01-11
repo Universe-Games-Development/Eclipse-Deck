@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class AbilitySO : ScriptableObject {
@@ -5,7 +6,7 @@ public abstract class AbilitySO : ScriptableObject {
     public string Description;
     public Sprite Sprite;
     public CardState activationState;
-    public EventType eventTrigger;
+    public List<EventType> eventTriggers;
 
     public virtual bool ActivateAbility(GameContext gameContext) {
         Debug.Log("Base ability activation");
