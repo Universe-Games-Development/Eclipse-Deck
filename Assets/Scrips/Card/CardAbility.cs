@@ -49,10 +49,10 @@ public class CardAbility : IEventListener {
         }
 
         //Debug.Log($"Registering ability for card: {card.data.name}");
-        foreach(var abilityTrigger in data.eventTriggers) {
+        foreach (var abilityTrigger in data.eventTriggers) {
             eventManager.RegisterListener(this, abilityTrigger, ExecutionType.Parallel);
         }
-        
+
         isRegistered = true;
     }
 
@@ -61,7 +61,7 @@ public class CardAbility : IEventListener {
         foreach (var abilityTrigger in data.eventTriggers) {
             eventManager.UnregisterListener(this, abilityTrigger);
         }
-        
+
         isRegistered = false;
     }
 

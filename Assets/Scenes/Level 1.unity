@@ -1761,7 +1761,7 @@ MonoBehaviour:
   playerCell: {fileID: 1958477723}
   enemyCell: {fileID: 625277295}
   _boardSettings:
-    rowTypes: 00000000010000000100000000000000
+    rowTypes: 0000000001000000010000000000000000000000000000000000000000000000
     columns: 5
 --- !u!114 &1253212647
 MonoBehaviour:
