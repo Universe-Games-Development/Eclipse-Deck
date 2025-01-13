@@ -7,23 +7,26 @@ public class BoardOverseer {
         get {
             return mainGrid;
         }
-        private set {  mainGrid = value; }
+        private set { mainGrid = value; }
     }
     private Grid mainGrid;
     private SubGrid playerGrid, enemyGrid;
     private readonly Dictionary<Opponent, SubGrid> opponentGrids = new();
 
-    public BoardOverseer(BoardSettings config) {
+    private BoardSettings config;
+    public BoardOverseer(BoardSettings initialConfig) {
+        config = initialConfig;
         ValidateBoardSettings(config);
-        InitializeGrids(config);
+        InitializeGrids();
     }
 
-    public void UpdateBoard(BoardSettings config) {
+    public void UpdateBoard(BoardSettings newConfig) {
+        config = newConfig;
         ValidateBoardSettings(config);
         UpdateGrids(config);
     }
 
-    private void InitializeGrids(BoardSettings config) {
+    private void InitializeGrids() {
         int rows = config.rowTypes.Count;
         int columns = config.columns;
         int divider = config.rowTypes.FindIndex(row => row == FieldType.Attack);
@@ -31,7 +34,6 @@ public class BoardOverseer {
         mainGrid = new Grid(rows, columns);
         playerGrid = new SubGrid(mainGrid, 0, divider);
         enemyGrid = new SubGrid(mainGrid, divider + 1, rows - 1);
-
         UpdateFieldTypes(config);
         Debug.Log("Initial Board:");
     }
@@ -87,8 +89,14 @@ public class BoardOverseer {
     }
 
 
-    public List<Field> GetGridPath(Field currentField, int pathAmount, Direction direction) {
-        List<Field> path = new List<Field>();
+    // TO DO: find path not in mainGrid use player/Enemy instead to make sure that creature never go more then its owner zone
+    public List<Field> GetMainGridPath(Field currentField, int pathAmount, Direction direction, bool reversedDirection = false) {
+        List<Field> path = new();
+
+        // якщо обрано зворотний напр€мок, зм≥нюЇмо на протилежний
+        if (reversedDirection) {
+            direction = DirectionHelper.GetOppositeDirection(direction);
+        }
 
         var (rowOffset, colOffset) = DirectionHelper.DirectionOffsets[direction];
 
@@ -106,6 +114,7 @@ public class BoardOverseer {
         return path;
     }
 
+
     public Grid GetGrid() {
         return mainGrid;
     }
@@ -116,8 +125,14 @@ public class BoardOverseer {
         return grid;
     }
 
+
     public Field GetFieldAt(int row, int column) {
         return MainGrid.Fields[row][column];
+    }
+
+    public Field GetFieldAt(Opponent opponent, int row, int column) {
+        opponentGrids.TryGetValue(opponent, out SubGrid grid);
+        return grid.Fields[row][column];
     }
 
     public bool FieldExists(Field field) {
@@ -144,6 +159,16 @@ public class BoardOverseer {
         if (attackIndices.Count != 2 || Mathf.Abs(attackIndices[1] - attackIndices[0]) != 1) {
             throw new System.ArgumentException("BoardSettings must have exactly 2 adjacent Attack rows.");
         }
+    }
+
+    // Search first attack row (it last row belongs to player)
+    // If field on row that more found then it`s opposite field and return true
+    public bool IsFieldInEnemyZone(Field field) {
+        if (field == null) {
+            throw new ArgumentException("Field is null for IsOnOppositeGrid method");
+        }
+        int divider = config.rowTypes.FindIndex(row => row == FieldType.Attack);
+        return field.row > divider;
     }
 }
 

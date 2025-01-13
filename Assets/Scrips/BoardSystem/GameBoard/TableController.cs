@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class TableController : MonoBehaviour {
@@ -17,20 +16,30 @@ public class TableController : MonoBehaviour {
         gameBoard = new GameBoard(_boardSettings == null ? GenerateDefaultBoardSettings() : _boardSettings);
     }
 
-    private void Start() {
-        DebugLogic();
+    private void StartDebug() {
+        DebugLogic().Forget();
     }
 
-    private void DebugLogic() {
+
+    private async UniTaskVoid DebugLogic() {
         gameBoard.RegisterOpponent(player);
         gameBoard.RegisterOpponent(enemy);
         gameBoard.StartGame();
 
 
-        Card cardToPlay = player.GetTestCard();
-        Creature creature = new Creature(cardToPlay);
-        Field fieldToPlace = gameBoard.boardOverseer.GetFieldAt(0, 0);
-        gameBoard.PlaceCreature(player, fieldToPlace, creature);
+        Card playerCard = player.GetTestCard();
+        Card enemyCard = enemy.GetTestCard();
+
+        Creature playerCreature = new(playerCard);
+        Creature enemyCreature = new(enemyCard);
+
+        Field fieldToPlace = gameBoard.boardOverseer.GetFieldAt(player, 0, 0);
+
+        await gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
+
+        fieldToPlace = gameBoard.boardOverseer.GetFieldAt(enemy, 0, 0);
+
+        fieldToPlace = gameBoard.boardOverseer.GetFieldAt(player, 1, 0);
     }
 
     public void AssignOpponent(Opponent opponent) {

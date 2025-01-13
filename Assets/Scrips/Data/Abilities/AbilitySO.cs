@@ -13,8 +13,7 @@ public abstract class AbilitySO : ScriptableObject {
         return true;
     }
 
-    // Викликається щоразу, коли об'єкт змінюється в редакторі
-    private void OnValidate() {
+    protected void OnValidate() {
         if (string.IsNullOrEmpty(Name)) {
             Name = GetType().Name;
         }

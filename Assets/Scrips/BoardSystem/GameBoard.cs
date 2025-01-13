@@ -1,7 +1,6 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class GameBoard {
@@ -18,7 +17,7 @@ public class GameBoard {
         MinPlayers = boardConfig.minPlayers;
         boardOverseer = new BoardOverseer(boardConfig);
         registeredOpponents = new List<Opponent>();
-        gameContext = new GameContext { observer = boardOverseer };
+        gameContext = new GameContext { overseer = boardOverseer };
     }
 
     public void RegisterOpponent(Opponent opponent) {
@@ -109,24 +108,48 @@ public class GameBoard {
         boardOverseer.UpdateBoard(newBoardConfig);
     }
 
-    public bool PlaceCreature(Opponent summoner, Field field, Creature creature) {
+    // used by Opponents to summon
+    public async UniTask<bool> SummonCreature(Opponent summoner, Field field, Creature creature) {
         // Перевірка, чи поле є в mainGrid
-        bool fieldExists = boardOverseer.FieldExists(field);
-        bool validOwner = field.Owner != null && field.Owner == summoner;
-
-        if (fieldExists && validOwner) {
-            
-            bool result = field.SummonCreature(creature, summoner);
-            if (result) {
-                Debug.Log($"Creature placed successfully in the field owned by {summoner.Name}");
-                return true;
-            } else {
-                Debug.Log("Field cannot spawn creature");
-            }
-            
+        bool isValidOccupy = ValidateFieldOccupy(field, creature);
+        if (!isValidOccupy) {
+            Debug.Log($"Failed to place creature: Field does not exist or is not owned by {summoner.Name}");
+            return false;
         }
 
-        Debug.Log($"Failed to place creature: Field does not exist or is not owned by {summoner.Name}");
-        return false;
+        bool result = await field.SummonCreatureAsync(creature, summoner); // Передбачаючи асинхронний метод SummonCreatureAsync
+        if (result) {
+            Debug.Log($"Creature placed successfully in the field owned by {summoner.Name}");
+            return true;
+        } else {
+
+            Debug.Log("Field cannot spawn creature");
+            return false;
+        }
+    }
+
+    // used by creatures to move
+    public async UniTask<bool> PlaceCreature(Field field, Creature creature) {
+        // Перевірка, чи поле є в mainGrid
+        bool isValidOccupy = ValidateFieldOccupy(field, creature);
+        if (!isValidOccupy) {
+            Debug.LogWarning($"Failed to place creature: Field does not exist");
+            return false;
+        }
+
+        bool result = await field.PlaceCreatureAsync(creature); // Передбачаючи асинхронний метод SummonCreatureAsync
+        if (result) {
+            Debug.Log($"Creature placed successfully in the field {field.row} " + " / " + $"{field.column}");
+            return true;
+        } else {
+            Debug.Log("Field cannot spawn creature");
+            return false;
+        }
+    }
+
+    private bool ValidateFieldOccupy(Field field, Creature creature) {
+        bool fieldExists = boardOverseer.FieldExists(field);
+        bool validOwner = field.Owner != null;
+        return fieldExists && validOwner;
     }
 }

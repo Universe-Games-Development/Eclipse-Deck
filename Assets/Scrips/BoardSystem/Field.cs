@@ -1,9 +1,9 @@
+using Cysharp.Threading.Tasks;
 using System;
-using System.ComponentModel;
 using UnityEngine;
 
 public class Field : ITipProvider {
-    [Header ("Actiopns")]
+    [Header("Actions")]
     public Action OnOccupiedByCreature;
     public Action OnChangedOwner;
     public Action<FieldType> OnChangedType;
@@ -37,6 +37,7 @@ public class Field : ITipProvider {
             return false;
         }
         OccupiedCreature = creature;
+        OnOccupiedByCreature?.Invoke();
         return true;
     }
 
@@ -48,26 +49,26 @@ public class Field : ITipProvider {
         if (OccupiedCreature != null) {
             OccupiedCreature.Health.ApplyDamage(damage);
         } else {
-            if (Owner) {
+            if (Owner != null) {
                 Owner.health.ApplyDamage(damage);
-                Debug.Log($"{Owner.Name} takes {damage} damage, because field {Owner} empty.");
+                Debug.Log($"{Owner.Name} takes {damage} damage, because field {row} / {column} is empty.");
             } else {
                 Debug.Log($"Nobody takes {damage} damage");
             }
         }
     }
 
-    public void AssignOwner(Opponent player1) {
+    public void AssignOwner(Opponent player) {
         if (Owner != null) {
             Debug.LogWarning($"{row} / {column} already occupied by owner");
         }
-        Owner = player1;
+        Owner = player;
+        OnChangedOwner?.Invoke();
     }
 
     public string GetInfo() {
         return "Field";
     }
-
 
     public void NotifyRemoval() {
         if (OccupiedCreature != null) {
@@ -75,15 +76,31 @@ public class Field : ITipProvider {
         }
     }
 
-    public bool SummonCreature(Creature creature, Opponent summoner) {
-        bool validOwner = Owner != null && Owner == summoner;
+    public async UniTask<bool> SummonCreatureAsync(Creature creature, Opponent summoner) {
+        await UniTask.DelayFrame(1);
 
-        if (validOwner) {
-            OccupiedCreature = creature;
-            return true;
+        if (summoner == null) {
+            Debug.LogError("Summoner for field is nobody!");
+            return false;
         }
 
-        Debug.Log($"Failed to place creature: Field is not owned by {summoner.Name}");
-        return false;
+        return PlaceCreature(creature);
+    }
+
+    public async UniTask<bool> PlaceCreatureAsync(Creature creature) {
+        await UniTask.DelayFrame(1);
+        return PlaceCreature(creature);
+    }
+
+    private bool PlaceCreature(Creature creature) {
+        if (OccupiedCreature == null && creature != null) {
+            OccupiedCreature = creature;
+            Debug.Log($"Creature placed at ({row}, {column}).");
+            OnOccupiedByCreature?.Invoke();
+            return true;
+        } else {
+            Debug.Log($"Field at ({row}, {column}) is already occupied.");
+            return false;
+        }
     }
 }

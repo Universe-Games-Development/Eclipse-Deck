@@ -1,10 +1,11 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Threading.Tasks;
+using UnityEngine;
 
 public class Creature {
     public Health Health;
     public Attack attack;
+
     private Card card;
 
     public Creature(Card myCard) {
@@ -19,7 +20,8 @@ public class Creature {
         // - Знищення істоти
     }
 
-    internal async UniTask PerformTurn(object gameContext) {
-        throw new NotImplementedException();
+    public async UniTask PerformTurn(object gameContext) {
+        await UniTask.Delay(1);
+        Debug.Log("Turn performed for creature");
     }
 }

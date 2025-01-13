@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 public static class DirectionHelper {
-    public static readonly Dictionary<Direction, (int rowOffset, int colOffset)> DirectionOffsets = new Dictionary<Direction, (int, int)> {
+    public static readonly Dictionary<Direction, (int rowOffset, int colOffset)> DirectionOffsets = new() {
         { Direction.North,     (-1,  0) },
         { Direction.South,     ( 1,  0) },
         { Direction.East,      ( 0,  1) },
@@ -11,4 +11,18 @@ public static class DirectionHelper {
         { Direction.SouthEast, ( 1,  1) },
         { Direction.SouthWest, ( 1, -1) }
     };
+
+    public static Direction GetOppositeDirection(Direction direction) {
+        return direction switch {
+            Direction.North => Direction.South,
+            Direction.South => Direction.North,
+            Direction.East => Direction.West,
+            Direction.West => Direction.East,
+            Direction.NorthEast => Direction.SouthWest,
+            Direction.NorthWest => Direction.SouthEast,
+            Direction.SouthEast => Direction.NorthWest,
+            Direction.SouthWest => Direction.NorthEast,
+            _ => throw new System.ArgumentException("Invalid direction", nameof(direction)),
+        };
+    }
 }
