@@ -8,4 +8,5 @@ public class GameContext {
     public int damage;
     public int healAmount;
     public int buffAmount;
+    internal BoardOverseer observer;
 }

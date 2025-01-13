@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 public class BoardOverseer {
+    public Grid MainGrid {
+        get {
+            return mainGrid;
+        }
+        private set {  mainGrid = value; }
+    }
     private Grid mainGrid;
     private SubGrid playerGrid, enemyGrid;
     private readonly Dictionary<Opponent, SubGrid> opponentGrids = new();
@@ -10,9 +16,6 @@ public class BoardOverseer {
     public BoardOverseer(BoardSettings config) {
         ValidateBoardSettings(config);
         InitializeGrids(config);
-
-        Debug.Log("Initial Board:");
-        PrintBoard();
     }
 
     public void UpdateBoard(BoardSettings config) {
@@ -31,7 +34,6 @@ public class BoardOverseer {
 
         UpdateFieldTypes(config);
         Debug.Log("Initial Board:");
-        PrintBoard();
     }
 
     private void UpdateGrids(BoardSettings config) {
@@ -114,18 +116,19 @@ public class BoardOverseer {
         return grid;
     }
 
-
-
-    public void PrintBoard() {
-        Debug.Log("Main Grid:");
-        mainGrid.PrintGrid();
-
-        Debug.Log("Player SubGrid:");
-        playerGrid.PrintGrid();
-
-        Debug.Log("Enemy SubGrid:");
-        enemyGrid.PrintGrid();
+    public Field GetFieldAt(int row, int column) {
+        return MainGrid.Fields[row][column];
     }
+
+    public bool FieldExists(Field field) {
+        foreach (var column in MainGrid.Fields) {
+            if (column != null && column.Contains(field)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     private void ValidateBoardSettings(BoardSettings settings) {
         if (settings.rowTypes.Count < 2 || settings.columns < 2) {

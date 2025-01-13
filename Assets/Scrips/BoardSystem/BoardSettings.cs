@@ -5,4 +5,6 @@ using System.Collections.Generic;
 public class BoardSettings {
     public List<FieldType> rowTypes;
     public int columns;
+
+    public int minPlayers;
 }

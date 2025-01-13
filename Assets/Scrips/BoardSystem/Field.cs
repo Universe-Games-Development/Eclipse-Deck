@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using UnityEngine;
 
 public class Field : ITipProvider {
@@ -15,10 +16,13 @@ public class Field : ITipProvider {
     public FieldType Type {
         get { return type; }
         set {
-            type = value;
-            OnChangedType?.Invoke(type);
+            if (type != value) {
+                type = value;
+                OnChangedType?.Invoke(type);
+            }
         }
     }
+
     [Header("Game Board Params")]
     public Creature OccupiedCreature { get; private set; }
 
@@ -53,10 +57,6 @@ public class Field : ITipProvider {
         }
     }
 
-    public bool IsEmpty() {
-        return OccupiedCreature == null;
-    }
-
     public void AssignOwner(Opponent player1) {
         if (Owner != null) {
             Debug.LogWarning($"{row} / {column} already occupied by owner");
@@ -68,7 +68,22 @@ public class Field : ITipProvider {
         return "Field";
     }
 
-    internal void OnRemoveFromGrid() {
-        throw new NotImplementedException();
+
+    public void NotifyRemoval() {
+        if (OccupiedCreature != null) {
+            OccupiedCreature.OnFieldRemoved(this);
+        }
+    }
+
+    public bool SummonCreature(Creature creature, Opponent summoner) {
+        bool validOwner = Owner != null && Owner == summoner;
+
+        if (validOwner) {
+            OccupiedCreature = creature;
+            return true;
+        }
+
+        Debug.Log($"Failed to place creature: Field is not owned by {summoner.Name}");
+        return false;
     }
 }

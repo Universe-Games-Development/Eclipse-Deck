@@ -865,7 +865,7 @@ MonoBehaviour:
   Name: Player
   initHealth: 0
   maxHealth: 0
-  gameBoard: {fileID: 1253212644}
+  gameBoard: {fileID: 0}
   handUI: {fileID: 376870063}
 --- !u!114 &432073391
 MonoBehaviour:
@@ -1713,9 +1713,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1253212643}
-  - component: {fileID: 1253212644}
   - component: {fileID: 1253212647}
   - component: {fileID: 1253212650}
+  - component: {fileID: 1253212651}
   m_Layer: 0
   m_Name: GameBoard
   m_TagString: Untagged
@@ -1746,23 +1746,6 @@ Transform:
   - {fileID: 472919893}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1253212644
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1253212642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5564ecbdce0ba2d45baec1aa147cb7ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerCell: {fileID: 1958477723}
-  enemyCell: {fileID: 625277295}
-  _boardSettings:
-    rowTypes: 0000000001000000010000000000000000000000000000000000000000000000
-    columns: 5
 --- !u!114 &1253212647
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1791,6 +1774,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectPrefab: {fileID: 5947056477227401689, guid: 564f4c8c8dd0e074481a074487de7f1d, type: 3}
   poolParent: {fileID: 472919893}
+--- !u!114 &1253212651
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253212642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5564ecbdce0ba2d45baec1aa147cb7ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _boardSettings:
+    rowTypes: 0000000001000000010000000000000000000000
+    columns: 2
+    minPlayers: 2
+  playerCell: {fileID: 1958477723}
+  enemyCell: {fileID: 625277295}
+  player: {fileID: 432073390}
+  enemy: {fileID: 1929906659}
 --- !u!1 &1360052283
 GameObject:
   m_ObjectHideFlags: 0
@@ -2160,7 +2163,7 @@ MonoBehaviour:
   Name: Opponent
   initHealth: 0
   maxHealth: 0
-  gameBoard: {fileID: 1253212644}
+  gameBoard: {fileID: 0}
 --- !u!4 &1929906660
 Transform:
   m_ObjectHideFlags: 0
@@ -2935,7 +2938,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 1253212644}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: GameBoard, Assembly-CSharp
           m_MethodName: AssignFieldsToPlayer
           m_Mode: 2

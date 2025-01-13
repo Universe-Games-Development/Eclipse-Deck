@@ -18,7 +18,7 @@ public class Opponent : MonoBehaviour {
     private ResourceManager resourceManager;
     private IEventManager eventManager;
 
-    [SerializeField] protected GameBoard gameBoard;
+    [SerializeField] protected TableController gameBoard;
 
     public Action<Opponent> OnDefeat { get; internal set; }
 
@@ -40,6 +40,10 @@ public class Opponent : MonoBehaviour {
     }
 
     protected virtual void Start() {
-        gameBoard.AssignOpponent(this);
+        //gameBoard.AssignOpponent(this);
+    }
+
+    public Card GetTestCard() {
+        return hand.GetRandomCard();
     }
 }

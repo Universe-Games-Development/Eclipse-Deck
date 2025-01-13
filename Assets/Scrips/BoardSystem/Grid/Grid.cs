@@ -55,16 +55,24 @@ public class Grid {
 
     public virtual void RemoveRow(int rowIndex) {
         if (rowIndex >= 0 && rowIndex < Fields.Count) {
+            var row = Fields[rowIndex];
+            foreach (var field in row) {
+                field.NotifyRemoval(); // Сповіщення поля
+            }
             Fields.RemoveAt(rowIndex);
         }
     }
 
     public virtual void RemoveColumn(int columnIndex) {
         foreach (var row in Fields) {
-            if (columnIndex < row.Count)
+            if (columnIndex < row.Count) {
+                var field = row[columnIndex];
+                field.NotifyRemoval(); // Сповіщення поля
                 row.RemoveAt(columnIndex);
+            }
         }
     }
+
     #endregion
 
     public void PrintGrid() {
