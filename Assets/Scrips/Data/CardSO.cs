@@ -2,23 +2,24 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Card", menuName = "Cards/Card")]
-public class CardSO : ScriptableObject {
-    [Header("UI")]
-    public string Name;
-    public string description;
-    public Sprite characterSprite;
+[CreateAssetMenu(fileName = "Card", menuName = "TGE/Card")]
+public class CardSO : TableGameEntitySO {
+    [Header("Card UI")]
     public Sprite biomeIamge;
     public string AuthorName;
 
     [Header("Logic")]
-    public string id;
+    public string resourseId;
     public Rarity rarity;
     public CardType cardType;
     public int cost;
-    public int attack;
-    public int health;
+    
     public List<CardAbilitySO> abilities;
+
+    // Soon be separated
+    [Header("Creature")]
+    public CreatureSO creatureData;
+   
 
     private static readonly Dictionary<Rarity, Color> rarityColors = new Dictionary<Rarity, Color> {
         { Rarity.Common, Color.gray },
@@ -29,8 +30,8 @@ public class CardSO : ScriptableObject {
     };
 
     private void OnValidate() {
-        if (string.IsNullOrEmpty(id)) {
-            id = System.Guid.NewGuid().ToString();
+        if (string.IsNullOrEmpty(resourseId)) {
+            resourseId = System.Guid.NewGuid().ToString();
 #if UNITY_EDITOR
             EditorUtility.SetDirty(this);
 #endif

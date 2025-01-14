@@ -30,7 +30,7 @@ public class UITimMonitor : MonoBehaviour {
 
     public void ShowInfo(string info) {
 
-        if (currentInfo.Equals(info)) {
+        if (currentInfo != null && currentInfo.Equals(info)) {
             if (hideCoroutine != null) {
                 StopCoroutine(hideCoroutine);
             }

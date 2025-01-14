@@ -2,8 +2,10 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public class GameBoard {
+
     // Opponents will use it to be notified which one can perform turn now
     public Action<Opponent> OnTurnBegan;
 
@@ -11,13 +13,14 @@ public class GameBoard {
     private List<Opponent> registeredOpponents;
     private Opponent currentPlayer;
     private GameContext gameContext;
-
     public int MinPlayers { get; private set; }
+
+
     public GameBoard(BoardSettings boardConfig) {
         MinPlayers = boardConfig.minPlayers;
         boardOverseer = new BoardOverseer(boardConfig);
         registeredOpponents = new List<Opponent>();
-        gameContext = new GameContext { overseer = boardOverseer };
+        gameContext = new GameContext { gameBoard = this, overseer = boardOverseer };
     }
 
     public void RegisterOpponent(Opponent opponent) {
@@ -35,6 +38,10 @@ public class GameBoard {
             opponent.OnDefeat -= UnRegisterOpponent;
             Debug.Log($"Opponent {opponent.Name} unregistered.");
         }
+    }
+
+    public Opponent GetCurrentPlayer() {
+        return currentPlayer;
     }
 
     // Used by other classes to allow start game
@@ -57,7 +64,7 @@ public class GameBoard {
     }
 
     // Used by any opponent
-    public async UniTaskVoid PerformTurn(Opponent opponent) {
+    public async UniTask PerformTurn(Opponent opponent) {
         if (opponent != currentPlayer) {
             Debug.Log("Not your turn buddy");
             return;
@@ -79,9 +86,11 @@ public class GameBoard {
             foreach (var field in column) {
                 var creature = field.OccupiedCreature;
                 if (creature != null) {
+                    gameContext.initialField = field;
                     await creature.PerformTurn(gameContext);
                 }
             }
+            gameContext.initialField = null;
         }
 
         ChangeTurn();

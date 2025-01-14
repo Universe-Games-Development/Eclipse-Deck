@@ -1,16 +1,22 @@
 public class GameContext {
     public Opponent activePlayer;
     public Opponent opponentPlayer;
+
     public Card sourceCard;
     public Card targetCard;
+
     public Field sourceField;
+    public Field initialField;
     public Field targetField;
+
     public int damage;
     public int healAmount;
     public int buffAmount;
-    internal BoardOverseer overseer;
-    internal Creature currentCreature;
-    internal Field currentField;
 
-    public GameBoard gameBoard { get; internal set; }
+    public Creature currentCreature;
+    
+
+    // By zenject
+    public GameBoard gameBoard;
+    public BoardOverseer overseer;
 }

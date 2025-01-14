@@ -1,15 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "Creature", menuName = "Creatures")]
-public class CreatureSO : ScriptableObject {
-    public string creatureName;
-    public Sprite creatureArt;
-    public int baseAttack;
-    public int baseHealth;
+[CreateAssetMenu(fileName = "Creature", menuName = "TGE/Creature")]
+public class CreatureSO : TableGameEntitySO {
 
-    public MovementStrategy movementStrategy;
+    [Header("Strategy")]
+    public CreatureMovementDataSO movementData;
     public AttackStrategy attackStrategy;
 
+    [Header("Abilities")]
     public List<CreatureAbilitySO> creatureAbilities;
 }

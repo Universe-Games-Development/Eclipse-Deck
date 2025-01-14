@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Zenject;
 
 public class TableController : MonoBehaviour {
     [SerializeField] private BoardSettings _boardSettings;
@@ -12,11 +13,12 @@ public class TableController : MonoBehaviour {
     [SerializeField] private Opponent player;
     [SerializeField] private Opponent enemy;
 
+    [Inject] ResourceManager resManager; 
     private void Awake() {
         gameBoard = new GameBoard(_boardSettings == null ? GenerateDefaultBoardSettings() : _boardSettings);
     }
 
-    private void StartDebug() {
+    private void Start() {
         DebugLogic().Forget();
     }
 
@@ -30,12 +32,21 @@ public class TableController : MonoBehaviour {
         Card playerCard = player.GetTestCard();
         Card enemyCard = enemy.GetTestCard();
 
-        Creature playerCreature = new(playerCard);
-        Creature enemyCreature = new(enemyCard);
+        
+        CreatureSO data = resManager.GetRandomResource<CreatureSO>(ResourceType.CREATURE);
+
+        Creature playerCreature = new Creature(playerCard, data);
+        Creature enemyCreature = new(enemyCard, data);
 
         Field fieldToPlace = gameBoard.boardOverseer.GetFieldAt(player, 0, 0);
 
         await gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
+        
+        int turn = 0;
+        for (int i = 0; i < 20; i++) {
+            Opponent currentOpponent = gameBoard.GetCurrentPlayer();
+            await gameBoard.PerformTurn(currentOpponent);
+        }
 
         fieldToPlace = gameBoard.boardOverseer.GetFieldAt(enemy, 0, 0);
 
