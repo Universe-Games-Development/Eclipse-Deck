@@ -15,13 +15,14 @@ MonoBehaviour:
   Name: Rose
   description: Sharp Rose
   characterSprite: {fileID: 21300000, guid: fec5dd7359041ff43b6c4465087d1e7f, type: 3}
+  attack: 1
+  health: 1
   biomeIamge: {fileID: 21300000, guid: 7888acd02a647e94eab785656df8d04c, type: 3}
   AuthorName: 
-  id: 7bb0ab6a-76fd-4696-92ee-e46434148d35
+  resourseId: 60ab77e4-0a1d-447c-b717-0e0ba02d4cc7
   rarity: 2
   cardType: 1
   cost: 0
-  attack: 1
-  health: 1
   abilities:
   - {fileID: 11400000, guid: 58134fba8d0e3054b801e441635d542f, type: 2}
+  creatureData: {fileID: 0}

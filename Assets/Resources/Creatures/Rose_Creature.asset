@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b60e714459dd1248b83cb5e5529732c, type: 3}
   m_Name: Rose_Creature
   m_EditorClassIdentifier: 
-  creatureName: Rose
-  creatureArt: {fileID: 21300000, guid: fec5dd7359041ff43b6c4465087d1e7f, type: 3}
-  baseAttack: 2
-  baseHealth: 3
+  Name: Rose
+  description: 'Simple sewers Rose '
+  characterSprite: {fileID: 21300000, guid: fec5dd7359041ff43b6c4465087d1e7f, type: 3}
+  attack: 2
+  health: 3
   movementData: {fileID: 11400000, guid: 50845f016a2f6ff43b540c801144b750, type: 2}
   attackStrategy: {fileID: 0}
   creatureAbilities: []

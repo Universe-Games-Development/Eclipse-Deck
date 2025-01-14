@@ -17,6 +17,6 @@ MonoBehaviour:
   attackStrategyType: 0
   attackMoveDirection: 0
   attackMovesAmount: 0
-  supportStrategyType: 0
-  supportMoveDirection: 0
-  supportMoveAmount: 0
+  supportStrategyType: 1
+  supportMoveDirection: 1
+  supportMoveAmount: 1
