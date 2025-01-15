@@ -59,7 +59,7 @@ public class AbilityUI : MonoBehaviour, IPointerEnterHandler, ITipProvider {
 
     #region User interaction
     public void OnPointerEnter(PointerEventData eventData) {
-        uiManager.ShowTip(this);
+        uiManager.ShowTip(GetInfo());
     }
     #endregion
 

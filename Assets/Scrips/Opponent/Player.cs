@@ -29,7 +29,7 @@ public class Player : Opponent {
 
     private void TrySummonCard() {
         GameObject gameObject = rayService.GetRayObject();
-        if (gameObject && gameObject.TryGetComponent(out Field field)) {
+        if (gameObject && gameObject.TryGetComponent(out FieldVisual field)) {
             CardUI selectedUICard = handUI.SelectedCard;
             if (selectedUICard == null) {
                 Debug.Log("No card selected to summon.");
@@ -42,7 +42,7 @@ public class Player : Opponent {
                 return;
             }
 
-            bool isPlayed = gameBoard.SummonCreature(this, selectedCard, field);
+            bool isPlayed = false;
             if (isPlayed) {
                 hand.RemoveCard(selectedCard);
                 Debug.Log($"Card {selectedCard.data.Name} summoned to field!");

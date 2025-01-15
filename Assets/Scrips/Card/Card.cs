@@ -23,7 +23,7 @@ public class Card {
         data = cardSO;
 
         Id = Guid.NewGuid().ToString(); // generate own uni id
-        ResourseId = cardSO.id;
+        ResourseId = cardSO.resourseId;
         EventManager = eventManager;
         Owner = owner;
 

@@ -7,7 +7,6 @@ public class ObjectDistributer : MonoBehaviour, IObjectDistributer {
     [SerializeField] protected Transform poolParent;
 
     protected ObjectPool<GameObject> objectPool;
-    protected Canvas worldSpaceCanvas;
     [Inject] DiContainer container;
 
     public virtual void Initialize() {

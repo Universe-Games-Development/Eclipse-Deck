@@ -16,4 +16,4 @@ MonoBehaviour:
   Description: Debugs in logs
   Sprite: {fileID: 21300000, guid: 8f7ada65468388c47bc58de9395f6a4a, type: 3}
   activationState: 1
-  eventTrigger: 5
+  eventTriggers: 07000000

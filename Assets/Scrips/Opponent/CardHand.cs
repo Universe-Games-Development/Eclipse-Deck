@@ -14,6 +14,7 @@ public class CardHand {
     private IEventManager eventManager;
 
     public CardHand(Opponent owner, IEventManager eventManager, int maxHandSize = DEFAULT_SIZE) {
+        this.owner = owner;
         this.maxHandSize = maxHandSize;
         this.eventManager = eventManager;
     }

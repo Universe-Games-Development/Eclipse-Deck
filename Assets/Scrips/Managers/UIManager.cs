@@ -7,7 +7,7 @@ public class UIManager : MonoBehaviour {
     [SerializeField] private GameObject worldSpaceCanvasPrefab; // Префаб World Space Canvas
     public Canvas WorldSpaceCanvas { get; private set; }
 
-    public Action<ITipProvider> OnInfoItemEnter;
+    public Action<string> OnInfoRequested;
 
     private void Awake() {
         // Перевіряємо чи вже існує World Space Canvas
@@ -21,8 +21,8 @@ public class UIManager : MonoBehaviour {
         }
     }
 
-    public void ShowTip(ITipProvider tipItem) {
-        OnInfoItemEnter?.Invoke(tipItem);
+    public void ShowTip(string info) {
+        OnInfoRequested?.Invoke(info);
     }
 
     /*

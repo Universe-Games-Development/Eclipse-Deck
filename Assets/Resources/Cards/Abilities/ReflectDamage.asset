@@ -15,5 +15,8 @@ MonoBehaviour:
   Name: Spikes
   Description: Deal equalent damage to attacker
   Sprite: {fileID: 21300000, guid: 2b7d2a616cc83db44a9bd278b17c3c14, type: 3}
-  activationState: 0
-  eventTrigger: 0
+  activationState: 2
+  eventTriggers: 0f000000
+  reflectMode: 2
+  fixedDamage: 0
+  damagePercentage: 0.5

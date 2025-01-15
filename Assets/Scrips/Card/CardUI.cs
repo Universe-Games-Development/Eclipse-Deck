@@ -29,8 +29,8 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
         originalSiblingIndex = transform.GetSiblingIndex();
     }
 
-    public override void Initialize(IObjectDistributer distributor, Card card) {
-        base.Initialize(distributor, card);
+    public override void Initialize(Card card) {
+        base.Initialize(card);
 
         if (card == null) {
             Debug.LogError("Card is null during initialization!");
@@ -132,20 +132,43 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
     }
     #endregion
 
-    protected override void Reset() {
+    public override void Reset() {
+        base.Reset();
         if (card != null) {
-            card.Health.OnValueChanged -= UpdateHealth;
-            card.Health.OnDeath -= OnCardDiscarded;
-            card.Attack.OnValueChanged -= UpdateAttack;
+            card.Cost.OnValueChanged -= UpdateCost;
         }
 
+        // Очистка UI полів
         if (descriptionText != null) {
             descriptionText.text = string.Empty;
             descriptionText.gameObject.SetActive(false);
         }
+
+        if (authorTMP != null) {
+            authorTMP.text = string.Empty;
+        }
+
+        if (costTMP != null) {
+            costTMP.text = "0";
+        }
+
+        if (characterImage != null) {
+            characterImage.sprite = null;
+            characterImage.color = Color.white;
+        }
+
+        if (rarity != null) {
+            rarity.color = Color.white;
+        }
+
         ClearAbilities();
         card = null;
+        isSelected = false;
+        if (animator != null) {
+            animator.SetBool("Selected", false);
+        }
     }
+
     protected override void OnDestroy() {
         base.OnDestroy();
 

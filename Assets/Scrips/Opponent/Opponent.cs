@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Zenject;
 
@@ -17,7 +18,9 @@ public class Opponent : MonoBehaviour {
     private ResourceManager resourceManager;
     private IEventManager eventManager;
 
-    [SerializeField] protected GameBoard gameBoard;
+    [SerializeField] protected TableController gameBoard;
+
+    public Action<Opponent> OnDefeat { get; internal set; }
 
     [Inject]
     public void Construct(IEventManager eventManager, ResourceManager resourceManager) {
@@ -37,6 +40,10 @@ public class Opponent : MonoBehaviour {
     }
 
     protected virtual void Start() {
-        gameBoard.AssignOpponent(this);
+        //gameBoard.AssignOpponent(this);
+    }
+
+    public Card GetTestCard() {
+        return hand.GetRandomCard();
     }
 }

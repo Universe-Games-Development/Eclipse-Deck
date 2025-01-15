@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Threading;
 
 public interface IEventManager {
@@ -9,14 +10,14 @@ public interface IEventManager {
     /// <param name="eventType">Тип події, на яку слухач реагує.</param>
     /// <param name="executionType">Тип виконання (послідовний чи паралельний).</param>
     /// <param name="executionOrder">Порядок виконання для послідовних слухачів.</param>
-    void RegisterListener(IEventListener listener, EventType eventType, ExecutionType executionType, int executionOrder = 0);
+    void RegisterListener<T>(IEventListener listener, T eventType, ExecutionType executionType, int executionOrder = 0, bool isPhantomListener = false) where T : Enum;
 
     /// <summary>
     /// Видаляє слухача подій для конкретного типу подій.
     /// </summary>
     /// <param name="listener">Слухач, який більше не має реагувати на події.</param>
     /// <param name="eventType">Тип події, з якого видаляється слухач.</param>
-    void UnregisterListener(IEventListener listener, EventType eventType);
+    void UnregisterListener<T>(IEventListener listener, T eventType, bool isPhantomListener = false) where T : Enum;
 
     /// <summary>
     /// Тригерить подію певного типу, передаючи додатковий контекст.
@@ -24,5 +25,10 @@ public interface IEventManager {
     /// <param name="eventType">Тип події, яку необхідно тригерити.</param>
     /// <param name="gameContext">Контекст гри, який буде переданий слухачам.</param>
     /// <returns>Асинхронне завдання, яке завершується після обробки події усіма слухачами.</returns>
-    UniTask TriggerEventAsync(EventType eventType, GameContext gameContext, CancellationToken cancellationToken = default);
+    UniTask TriggerEventAsync<T>(T eventType, GameContext gameContext, CancellationToken cancellationToken = default, bool isPhantomCall = false) where T : Enum;
+}
+
+public enum ExecutionType {
+    Sequential,
+    Parallel
 }

@@ -7,7 +7,8 @@ public enum ResourceType {
     ENEMIES,
     MAP_INFO,
     ROOMS,
-    EFFECTS
+    EFFECTS,
+    CREATURE
 }
 
 public class ResourceManager : MonoBehaviour {
@@ -27,7 +28,7 @@ public class ResourceManager : MonoBehaviour {
     [SerializeField] private string enemyResourcePath = "Enemies"; // Шлях до ресурсів з ворогами
     [SerializeField] private string mapInfoResourcePath = "MapInfos"; // Шлях до ресурсів з інформацією про карту
     [SerializeField] private string roomResourcePath = "Rooms"; // Шлях до ресурсів з кімнатами
-
+    [SerializeField] private string creaturesResourcePath = "Creatures"; // Шлях до ресурсів з кімнатами
     // Словник для збереження завантажених ресурсів
     private Dictionary<ResourceType, bool> resourcesLoaded = new Dictionary<ResourceType, bool>();
 
@@ -117,6 +118,8 @@ public class ResourceManager : MonoBehaviour {
                 return mapInfoResourcePath;
             case ResourceType.ROOMS:
                 return roomResourcePath;
+            case ResourceType.CREATURE:
+                return creaturesResourcePath;
             default:
                 return string.Empty;
         }
