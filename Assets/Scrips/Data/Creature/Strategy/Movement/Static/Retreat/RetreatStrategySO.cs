@@ -1,21 +1,12 @@
-/* The logic of movements for creature:
- * 1. I'm do nothing
- */
 using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
-[CreateAssetMenu(fileName = "RetreatSO", menuName = "Strategies/Movement/Retreat")]
 public class RetreatStrategySO : SimpleMoveStrategySO {
-    public int scaredDistance = 1;
-    public Direction scarredDirection = Direction.South;
     public int retreatAmount = 1;
-    public Direction retreatDirection = Direction.North;
+    public Direction checkDirection = Direction.North;
 
     protected override async UniTask<int> Move() {
-
         int moves;
         if (ConditionToEscape()) {
             moves = await Escape();
@@ -26,12 +17,12 @@ public class RetreatStrategySO : SimpleMoveStrategySO {
         return moves;
     }
 
-    protected bool ConditionToEscape() {
-        return navigator.GetCreaturesInDirection(scaredDistance, scarredDirection).Count > 0;
+    protected virtual bool ConditionToEscape() {
+        return false;
     }
 
     protected async UniTask<int> Escape() {
-        int moves = await navigator.TryMove(retreatAmount, retreatDirection);
+        int moves = await navigator.TryMove(retreatAmount, checkDirection);
 
         if (moves == 0) {
             List<Field> freeFields = navigator.GetAdjacentFields()
@@ -48,6 +39,4 @@ public class RetreatStrategySO : SimpleMoveStrategySO {
 
         return moves;
     }
-
-
 }

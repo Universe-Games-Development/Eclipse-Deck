@@ -9,34 +9,17 @@ public class GameBoard {
     public Action<Opponent> OnTurnBegan;
 
     public BoardOverseer boardOverseer { get; private set; }
-    private List<Opponent> registeredOpponents;
+    public OpponentManager opponentManager { get; private set; }
+
     private Opponent currentPlayer;
     private GameContext gameContext;
     public int MinPlayers { get; private set; }
 
-
     public GameBoard(BoardSettings boardConfig) {
         MinPlayers = boardConfig.minPlayers;
         boardOverseer = new BoardOverseer(boardConfig);
-        registeredOpponents = new List<Opponent>();
+        opponentManager = new OpponentManager(boardOverseer.GridManager);
         gameContext = new GameContext { gameBoard = this, overseer = boardOverseer };
-    }
-
-    public void RegisterOpponent(Opponent opponent) {
-        if (!registeredOpponents.Contains(opponent)) {
-            registeredOpponents.Add(opponent);
-            boardOverseer.OccupyGrid(opponent);
-            opponent.OnDefeat += UnRegisterOpponent;
-            Debug.Log($"Opponent {opponent.Name} registered.");
-        }
-    }
-
-    public void UnRegisterOpponent(Opponent opponent) {
-        if (registeredOpponents.Contains(opponent)) {
-            registeredOpponents.Remove(opponent);
-            opponent.OnDefeat -= UnRegisterOpponent;
-            Debug.Log($"Opponent {opponent.Name} unregistered.");
-        }
     }
 
     public Opponent GetCurrentPlayer() {
@@ -45,19 +28,19 @@ public class GameBoard {
 
     // Used by other classes to allow start game
     public bool StartGame(int minPlayers = 2) {
-        if (registeredOpponents.Count >= minPlayers) {
+        if (opponentManager.registeredOpponents.Count >= minPlayers) {
             currentPlayer = ChooseFirstPlayer();
             OnTurnBegan?.Invoke(currentPlayer);
             return true;
         } else {
-            Debug.Log($"Can`t start game because there are only {registeredOpponents.Count} registered players. " + "Need :" + MinPlayers);
+            Debug.Log($"Can't start game because there are only {opponentManager.registeredOpponents.Count} registered players. Need: {MinPlayers}");
             return false;
         }
     }
 
     private Opponent ChooseFirstPlayer() {
         // Logic to choose the first player, e.g., randomly
-        currentPlayer = registeredOpponents[UnityEngine.Random.Range(0, registeredOpponents.Count)];
+        currentPlayer = opponentManager.registeredOpponents[UnityEngine.Random.Range(0, opponentManager.registeredOpponents.Count)];
         Debug.Log($"{currentPlayer.Name} is chosen to start first.");
         return currentPlayer;
     }
@@ -72,12 +55,12 @@ public class GameBoard {
     }
 
     private async UniTask RunTurnAsync(Opponent opponent) {
-        if (boardOverseer.MainGrid.Fields == null || boardOverseer.MainGrid.Fields.Count == 0) {
-            Debug.LogError("MainGrid fields are not initialized.");
+        if (!boardOverseer.IsInitialized()) {
+            Debug.LogError("Overseer is not initialized.");
             return;
         }
 
-        foreach (var column in boardOverseer.MainGrid.Fields) {
+        foreach (var column in boardOverseer.GridManager.MainGrid.Fields) {
             if (column == null) {
                 Debug.LogWarning("Column with null");
                 continue;
@@ -96,19 +79,8 @@ public class GameBoard {
     }
 
     private void ChangeTurn() {
-        if (registeredOpponents.Count == 0) {
-            Debug.LogError("No players left to take a turn.");
-            return;
-        }
-
-        int currentIndex = registeredOpponents.IndexOf(currentPlayer);
-        currentPlayer = registeredOpponents[(currentIndex + 1) % registeredOpponents.Count];
-
+        currentPlayer = opponentManager.GetNextOpponent(currentPlayer);
         Debug.Log($"It is now {currentPlayer.Name}'s turn.");
-        if (currentPlayer == null) {
-            Debug.Log("ChangeTurn: Cant find player");
-            return;
-        }
         OnTurnBegan?.Invoke(currentPlayer);
     }
 
@@ -118,36 +90,28 @@ public class GameBoard {
 
     // used by Opponents to summon
     public async UniTask<bool> SummonCreature(Opponent summoner, Field field, Creature creature) {
-        // Перевірка, чи поле є в mainGrid
-        bool isValidOccupy = ValidateFieldOccupy(field, creature);
-        if (!isValidOccupy) {
-            Debug.Log($"Failed to place creature: Field does not exist or is not owned by {summoner.Name}");
-            return false;
-        }
-
-        bool result = await field.SummonCreatureAsync(creature, summoner); // Передбачаючи асинхронний метод SummonCreatureAsync
-        if (result) {
-            Debug.Log($"Creature placed successfully in the field owned by {summoner.Name}");
-            return true;
-        } else {
-
-            Debug.Log("Field cannot spawn creature");
-            return false;
-        }
+        return await PlaceCreatureInternal(field, creature, summoner);
     }
 
     // used by creatures to move
     public async UniTask<bool> PlaceCreature(Field field, Creature creature) {
+        return await PlaceCreatureInternal(field, creature, null);
+    }
+
+    private async UniTask<bool> PlaceCreatureInternal(Field field, Creature creature, Opponent owner) {
         // Перевірка, чи поле є в mainGrid
         bool isValidOccupy = ValidateFieldOccupy(field, creature);
         if (!isValidOccupy) {
-            Debug.LogWarning($"Failed to place creature: Field does not exist");
+            Debug.LogWarning($"Failed to place creature: Field does not exist or is not owned by {owner?.Name}");
             return false;
         }
 
-        bool result = await field.PlaceCreatureAsync(creature); // Передбачаючи асинхронний метод SummonCreatureAsync
+        bool result = owner != null
+            ? await field.SummonCreatureAsync(creature, owner)
+            : await field.PlaceCreatureAsync(creature);
+
         if (result) {
-            Debug.Log($"Creature placed successfully in the field {field.row} " + " / " + $"{field.column}");
+            Debug.Log($"Creature placed successfully in the field {field.row} / {field.column}");
             return true;
         } else {
             Debug.Log("Field cannot spawn creature");
@@ -156,7 +120,7 @@ public class GameBoard {
     }
 
     private bool ValidateFieldOccupy(Field field, Creature creature) {
-        bool fieldExists = boardOverseer.FieldExists(field);
+        bool fieldExists = boardOverseer.mainNavigator.FieldExists(field);
         bool validOwner = field.Owner != null;
         return fieldExists && validOwner;
     }

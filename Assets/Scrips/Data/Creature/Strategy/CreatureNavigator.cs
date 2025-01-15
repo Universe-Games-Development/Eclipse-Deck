@@ -7,10 +7,14 @@ public class CreatureNavigator {
     public GameContext GameContext { get; protected set; }
     public GameBoard GameBoard { get; protected set; }
     public BoardOverseer Overseer { get; protected set; }
+    public GridNavigator mainNavigator { get; protected set; }
+    public GridNavigator playerNavigator { get; protected set; }
+    public GridNavigator enemyNavigator { get; protected set; }
     public Field CurrentField { get; protected set; }
     public Creature CurrentCreature { get; protected set; }
-    public bool IsReversed { get; protected set; } = false;
+    public bool IsRelativeToEnemy { get; protected set; } = false;
 
+    private const int DEFAULT_OFFSET = 1;
     public CreatureNavigator(GameContext gameContext) {
         UpdateParams(gameContext);
     }
@@ -19,9 +23,13 @@ public class CreatureNavigator {
         GameContext = gameContext;
         GameBoard = gameContext.gameBoard;
         Overseer = gameContext.overseer;
+        mainNavigator = Overseer.mainNavigator;
+        playerNavigator = Overseer.playerNavigator;
+        enemyNavigator = Overseer.enemyNavigator;
+
         CurrentField = gameContext.initialField;
         CurrentCreature = gameContext.currentCreature;
-        IsReversed = Overseer.IsFieldInEnemyZone(CurrentField);
+        IsRelativeToEnemy = Overseer.mainNavigator.IsFieldInEnemyZone(CurrentField);
     }
 
     // Trying to move in the chosen direction
@@ -33,8 +41,8 @@ public class CreatureNavigator {
             return moves;
         }
 
-        IsReversed = Overseer.IsFieldInEnemyZone(CurrentField);
-        List<Field> path = Overseer.GetMainGridPath(CurrentField, moveAmount, moveDirection, IsReversed);
+        IsRelativeToEnemy = mainNavigator.IsFieldInEnemyZone(CurrentField);
+        List<Field> path = mainNavigator.GetPath(CurrentField, moveAmount, moveDirection, IsRelativeToEnemy);
 
         if (path.Count == 0) {
             Debug.LogWarning("No valid path found.");
@@ -72,7 +80,7 @@ public class CreatureNavigator {
     }
 
     public List<Field> GetFieldsInDirection(int amount, Direction direction) {
-        return Overseer.GetMainGridPath(CurrentField, amount, direction, IsReversed);
+        return mainNavigator.GetPath(CurrentField, amount, direction, IsRelativeToEnemy);
     }
 
     public List<Creature> GetCreaturesInDirection(int amount, Direction direction) {
@@ -91,7 +99,7 @@ public class CreatureNavigator {
     }
 
     public List<Field> GetAdjacentFields() {
-        return Overseer.GetAdjacentFields(CurrentField);
+        return mainNavigator.GetAdjacentFields(CurrentField);
     }
 
     private static bool ValidateInputs(GameBoard gameBoard, BoardOverseer boardOverseer, Creature creatureToMove, Field currentField) {
@@ -106,7 +114,32 @@ public class CreatureNavigator {
         return true;
     }
 
+    public List<Field> GetFlankFields(int flankSize) {
+        return mainNavigator.GetFlankFields(CurrentField, flankSize, IsRelativeToEnemy);
+    }
+
+    public List<Field> GetFlankFieldsInDirection(int flankSize, Direction mainDirection) {
+        List<Field> flankFields = new List<Field>();
+
+        // Поля вказаного напряму
+        List<Field> mainDirectionFields = GetFieldsInDirection(DEFAULT_OFFSET, mainDirection);
+        if (mainDirectionFields.Count > 0) {
+            Field mainDirectionField = mainDirectionFields[0];
+            flankFields.Add(mainDirectionField);
+
+            // Фланги від поля вказаного напряму
+            flankFields.AddRange(GetFlankFields(flankSize));
+        }
+
+        return flankFields;
+    }
+
+
     public static Direction GetOppositeDirection(Direction direction) {
         return CompasUtil.GetOppositeDirection(direction);
+    }
+
+    public Opponent GetCurrentOwner() {
+        return CurrentField.Owner;
     }
 }

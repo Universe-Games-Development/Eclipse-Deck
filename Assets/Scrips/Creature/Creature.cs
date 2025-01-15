@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Creature {
     public Health Health;
-    public Attack attack;
+    public Attack Attack;
 
     private Card card;
     private CreatureStrategyMovement movementHandler;
