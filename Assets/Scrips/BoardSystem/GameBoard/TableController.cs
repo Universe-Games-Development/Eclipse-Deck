@@ -24,8 +24,8 @@ public class TableController : MonoBehaviour {
 
 
     private async UniTaskVoid DebugLogic() {
-        gameBoard.RegisterOpponent(player);
-        gameBoard.RegisterOpponent(enemy);
+        gameBoard.opponentManager.RegisterOpponent(player);
+        gameBoard.opponentManager.RegisterOpponent(enemy);
         gameBoard.StartGame();
 
 
@@ -38,7 +38,7 @@ public class TableController : MonoBehaviour {
         Creature playerCreature = new Creature(playerCard, data);
         Creature enemyCreature = new(enemyCard, data);
 
-        Field fieldToPlace = gameBoard.boardOverseer.GetFieldAt(player, 0, 0);
+        Field fieldToPlace = gameBoard.opponentManager.GetFieldAt(player, 0, 0);
 
         await gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
 
@@ -47,14 +47,14 @@ public class TableController : MonoBehaviour {
             await gameBoard.PerformTurn(currentOpponent);
         }
 
-        fieldToPlace = gameBoard.boardOverseer.GetFieldAt(enemy, 0, 0);
+        fieldToPlace = gameBoard.opponentManager.GetFieldAt(enemy, 0, 0);
 
-        fieldToPlace = gameBoard.boardOverseer.GetFieldAt(player, 1, 0);
+        fieldToPlace = gameBoard.opponentManager.GetFieldAt(player, 1, 0);
     }
 
     public void AssignOpponent(Opponent opponent) {
         AssignHPCellToOpponent(opponent);
-        gameBoard.RegisterOpponent(opponent);
+        gameBoard.opponentManager.RegisterOpponent(opponent);
     }
 
     private void AssignHPCellToOpponent(Opponent opponent) {
