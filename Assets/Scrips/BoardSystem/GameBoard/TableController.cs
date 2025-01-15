@@ -13,7 +13,7 @@ public class TableController : MonoBehaviour {
     [SerializeField] private Opponent player;
     [SerializeField] private Opponent enemy;
 
-    [Inject] ResourceManager resManager; 
+    [Inject] ResourceManager resManager;
     private void Awake() {
         gameBoard = new GameBoard(_boardSettings == null ? GenerateDefaultBoardSettings() : _boardSettings);
     }
@@ -32,7 +32,7 @@ public class TableController : MonoBehaviour {
         Card playerCard = player.GetTestCard();
         Card enemyCard = enemy.GetTestCard();
 
-        
+
         CreatureSO data = resManager.GetRandomResource<CreatureSO>(ResourceType.CREATURE);
 
         Creature playerCreature = new Creature(playerCard, data);
@@ -41,8 +41,7 @@ public class TableController : MonoBehaviour {
         Field fieldToPlace = gameBoard.boardOverseer.GetFieldAt(player, 0, 0);
 
         await gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
-        
-        int turn = 0;
+
         for (int i = 0; i < 20; i++) {
             Opponent currentOpponent = gameBoard.GetCurrentPlayer();
             await gameBoard.PerformTurn(currentOpponent);

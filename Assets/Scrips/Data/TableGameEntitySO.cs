@@ -1,7 +1,6 @@
 using UnityEngine;
 
-public class TableGameEntitySO : ScriptableObject
-{
+public class TableGameEntitySO : ScriptableObject {
     [Header("UI Data")]
     public string Name;
     public string description;

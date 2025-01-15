@@ -95,10 +95,10 @@ public class BoardOverseer {
 
         // якщо обрано зворотний напр€мок, зм≥нюЇмо на протилежний
         if (reversedDirection) {
-            direction = DirectionHelper.GetOppositeDirection(direction);
+            direction = CompasUtil.GetOppositeDirection(direction);
         }
 
-        var (rowOffset, colOffset) = DirectionHelper.DirectionOffsets[direction];
+        var (rowOffset, colOffset) = CompasUtil.DirectionOffsets[direction];
 
         for (int i = 1; i <= pathAmount; i++) {
             int newRow = currentField.row + rowOffset * i;
@@ -170,5 +170,23 @@ public class BoardOverseer {
         int divider = config.rowTypes.FindIndex(row => row == FieldType.Attack);
         return field.row > divider;
     }
+
+    public List<Field> GetAdjacentFields(Field currentField) {
+        List<Field> adjacentFields = new();
+        List<(int rowOffset, int colOffset)> offsets = CompasUtil.GetOffsets();
+
+        foreach (var (rowOffset, colOffset) in offsets) {
+            int newRow = currentField.row + rowOffset;
+            int newCol = currentField.column + colOffset;
+
+            // ѕерев≥рка, чи знаходитьс€ нове поле в межах основноњ с≥тки
+            if (newRow >= 0 && newRow < mainGrid.Fields.Count && newCol >= 0 && newCol < mainGrid.Fields[0].Count) {
+                adjacentFields.Add(mainGrid.Fields[newRow][newCol]);
+            }
+        }
+
+        return adjacentFields;
+    }
+
 }
 

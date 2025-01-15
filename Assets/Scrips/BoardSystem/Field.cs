@@ -95,7 +95,6 @@ public class Field : ITipProvider {
     private bool PlaceCreature(Creature creature) {
         if (OccupiedCreature == null && creature != null) {
             OccupiedCreature = creature;
-            Debug.Log($"Creature placed at ({row}, {column}).");
             OnOccupiedByCreature?.Invoke();
             return true;
         } else {

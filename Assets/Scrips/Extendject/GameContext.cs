@@ -14,7 +14,7 @@ public class GameContext {
     public int buffAmount;
 
     public Creature currentCreature;
-    
+
 
     // By zenject
     public GameBoard gameBoard;

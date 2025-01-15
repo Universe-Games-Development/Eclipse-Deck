@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
 
-public static class DirectionHelper {
+public static class CompasUtil {
     public static readonly Dictionary<Direction, (int rowOffset, int colOffset)> DirectionOffsets = new() {
         { Direction.North,     (-1,  0) },
         { Direction.South,     ( 1,  0) },
@@ -25,4 +26,9 @@ public static class DirectionHelper {
             _ => throw new System.ArgumentException("Invalid direction", nameof(direction)),
         };
     }
+
+    internal static List<(int rowOffset, int colOffset)> GetOffsets() {
+        return new List<(int rowOffset, int colOffset)>(DirectionOffsets.Values);
+    }
+
 }

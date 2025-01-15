@@ -5,8 +5,8 @@ using UnityEngine;
 public class CreatureSO : TableGameEntitySO {
 
     [Header("Strategy")]
-    public CreatureMovementDataSO movementData;
-    public AttackStrategy attackStrategy;
+    public CreatureMovementDataSO movementStrategy;
+    public AttackStrategySO attackStrategy;
 
     [Header("Abilities")]
     public List<CreatureAbilitySO> creatureAbilities;

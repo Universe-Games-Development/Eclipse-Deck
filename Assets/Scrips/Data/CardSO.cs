@@ -13,13 +13,13 @@ public class CardSO : TableGameEntitySO {
     public Rarity rarity;
     public CardType cardType;
     public int cost;
-    
+
     public List<CardAbilitySO> abilities;
 
     // Soon be separated
     [Header("Creature")]
     public CreatureSO creatureData;
-   
+
 
     private static readonly Dictionary<Rarity, Color> rarityColors = new Dictionary<Rarity, Color> {
         { Rarity.Common, Color.gray },

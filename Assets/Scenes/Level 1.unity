@@ -1787,7 +1787,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _boardSettings:
-    rowTypes: 0000000001000000010000000000000000000000
+    rowTypes: 00000000000000000100000001000000000000000000000000000000
     columns: 2
     minPlayers: 2
   playerCell: {fileID: 1958477723}
