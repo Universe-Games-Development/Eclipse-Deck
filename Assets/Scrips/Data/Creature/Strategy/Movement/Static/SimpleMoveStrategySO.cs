@@ -1,5 +1,4 @@
 using Cysharp.Threading.Tasks;
-using System.Collections.Generic;
 using UnityEngine;
 
 /* The logic of movements for creature:

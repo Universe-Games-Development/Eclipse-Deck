@@ -1,5 +1,5 @@
-using UnityEngine;
 using System.Linq;
+using UnityEngine;
 
 [CreateAssetMenu(fileName = "RetreatSurroundedSO", menuName = "Strategies/Movement/RetreatSurrounded")]
 public class RetreatSurroundedSO : RetreatStrategySO {

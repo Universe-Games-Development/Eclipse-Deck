@@ -3,20 +3,18 @@ using UnityEngine;
 using Zenject;
 
 public class TableController : MonoBehaviour {
-    [SerializeField] private BoardSettings _boardSettings;
+    [SerializeField] private HealthCellController playerCell;
+    [SerializeField] private HealthCellController enemyCell;
 
-    [SerializeField] private HealthCell playerCell;
-    [SerializeField] private HealthCell enemyCell;
-    private GameBoard gameBoard;
 
     //DEBUG
     [SerializeField] private Opponent player;
     [SerializeField] private Opponent enemy;
-
+    // Scene Context
+    [Inject] private GameBoard gameBoard;
+    [Inject] private GridManager gridManager;
+    // GAme context
     [Inject] ResourceManager resManager;
-    private void Awake() {
-        gameBoard = new GameBoard(_boardSettings == null ? GenerateDefaultBoardSettings() : _boardSettings);
-    }
 
     private void Start() {
         DebugLogic().Forget();
@@ -38,7 +36,7 @@ public class TableController : MonoBehaviour {
         Creature playerCreature = new Creature(playerCard, data);
         Creature enemyCreature = new(enemyCard, data);
 
-        Field fieldToPlace = gameBoard.opponentManager.GetFieldAt(player, 0, 0);
+        Field fieldToPlace = gridManager.PlayerGrid.GetFieldAt(0, 0);
 
         await gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
 
@@ -47,9 +45,9 @@ public class TableController : MonoBehaviour {
             await gameBoard.PerformTurn(currentOpponent);
         }
 
-        fieldToPlace = gameBoard.opponentManager.GetFieldAt(enemy, 0, 0);
+        fieldToPlace = gridManager.PlayerGrid.GetFieldAt(0, 0);
 
-        fieldToPlace = gameBoard.opponentManager.GetFieldAt(player, 1, 0);
+        fieldToPlace = gridManager.PlayerGrid.GetFieldAt(1, 0);
     }
 
     public void AssignOpponent(Opponent opponent) {
@@ -63,11 +61,5 @@ public class TableController : MonoBehaviour {
         } else { enemyCell.AssignOwner(opponent); }
     }
 
-    private BoardSettings GenerateDefaultBoardSettings() {
-        _boardSettings = new BoardSettings();
-        _boardSettings.rowTypes[0] = FieldType.Attack;
-        _boardSettings.rowTypes[1] = FieldType.Attack;
-        _boardSettings.columns = 4;
-        return _boardSettings;
-    }
+
 }

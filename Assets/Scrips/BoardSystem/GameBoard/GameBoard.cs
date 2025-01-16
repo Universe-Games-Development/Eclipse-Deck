@@ -1,25 +1,25 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public class GameBoard {
 
     // Opponents will use it to be notified which one can perform turn now
     public Action<Opponent> OnTurnBegan;
 
-    public BoardOverseer boardOverseer { get; private set; }
-    public OpponentManager opponentManager { get; private set; }
+    [Inject] public OpponentManager opponentManager { get; private set; }
+    [Inject] private GridManager gridManager;
 
     private Opponent currentPlayer;
     private GameContext gameContext;
     public int MinPlayers { get; private set; }
 
-    public GameBoard(BoardSettings boardConfig) {
-        MinPlayers = boardConfig.minPlayers;
-        boardOverseer = new BoardOverseer(boardConfig);
-        opponentManager = new OpponentManager(boardOverseer.GridManager);
-        gameContext = new GameContext { gameBoard = this, overseer = boardOverseer };
+
+    public GameBoard(OpponentManager opponentManager, GridManager gridManager) {
+        gameContext = new GameContext { gameBoard = this, _gridManager = gridManager };
+        this.gridManager = gridManager;
+        this.opponentManager = opponentManager;
     }
 
     public Opponent GetCurrentPlayer() {
@@ -28,7 +28,7 @@ public class GameBoard {
 
     // Used by other classes to allow start game
     public bool StartGame(int minPlayers = 2) {
-        if (opponentManager.registeredOpponents.Count >= minPlayers) {
+        if (opponentManager.IsAllRegistered()) {
             currentPlayer = ChooseFirstPlayer();
             OnTurnBegan?.Invoke(currentPlayer);
             return true;
@@ -40,7 +40,7 @@ public class GameBoard {
 
     private Opponent ChooseFirstPlayer() {
         // Logic to choose the first player, e.g., randomly
-        currentPlayer = opponentManager.registeredOpponents[UnityEngine.Random.Range(0, opponentManager.registeredOpponents.Count)];
+        currentPlayer = opponentManager.GetRandomOpponent();
         Debug.Log($"{currentPlayer.Name} is chosen to start first.");
         return currentPlayer;
     }
@@ -55,12 +55,7 @@ public class GameBoard {
     }
 
     private async UniTask RunTurnAsync(Opponent opponent) {
-        if (!boardOverseer.IsInitialized()) {
-            Debug.LogError("Overseer is not initialized.");
-            return;
-        }
-
-        foreach (var column in boardOverseer.GridManager.MainGrid.Fields) {
+        foreach (var column in gridManager.MainGrid.Fields) {
             if (column == null) {
                 Debug.LogWarning("Column with null");
                 continue;
@@ -84,10 +79,6 @@ public class GameBoard {
         OnTurnBegan?.Invoke(currentPlayer);
     }
 
-    public void UpdateBoard(BoardSettings newBoardConfig) {
-        boardOverseer.UpdateBoard(newBoardConfig);
-    }
-
     // used by Opponents to summon
     public async UniTask<bool> SummonCreature(Opponent summoner, Field field, Creature creature) {
         return await PlaceCreatureInternal(field, creature, summoner);
@@ -101,10 +92,8 @@ public class GameBoard {
     private async UniTask<bool> PlaceCreatureInternal(Field field, Creature creature, Opponent owner) {
         // Перевірка, чи поле є в mainGrid
         bool isValidOccupy = ValidateFieldOccupy(field, creature);
-        if (!isValidOccupy) {
-            Debug.LogWarning($"Failed to place creature: Field does not exist or is not owned by {owner?.Name}");
+        if (!isValidOccupy)
             return false;
-        }
 
         bool result = owner != null
             ? await field.SummonCreatureAsync(creature, owner)
@@ -120,8 +109,18 @@ public class GameBoard {
     }
 
     private bool ValidateFieldOccupy(Field field, Creature creature) {
-        bool fieldExists = boardOverseer.mainNavigator.FieldExists(field);
+        bool fieldExists = gridManager.MainGrid.FieldExists(field);
+        if (!fieldExists) {
+            Debug.LogWarning($"{field} doesnt exist in main grid : ");
+            return fieldExists;
+        }
+
         bool validOwner = field.Owner != null;
-        return fieldExists && validOwner;
+        if (!validOwner) {
+            Debug.LogWarning($"{field} can`t be occupied by this owner! ");
+            return validOwner;
+        }
+
+        return true;
     }
 }

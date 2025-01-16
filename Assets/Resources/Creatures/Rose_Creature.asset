@@ -17,6 +17,6 @@ MonoBehaviour:
   characterSprite: {fileID: 21300000, guid: fec5dd7359041ff43b6c4465087d1e7f, type: 3}
   attack: 2
   health: 3
-  movementData: {fileID: 11400000, guid: 50845f016a2f6ff43b540c801144b750, type: 2}
+  movementStrategy: {fileID: 11400000, guid: 50845f016a2f6ff43b540c801144b750, type: 2}
   attackStrategy: {fileID: 0}
   creatureAbilities: []

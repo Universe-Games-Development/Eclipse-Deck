@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class HealthCell : MonoBehaviour {
+public class HealthCellController : MonoBehaviour {
     private void Awake() {
 
     }

@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CreatureNavigator {
-    public GameContext GameContext { get; protected set; }
+    // Zenject needed
     public GameBoard GameBoard { get; protected set; }
-    public BoardOverseer Overseer { get; protected set; }
-    public GridNavigator mainNavigator { get; protected set; }
-    public GridNavigator playerNavigator { get; protected set; }
-    public GridNavigator enemyNavigator { get; protected set; }
+    // 
+    public Grid mainGrid;
+    public Grid playerGrid;
+    public Grid enemyGrid;
+    public GameContext GameContext { get; protected set; }
     public Field CurrentField { get; protected set; }
     public Creature CurrentCreature { get; protected set; }
     public bool IsRelativeToEnemy { get; protected set; } = false;
@@ -22,14 +23,15 @@ public class CreatureNavigator {
     public void UpdateParams(GameContext gameContext) {
         GameContext = gameContext;
         GameBoard = gameContext.gameBoard;
-        Overseer = gameContext.overseer;
-        mainNavigator = Overseer.mainNavigator;
-        playerNavigator = Overseer.playerNavigator;
-        enemyNavigator = Overseer.enemyNavigator;
 
         CurrentField = gameContext.initialField;
         CurrentCreature = gameContext.currentCreature;
-        IsRelativeToEnemy = Overseer.mainNavigator.IsFieldInEnemyZone(CurrentField);
+
+        mainGrid = gameContext._gridManager.MainGrid;
+        playerGrid = gameContext._gridManager.PlayerGrid;
+        enemyGrid = gameContext._gridManager.EnemyGrid;
+
+        IsRelativeToEnemy = mainGrid.IsFieldInEnemyZone(CurrentField);
     }
 
     // Trying to move in the chosen direction
@@ -37,12 +39,12 @@ public class CreatureNavigator {
     public async UniTask<int> TryMove(int moveAmount, Direction moveDirection) {
         int moves = 0;
 
-        if (!ValidateInputs(GameBoard, Overseer, CurrentCreature, CurrentField)) {
+        if (!ValidateInputs(GameBoard, CurrentCreature, CurrentField)) {
             return moves;
         }
 
-        IsRelativeToEnemy = mainNavigator.IsFieldInEnemyZone(CurrentField);
-        List<Field> path = mainNavigator.GetPath(CurrentField, moveAmount, moveDirection, IsRelativeToEnemy);
+        IsRelativeToEnemy = mainGrid.IsFieldInEnemyZone(CurrentField);
+        List<Field> path = mainGrid.GetPath(CurrentField, moveAmount, moveDirection, IsRelativeToEnemy);
 
         if (path.Count == 0) {
             Debug.LogWarning("No valid path found.");
@@ -80,7 +82,7 @@ public class CreatureNavigator {
     }
 
     public List<Field> GetFieldsInDirection(int amount, Direction direction) {
-        return mainNavigator.GetPath(CurrentField, amount, direction, IsRelativeToEnemy);
+        return mainGrid.GetPath(CurrentField, amount, direction, IsRelativeToEnemy);
     }
 
     public List<Creature> GetCreaturesInDirection(int amount, Direction direction) {
@@ -99,15 +101,15 @@ public class CreatureNavigator {
     }
 
     public List<Field> GetAdjacentFields() {
-        return mainNavigator.GetAdjacentFields(CurrentField);
+        return mainGrid.GetAdjacentFields(CurrentField);
     }
 
-    private static bool ValidateInputs(GameBoard gameBoard, BoardOverseer boardOverseer, Creature creatureToMove, Field currentField) {
+    private static bool ValidateInputs(GameBoard gameBoard, Creature creatureToMove, Field currentField) {
         if (creatureToMove == null || currentField == null) {
             Debug.LogError("Current creature or field is null.");
             return false;
         }
-        if (gameBoard == null || boardOverseer == null) {
+        if (gameBoard == null) {
             Debug.LogError("Board data missing");
             return false;
         }
@@ -115,7 +117,7 @@ public class CreatureNavigator {
     }
 
     public List<Field> GetFlankFields(int flankSize) {
-        return mainNavigator.GetFlankFields(CurrentField, flankSize, IsRelativeToEnemy);
+        return mainGrid.GetFlankFields(CurrentField, flankSize, IsRelativeToEnemy);
     }
 
     public List<Field> GetFlankFieldsInDirection(int flankSize, Direction mainDirection) {
