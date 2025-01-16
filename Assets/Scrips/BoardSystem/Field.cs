@@ -71,6 +71,7 @@ public class Field : ITipProvider {
     }
 
     public void NotifyRemoval() {
+        // Remove animation
         if (OccupiedCreature != null) {
             OccupiedCreature.OnFieldRemoved(this);
         }

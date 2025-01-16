@@ -75,6 +75,73 @@ public class Grid {
 
     #endregion
 
+    #region GETTERS
+    public List<Field> GetAdjacentFields(Field currentField) {
+        var adjacentFields = new List<Field>();
+        var offsets = CompasUtil.GetOffsets();
+
+        foreach (var (rowOffset, colOffset) in offsets) {
+            int newRow = currentField.row + rowOffset;
+            int newCol = currentField.column + colOffset;
+
+            if (newRow >= 0 && newRow < Fields.Count && newCol >= 0 && newCol < Fields[0].Count) {
+                adjacentFields.Add(Fields[newRow][newCol]);
+            }
+        }
+
+        return adjacentFields;
+    }
+
+    public List<Field> GetPath(Field currentField, int pathAmount, Direction direction, bool reversed = false) {
+        List<Field> path = new();
+
+        if (reversed) {
+            direction = CompasUtil.GetOppositeDirection(direction);
+        }
+
+        var (rowOffset, colOffset) = CompasUtil.DirectionOffsets[direction];
+
+        for (int i = 1; i <= pathAmount; i++) {
+            int newRow = currentField.row + rowOffset * i;
+            int newCol = currentField.column + colOffset * i;
+
+            if (newRow >= 0 && newRow < Fields.Count && newCol >= 0 && newCol < Fields[0].Count) {
+                path.Add(Fields[newRow][newCol]);
+            } else {
+                break;
+            }
+        }
+
+        return path;
+    }
+
+    public List<Field> GetFlankFields(Field field, int flankSize, bool isReversed) {
+        List<Field> flankFields = new List<Field>();
+
+        // Ліва сторона
+        List<Field> leftFlank = GetPath(field, flankSize, Direction.West, isReversed);
+        flankFields.AddRange(leftFlank);
+
+        // Права сторона
+        List<Field> rightFlank = GetPath(field, flankSize, Direction.East, isReversed);
+        flankFields.AddRange(rightFlank);
+
+        return flankFields;
+    }
+
+    public bool FieldExists(Field field) {
+        return Fields.Any(column => column?.Contains(field) == true);
+
+    }
+
+    public Field GetFieldAt(int row, int column) {
+        return Fields[row][column];
+    }
+    #endregion
+
+    public bool IsFieldInEnemyZone(Field field) {
+        return field.Owner is Enemy;
+    }
     public void PrintGrid() {
         foreach (var row in Fields) {
             Console.WriteLine(string.Join(", ", row.Select(t => t.column)));

@@ -1786,10 +1786,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5564ecbdce0ba2d45baec1aa147cb7ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _boardSettings:
-    rowTypes: 00000000000000000100000001000000000000000000000000000000
-    columns: 2
-    minPlayers: 2
   playerCell: {fileID: 1958477723}
   enemyCell: {fileID: 625277295}
   player: {fileID: 432073390}
@@ -2079,6 +2075,7 @@ GameObject:
   - component: {fileID: 1832511274}
   - component: {fileID: 1832511273}
   - component: {fileID: 1832511275}
+  - component: {fileID: 1832511276}
   m_Layer: 0
   m_Name: SceneContext
   m_TagString: Untagged
@@ -2099,7 +2096,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _scriptableObjectInstallers: []
-  _monoInstallers: []
+  _monoInstallers:
+  - {fileID: 1832511275}
   _installerPrefabs: []
   _autoRun: 1
   OnPreInstall:
@@ -2144,10 +2142,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e530501f42323c34194c948a684a892d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _boardSettings:
-    rowTypes: 00000000010000000100000000000000
-    columns: 4
+  boardConfig:
+    rowTypes: 0000000001000000010000000000000000000000
+    columns: 2
     minPlayers: 2
+--- !u!114 &1832511276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1832511272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bf4218bdd6cd2f41bda67bf502d4f4b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1929906658
 GameObject:
   m_ObjectHideFlags: 0

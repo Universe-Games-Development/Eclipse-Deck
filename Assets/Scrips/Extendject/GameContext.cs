@@ -16,7 +16,7 @@ public class GameContext {
     public Creature currentCreature;
 
 
-    // By zenject
+    // need By zenject
     public GameBoard gameBoard;
-    public BoardOverseer overseer;
+    public GridManager _gridManager;
 }
