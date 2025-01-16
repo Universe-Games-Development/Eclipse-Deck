@@ -12,11 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cd5913b91c55a242835e8a0ffbf3260, type: 3}
   m_Name: SimpleStrategy
   m_EditorClassIdentifier: 
-  Name: 
+  Name: Simple
   strategyIcon: {fileID: 0}
-  attackStrategyType: 0
-  attackMoveDirection: 0
-  attackMovesAmount: 0
-  supportStrategyType: 1
-  supportMoveDirection: 1
-  supportMoveAmount: 1
+  attackStrategy: {fileID: 11400000, guid: 63bcb6d5fe708b5469ad988cb6fae13c, type: 2}
+  supportStrategy: {fileID: 11400000, guid: 8136f0eadc17fb343946abf62b5ae081, type: 2}
