@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Field : ITipProvider {
     [Header("Actions")]
-    public Action OnOccupiedByCreature;
     public Action OnChangedOwner;
     public Action<FieldType> OnChangedType;
 
@@ -31,20 +30,6 @@ public class Field : ITipProvider {
         this.column = column;
     }
 
-    public bool AssignCreature(Creature creature) {
-        if (OccupiedCreature != null) {
-            Debug.Log($"{row} / {column} already occupied by creature");
-            return false;
-        }
-        OccupiedCreature = creature;
-        OnOccupiedByCreature?.Invoke();
-        return true;
-    }
-
-    public void RemoveCreature() {
-        OccupiedCreature = null;
-    }
-
     public void ReceiveAttack(int damage) {
         if (OccupiedCreature != null) {
             OccupiedCreature.Health.ApplyDamage(damage);
@@ -60,27 +45,27 @@ public class Field : ITipProvider {
 
     public void AssignOwner(Opponent player) {
         if (Owner != null) {
-            Debug.LogWarning($"{row} / {column} already occupied by owner");
+            Debug.LogWarning($"{row} / {column} already occupied by {Owner.Name} but you trying to assign {player.Name}");
         }
         Owner = player;
         OnChangedOwner?.Invoke();
     }
 
     public string GetInfo() {
-        return "Field";
+        return $"Field is ({{ {row} }} / {{ {column} }}).";
     }
 
-    public void NotifyRemoval() {
+    public void NotifyFieldRemoval() {
         // Remove animation
-        if (OccupiedCreature != null) {
-            OccupiedCreature.OnFieldRemoved(this);
-        }
+        OccupiedCreature?.OnFieldRemoved(this);
     }
+
 
     public async UniTask<bool> SummonCreatureAsync(Creature creature, Opponent summoner) {
         await UniTask.DelayFrame(1);
 
-        if (summoner == null) {
+        bool canSummon = isSommonable(creature, summoner);
+        if (!canSummon) {
             Debug.LogError("Summoner for field is nobody!");
             return false;
         }
@@ -88,19 +73,37 @@ public class Field : ITipProvider {
         return PlaceCreature(creature);
     }
 
+
     public async UniTask<bool> PlaceCreatureAsync(Creature creature) {
-        await UniTask.DelayFrame(1);
+        await UniTask.DelayFrame(1); // Імітація асинхронності (можна замінити на анімацію або затримку)
         return PlaceCreature(creature);
     }
 
     private bool PlaceCreature(Creature creature) {
-        if (OccupiedCreature == null && creature != null) {
-            OccupiedCreature = creature;
-            OnOccupiedByCreature?.Invoke();
-            return true;
-        } else {
-            Debug.Log($"Field at ({row}, {column}) is already occupied.");
+        if (OccupiedCreature != null) {
+            Debug.LogWarning($"Field at ({row}, {column}) is already occupied by another creature.");
             return false;
+        }
+
+        OccupiedCreature = creature;
+        OccupiedCreature.AssignField(this);
+        Debug.Log($"Creature placed on field ({row}, {column}).");
+        return true;
+    }
+
+    public bool CanPlaceCreature(Creature creature) {
+        return OccupiedCreature == null && creature != null;
+    }
+
+    public bool isSommonable(Creature creature, Opponent summoner) {
+        return CanPlaceCreature(creature) && summoner == Owner;
+    }
+
+    public void RemoveCreature() {
+        if (OccupiedCreature != null) {
+            OccupiedCreature = null;
+        } else {
+            Debug.Log("Received remove but nothing to remove!");
         }
     }
 }

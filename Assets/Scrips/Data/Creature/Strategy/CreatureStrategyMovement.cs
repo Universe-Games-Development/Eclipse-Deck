@@ -1,5 +1,6 @@
-using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
+
 public class CreatureStrategyMovement {
     private readonly IMoveStrategy attackMovementStrategy;
     private readonly IMoveStrategy supportMovementStrategy;
@@ -12,17 +13,15 @@ public class CreatureStrategyMovement {
         currentCreature = creature;
     }
 
-    public async UniTask<int> ExecuteMovement(GameContext gameContext) {
+    public List<Path> GetPaths(GameContext gameContext) {
         if (gameContext.initialField == null) Debug.LogError("Handler can`t define field to move from");
 
-        int moves = 0;
         if (gameContext.initialField.Type == FieldType.Attack) {
-            moves += await attackMovementStrategy.Movement(gameContext);
+            return attackMovementStrategy.CalculatePath(gameContext);
         } else if (gameContext.initialField.Type == FieldType.Support) {
-            moves += await supportMovementStrategy.Movement(gameContext);
-        } else {
-            Debug.Log("No movement strategy for this field");
+            return supportMovementStrategy.CalculatePath(gameContext);
         }
-        return moves;
+        Debug.Log("No movement strategy for this creature");
+        return null;
     }
 }

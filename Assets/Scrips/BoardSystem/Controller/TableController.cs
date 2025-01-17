@@ -8,8 +8,11 @@ public class TableController : MonoBehaviour {
 
 
     //DEBUG
-    [SerializeField] private Opponent player;
-    [SerializeField] private Opponent enemy;
+    [SerializeField] private PlayerController player_c;
+    [SerializeField] private EnemyController enemy_c;
+    private Enemy enemy;
+    private Player player;
+
     // Scene Context
     [Inject] private GameBoard gameBoard;
     [Inject] private GridManager gridManager;
@@ -17,6 +20,8 @@ public class TableController : MonoBehaviour {
     [Inject] ResourceManager resManager;
 
     private void Start() {
+        player = player_c.player;
+        enemy = enemy_c.enemy;
         DebugLogic().Forget();
     }
 
@@ -56,7 +61,7 @@ public class TableController : MonoBehaviour {
     }
 
     private void AssignHPCellToOpponent(Opponent opponent) {
-        if (opponent is Player) {
+        if (opponent is PlayerController) {
             playerCell.AssignOwner(opponent);
         } else { enemyCell.AssignOwner(opponent); }
     }

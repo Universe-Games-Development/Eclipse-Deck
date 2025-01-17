@@ -826,7 +826,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 432073389}
-  - component: {fileID: 432073390}
+  - component: {fileID: 432073392}
   - component: {fileID: 432073391}
   m_Layer: 0
   m_Name: Player
@@ -850,23 +850,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &432073390
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 432073387}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 14b72f358e8afad4aa2d6f39cb210d1b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Name: Player
-  initHealth: 0
-  maxHealth: 0
-  gameBoard: {fileID: 0}
-  handUI: {fileID: 376870063}
 --- !u!114 &432073391
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -884,6 +867,19 @@ MonoBehaviour:
   itemsLayer:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &432073392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 432073387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2afa519a35808eb4e8cc1edc1720240d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  handUI: {fileID: 376870063}
 --- !u!1 &472919892
 GameObject:
   m_ObjectHideFlags: 0
@@ -1788,8 +1784,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerCell: {fileID: 1958477723}
   enemyCell: {fileID: 625277295}
-  player: {fileID: 432073390}
-  enemy: {fileID: 1929906659}
+  player_c: {fileID: 432073392}
+  enemy_c: {fileID: 1929906661}
 --- !u!1 &1360052283
 GameObject:
   m_ObjectHideFlags: 0
@@ -2167,7 +2163,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1929906660}
-  - component: {fileID: 1929906659}
+  - component: {fileID: 1929906661}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -2175,22 +2171,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1929906659
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1929906658}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86870c411232d6b4a939811b595f122c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Name: Opponent
-  initHealth: 0
-  maxHealth: 0
-  gameBoard: {fileID: 0}
 --- !u!4 &1929906660
 Transform:
   m_ObjectHideFlags: 0
@@ -2207,6 +2187,18 @@ Transform:
   - {fileID: 1061550864}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1929906661
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1929906658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 657e32b66bcaea44994531101b8431fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1958477721
 GameObject:
   m_ObjectHideFlags: 0
@@ -2970,7 +2962,7 @@ MonoBehaviour:
           m_MethodName: AssignFieldsToPlayer
           m_Mode: 2
           m_Arguments:
-            m_ObjectArgument: {fileID: 432073390}
+            m_ObjectArgument: {fileID: 0}
             m_ObjectArgumentAssemblyTypeName: Opponent, Assembly-CSharp
             m_IntArgument: 0
             m_FloatArgument: 0
@@ -2985,8 +2977,8 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 1088063864}
   - {fileID: 1253212643}
-  - {fileID: 432073389}
   - {fileID: 634577918}
   - {fileID: 1641517154}
+  - {fileID: 432073389}
   - {fileID: 1929906660}
   - {fileID: 1832511274}

@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "BouncingMoveStrategySO", menuName = "Strategies/Movement/Bouncing")]
@@ -14,21 +15,23 @@ public class BouncingMoveStrategy : InstanceMovementStrategy {
     private bool isBounced = false;
 
     private Direction currentDirection;
-    private int moveAmount;
+    private readonly int moveAmount;
     public BouncingMoveStrategy(int moveAmount, Direction initialDirection) {
         this.currentDirection = initialDirection;
         this.moveAmount = moveAmount;
     }
 
-    protected override async UniTask<int> Move() {
-        int moves = await navigator.TryMove(moveAmount, currentDirection);
-        if (moves == 0) {
+    protected override List<Path> Move() {
+        List<Path> paths = new();
+        Path path =  navigator.GenerateSimplePath(moveAmount, currentDirection);
+        if (path.isInterrupted) {
             isBounced = true;
         }
-        if (moves == 0 && isBounced) {
-            currentDirection = CompasUtil.GetOppositeDirection(currentDirection);
-            await navigator.TryMove(moveAmount, currentDirection);
+        if (isBounced) {
+            currentDirection = CompassUtil.GetOppositeDirection(currentDirection);
+            path = navigator.GenerateSimplePath(moveAmount, currentDirection);
         }
-        return moves;
+        paths.Add(path);
+        return paths;
     }
 }

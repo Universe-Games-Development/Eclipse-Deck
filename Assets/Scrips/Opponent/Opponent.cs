@@ -2,34 +2,31 @@ using System;
 using UnityEngine;
 using Zenject;
 
-public class Opponent : MonoBehaviour {
+public class Opponent {
     public string Name = "Opponent";
-    protected CardCollection cardCollection;
-    protected Deck deck;
-    protected Deck discardDeck;
-
-    protected CardHand hand;
-
-    [SerializeField] private int initHealth;
-    [SerializeField] private int maxHealth;
-
     public Health health;
+
+    public CardHand hand;
+
+    public Deck deck;
+    public Deck discardDeck;
+
+    public CardCollection cardCollection;
 
     private ResourceManager resourceManager;
     private IEventManager eventManager;
 
-    [SerializeField] protected TableController gameBoard;
-
     public Action<Opponent> OnDefeat { get; internal set; }
 
     [Inject]
-    public void Construct(IEventManager eventManager, ResourceManager resourceManager) {
+    public Opponent(IEventManager eventManager, ResourceManager resourceManager) {
         this.eventManager = eventManager;
         this.resourceManager = resourceManager;
+        Initialize();
     }
 
-    protected virtual void Awake() {
-        health = new Health(maxHealth, initHealth);
+    protected virtual void Initialize() {
+        health = new Health(0, 20);
         cardCollection = new CardCollection(resourceManager);
         cardCollection.GenerateTestDeck(20);
 
@@ -37,10 +34,6 @@ public class Opponent : MonoBehaviour {
         Debug.Log("deck initialized with cards : " + deck.GetCount());
 
         hand = new CardHand(this, eventManager);
-    }
-
-    protected virtual void Start() {
-        //gameBoard.AssignOpponent(this);
     }
 
     public Card GetTestCard() {

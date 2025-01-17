@@ -1,21 +1,19 @@
-using Cysharp.Threading.Tasks;
-using Zenject;
+using System.Collections.Generic;
 
 public abstract class StaticMovementStrategySO : MovementStrategySO, IMoveStrategy {
     protected CreatureNavigator navigator;
-    private DiContainer diContainer;
     public override IMoveStrategy GetInstance() {
-        return this;
+        return this; 
     }
 
-    protected abstract UniTask<int> Move();
+    protected abstract List<Path> Move();
 
-    public async UniTask<int> Movement(GameContext gameContext) {
+    public List<Path> CalculatePath(GameContext gameContext) {
         if (navigator != null) {
             navigator.UpdateParams(gameContext);
         } else {
             navigator = new CreatureNavigator(gameContext);
         }
-        return await Move();
+        return Move();
     }
 }
