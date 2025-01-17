@@ -2,12 +2,13 @@
  * 1. I'm do nothing
  */
 using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NoneMoveStrategySO", menuName = "Strategies/Movement/None")]
 public class NoneMoveStrategySO : StaticMovementStrategySO {
-    protected override async UniTask<int> Move() {
-        await UniTask.Yield();
-        return 0;
+    protected override List<Path> Move() {
+        List<Path> paths = new();
+        return paths;
     }
 }

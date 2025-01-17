@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-public static class CompasUtil {
+public static class CompassUtil {
     public static readonly Dictionary<Direction, (int rowOffset, int colOffset)> DirectionOffsets = new() {
         { Direction.North,     (-1,  0) },
         { Direction.South,     ( 1,  0) },
@@ -30,4 +30,12 @@ public static class CompasUtil {
         return new List<(int rowOffset, int colOffset)>(DirectionOffsets.Values);
     }
 
+    public static Direction GetDirectionFromOffset(int rowOffset, int colOffset) {
+        foreach (var direction in DirectionOffsets) {
+            if (direction.Value.rowOffset == rowOffset && direction.Value.colOffset == colOffset) {
+                return direction.Key;
+            }
+        }
+        throw new System.ArgumentException("Invalid offset values", nameof(rowOffset));
+    }
 }

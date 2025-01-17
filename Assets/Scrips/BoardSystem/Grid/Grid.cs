@@ -57,7 +57,7 @@ public class Grid {
         if (rowIndex >= 0 && rowIndex < Fields.Count) {
             var row = Fields[rowIndex];
             foreach (var field in row) {
-                field.NotifyRemoval(); // Сповіщення поля
+                field.NotifyFieldRemoval(); // Сповіщення поля
             }
             Fields.RemoveAt(rowIndex);
         }
@@ -67,7 +67,7 @@ public class Grid {
         foreach (var row in Fields) {
             if (columnIndex < row.Count) {
                 var field = row[columnIndex];
-                field.NotifyRemoval(); // Сповіщення поля
+                field.NotifyFieldRemoval(); // Сповіщення поля
                 row.RemoveAt(columnIndex);
             }
         }
@@ -78,7 +78,7 @@ public class Grid {
     #region GETTERS
     public List<Field> GetAdjacentFields(Field currentField) {
         var adjacentFields = new List<Field>();
-        var offsets = CompasUtil.GetOffsets();
+        var offsets = CompassUtil.GetOffsets();
 
         foreach (var (rowOffset, colOffset) in offsets) {
             int newRow = currentField.row + rowOffset;
@@ -92,14 +92,14 @@ public class Grid {
         return adjacentFields;
     }
 
-    public List<Field> GetPath(Field currentField, int pathAmount, Direction direction, bool reversed = false) {
+    public List<Field> GetFieldsToMove(Field currentField, int pathAmount, Direction direction, bool reversed = false) {
         List<Field> path = new();
 
         if (reversed) {
-            direction = CompasUtil.GetOppositeDirection(direction);
+            direction = CompassUtil.GetOppositeDirection(direction);
         }
 
-        var (rowOffset, colOffset) = CompasUtil.DirectionOffsets[direction];
+        var (rowOffset, colOffset) = CompassUtil.DirectionOffsets[direction];
 
         for (int i = 1; i <= pathAmount; i++) {
             int newRow = currentField.row + rowOffset * i;
@@ -119,11 +119,11 @@ public class Grid {
         List<Field> flankFields = new List<Field>();
 
         // Ліва сторона
-        List<Field> leftFlank = GetPath(field, flankSize, Direction.West, isReversed);
+        List<Field> leftFlank = GetFieldsToMove(field, flankSize, Direction.West, isReversed);
         flankFields.AddRange(leftFlank);
 
         // Права сторона
-        List<Field> rightFlank = GetPath(field, flankSize, Direction.East, isReversed);
+        List<Field> rightFlank = GetFieldsToMove(field, flankSize, Direction.East, isReversed);
         flankFields.AddRange(rightFlank);
 
         return flankFields;

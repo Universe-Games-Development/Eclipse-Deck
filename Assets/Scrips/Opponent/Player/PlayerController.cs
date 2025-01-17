@@ -1,24 +1,23 @@
 using UnityEngine;
+using Zenject;
 
-public class Player : Opponent {
+public class PlayerController : MonoBehaviour {
+    [Inject] public Player player;
+
     [SerializeField] private CardHandUI handUI;
-
+    
     private RayService rayService;
-    protected override void Awake() {
-        base.Awake();
+    protected void Awake() {
+
         rayService = GetComponent<RayService>();
     }
 
-    protected override void Start() {
-        base.Start();
-        handUI.Initialize(hand);
+    protected void Start() {
+        handUI.Initialize(player.hand);
 
-
-
-        hand.AddCard(deck.DrawCard());
-        hand.AddCard(deck.DrawCard());
-        hand.AddCard(deck.DrawCard());
-        hand.AddCard(deck.DrawCard());
+        for (int i = 0; i < 3; i++) {
+            player.hand.AddCard(player.deck.DrawCard());
+        }
     }
 
     void Update() {
@@ -36,17 +35,14 @@ public class Player : Opponent {
                 return;
             }
 
-            Card selectedCard = hand.GetCardByID(selectedUICard.Id);
+            Card selectedCard = player.hand.GetCardByID(selectedUICard.Id);
             if (selectedCard == null) {
                 Debug.Log("Selected card not found in hand.");
                 return;
             }
 
-            bool isPlayed = false;
-            if (isPlayed) {
-                hand.RemoveCard(selectedCard);
-                Debug.Log($"Card {selectedCard.data.Name} summoned to field!");
-            }
+            player.hand.RemoveCard(selectedCard);
+            Debug.Log($"Card {selectedCard.data.Name} summoned to field!");
         } else {
             handUI.DeselectCurrentCard();
         }

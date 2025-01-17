@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using UnityEngine;
 
-public class EventManager : MonoBehaviour, IEventManager {
+public class EventManager : IEventManager {
     private Dictionary<Type, Dictionary<Enum, List<EventListenerInfo>>> listeners =
         new Dictionary<Type, Dictionary<Enum, List<EventListenerInfo>>>();
     private Dictionary<Type, Dictionary<Enum, List<EventListenerInfo>>> phantomListeners =

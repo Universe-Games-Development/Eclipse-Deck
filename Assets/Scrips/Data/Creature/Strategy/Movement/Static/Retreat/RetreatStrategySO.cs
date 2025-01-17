@@ -6,37 +6,38 @@ public class RetreatStrategySO : SimpleMoveStrategySO {
     public int retreatAmount = 1;
     public Direction checkDirection = Direction.North;
 
-    protected override async UniTask<int> Move() {
-        int moves;
+    protected override List<Path> Move() {
+        List<Path> paths = new();
         if (ConditionToEscape()) {
-            moves = await Escape();
+            paths.Add(Escape());
         } else {
-            moves = await base.Move();
+            paths = base.Move();
         }
 
-        return moves;
+        return paths;
     }
 
     protected virtual bool ConditionToEscape() {
         return false;
     }
 
-    protected async UniTask<int> Escape() {
-        int moves = await navigator.TryMove(retreatAmount, checkDirection);
+    protected Path Escape() {
+        Path escapePath = navigator.GenerateSimplePath(retreatAmount, checkDirection);
 
-        if (moves == 0) {
+        if (escapePath.isInterrupted) {
             List<Field> freeFields = navigator.GetAdjacentFields()
                 .Where(field => field.Owner == navigator.CurrentField.Owner && field.OccupiedCreature == null)
                 .ToList();
 
             if (freeFields.Count == 0) {
-                return moves;
+                return escapePath;
             }
 
             Field fieldToEscape = RandomUtil.GetRandomFromList(freeFields);
-            moves = await navigator.TryMoveToField(fieldToEscape);
+            Direction directionToEscape = navigator.GetDirectionToField(fieldToEscape);
+            escapePath = navigator.GenerateSimplePath(retreatAmount, directionToEscape);
         }
 
-        return moves;
+        return escapePath;
     }
 }

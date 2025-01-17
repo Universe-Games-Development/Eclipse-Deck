@@ -1,13 +1,15 @@
-using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 
 public class Creature {
+    public Field CurrentField { get; private set; }
+
     public Health Health;
     public Attack Attack;
 
     private Card card;
     private CreatureStrategyMovement movementHandler;
+    private MoveCommand moveCommand;
 
     public Creature(Card myCard, CreatureSO creatuseSO) {
         card = myCard;
@@ -15,14 +17,24 @@ public class Creature {
         // TO DO : abilities initialization
 
         movementHandler = new CreatureStrategyMovement(movementData, this);
+        moveCommand = new MoveCommand(this, movementHandler);
     }
 
-    // TODO: Ensure that same creature don`t make a move after moveing (GameBoard calls in columns so it may call again moved creture)
-    public async UniTask PerformTurn(GameContext gameContext) {
-        gameContext.currentCreature = this;
-        int moves = await movementHandler.ExecuteMovement(gameContext);
-        Debug.Log(this + " moved by " + moves + " times");
-        gameContext.currentCreature = null;
+    // TODO: return also attack action
+    public ICommand GetTurnActions(GameContext gameContext) {
+        gameContext.initialField = CurrentField;
+        moveCommand.SetGameContext(gameContext);
+        return moveCommand;
+    }
+
+    
+
+    public void AssignField(Field field) {
+        if (CurrentField != null) {
+            CurrentField.RemoveCreature();
+        }
+
+        CurrentField = field;
     }
 
     public void OnFieldRemoved(Field field) {
@@ -30,5 +42,9 @@ public class Creature {
         Console.WriteLine($"Creature on field ({field.row}, {field.column}) is notified about its removal.");
         // - Вибір нового місця
         // - Знищення істоти
+    }
+
+    public void InterruptedMove() {
+        Debug.Log("INTERRUPTED to MOVE! ANIMATION NEEDED");
     }
 }

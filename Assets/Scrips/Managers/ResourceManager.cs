@@ -11,7 +11,7 @@ public enum ResourceType {
     CREATURE
 }
 
-public class ResourceManager : MonoBehaviour {
+public class ResourceManager {
     [Header("Card Data")]
     public List<CardSO> cardDataList = new List<CardSO>();
 
@@ -35,8 +35,7 @@ public class ResourceManager : MonoBehaviour {
     // Словник для зберігання списків ресурсів
     private Dictionary<ResourceType, List<Object>> resourceDictionary = new Dictionary<ResourceType, List<Object>>();
 
-    private void Awake() {
-        // Ініціалізуємо словник завантажених ресурсів
+    public ResourceManager() {
         foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType))) {
             resourcesLoaded[type] = false;
         }

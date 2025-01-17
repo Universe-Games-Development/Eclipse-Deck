@@ -1,5 +1,5 @@
-using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 
 public interface IMoveStrategy {
-    public UniTask<int> Movement(GameContext gameContext);
+    public List<Path> CalculatePath(GameContext gameContext);
 }

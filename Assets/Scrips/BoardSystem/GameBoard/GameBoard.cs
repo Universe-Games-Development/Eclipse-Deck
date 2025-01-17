@@ -7,16 +7,16 @@ public class GameBoard {
 
     // Opponents will use it to be notified which one can perform turn now
     public Action<Opponent> OnTurnBegan;
-
     [Inject] public OpponentManager opponentManager { get; private set; }
     [Inject] private GridManager gridManager;
+    [Inject] private CommandManager commandManager;
 
     private Opponent currentPlayer;
     private GameContext gameContext;
     public int MinPlayers { get; private set; }
 
 
-    public GameBoard(OpponentManager opponentManager, GridManager gridManager) {
+    public GameBoard(OpponentManager opponentManager, GridManager gridManager, CommandManager commandManager) {
         gameContext = new GameContext { gameBoard = this, _gridManager = gridManager };
         this.gridManager = gridManager;
         this.opponentManager = opponentManager;
@@ -51,10 +51,11 @@ public class GameBoard {
             Debug.Log("Not your turn buddy");
             return;
         }
-        await RunTurnAsync(currentPlayer);
+        GatherPlayerCreaturesActions(currentPlayer);
+        await commandManager.ExecuteCommands();
     }
 
-    private async UniTask RunTurnAsync(Opponent opponent) {
+    private void GatherPlayerCreaturesActions(Opponent opponent) {
         foreach (var column in gridManager.MainGrid.Fields) {
             if (column == null) {
                 Debug.LogWarning("Column with null");
@@ -64,7 +65,7 @@ public class GameBoard {
                 var creature = field.OccupiedCreature;
                 if (creature != null) {
                     gameContext.initialField = field;
-                    await creature.PerformTurn(gameContext);
+                    commandManager.RegisterCommand(creature.GetTurnActions(gameContext));
                 }
             }
             gameContext.initialField = null;
@@ -79,34 +80,33 @@ public class GameBoard {
         OnTurnBegan?.Invoke(currentPlayer);
     }
 
-    // used by Opponents to summon
-    public async UniTask<bool> SummonCreature(Opponent summoner, Field field, Creature creature) {
-        return await PlaceCreatureInternal(field, creature, summoner);
-    }
-
-    // used by creatures to move
-    public async UniTask<bool> PlaceCreature(Field field, Creature creature) {
-        return await PlaceCreatureInternal(field, creature, null);
-    }
-
-    private async UniTask<bool> PlaceCreatureInternal(Field field, Creature creature, Opponent owner) {
-        // Перевірка, чи поле є в mainGrid
-        bool isValidOccupy = ValidateFieldOccupy(field, creature);
-        if (!isValidOccupy)
-            return false;
-
-        bool result = owner != null
-            ? await field.SummonCreatureAsync(creature, owner)
-            : await field.PlaceCreatureAsync(creature);
-
-        if (result) {
-            Debug.Log($"Creature placed successfully in the field {field.row} / {field.column}");
-            return true;
-        } else {
-            Debug.Log("Field cannot spawn creature");
+    public async UniTask<bool> SummonCreature(Opponent opponent, Field field, Creature creature) {
+        // Code warnings
+        if (field == null || creature == null) {
+            Debug.LogWarning("Field or creature is null.");
             return false;
         }
+
+        // Game warnings
+        if (currentPlayer != opponent) {
+            Debug.LogWarning("It`s not turn of : " + opponent.Name);
+        }
+
+        if (opponent != field.Owner) {
+            Debug.LogWarning("This field not belong to : " + opponent.Name);
+        }
+
+
+        bool result = await field.PlaceCreatureAsync(creature);
+        if (result) {
+            Debug.Log($"Creature successfully placed at {field.row}, {field.column}.");
+        } else {
+            Debug.LogWarning($"Failed to place creature at {field.row}, {field.column}.");
+        }
+
+        return result;
     }
+
 
     private bool ValidateFieldOccupy(Field field, Creature creature) {
         bool fieldExists = gridManager.MainGrid.FieldExists(field);
