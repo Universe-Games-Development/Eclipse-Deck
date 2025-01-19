@@ -109,13 +109,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccba54aceae8b2a4fa95b02964daedef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IsPlayerField: 0
-  Index: 0
-  spawnPoint: {fileID: 6499584136698622478}
-  uiPoint: {fileID: 3356391024840837650}
+  attackMaterial: {fileID: 2100000, guid: c014fcf4259a7f5459621a81021d5194, type: 2}
+  supportMaterial: {fileID: 2100000, guid: 5a80be3284be60d4d9fa777c4723a878, type: 2}
   meshRenderer: {fileID: 3989146654983234561}
-  defaultMaterial: {fileID: 963798294112862009, guid: b91345e0f44605d459d9843cd35dea87, type: 3}
-  transparentMaterial: {fileID: 2100000, guid: 5a80be3284be60d4d9fa777c4723a878, type: 2}
+  levitator: {fileID: 0}
 --- !u!1001 &2350278803631388805
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -130,7 +127,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b91345e0f44605d459d9843cd35dea87, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.172
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b91345e0f44605d459d9843cd35dea87, type: 3}
       propertyPath: m_LocalPosition.z
@@ -178,7 +175,10 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b91345e0f44605d459d9843cd35dea87, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1846103424125986722}
+      addedObject: {fileID: 2184289425653620894}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b91345e0f44605d459d9843cd35dea87, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3285856700925144530}
   m_SourcePrefab: {fileID: 100100000, guid: b91345e0f44605d459d9843cd35dea87, type: 3}
 --- !u!4 &2816833770654097262 stripped
 Transform:
@@ -190,7 +190,25 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: b91345e0f44605d459d9843cd35dea87, type: 3}
   m_PrefabInstance: {fileID: 2350278803631388805}
   m_PrefabAsset: {fileID: 0}
---- !u!65 &1846103424125986722
+--- !u!114 &2184289425653620894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3196631937252394452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 711ee44498690a04db866b8ab84b50ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  liftHeight: 0.2
+  levitationRange: 0.05
+  levitationSpeed: 1
+  dropDuration: 0.5
+  spawnHeight: 10
+  flyHeight: 10
+--- !u!65 &3285856700925144530
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

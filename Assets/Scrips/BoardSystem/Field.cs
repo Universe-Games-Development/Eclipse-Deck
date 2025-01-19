@@ -2,7 +2,9 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 
-public class Field : ITipProvider {
+public class Field {
+    public Action<Field> OnRemoval;
+    public Action<bool> OnSelect;
     [Header("Actions")]
     public Action OnChangedOwner;
     public Action<FieldType> OnChangedType;
@@ -51,15 +53,25 @@ public class Field : ITipProvider {
         OnChangedOwner?.Invoke();
     }
 
-    public string GetInfo() {
-        return $"Field is ({{ {row} }} / {{ {column} }}).";
+    public void UnAssignCreature() {
+        if (OccupiedCreature != null) {
+            OccupiedCreature = null;
+        } else {
+            Debug.Log("Received remove but nothing to remove!");
+        }
     }
 
-    public void NotifyFieldRemoval() {
-        // Remove animation
-        OccupiedCreature?.OnFieldRemoved(this);
+    public void SelectField() {
+        OnSelect?.Invoke(true);
     }
 
+    public void DeselectField() {
+        OnSelect?.Invoke(false);
+    }
+
+    public void RemoveField() {
+        OnRemoval?.Invoke(this);
+    }
 
     public async UniTask<bool> SummonCreatureAsync(Creature creature, Opponent summoner) {
         await UniTask.DelayFrame(1);
@@ -91,19 +103,13 @@ public class Field : ITipProvider {
         return true;
     }
 
+    // To walk
     public bool CanPlaceCreature(Creature creature) {
         return OccupiedCreature == null && creature != null;
     }
 
+    // To summon
     public bool isSommonable(Creature creature, Opponent summoner) {
         return CanPlaceCreature(creature) && summoner == Owner;
-    }
-
-    public void RemoveCreature() {
-        if (OccupiedCreature != null) {
-            OccupiedCreature = null;
-        } else {
-            Debug.Log("Received remove but nothing to remove!");
-        }
     }
 }

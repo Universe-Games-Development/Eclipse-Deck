@@ -11,9 +11,13 @@ public class OpponentManager {
 
     public int MinPlayers { get; private set; }
 
-    public OpponentManager(GridManager gridManager, BoardSettings boardSettings) {
-        MinPlayers = boardSettings.minPlayers;
+
+    public OpponentManager(GridManager gridManager) {
         this.gridManager = gridManager;
+    }
+
+    internal void UpdateSettings(BoardSettings boardSettings) {
+        MinPlayers = boardSettings.minPlayers;
     }
 
     public void RegisterOpponent(Opponent opponent) {

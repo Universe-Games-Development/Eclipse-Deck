@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,10 +7,6 @@ public class GridManager {
     public Grid MainGrid { get; private set; }
     public SubGrid PlayerGrid { get; private set; }
     public SubGrid EnemyGrid { get; private set; }
-
-    public GridManager(BoardSettings config) {
-        UpdateGrid(config);
-    }
 
     public void UpdateGrid(BoardSettings config) {
         int rows = config.rowTypes.Count;
@@ -25,6 +22,7 @@ public class GridManager {
             PlayerGrid = new SubGrid(MainGrid, 0, divider);
             EnemyGrid = new SubGrid(MainGrid, divider + 1, rows - 1);
         }
+        UpdateFieldTypes(config);
     }
 
     private void UpdateFieldTypes(BoardSettings config) {

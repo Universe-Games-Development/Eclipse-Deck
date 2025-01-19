@@ -57,7 +57,7 @@ public class MoveCommand : ICommand {
     }
 
     public async UniTask<bool> TryMoveToField(Field field, Creature creature) {
-        creature.CurrentField?.RemoveCreature();
+        creature.CurrentField?.UnAssignCreature();
         bool placeResult = await field.PlaceCreatureAsync(creature);
         if (!placeResult) {
             Debug.LogWarning($"Failed to move to {field.row} / {field.column}. Field may be occupied or invalid.");
