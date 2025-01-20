@@ -27,17 +27,16 @@ public class Creature {
         return moveCommand;
     }
 
-    
-
     public void AssignField(Field field) {
         if (CurrentField != null) {
-            CurrentField.RemoveCreature();
+            CurrentField.UnAssignCreature();
+            CurrentField.OnRemoval -= RemoveCreature;
         }
-
+        field.OnRemoval += RemoveCreature;
         CurrentField = field;
     }
 
-    public void OnFieldRemoved(Field field) {
+    public void RemoveCreature(Field field) {
         // Реакція на видалення поля, наприклад, переміщення на інше поле або помилка.
         Console.WriteLine($"Creature on field ({field.row}, {field.column}) is notified about its removal.");
         // - Вибір нового місця

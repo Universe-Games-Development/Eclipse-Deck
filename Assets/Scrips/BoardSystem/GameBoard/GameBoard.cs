@@ -5,8 +5,11 @@ using Zenject;
 
 public class GameBoard {
 
+    bool isStarted = false;
     // Opponents will use it to be notified which one can perform turn now
     public Action<Opponent> OnTurnBegan;
+
+    [Inject] TableController tableController;
     [Inject] public OpponentManager opponentManager { get; private set; }
     [Inject] private GridManager gridManager;
     [Inject] private CommandManager commandManager;
@@ -14,6 +17,23 @@ public class GameBoard {
     private Opponent currentPlayer;
     private GameContext gameContext;
     public int MinPlayers { get; private set; }
+
+    private Field _selectedField;
+
+    private Field SelectedField {
+        get { return _selectedField; }
+        set {
+            if (_selectedField != null && _selectedField != value) {
+                Debug.Log($"Deselected : {_selectedField.row} + {_selectedField.column}");
+                _selectedField.DeselectField();
+            }
+            _selectedField = value;
+            if (_selectedField != null) {
+                _selectedField.SelectField();
+                Debug.Log($"Selected : {_selectedField.row} + {_selectedField.column}");
+            }
+        }
+    }
 
 
     public GameBoard(OpponentManager opponentManager, GridManager gridManager, CommandManager commandManager) {
@@ -26,16 +46,24 @@ public class GameBoard {
         return currentPlayer;
     }
 
+    public void SetBoardSettings(BoardSettings boardSettings) {
+        gridManager.UpdateGrid(boardSettings);
+        opponentManager.UpdateSettings(boardSettings);
+    }
+
     // Used by other classes to allow start game
-    public bool StartGame(int minPlayers = 2) {
-        if (opponentManager.IsAllRegistered()) {
-            currentPlayer = ChooseFirstPlayer();
-            OnTurnBegan?.Invoke(currentPlayer);
-            return true;
-        } else {
+    public async UniTask<bool> StartGame(int minPlayers = 2) {
+        await tableController.SpawnFields(gridManager.MainGrid);
+
+        if (!opponentManager.IsAllRegistered()) {
             Debug.Log($"Can't start game because there are only {opponentManager.registeredOpponents.Count} registered players. Need: {MinPlayers}");
             return false;
         }
+
+        isStarted = true;
+        currentPlayer = ChooseFirstPlayer();
+        OnTurnBegan?.Invoke(currentPlayer);
+        return true;
     }
 
     private Opponent ChooseFirstPlayer() {
@@ -106,8 +134,6 @@ public class GameBoard {
 
         return result;
     }
-
-
     private bool ValidateFieldOccupy(Field field, Creature creature) {
         bool fieldExists = gridManager.MainGrid.FieldExists(field);
         if (!fieldExists) {
@@ -122,5 +148,72 @@ public class GameBoard {
         }
 
         return true;
+    }
+
+
+    // Can get null to deselect field
+    public bool SelectField(Field field) {
+        if (!IsInitialized()) {
+            Debug.LogWarning("Gameboard not initialized! Can`t select field");
+        }
+
+        if (!gridManager.MainGrid.FieldExists(field)) {
+            Debug.Log("Field doesn`t exist! Gameboard can`t select : " + field);
+            return false;
+        }
+
+        // Game rules errors
+        if (currentPlayer is Enemy) {
+            Debug.Log("Field can`t be selected during enemy turn. Current player : " + currentPlayer);
+            return false;
+        }
+
+        if (currentPlayer != field.Owner) {
+            return false;
+        }
+
+        if (SelectedField == field) {
+            return true;
+        }
+
+        SelectedField = field;
+        SelectedField.SelectField();
+        return true;
+    }
+
+    public void DeselectField() {
+        if (SelectedField != null) {
+            SelectedField.DeselectField();
+            SelectedField = null;
+        }
+    }
+
+
+    public bool IsInitialized() {
+        if (gridManager.MainGrid == null || gridManager.MainGrid.Fields == null || gridManager.MainGrid.Fields.Count == 0) {
+            Debug.LogWarning("GridManager is not properly initialized: MainGrid is null or empty.");
+            return false;
+        }
+
+        if (!opponentManager.IsAllRegistered()) {
+            Debug.LogWarning("Not all players are registered.");
+            return false;
+        }
+
+        if (currentPlayer == null) {
+            Debug.LogWarning("Current player is not set.");
+            return false;
+        }
+
+        if (gameContext == null || gameContext.gameBoard == null || gameContext._gridManager == null) {
+            Debug.LogWarning("Game context is not properly initialized.");
+            return false;
+        }
+
+        return true;
+    }
+
+    internal void SetCurrentPlayer(Player player) {
+        currentPlayer = player;
     }
 }

@@ -42,7 +42,7 @@ public class CreatureNavigator {
 
         bool isRelativeToEnemy = mainGrid.IsFieldInEnemyZone(CurrentField);
 
-        List<Field> fieldsToMove = mainGrid.GetFieldsToMove(CurrentField, moveAmount, moveDirection, isRelativeToEnemy);
+        List<Field> fieldsToMove = mainGrid.GetFieldsInDirection(CurrentField, moveAmount, moveDirection, isRelativeToEnemy);
         if (fieldsToMove == null || fieldsToMove.Count == 0) {
             Debug.LogWarning("No valid fields to move.");
             path.isInterrupted = true;
@@ -71,7 +71,7 @@ public class CreatureNavigator {
 
 
     public List<Field> GetFieldsInDirection(int amount, Direction direction) {
-        return mainGrid.GetFieldsToMove(CurrentField, amount, direction, IsRelativeToEnemy);
+        return mainGrid.GetFieldsInDirection(CurrentField, amount, direction, IsRelativeToEnemy);
     }
 
     public List<Creature> GetCreaturesInDirection(int amount, Direction direction) {

@@ -1,70 +1,71 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using Zenject;
+
+[System.Serializable]
+public struct CellSize {
+    public float width;
+    public float height;
+}
 
 public class TableController : MonoBehaviour {
-    [SerializeField] private HealthCellController playerCell;
-    [SerializeField] private HealthCellController enemyCell;
+    [SerializeField] private int spawnDelay = 15;
+    public CellSize cellSize = new CellSize { width = 1f, height = 1f };
+    public Transform origin;
+    public GameObject fieldPrefab;
 
+    private int gridWidth;
+    private int gridHeight;
 
-    //DEBUG
-    [SerializeField] private PlayerController player_c;
-    [SerializeField] private EnemyController enemy_c;
-    private Enemy enemy;
-    private Player player;
+    [Header("Mouse Check Range")]
+    [Range (0, 10)]
+    public float yCheckRange = 1f;
+    public async UniTask SpawnFields(Grid grid) {
+        gridWidth = grid.Fields.Count;
+        gridHeight = grid.Fields[0].Count;
+        float xOffset = cellSize.width / 2;
+        float yOffset = cellSize.height / 2;
 
-    // Scene Context
-    [Inject] private GameBoard gameBoard;
-    [Inject] private GridManager gridManager;
-    // GAme context
-    [Inject] ResourceManager resManager;
+        for (int x = 0; x < gridWidth; x++) {
+            for (int y = 0; y < gridHeight; y++) {
+                // Обчислюємо локальну позицію відносно origin
+                Vector3 localPosition = new Vector3(x * cellSize.width + xOffset, 0f, y * cellSize.height + yOffset);
 
-    private void Start() {
-        player = player_c.player;
-        enemy = enemy_c.enemy;
-        DebugLogic().Forget();
+                // Перетворюємо локальну позицію в світову, враховуючи трансформації origin
+                Vector3 spawnPosition = origin.TransformPoint(localPosition);
+
+                // Створюємо об'єкт з поворотом origin
+                GameObject fieldObject = Instantiate(fieldPrefab, spawnPosition, origin.rotation, origin); // Ключова зміна тут
+
+                Field fieldData = grid.Fields[x][y];
+                fieldObject.GetComponent<FieldController>().Initialize(fieldData);
+
+                await UniTask.Delay(spawnDelay);
+            }
+        }
     }
 
-
-    private async UniTaskVoid DebugLogic() {
-        gameBoard.opponentManager.RegisterOpponent(player);
-        gameBoard.opponentManager.RegisterOpponent(enemy);
-        gameBoard.StartGame();
-
-
-        Card playerCard = player.GetTestCard();
-        Card enemyCard = enemy.GetTestCard();
-
-
-        CreatureSO data = resManager.GetRandomResource<CreatureSO>(ResourceType.CREATURE);
-
-        Creature playerCreature = new Creature(playerCard, data);
-        Creature enemyCreature = new(enemyCard, data);
-
-        Field fieldToPlace = gridManager.PlayerGrid.GetFieldAt(0, 0);
-
-        await gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
-
-        for (int i = 0; i < 20; i++) {
-            Opponent currentOpponent = gameBoard.GetCurrentPlayer();
-            await gameBoard.PerformTurn(currentOpponent);
+    public Vector2Int? GetGridIndex(Vector3 worldPosition) {
+        if (gridWidth == 0 || gridHeight == 0) {
+            Debug.LogError("Grid dimensions are not initialized!");
+            return null;
         }
 
-        fieldToPlace = gridManager.PlayerGrid.GetFieldAt(0, 0);
+        // Перевірка по Y (висоті)
+        if (Mathf.Abs(worldPosition.y - origin.position.y) > yCheckRange) {
+            // Позиція за межами діапазону по Y
+            return null;
+        }
 
-        fieldToPlace = gridManager.PlayerGrid.GetFieldAt(1, 0);
+        Vector3 localPosition = origin.InverseTransformPoint(worldPosition);
+
+        int x = Mathf.FloorToInt((localPosition.x) / cellSize.width);
+        int y = Mathf.FloorToInt((localPosition.z) / cellSize.height);
+
+        if (x < 0 || x >= gridWidth || y < 0 || y >= gridHeight) {
+            return null;
+        }
+
+        return new Vector2Int(x, y);
     }
-
-    public void AssignOpponent(Opponent opponent) {
-        AssignHPCellToOpponent(opponent);
-        gameBoard.opponentManager.RegisterOpponent(opponent);
-    }
-
-    private void AssignHPCellToOpponent(Opponent opponent) {
-        if (opponent is PlayerController) {
-            playerCell.AssignOwner(opponent);
-        } else { enemyCell.AssignOwner(opponent); }
-    }
-
 
 }

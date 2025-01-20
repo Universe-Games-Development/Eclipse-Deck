@@ -3,9 +3,11 @@ using Zenject;
 
 public class PlayerController : MonoBehaviour {
     [Inject] public Player player;
+    [Inject] GameboardController gameboard_c;
 
     [SerializeField] private CardHandUI handUI;
-    
+    [SerializeField] private int amountToDraw = 1;
+
     private RayService rayService;
     protected void Awake() {
 
@@ -15,7 +17,7 @@ public class PlayerController : MonoBehaviour {
     protected void Start() {
         handUI.Initialize(player.hand);
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < amountToDraw; i++) {
             player.hand.AddCard(player.deck.DrawCard());
         }
     }
@@ -24,11 +26,20 @@ public class PlayerController : MonoBehaviour {
         if (Input.GetMouseButtonDown(0)) {
             TrySummonCard();
         }
+
+        
+        Vector3? mouseWorldPosition = rayService.GetRayMousePosition();
+        
+
+        if (gameboard_c != null) {
+            gameboard_c.UpdateCursorPosition(mouseWorldPosition);
+        }
     }
+
 
     private void TrySummonCard() {
         GameObject gameObject = rayService.GetRayObject();
-        if (gameObject && gameObject.TryGetComponent(out FieldVisual field)) {
+        if (gameObject && gameObject.TryGetComponent(out FieldController field)) {
             CardUI selectedUICard = handUI.SelectedCard;
             if (selectedUICard == null) {
                 Debug.Log("No card selected to summon.");
