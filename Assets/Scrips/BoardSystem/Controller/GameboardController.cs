@@ -76,9 +76,18 @@ public class GameboardController : MonoBehaviour {
         } else { enemyCell.AssignOwner(opponent); }
     }
 
-    internal void UpdateCursorPosition(Vector3 mouseWorldPosition) {
-        Vector2Int indexes = tableController.GetGridIndex(mouseWorldPosition);
-        Field field = gridManager.MainGrid.GetFieldAt(indexes.x, indexes.y);
+    internal void UpdateCursorPosition(Vector3? mouseWorldPosition) {
+        if (!mouseWorldPosition.HasValue) {
+            gameBoard.DeselectField();
+            return;
+        }
+        Vector2Int? indexes = tableController.GetGridIndex(mouseWorldPosition.Value);
+        if (!indexes.HasValue) {
+            gameBoard.DeselectField();
+            return;
+        }
+
+        Field field = gridManager.MainGrid.GetFieldAt(indexes.Value.x, indexes.Value.y);
         //debugObject.transform.position = mouseWorldPosition;
         if (field != null) {
             gameBoard.SelectField(field);

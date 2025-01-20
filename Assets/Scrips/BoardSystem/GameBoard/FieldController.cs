@@ -15,15 +15,14 @@ public class FieldController : MonoBehaviour {
 
     [Inject] UIManager uiManager;
 
-    [SerializeField] private Material attackMaterial;
-    [SerializeField] private Material supportMaterial;
-    [SerializeField] private MeshRenderer meshRenderer;
-    [SerializeField] private Levitator levitator;
+
+    private FieldMaterializer fieldMaterializer;
+    private Levitator levitator;
 
     bool isInteractable = false;
 
     private void Awake() {
-        meshRenderer = GetComponentInChildren<MeshRenderer>();
+        fieldMaterializer = GetComponentInChildren<FieldMaterializer>();
         levitator = GetComponentInChildren<Levitator>();
         levitator.UpdateInitialPosition(transform.position);
         levitator.OnFall += () => SetInteractable(true);
@@ -31,9 +30,9 @@ public class FieldController : MonoBehaviour {
     }
 
     public void Initialize(Field field) {
+        fieldMaterializer.Initialize(field);
+
         this.field = field;
-        UpdateMaterialBasedOnType(field.Type);
-        field.OnChangedType += UpdateMaterialBasedOnType;
         field.OnRemoval += Remove;
     }
 
@@ -42,36 +41,29 @@ public class FieldController : MonoBehaviour {
             Debug.LogWarning("Trying to remove by wrong field");
         }
         SetInteractable(false);
-        field.OnChangedType -= UpdateMaterialBasedOnType;
         field.OnRemoval -= Remove;
         levitator.FlyAway();
     }
 
     private void SetInteractable(bool value) {
         isInteractable = value;
+        if (field == null) return;
         if (value) {
             field.OnSelect += levitator.ToggleLevitation;
+            field.OnSelect += fieldMaterializer.ToggleHighlight;
         } else {
             field.OnSelect -= levitator.ToggleLevitation;
+            field.OnSelect -= fieldMaterializer.ToggleHighlight;
         }
     }
 
-    private void UpdateMaterialBasedOnType(FieldType newType) {
-        if (meshRenderer != null) {
-            if (newType == FieldType.Support) {
-                meshRenderer.material = supportMaterial;
-            } else {
-                meshRenderer.material = attackMaterial;
-            }
-        }
-    }
+    
 
     void OnMouseEnter() {
         uiManager.ShowTip("Field");
     }
 
     private void OnDestroy() {
-        field.OnChangedType -= UpdateMaterialBasedOnType;
         field.OnSelect -= levitator.ToggleLevitation;
     }
 }

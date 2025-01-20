@@ -28,7 +28,7 @@ public class PlayerController : MonoBehaviour {
         }
 
         
-        Vector3 mouseWorldPosition = rayService.GetRayMousePosition();
+        Vector3? mouseWorldPosition = rayService.GetRayMousePosition();
         
 
         if (gameboard_c != null) {

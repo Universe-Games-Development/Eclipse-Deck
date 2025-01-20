@@ -1305,7 +1305,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Id: 
-  nameText: {fileID: 0}
+  nameText: {fileID: 3452941877714409755}
   healthText: {fileID: 653443174712715830}
   attackText: {fileID: 653443174712715830}
   abilityUIDisctibuter: {fileID: 5065088701265242274}

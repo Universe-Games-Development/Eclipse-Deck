@@ -39,8 +39,8 @@ public class RayService : MonoBehaviour {
         return null;
     }
 
-    public Vector3 GetRayMousePosition() {
+    public Vector3? GetRayMousePosition() {
         var hit = GetRaycastHit(20f);
-        return hit?.point ?? Vector3.zero;
+        return hit?.point ?? null;
     }
 }
