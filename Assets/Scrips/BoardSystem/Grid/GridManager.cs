@@ -1,9 +1,11 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public class GridManager {
+    public event Func<UniTask> OnGridInitialized;
     public Grid MainGrid { get; private set; }
     public SubGrid PlayerGrid { get; private set; }
     public SubGrid EnemyGrid { get; private set; }
@@ -18,10 +20,12 @@ public class GridManager {
             PlayerGrid.BoundToMainGrid(MainGrid, 0, divider);
             EnemyGrid.BoundToMainGrid(MainGrid, divider + 1, rows - 1);
         } else {
-            MainGrid = new Grid(rows, columns);
+            MainGrid = new Grid(rows, columns, config.cellSize);
             PlayerGrid = new SubGrid(MainGrid, 0, divider);
             EnemyGrid = new SubGrid(MainGrid, divider + 1, rows - 1);
+            OnGridInitialized?.Invoke();
         }
+
         UpdateFieldTypes(config);
     }
 

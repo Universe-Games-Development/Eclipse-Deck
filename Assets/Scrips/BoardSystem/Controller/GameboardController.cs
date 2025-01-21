@@ -19,7 +19,7 @@ public class GameboardController : MonoBehaviour {
     [Inject] private GridManager gridManager;
     // GAme context
     [Inject] ResourceManager resManager;
-    [Inject] TableController tableController;
+    [Inject] BoardVisual tableController;
 
     //[SerializeField] Transform debugObject;
 
@@ -34,7 +34,7 @@ public class GameboardController : MonoBehaviour {
     }
 
     private async UniTaskVoid DebugLogic() {
-        gameBoard.SetBoardSettings(boardConfig);
+        
 
         gameBoard.opponentManager.RegisterOpponent(player);
         gameBoard.opponentManager.RegisterOpponent(enemy);
@@ -63,6 +63,19 @@ public class GameboardController : MonoBehaviour {
         fieldToPlace = gridManager.PlayerGrid.GetFieldAt(0, 0);
 
         fieldToPlace = gridManager.PlayerGrid.GetFieldAt(1, 0);
+
+
+        await UniTask.Delay(3000);
+        boardConfig.columns = 3;
+        gameBoard.SetBoardSettings(boardConfig);
+
+        await UniTask.Delay(3000);
+        boardConfig.columns = 7;
+        gameBoard.SetBoardSettings(boardConfig);
+
+        await UniTask.Delay(3000);
+        boardConfig.rowTypes.Add(FieldType.Support);
+        gameBoard.SetBoardSettings(boardConfig);
     }
 
     public void AssignOpponent(Opponent opponent) {

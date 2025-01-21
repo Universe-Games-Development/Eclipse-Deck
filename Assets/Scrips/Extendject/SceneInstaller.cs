@@ -9,7 +9,7 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
         
         Container.Bind<GameboardController>().FromComponentInHierarchy().AsSingle();
-        Container.Bind<TableController>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<BoardVisual>().FromComponentInHierarchy().AsSingle();
 
         Container.Bind<GameBoard>().AsTransient();
         Container.Bind<GridManager>().AsSingle();

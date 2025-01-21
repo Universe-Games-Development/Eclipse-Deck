@@ -1,7 +1,5 @@
-using System;
-using System.Runtime.CompilerServices;
+using Cysharp.Threading.Tasks.Triggers;
 using UnityEngine;
-using Zenject;
 
 public enum FieldType {
     Support,
@@ -13,8 +11,6 @@ public class FieldController : MonoBehaviour {
     private Field field;
     [SerializeField] public FieldUI fieldUI;
 
-    [Inject] UIManager uiManager;
-
 
     private FieldMaterializer fieldMaterializer;
     private Levitator levitator;
@@ -24,9 +20,15 @@ public class FieldController : MonoBehaviour {
     private void Awake() {
         fieldMaterializer = GetComponentInChildren<FieldMaterializer>();
         levitator = GetComponentInChildren<Levitator>();
-        levitator.UpdateInitialPosition(transform.position);
-        levitator.OnFall += () => SetInteractable(true);
-        levitator.FlyToInitialPosition();
+    }
+
+    public void InitializeLevitator(Vector3 initialPosition) {
+        transform.position = initialPosition;
+        if (levitator != null) {
+            levitator.UpdateInitialPosition(transform.position);
+            levitator.FlyToInitialPosition();
+            levitator.OnFall += () => SetInteractable(true);
+        }
     }
 
     public void Initialize(Field field) {
@@ -57,13 +59,18 @@ public class FieldController : MonoBehaviour {
         }
     }
 
-    
+    public void Reset() {
+        levitator.Reset();
+        fieldMaterializer.Reset();
 
-    void OnMouseEnter() {
-        uiManager.ShowTip("Field");
+        isInteractable = false;
+        if (field != null)
+            field.OnSelect -= levitator.ToggleLevitation;
+        field = null;
     }
 
     private void OnDestroy() {
+        if (field != null)
         field.OnSelect -= levitator.ToggleLevitation;
     }
 }

@@ -9,7 +9,7 @@ public class GameBoard {
     // Opponents will use it to be notified which one can perform turn now
     public Action<Opponent> OnTurnBegan;
 
-    [Inject] TableController tableController;
+    [Inject] BoardVisual boardVisual;
     [Inject] public OpponentManager opponentManager { get; private set; }
     [Inject] private GridManager gridManager;
     [Inject] private CommandManager commandManager;
@@ -46,15 +46,14 @@ public class GameBoard {
         return currentPlayer;
     }
 
-    public void SetBoardSettings(BoardSettings boardSettings) {
+    public async void SetBoardSettings(BoardSettings boardSettings) {
         gridManager.UpdateGrid(boardSettings);
         opponentManager.UpdateSettings(boardSettings);
     }
 
     // Used by other classes to allow start game
     public async UniTask<bool> StartGame(int minPlayers = 2) {
-        await tableController.SpawnFields(gridManager.MainGrid);
-
+        await UniTask.Delay(50);
         if (!opponentManager.IsAllRegistered()) {
             Debug.Log($"Can't start game because there are only {opponentManager.registeredOpponents.Count} registered players. Need: {MinPlayers}");
             return false;

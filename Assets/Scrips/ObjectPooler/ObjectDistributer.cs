@@ -23,22 +23,33 @@ public class ObjectDistributer : MonoBehaviour, IObjectDistributer {
 
         objectPool = new ObjectPool<GameObject>(
             createFunc: () => container.InstantiatePrefab(objectPrefab, poolParent),
-            actionOnGet: panel => panel.SetActive(true),
-            actionOnRelease: panel => {
-                panel.transform.SetParent(poolParent);
-                panel.SetActive(false);
+            actionOnGet: @object => @object.SetActive(true),
+            actionOnRelease: @object => {
+                @object.transform.SetParent(poolParent);
+                @object.SetActive(false);
             },
             actionOnDestroy: Destroy
         );
     }
 
+    // Створення об'єкта в довільному місці
     public virtual GameObject CreateObject() {
         if (objectPool == null) {
             CreateObjectPool();  // Ініціалізуємо пул, якщо він не був створений
         }
 
-        // Беремо об'єкт з пулу
-        return objectPool.Get();
+        GameObject obj = objectPool.Get();
+        return obj;
+    }
+
+    public virtual GameObject CreateObject(Vector3 position, Quaternion rotation) {
+        if (objectPool == null) {
+            CreateObjectPool(); 
+        }
+
+        GameObject obj = objectPool.Get();
+        obj.transform.SetPositionAndRotation(position, rotation);
+        return obj;
     }
 
     public virtual void ReleaseObject(GameObject obj) {
