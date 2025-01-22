@@ -55,6 +55,20 @@ public class FieldMaterializer : MonoBehaviour {
         meshRenderer.SetPropertyBlock(propBlock);
     }
 
+    public void Reset() {
+        if (field != null) {
+            field.OnChangedType -= UpdateColorBasedOnType;
+        }
+        field = null;
+        originalColor = default(Color);
+        propBlock.SetColor("_Color", originalColor);
+        propBlock.SetFloat("_EmissionIntensity", originalEmissionIntensity);
+        if (meshRenderer != null) {
+            meshRenderer.SetPropertyBlock(propBlock);
+        }
+    }
+
+
     private void OnDestroy() {
         if (field != null) {
             field.OnChangedType -= UpdateColorBasedOnType;

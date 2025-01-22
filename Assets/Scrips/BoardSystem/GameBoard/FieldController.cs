@@ -1,49 +1,45 @@
-using System;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using Zenject;
-
-public enum FieldType {
-    Support,
-    Attack
-}
 
 public class FieldController : MonoBehaviour {
+    public FieldType type;
+    public string owner;
 
     private Field field;
     [SerializeField] public FieldUI fieldUI;
 
-    [Inject] UIManager uiManager;
 
-
-    private FieldMaterializer fieldMaterializer;
-    private Levitator levitator;
+    [SerializeField] private FieldMaterializer fieldMaterializer;
+    [SerializeField] public Levitator levitator;
 
     bool isInteractable = false;
 
     private void Awake() {
         fieldMaterializer = GetComponentInChildren<FieldMaterializer>();
         levitator = GetComponentInChildren<Levitator>();
-        levitator.UpdateInitialPosition(transform.position);
-        levitator.OnFall += () => SetInteractable(true);
-        levitator.FlyToInitialPosition();
+    }
+
+    public void InitializeLevitator(Vector3 initialPosition) {
+        transform.position = initialPosition;
+        if (levitator != null) {
+            levitator.FlyToInitialPosition();
+            levitator.OnFall += () => SetInteractable(true);
+        }
     }
 
     public void Initialize(Field field) {
-        fieldMaterializer.Initialize(field);
-
-        this.field = field;
-        field.OnRemoval += Remove;
-    }
-
-    private void Remove(Field field) {
-        if (field != this.field) {
-            Debug.LogWarning("Trying to remove by wrong field");
+        
+        if (field == null) {
+            Debug.LogError("null field data");
+            return;
         }
-        SetInteractable(false);
-        field.OnRemoval -= Remove;
-        levitator.FlyAway();
+        fieldMaterializer.Initialize(field);
+        this.field = field;
+        type = field.Type;
+        if (field.Owner != null) {
+            owner = field.Owner.Name;
+        }
     }
+
 
     private void SetInteractable(bool value) {
         isInteractable = value;
@@ -57,13 +53,18 @@ public class FieldController : MonoBehaviour {
         }
     }
 
-    
+    public void Reset() {
+        levitator.Reset();
+        fieldMaterializer.Reset();
 
-    void OnMouseEnter() {
-        uiManager.ShowTip("Field");
+        isInteractable = false;
+        if (field != null)
+            field.OnSelect -= levitator.ToggleLevitation;
+        field = null;
     }
 
     private void OnDestroy() {
-        field.OnSelect -= levitator.ToggleLevitation;
+        if (field != null)
+            field.OnSelect -= levitator.ToggleLevitation;
     }
 }

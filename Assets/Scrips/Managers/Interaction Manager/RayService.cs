@@ -20,19 +20,19 @@ public class RayService : MonoBehaviour {
         raycastCamera = Camera.main;
     }
 
-    public Vector3? GetRayHitPosition(float distance = 20f) {
-        return GetRaycastHit(distance)?.point;
+    public Vector3? GetRayHitPosition() {
+        return GetRaycastHit()?.point;
     }
 
-    public GameObject GetRayObject(float distance = 20f) {
-        return GetRaycastHit(distance)?.collider.gameObject;
+    public GameObject GetRayObject() {
+        return GetRaycastHit()?.collider.gameObject;
     }
 
-    private RaycastHit? GetRaycastHit(float distance) {
+    private RaycastHit? GetRaycastHit() {
         Ray ray = raycastCamera.ScreenPointToRay(Input.mousePosition);
-        Debug.DrawRay(ray.origin, ray.direction * distance, Color.red, 1f); // Debug ray for visualization
+        Debug.DrawRay(ray.origin, ray.direction * tableRayDistance, Color.red, 1f); // Debug ray for visualization
 
-        if (Physics.Raycast(ray, out RaycastHit hit, distance, -1, QueryTriggerInteraction.Ignore)) {
+        if (Physics.Raycast(ray, out RaycastHit hit, tableRayDistance, -1, QueryTriggerInteraction.Ignore)) {
             Debug.DrawLine(ray.origin, hit.point, Color.green, 1f); // Debug line to hit point
             return hit;
         }
@@ -40,7 +40,7 @@ public class RayService : MonoBehaviour {
     }
 
     public Vector3? GetRayMousePosition() {
-        var hit = GetRaycastHit(20f);
+        var hit = GetRaycastHit();
         return hit?.point ?? null;
     }
 }

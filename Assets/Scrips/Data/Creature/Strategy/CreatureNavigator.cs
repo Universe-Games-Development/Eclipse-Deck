@@ -24,8 +24,6 @@ public class CreatureNavigator {
         CurrentCreature = gameContext.currentCreature;
 
         mainGrid = gameContext._gridManager.MainGrid;
-        playerGrid = gameContext._gridManager.PlayerGrid;
-        enemyGrid = gameContext._gridManager.EnemyGrid;
 
         IsRelativeToEnemy = mainGrid.IsFieldInEnemyZone(CurrentField);
     }

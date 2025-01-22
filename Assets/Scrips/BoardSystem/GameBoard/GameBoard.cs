@@ -3,16 +3,16 @@ using System;
 using UnityEngine;
 using Zenject;
 
+// Add states soon
 public class GameBoard {
 
-    bool isStarted = false;
     // Opponents will use it to be notified which one can perform turn now
     public Action<Opponent> OnTurnBegan;
 
-    [Inject] TableController tableController;
+    [Inject] BoardVisual boardVisual;
     [Inject] public OpponentManager opponentManager { get; private set; }
     [Inject] private GridManager gridManager;
-    [Inject] private CommandManager commandManager;
+    [Inject] private CommandManager creatureCommands;
 
     private Opponent currentPlayer;
     private GameContext gameContext;
@@ -53,14 +53,12 @@ public class GameBoard {
 
     // Used by other classes to allow start game
     public async UniTask<bool> StartGame(int minPlayers = 2) {
-        await tableController.SpawnFields(gridManager.MainGrid);
-
+        await UniTask.Delay(50);
         if (!opponentManager.IsAllRegistered()) {
             Debug.Log($"Can't start game because there are only {opponentManager.registeredOpponents.Count} registered players. Need: {MinPlayers}");
             return false;
         }
 
-        isStarted = true;
         currentPlayer = ChooseFirstPlayer();
         OnTurnBegan?.Invoke(currentPlayer);
         return true;
@@ -80,7 +78,7 @@ public class GameBoard {
             return;
         }
         GatherPlayerCreaturesActions(currentPlayer);
-        await commandManager.ExecuteCommands();
+        await creatureCommands.ExecuteCommands();
     }
 
     private void GatherPlayerCreaturesActions(Opponent opponent) {
@@ -93,7 +91,7 @@ public class GameBoard {
                 var creature = field.OccupiedCreature;
                 if (creature != null) {
                     gameContext.initialField = field;
-                    commandManager.RegisterCommand(creature.GetTurnActions(gameContext));
+                    creatureCommands.RegisterCommand(creature.GetTurnActions(gameContext));
                 }
             }
             gameContext.initialField = null;

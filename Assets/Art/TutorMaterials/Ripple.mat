@@ -102,7 +102,7 @@ Material:
     - _AddPrecomputedVelocity: 0
     - _AlphaClip: 0
     - _AlphaToMask: 0
-    - _Amplitude: 0.04
+    - _Amplitude: 0.01
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
     - _BumpScale: 1
@@ -115,20 +115,20 @@ Material:
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _Edge_Blend: 0.98
-    - _Effect_Radius: 4000000
+    - _Effect_Radius: 1
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Gradient_Edge: 0.68
+    - _Gradient_Edge: 0.58
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Ripple_Density: 11500
-    - _Ripple_Freq: 9.95
+    - _Ripple_Density: 500
+    - _Ripple_Freq: 8.5
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -139,9 +139,9 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0, g: 0, b: 0, a: 1}
+    - _Color: {r: 0.3018868, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _Gradient_Color: {r: 0.6132076, g: 0.22935735, b: 0.2053667, a: 1}
+    - _Gradient_Color: {r: 0.8396226, g: 0.32833937, b: 0.29703632, a: 1}
     - _Origin: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []

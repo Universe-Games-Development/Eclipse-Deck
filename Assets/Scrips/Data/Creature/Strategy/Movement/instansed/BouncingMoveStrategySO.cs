@@ -1,4 +1,3 @@
-using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -23,7 +22,7 @@ public class BouncingMoveStrategy : InstanceMovementStrategy {
 
     protected override List<Path> Move() {
         List<Path> paths = new();
-        Path path =  navigator.GenerateSimplePath(moveAmount, currentDirection);
+        Path path = navigator.GenerateSimplePath(moveAmount, currentDirection);
         if (path.isInterrupted) {
             isBounced = true;
         }
