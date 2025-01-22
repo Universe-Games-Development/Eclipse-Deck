@@ -27,9 +27,9 @@ public class PlayerController : MonoBehaviour {
             TrySummonCard();
         }
 
-        
+
         Vector3? mouseWorldPosition = rayService.GetRayMousePosition();
-        
+
 
         if (gameboard_c != null) {
             gameboard_c.UpdateCursorPosition(mouseWorldPosition);

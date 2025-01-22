@@ -1,13 +1,12 @@
-using UnityEngine;
 using Zenject;
 
 public class GameInstaller : MonoInstaller<GameInstaller> {
-    
+
 
     public override void InstallBindings() {
         Container.Bind<OpponentManager>().AsSingle();
 
-        
+
         Container.Bind<GameboardController>().FromComponentInHierarchy().AsSingle();
         Container.Bind<BoardVisual>().FromComponentInHierarchy().AsSingle();
 

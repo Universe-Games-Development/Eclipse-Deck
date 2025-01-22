@@ -1,8 +1,7 @@
 using UnityEngine;
 
-[CreateAssetMenu (fileName = "LevitationData", menuName = "PrefabSettings/Levitation"), ]
-public class LevitationData : ScriptableObject
-{
+[CreateAssetMenu(fileName = "LevitationData", menuName = "PrefabSettings/Levitation"),]
+public class LevitationData : ScriptableObject {
     [Header("Start Leviation")]
     public float liftHeight = 1f;
     public float liftDuration = 0.5f;

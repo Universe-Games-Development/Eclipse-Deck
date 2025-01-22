@@ -5,9 +5,12 @@ using System.Linq;
 using UnityEngine;
 
 public class Grid {
-    public Func<Grid, UniTask> OnGridInitialized;
-    public Func<Grid, UniTask> OnGridChanged;
-    
+    public Func<Grid, UniTask> OnGridChangedAsync;
+    public Action<Grid> OnGridChanged;
+
+    public Action<Field> OnAddField;
+    public Action<Field> OnRemoveField;
+
 
     public CellSize cellSize = new CellSize { width = 1f, height = 1f };
     private List<List<Field>> _fields;
@@ -16,6 +19,7 @@ public class Grid {
         get => _fields;
         protected set => _fields = value;
     }
+
 
     public Grid() {
         _fields = new List<List<Field>>();
@@ -30,7 +34,6 @@ public class Grid {
         Fields = new List<List<Field>>();
         UpdateGridSize(rows, columns);
         // spawn grid + find center
-        OnGridInitialized?.Invoke(this);
     }
 
 
@@ -40,6 +43,7 @@ public class Grid {
             AdjustSize(row.Count, targetColumns, _ => AddColumn(), row => RemoveColumn(row));
         }
         // update grid + find center
+        OnGridChangedAsync?.Invoke(this);
         OnGridChanged?.Invoke(this);
     }
 
@@ -58,22 +62,30 @@ public class Grid {
     public virtual void AddRow() {
         int newRowIndex = Fields.Count; // Індекс нового ряду
         int columns = Fields.Count > 0 ? Fields[0].Count : 1; // Кількість колонок у рядку
-        var newRow = Enumerable.Range(0, columns).Select(col => new Field(newRowIndex, col)).ToList();
+        var newRow = Enumerable.Range(0, columns)
+            .Select(col => new Field(newRowIndex, col))
+            .ToList();
         Fields.Add(newRow);
+
+        foreach (var field in newRow) {
+            OnAddField?.Invoke(field);
+        }
     }
 
-    public virtual void AddColumn() { 
-        foreach (var row in Fields) { 
-            int columnIndex = row.Count; 
-            row.Add(new Field(Fields.IndexOf(row), columnIndex)); 
-        } 
+    public virtual void AddColumn() {
+        foreach (var row in Fields) {
+            int columnIndex = row.Count;
+            Field field = new(Fields.IndexOf(row), columnIndex);
+            row.Add(field);
+            OnAddField?.Invoke(field);
+        }
     }
 
     public virtual void RemoveRow(int rowIndex) {
         if (rowIndex >= 0 && rowIndex < Fields.Count) {
             var row = Fields[rowIndex];
             foreach (var field in row) {
-                field.RemoveField(); // Сповіщення поля
+                OnRemoveField?.Invoke(field);
             }
             Fields.RemoveAt(rowIndex);
         }
@@ -83,8 +95,8 @@ public class Grid {
         foreach (var row in Fields) {
             if (columnIndex < row.Count) {
                 var field = row[columnIndex];
-                field.RemoveField(); // Сповіщення поля
                 row.RemoveAt(columnIndex);
+                OnRemoveField?.Invoke(field);
             }
         }
     }
@@ -132,7 +144,7 @@ public class Grid {
     }
 
     public List<Field> GetFlankFields(Field field, int flankSize, bool isReversed) {
-        List<Field> flankFields = new List<Field>();
+        List<Field> flankFields = new();
 
         // Ліва сторона
         List<Field> leftFlank = GetFieldsInDirection(field, flankSize, Direction.West, isReversed);

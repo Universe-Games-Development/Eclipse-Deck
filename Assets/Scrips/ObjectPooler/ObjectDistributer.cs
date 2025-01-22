@@ -44,7 +44,7 @@ public class ObjectDistributer : MonoBehaviour, IObjectDistributer {
 
     public virtual GameObject CreateObject(Vector3 position, Quaternion rotation) {
         if (objectPool == null) {
-            CreateObjectPool(); 
+            CreateObjectPool();
         }
 
         GameObject obj = objectPool.Get();

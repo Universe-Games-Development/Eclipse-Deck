@@ -46,8 +46,8 @@ public class Field {
     }
 
     public void AssignOwner(Opponent player) {
-        if (Owner != null) {
-            Debug.LogWarning($"{row} / {column} already occupied by {Owner.Name} but you trying to assign {player.Name}");
+        if (Owner == player) {
+            return;
         }
         Owner = player;
         OnChangedOwner?.Invoke();

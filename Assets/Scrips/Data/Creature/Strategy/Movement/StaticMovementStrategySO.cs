@@ -3,7 +3,7 @@ using System.Collections.Generic;
 public abstract class StaticMovementStrategySO : MovementStrategySO, IMoveStrategy {
     protected CreatureNavigator navigator;
     public override IMoveStrategy GetInstance() {
-        return this; 
+        return this;
     }
 
     protected abstract List<Path> Move();

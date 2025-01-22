@@ -32,10 +32,13 @@ public class FieldPool : MonoBehaviour {
 
     private void OnReturnToPool(FieldController fieldController) {
         if (fieldController != null) {
-            fieldController.Reset();
-            fieldController.gameObject.SetActive(false);
+            fieldController.levitator.FlyAwayWithCallback(() => {
+                fieldController.Reset();
+                fieldController.gameObject.SetActive(false);
+            });
         }
     }
+
 
     private void OnDestroyField(FieldController fieldController) {
         if (fieldController != null) {

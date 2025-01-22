@@ -3,16 +3,16 @@ using System;
 using UnityEngine;
 using Zenject;
 
+// Add states soon
 public class GameBoard {
 
-    bool isStarted = false;
     // Opponents will use it to be notified which one can perform turn now
     public Action<Opponent> OnTurnBegan;
 
     [Inject] BoardVisual boardVisual;
     [Inject] public OpponentManager opponentManager { get; private set; }
     [Inject] private GridManager gridManager;
-    [Inject] private CommandManager commandManager;
+    [Inject] private CommandManager creatureCommands;
 
     private Opponent currentPlayer;
     private GameContext gameContext;
@@ -46,7 +46,7 @@ public class GameBoard {
         return currentPlayer;
     }
 
-    public async void SetBoardSettings(BoardSettings boardSettings) {
+    public void SetBoardSettings(BoardSettings boardSettings) {
         gridManager.UpdateGrid(boardSettings);
         opponentManager.UpdateSettings(boardSettings);
     }
@@ -59,7 +59,6 @@ public class GameBoard {
             return false;
         }
 
-        isStarted = true;
         currentPlayer = ChooseFirstPlayer();
         OnTurnBegan?.Invoke(currentPlayer);
         return true;
@@ -79,7 +78,7 @@ public class GameBoard {
             return;
         }
         GatherPlayerCreaturesActions(currentPlayer);
-        await commandManager.ExecuteCommands();
+        await creatureCommands.ExecuteCommands();
     }
 
     private void GatherPlayerCreaturesActions(Opponent opponent) {
@@ -92,7 +91,7 @@ public class GameBoard {
                 var creature = field.OccupiedCreature;
                 if (creature != null) {
                     gameContext.initialField = field;
-                    commandManager.RegisterCommand(creature.GetTurnActions(gameContext));
+                    creatureCommands.RegisterCommand(creature.GetTurnActions(gameContext));
                 }
             }
             gameContext.initialField = null;

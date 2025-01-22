@@ -1,7 +1,6 @@
 /* The logic of movements for creature:
  * 1. I'm do nothing
  */
-using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
 
