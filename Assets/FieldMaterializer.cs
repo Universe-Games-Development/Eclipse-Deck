@@ -3,6 +3,10 @@ using UnityEngine;
 public class FieldMaterializer : MonoBehaviour {
     [SerializeField] private Color attackColor = Color.red;
     [SerializeField] private Color supportColor = Color.green;
+
+    [SerializeField] private Color enemyColor = Color.red;
+    [SerializeField] private Color playerColor = Color.green;
+
     [SerializeField] private float highlightIntensity = 2f; // Інтенсивність підсвічування
 
     [SerializeField] private MeshRenderer meshRenderer;
@@ -30,6 +34,8 @@ public class FieldMaterializer : MonoBehaviour {
     public void Initialize(Field field) {
         this.field = field;
         UpdateColorBasedOnType(field.Type);
+        UpdateColorBasedOnOwner(field.Owner);
+        field.OnChangedOwner += UpdateColorBasedOnOwner;
         field.OnChangedType += UpdateColorBasedOnType;
     }
 
@@ -37,6 +43,14 @@ public class FieldMaterializer : MonoBehaviour {
         if (meshRenderer != null) {
             originalColor = newType == FieldType.Support ? supportColor : attackColor;
             propBlock.SetColor("_Color", originalColor);
+            meshRenderer.SetPropertyBlock(propBlock);
+        }
+    }
+
+    public void UpdateColorBasedOnOwner(Opponent opponent) {
+        if (meshRenderer != null) {
+            originalColor = opponent is Player ? playerColor : enemyColor;
+            propBlock.SetColor("_BaseColor", originalColor);
             meshRenderer.SetPropertyBlock(propBlock);
         }
     }
@@ -58,8 +72,10 @@ public class FieldMaterializer : MonoBehaviour {
     public void Reset() {
         if (field != null) {
             field.OnChangedType -= UpdateColorBasedOnType;
+            field.OnChangedOwner -= UpdateColorBasedOnOwner;
+            field = null;
         }
-        field = null;
+        
         originalColor = default(Color);
         propBlock.SetColor("_Color", originalColor);
         propBlock.SetFloat("_EmissionIntensity", originalEmissionIntensity);
@@ -72,6 +88,7 @@ public class FieldMaterializer : MonoBehaviour {
     private void OnDestroy() {
         if (field != null) {
             field.OnChangedType -= UpdateColorBasedOnType;
+            field.OnChangedOwner -= UpdateColorBasedOnOwner;
         }
     }
 }

@@ -9,7 +9,7 @@ public class GameboardController : MonoBehaviour {
     [SerializeField] private PlayerController player_c;
     [SerializeField] private EnemyController enemy_c;
 
-    [SerializeField] private BoardSettings boardConfig;
+    [SerializeField] private GridSettings boardConfig;
 
     private Enemy enemy;
     private Player player;
@@ -19,7 +19,7 @@ public class GameboardController : MonoBehaviour {
     [Inject] private OpponentManager opponentManager;
     // GAme context
     [Inject] ResourceManager resManager;
-    [Inject] BoardVisual tableController;
+    [Inject] GridVisual tableController;
 
     //[SerializeField] Transform debugObject;
 
@@ -52,6 +52,10 @@ public class GameboardController : MonoBehaviour {
         await gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
 
         int taskDelay = 1000;
+
+        await UniTask.Delay(taskDelay);
+        boardConfig.RemoveRowAt(0); // Видалення першого рядка
+        gameBoard.SetBoardSettings(boardConfig);
         
         // Тестування змін конфігурації дошки
         // 1. Базове тестування колонок
@@ -59,14 +63,15 @@ public class GameboardController : MonoBehaviour {
         boardConfig.SetColumns(3); // Встановлення 3 колонок
         gameBoard.SetBoardSettings(boardConfig);
 
+        
         await UniTask.Delay(taskDelay);
         boardConfig.SetColumns(7); // Встановлення 7 колонок
         gameBoard.SetBoardSettings(boardConfig);
-
+        
         await UniTask.Delay(taskDelay);
         boardConfig.SetColumns(1); // Спроба встановити кількість колонок нижче мінімальної
         gameBoard.SetBoardSettings(boardConfig);
-
+        
         // 2. Базове тестування рядків
         await UniTask.Delay(taskDelay);
         boardConfig.AddRow(FieldType.Support); // Додавання рядка Support
@@ -76,10 +81,8 @@ public class GameboardController : MonoBehaviour {
         boardConfig.RemoveRow(); // Видалення останнього рядка
         gameBoard.SetBoardSettings(boardConfig);
 
-        await UniTask.Delay(taskDelay);
-        boardConfig.RemoveRowAt(0); // Видалення першого рядка
-        gameBoard.SetBoardSettings(boardConfig);
-
+        
+        
         // 4. Тестування мінімальної та максимальної кількості рядків і колонок
         await UniTask.Delay(taskDelay);
         boardConfig.SetColumns(50); // Тестування великої кількості колонок
@@ -117,7 +120,8 @@ public class GameboardController : MonoBehaviour {
         // 6. Масштабування конфігурації
         await UniTask.Delay(taskDelay);
         boardConfig.AddRowAt(FieldType.Support, 0); // Додавання Support рядка в початок
-        gameBoard.SetBoardSettings(boardConfig);
+        gameBoard.SetBoardSettings(boardConfig); 
+        //*/
         Debug.Log("DebugLogic завершено.");
     }
 

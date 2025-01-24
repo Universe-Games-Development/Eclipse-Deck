@@ -6,7 +6,7 @@ public class Field {
     public Action<Field> OnRemoval;
     public Action<bool> OnSelect;
     [Header("Actions")]
-    public Action OnChangedOwner;
+    public Action<Opponent> OnChangedOwner;
     public Action<FieldType> OnChangedType;
 
     [Header("Board Set-up")]
@@ -50,7 +50,12 @@ public class Field {
             return;
         }
         Owner = player;
-        OnChangedOwner?.Invoke();
+        OnChangedOwner?.Invoke(Owner);
+    }
+
+    public void RemoveOwner() {
+        Owner = null;
+        OnChangedOwner?.Invoke(Owner);
     }
 
     public void UnAssignCreature() {
