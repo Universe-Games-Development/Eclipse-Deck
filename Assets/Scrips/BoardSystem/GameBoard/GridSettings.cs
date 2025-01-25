@@ -4,7 +4,7 @@ using UnityEngine;
 using System.Linq;
 
 [Serializable]
-public class BoardSettings {
+public class GridSettings {
     private const int MIN_ROW_COUNT = 2;
     private const int MIN_COLUMN_COUNT = 2;
 
@@ -26,7 +26,7 @@ public class BoardSettings {
     private List<FieldType> previousRowTypes;
     private int previousColumns;
 
-    public BoardSettings() {
+    public GridSettings() {
         if (!IsValidColumns(columns)) {
             columns = MIN_COLUMN_COUNT;
         }

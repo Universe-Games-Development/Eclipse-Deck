@@ -8,7 +8,8 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
 
         Container.Bind<GameboardController>().FromComponentInHierarchy().AsSingle();
-        Container.Bind<BoardVisual>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<GridVisual>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<FieldPool>().FromComponentsInHierarchy().AsSingle();
 
         Container.Bind<GameBoard>().AsTransient();
         Container.Bind<GridManager>().AsSingle();

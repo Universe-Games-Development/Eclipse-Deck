@@ -1463,6 +1463,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackColor: {r: 0.7735849, g: 0.25266308, b: 0, a: 1}
   supportColor: {r: 0.05882351, g: 0.5487737, b: 0.6509804, a: 1}
+  enemyColor: {r: 1, g: 0, b: 0, a: 1}
+  playerColor: {r: 0, g: 1, b: 0, a: 1}
   highlightIntensity: 2
   meshRenderer: {fileID: 0}
 --- !u!1 &885230738
@@ -1864,6 +1866,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 0
   owner: 
+  fieldMaterializer: {fileID: 0}
   levitator: {fileID: 0}
 --- !u!1 &1253212642
 GameObject:
@@ -1875,9 +1878,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1253212643}
   - component: {fileID: 1253212651}
+  - component: {fileID: 1253212654}
   - component: {fileID: 1253212650}
   - component: {fileID: 1253212647}
-  - component: {fileID: 1253212652}
   - component: {fileID: 1253212653}
   m_Layer: 0
   m_Name: GameBoard
@@ -1957,22 +1960,6 @@ MonoBehaviour:
       height: 1
     columns: 2
     minPlayers: 2
---- !u!114 &1253212652
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1253212642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89b1007f391da054988b03182abd35f0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pool: {fileID: 1253212653}
-  origin: {fileID: 2875565043564269430}
-  globalCenter: {fileID: 1587158555}
-  yInteractionRange: 1
 --- !u!114 &1253212653
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1987,6 +1974,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fieldPrefab: {fileID: 7025480052318313972, guid: b335380be08b2fe48a40fd6efc1a9e25, type: 3}
   parentTransform: {fileID: 2875565043564269430}
+--- !u!114 &1253212654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253212642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f619e5253ae4b2c41978cdafb0754351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pool: {fileID: 1253212653}
+  origin: {fileID: 2875565043564269430}
+  globalCenter: {fileID: 1587158555}
+  yInteractionRange: 1
 --- !u!1 &1360052283
 GameObject:
   m_ObjectHideFlags: 0
@@ -2365,7 +2368,6 @@ GameObject:
   - component: {fileID: 1832511274}
   - component: {fileID: 1832511273}
   - component: {fileID: 1832511275}
-  - component: {fileID: 1832511276}
   m_Layer: 0
   m_Name: SceneContext
   m_TagString: Untagged
@@ -2430,18 +2432,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e530501f42323c34194c948a684a892d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1832511276
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1832511272}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bf4218bdd6cd2f41bda67bf502d4f4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1866940194
@@ -2768,7 +2758,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8683058723897186025}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 2, y: 0, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0

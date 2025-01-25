@@ -10,6 +10,12 @@ public class FieldPool : MonoBehaviour {
     [Inject] DiContainer container;
 
     private void Awake() {
+        InitPool();
+    }
+
+    public void InitPool() {
+        if (fieldPool != null) return;
+
         fieldPool = new ObjectPool<FieldController>(
             CreateField,
             OnTakeFromPool,

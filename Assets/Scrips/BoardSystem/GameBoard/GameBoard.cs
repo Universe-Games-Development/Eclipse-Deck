@@ -9,7 +9,7 @@ public class GameBoard {
     // Opponents will use it to be notified which one can perform turn now
     public Action<Opponent> OnTurnBegan;
 
-    [Inject] BoardVisual boardVisual;
+    [Inject] GridVisual boardVisual;
     [Inject] public OpponentManager opponentManager { get; private set; }
     [Inject] private GridManager gridManager;
     [Inject] private CommandManager creatureCommands;
@@ -46,9 +46,8 @@ public class GameBoard {
         return currentPlayer;
     }
 
-    public void SetBoardSettings(BoardSettings boardSettings) {
+    public void SetBoardSettings(GridSettings boardSettings) {
         gridManager.UpdateGrid(boardSettings);
-        opponentManager.UpdateSettings(boardSettings);
     }
 
     // Used by other classes to allow start game

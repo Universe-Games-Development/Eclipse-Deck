@@ -1,106 +1,121 @@
-using Cysharp.Threading.Tasks;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public class Grid {
-    public Func<Grid, UniTask> OnGridChangedAsync;
-    public Action<Grid> OnGridChanged;
-
-    public Action<Field> OnAddField;
-    public Action<Field> OnRemoveField;
-
-
-    public CellSize cellSize = new CellSize { width = 1f, height = 1f };
+    private GridSettings _settings;
     private List<List<Field>> _fields;
-
     public List<List<Field>> Fields {
         get => _fields;
         protected set => _fields = value;
     }
 
-
-    public Grid() {
-        _fields = new List<List<Field>>();
-    }
-
-    public Grid(int rows, int columns, CellSize cellSize) {
-        this.cellSize = cellSize;
-        InitializeGrid(rows, columns);
-    }
-
-    public virtual void InitializeGrid(int rows, int columns) {
-        Fields = new List<List<Field>>();
-        UpdateGridSize(rows, columns);
-        // spawn grid + find center
+    public virtual GridUpdateData UpdateGrid(GridSettings gridSettings) {
+        _settings = gridSettings;
+        return BuildGrid(_settings.RowTypes.Count, _settings.columns);
     }
 
 
-    public virtual void UpdateGridSize(int targetRows, int targetColumns) {
-        AdjustSize(Fields.Count, targetRows, _ => AddRow(), row => RemoveRow(row));
-        foreach (var row in Fields) {
-            AdjustSize(row.Count, targetColumns, _ => AddColumn(), row => RemoveColumn(row));
+    public virtual GridUpdateData BuildGrid(int targetRows, int targetColumns) {
+        GridUpdateData gridUpdateData = new GridUpdateData(); // Ініціалізація gridUpdateData
+        gridUpdateData.IsInitialized = Fields == null;
+        if (Fields == null) {
+            Fields = new List<List<Field>>();
         }
-        // update grid + find center
-        OnGridChangedAsync?.Invoke(this);
-        OnGridChanged?.Invoke(this);
+        
+        // adjust rows
+        AdjustSize(Fields.Count, targetRows, _ => AddRow(), row => RemoveRow(row), out List<Field> rowRemovedFields, out List<Field> rowAddedFields);
+        gridUpdateData.removedFields.AddRange(rowRemovedFields);
+        gridUpdateData.addedFields.AddRange(rowAddedFields);
+
+        // adjust columns
+        foreach (var row in Fields) {
+            AdjustSize(row.Count, targetColumns, _ => AddColumn(), col => RemoveColumn(col), out List<Field> colRemovedFields, out List<Field> colAddedFields);
+            gridUpdateData.removedFields.AddRange(colRemovedFields);
+            gridUpdateData.addedFields.AddRange(colAddedFields);
+        }
+
+        return gridUpdateData;
     }
 
 
-    private void AdjustSize(int currentSize, int targetSize, Action<int> addAction, Action<int> removeAction) {
+        private void AdjustSize(int currentSize, int targetSize, Func<int, List<Field>> addAction, Func<int, List<Field>> removeAction, out List<Field> removedFields, out List<Field> addedFields) {
+        removedFields = new List<Field>();
+        addedFields = new List<Field>();
+
         while (currentSize < targetSize) {
-            addAction(currentSize++);
+            addedFields.AddRange(addAction(currentSize++));
         }
         while (currentSize > targetSize) {
-            removeAction(--currentSize);
+            removedFields.AddRange(removeAction(--currentSize));
         }
     }
 
 
     #region ADD / REMOVE
-    public virtual void AddRow() {
+    public virtual List<Field> AddRow() {
         int newRowIndex = Fields.Count; // Індекс нового ряду
         int columns = Fields.Count > 0 ? Fields[0].Count : 1; // Кількість колонок у рядку
         var newRow = Enumerable.Range(0, columns)
             .Select(col => new Field(newRowIndex, col))
             .ToList();
+
         Fields.Add(newRow);
 
-        foreach (var field in newRow) {
-            OnAddField?.Invoke(field);
-        }
+        return newRow;
     }
 
-    public virtual void AddColumn() {
+
+    public virtual List<Field> RemoveRow(int rowIndex) {
+        if (rowIndex < 0 || rowIndex >= Fields.Count) {
+            // Можна кинути виняток або записати в лог
+            return null;
+        }
+        var row = Fields[rowIndex];
+        Fields.RemoveAt(rowIndex);
+        return row;
+    }
+
+
+
+    public virtual List<Field> AddColumn() {
+
+        List<Field> fieldsToAdd = new List<Field>();
+
+        // Якщо немає рядків, створити перший рядок
+        if (Fields.Count == 0) {
+            AddRow();
+        }
+
         foreach (var row in Fields) {
             int columnIndex = row.Count;
-            Field field = new(Fields.IndexOf(row), columnIndex);
+            Field field = new Field(Fields.IndexOf(row), columnIndex);
             row.Add(field);
-            OnAddField?.Invoke(field);
+            fieldsToAdd.Add(field);
         }
+
+        return fieldsToAdd;
     }
 
-    public virtual void RemoveRow(int rowIndex) {
-        if (rowIndex >= 0 && rowIndex < Fields.Count) {
-            var row = Fields[rowIndex];
-            foreach (var field in row) {
-                OnRemoveField?.Invoke(field);
-            }
-            Fields.RemoveAt(rowIndex);
+    public virtual List<Field> RemoveColumn(int columnIndex) {
+        if (Fields.Count == 0) {
+            throw new InvalidOperationException("Fields is not initialized or empty.");
         }
-    }
 
-    public virtual void RemoveColumn(int columnIndex) {
+        List<Field> fieldsToRemove = new List<Field>();
+
         foreach (var row in Fields) {
-            if (columnIndex < row.Count) {
+            if (row != null && columnIndex >= 0 && columnIndex < row.Count) {
                 var field = row[columnIndex];
                 row.RemoveAt(columnIndex);
-                OnRemoveField?.Invoke(field);
+                fieldsToRemove.Add(field);
             }
         }
-    }
 
+        return fieldsToRemove;
+    }
     #endregion
 
     #region GETTERS
@@ -121,7 +136,7 @@ public class Grid {
     }
 
     public List<Field> GetFieldsInDirection(Field currentField, int pathAmount, Direction direction, bool reversed = false) {
-        List<Field> fields = new();
+        List<Field> fields = new List<Field>();
 
         if (reversed) {
             direction = CompassUtil.GetOppositeDirection(direction);
@@ -133,8 +148,8 @@ public class Grid {
             int newRow = currentField.row + rowOffset * i;
             int newCol = currentField.column + colOffset * i;
 
-            if (newRow >= 0 && newRow < Fields.Count && newCol >= 0 && newCol < Fields[0].Count) {
-                fields.Add(Fields[newRow][newCol]);
+            if (newRow >= 0 && newRow < this.Fields.Count && newCol >= 0 && newCol < this.Fields[0].Count) {
+                fields.Add(this.Fields[newRow][newCol]);
             } else {
                 break;
             }
@@ -144,7 +159,7 @@ public class Grid {
     }
 
     public List<Field> GetFlankFields(Field field, int flankSize, bool isReversed) {
-        List<Field> flankFields = new();
+        List<Field> flankFields = new List<Field>();
 
         // Ліва сторона
         List<Field> leftFlank = GetFieldsInDirection(field, flankSize, Direction.West, isReversed);
@@ -158,42 +173,44 @@ public class Grid {
     }
 
     public bool FieldExists(Field field) {
-        return Fields.Any(column => column?.Contains(field) == true);
-
+        return GetFieldAt(field.row, field.column) != null;
     }
 
     public Field GetFieldAt(int row, int column) {
-        if (Fields == null) {
-            return null;
-        }
-        if (row < 0 || column < 0 || row > Fields.Count - 1 || column > Fields[0].Count - 1) {
+        if (Fields == null
+            || row < 0 || column < 0
+            || row >= Fields.Count
+            || column >= Fields[0].Count) {
             return null;
         }
         return Fields[row][column];
     }
+
     #endregion
 
     public bool IsFieldInEnemyZone(Field field) {
         return field.Owner is Enemy;
     }
 
-    public void PrintGrid() {
-        foreach (var row in Fields) {
-            Console.WriteLine(string.Join(", ", row.Select(t => t.column)));
-            Console.WriteLine(string.Join(", ", row.Select(t => t.row)));
-        }
-        Console.WriteLine();
+    public Vector3 GetGridCenter() {
+        float width = Fields.Count > 0 ? Fields.Count : 0f;
+        float height = Fields.Count > 0 && Fields[0].Count > 0 ? Fields[0].Count : 0f;
+        return new Vector3(width / 2f, 0, height / 2f);
     }
 
     public Vector2Int? GetGridIndexByWorld(Transform origin, Vector3 worldPosition) {
+        if (_settings == null) return null;
         Vector3 localPosition = origin.InverseTransformPoint(worldPosition);
-        int x = Mathf.FloorToInt((localPosition.x) / cellSize.width);
-        int y = Mathf.FloorToInt((localPosition.z) / cellSize.height);
+        int x = Mathf.FloorToInt(localPosition.x / _settings.cellSize.width);
+        int y = Mathf.FloorToInt(localPosition.z / _settings.cellSize.height);
+        return (x >= 0 && x < Fields.Count && y >= 0 && y < Fields[0].Count) ? new Vector2Int(x, y) : (Vector2Int?)null;
+    }
 
-        if (x < 0 || x >= Fields.Count || y < 0 || y >= Fields[0].Count) {
-            return null;
-        }
+    public GridUpdateData RemoveAll() {
+        return BuildGrid(0, 0);
+    }
 
-        return new Vector2Int(x, y);
+    public GridSettings GetConfig() {
+        return _settings;
     }
 }
