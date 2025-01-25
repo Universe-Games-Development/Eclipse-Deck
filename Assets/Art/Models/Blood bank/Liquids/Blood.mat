@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-1341402583794746922
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 9
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Blood
+  m_Shader: {fileID: -6465566751694194690, guid: 9bba8111b4e53b1498c4b75ab1767c9f, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 2
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses:
+  - MOTIONVECTORS
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _EffectTexture:
+        m_Texture: {fileID: 2800000, guid: 6cb943eb88ee1a64c82b30a58c888262, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Noise:
+        m_Texture: {fileID: 2800000, guid: f9959bc41ee516a48b8dd7c78916cb28, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParalaxNoise:
+        m_Texture: {fileID: 2800000, guid: f9959bc41ee516a48b8dd7c78916cb28, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_3b145c583edf4c2ab813c6b996a85f8b_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 3896c867d14fa724ea7011400dbdbaf8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Texture2D:
+        m_Texture: {fileID: 2800000, guid: 3896c867d14fa724ea7011400dbdbaf8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorNess: 30
+    - _Color_Fresnel_Power: 1
+    - _Effect_Frequency: 0.7
+    - _Emission: 0.42
+    - _Frequency: 1
+    - _Level: 1.02
+    - _Paralax: 20
+    - _QueueControl: 0
+    - _QueueOffset: 0
+    - _Wave_Frequency: 1
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _MainColor: {r: 0.47058824, g: 0.023529412, b: 0.023930026, a: 1}
+    - _SOMETHING: {r: 0, g: 0.47, b: 0, a: 0}
+    - _Wave_Amplitude: {r: 0.1, g: 0.22, b: 0, a: 0}
+    - _Wave_Frequency: {r: 1, g: 1, b: 0, a: 0}
+    - _Waves_Amplitude: {r: 0, g: 0, b: 0, a: 0}
+    - _Waves_Direction: {r: 20, g: 23, b: 0, a: 0}
+    - _Waves_Tiling: {r: 2, g: 3, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
