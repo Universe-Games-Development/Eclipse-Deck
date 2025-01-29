@@ -1,3 +1,5 @@
+using Cysharp.Threading.Tasks;
+using System;
 using UnityEngine;
 
 public class FieldController : MonoBehaviour {
@@ -10,6 +12,8 @@ public class FieldController : MonoBehaviour {
 
     [SerializeField] private FieldMaterializer fieldMaterializer;
     [SerializeField] public Levitator levitator;
+
+    private FieldPool pool;
 
     bool isInteractable = false;
 
@@ -26,15 +30,19 @@ public class FieldController : MonoBehaviour {
         }
     }
 
+    public void SetPool(FieldPool pool) {
+        this.pool = pool;
+    }
+
     public void Initialize(Field field) {
         
         if (field == null) {
             Debug.LogError("null field data");
             return;
         }
-        fieldMaterializer.Initialize(field);
         this.field = field;
         type = field.Type;
+        fieldMaterializer.Initialize(field);
         if (field.Owner != null) {
             owner = field.Owner.Name;
         }
@@ -45,11 +53,11 @@ public class FieldController : MonoBehaviour {
         isInteractable = value;
         if (field == null) return;
         if (value) {
-            field.OnSelect += levitator.ToggleLevitation;
-            field.OnSelect += fieldMaterializer.ToggleHighlight;
+            field.OnSelectToggled += levitator.ToggleLevitation;
+            field.OnSelectToggled += fieldMaterializer.ToggleHighlight;
         } else {
-            field.OnSelect -= levitator.ToggleLevitation;
-            field.OnSelect -= fieldMaterializer.ToggleHighlight;
+            field.OnSelectToggled -= levitator.ToggleLevitation;
+            field.OnSelectToggled -= fieldMaterializer.ToggleHighlight;
         }
     }
 
@@ -59,12 +67,21 @@ public class FieldController : MonoBehaviour {
 
         isInteractable = false;
         if (field != null)
-            field.OnSelect -= levitator.ToggleLevitation;
+            field.OnSelectToggled -= levitator.ToggleLevitation;
         field = null;
     }
 
     private void OnDestroy() {
         if (field != null)
-            field.OnSelect -= levitator.ToggleLevitation;
+            field.OnSelectToggled -= levitator.ToggleLevitation;
+    }
+
+    public async UniTask RemoveController() {
+        await levitator.FlyAwayWithCallback();
+        ReturnToPool();
+    }
+
+    public void ReturnToPool() {
+        pool.ReleaseField(this);
     }
 }

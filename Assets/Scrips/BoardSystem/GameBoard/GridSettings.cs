@@ -1,154 +1,180 @@
-using System.Collections.Generic;
 using System;
-using UnityEngine;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
-[Serializable]
-public class GridSettings {
-    private const int MIN_ROW_COUNT = 2;
-    private const int MIN_COLUMN_COUNT = 2;
+[CreateAssetMenu (fileName ="GridBoardSettings", menuName = "GridSettings")]
+public class GridSettings : ScriptableObject {
+    private const int MIN_ATTACK_ROW_COUNT = 1;
 
-    public List<FieldType> _rowTypes;
-    public List<FieldType> RowTypes {
-        get => _rowTypes;
-        private set {
-            _rowTypes = value;
-        }
-    }
-
-    public CellSize cellSize = new CellSize { width = 1f, height = 1f };
-
-    [Min(2)]
-    public int columns;
-
-    public int minPlayers = 2;
-
-    private List<FieldType> previousRowTypes;
-    private int previousColumns;
+    public List<FieldType> northRows;
+    public List<FieldType> southRows;
+    public List<int> westColumns;
+    public List<int> eastColumns;
+    public CellSize cellSize = new CellSize() { width = 1, height = 1 };
 
     public GridSettings() {
-        if (!IsValidColumns(columns)) {
-            columns = MIN_COLUMN_COUNT;
-        }
-
-        if (!IsValidRowConfiguration(RowTypes)) {
-            RowTypes = previousRowTypes ?? GenerateDefaultRows();
-        }
-    }
-
-    private void OnValidate() {
-        BackupCurrentValues();
-
-        if (!IsValidColumns(columns)) {
-            Debug.LogWarning($"Invalid column count: {columns}. Reverting to previous value or default (4).");
-            columns = Mathf.Max(previousColumns, MIN_COLUMN_COUNT);
-        }
-
-        if (!IsValidRowConfiguration(RowTypes)) {
-            Debug.LogWarning("Invalid row configuration. Reverting changes.");
-            RowTypes = previousRowTypes ?? GenerateDefaultRows();
-        }
+        Debug.LogWarning("Config reset to default!");
+        ResetSettings();
     }
 
     #region Validation
-    private void BackupCurrentValues() {
-        if (RowTypes != null && IsValidRowConfiguration(RowTypes)) {
-            previousRowTypes = new List<FieldType>(RowTypes);
+    public void OnValidate() {
+        if (!IsValidRow(northRows)) {
+            northRows = GenerateDefaultRows();
         }
-        if (IsValidColumns(columns)) {
-            previousColumns = columns;
+        if (!IsValidRow(southRows)) {
+            southRows = GenerateDefaultRows();
+        }
+        if (!IsValidColumns()) {
+            westColumns = GenerateDefaultColumns();
+            eastColumns = GenerateDefaultColumns();
         }
     }
 
-    private bool IsValidColumns(int columns) {
-        return columns >= MIN_COLUMN_COUNT;
+    public void ResetSettings() {
+        northRows = GenerateDefaultRows();
+        southRows = GenerateDefaultRows();
+        westColumns = GenerateDefaultColumns();
+        eastColumns = GenerateDefaultColumns();
     }
 
-    private bool IsValidRowConfiguration(List<FieldType> rows) {
-        if (rows == null) {
+    public bool IsValidConfiguration() {
+        return IsValidRow(northRows) && IsValidRow(southRows) && IsValidColumns();
+    }
+
+    private bool IsValidRow(List<FieldType> row) {
+        if (row == null || row.Count < MIN_ATTACK_ROW_COUNT) {
+            Debug.LogWarning("Wrong amount of rows. Need : " + MIN_ATTACK_ROW_COUNT);
             return false;
         }
-        return HasTwoAdjacentAttackRows(rows) && rows.Count >= MIN_ROW_COUNT;
+
+        if (row[0] != FieldType.Attack) {
+            Debug.LogWarning("First row is not attack type in settings");
+            return false;
+        }
+
+        int attackRows = row.Count(rowtype => rowtype == FieldType.Attack);
+
+        if (attackRows > MIN_ATTACK_ROW_COUNT || attackRows < MIN_ATTACK_ROW_COUNT) {
+            Debug.LogWarning($"Wrong amount of attack rows {attackRows} is settings must be {MIN_ATTACK_ROW_COUNT} for each");
+            return false;
+        }
+
+        return true;
     }
 
-    private bool HasTwoAdjacentAttackRows(List<FieldType> rowTypes) {
-        var attackIndices = rowTypes
-            .Select((type, index) => type == FieldType.Attack ? index : -1)
-            .Where(index => index != -1)
-            .ToList();
+    private bool IsValidColumns() {
+        bool leftColumnsEmpty = westColumns == null || westColumns.Count == 0;
+        bool rightColumnsEmpty = eastColumns == null || eastColumns.Count == 0;
 
-        return attackIndices.Count == MIN_ROW_COUNT && Mathf.Abs(attackIndices[1] - attackIndices[0]) == 1;
+        if (leftColumnsEmpty && rightColumnsEmpty) {
+            return false;
+        }
+
+        // Check if all values in westColumns are 0
+        bool allLeftColumnsZero = westColumns != null && westColumns.All(value => value == 0);
+        // Check if all values in eastColumns are 0
+        bool allRightColumnsZero = eastColumns != null && eastColumns.All(value => value == 0);
+
+        // If both column lists contain only zeros, return false
+        if (allLeftColumnsZero && allRightColumnsZero) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+
+    #endregion
+
+    #region Add/Remove Rows
+    public void AddNorthRow(FieldType rowType) {
+        AddRow(northRows, rowType);
+    }
+
+    public void AddSouthRow(FieldType rowType) {
+        AddRow(southRows, rowType);
+    }
+
+    public void RemoveNorthRowAt(int index) {
+        RemoveRowAt(northRows, index);
+    }
+
+    public void RemoveSouthRowAt(int index) {
+        RemoveRowAt(southRows, index);
+    }
+
+    private void AddRow(List<FieldType> rows, FieldType rowType) {
+        if (rows == null)
+            rows = new List<FieldType>();
+        rows.Add(rowType);
+    }
+
+    private void RemoveRowAt(List<FieldType> rows, int index) {
+        if (rows != null && index >= 0 && index < rows.Count) {
+            rows.RemoveAt(index);
+        }
     }
     #endregion
 
     #region Add/Remove Columns
-    public void AddColumn() {
-        columns++;
+    public void AddLeftColumn(int value) {
+        AddColumn(westColumns, value);
     }
 
-    public void RemoveColumn() {
-        if (columns > MIN_COLUMN_COUNT) {
-            columns--;
-        } else {
-            Debug.LogWarning("Cannot remove column. Minimum number of columns reached.");
+    public void AddRightColumn(int value) {
+        AddColumn(eastColumns, value);
+    }
+
+    private void AddColumn(List<int> columnList, int value) {
+        if (columnList == null)
+            columnList = new List<int>();
+        columnList.Add(value);
+    }
+
+    public void RemoveLeftColumnAt(int index) {
+        RemoveColumn(westColumns, index);
+    }
+
+    public void RemoveRightColumnAt(int index) {
+        RemoveColumn(eastColumns, index);
+    }
+
+    private void RemoveColumn(List<int> columnList, int index) {
+        if (columnList != null && index >= 0 && index < columnList.Count) {
+            columnList.RemoveAt(index);
         }
     }
 
-    public void SetColumns(int columns) {
-        if (columns != this.columns && IsValidColumns(columns)) {
-            this.columns = columns;
+    public void SetEastColumns(List<int> list) {
+        if (list != null) {
+            eastColumns = new List<int>(list);
+        }
+    }
+
+    public void SetWestColumns(List<int> list) {
+        if (list != null) {
+            westColumns = new List<int>(list);
         }
     }
     #endregion
 
-    #region Add/Remove Rows
-    public void AddRow(FieldType rowType) {
-        AddRowAt(rowType, RowTypes.Count); // Вставка в кінець
-    }
-
-    public void AddRowAt(FieldType row, int index) {
-        if (index < 0 || index > RowTypes.Count) {
-            Debug.LogWarning($"Invalid row index: {index}. Allowed range: 0 to {RowTypes.Count}.");
-            return;
-        }
-
-        var newRows = new List<FieldType>(RowTypes);
-        newRows.Insert(index, row);
-
-        if (HasTwoAdjacentAttackRows(newRows)) {
-            RowTypes.Insert(index, row);
-        } else {
-            Debug.LogWarning("Cannot add row. Configuration does not meet the criteria of two adjacent attack rows.");
-        }
-    }
-
-    public void RemoveRow() {
-        RemoveRowAt(RowTypes.Count - 1); // Видалення останнього елемента
-    }
-
-    public void RemoveRowAt(int index) {
-        if (index < 0 || index >= RowTypes.Count) {
-            Debug.LogWarning($"Invalid row index: {index}. Allowed range: 0 to {RowTypes.Count - 1}.");
-            return;
-        }
-
-        var newRows = new List<FieldType>(RowTypes);
-        newRows.RemoveAt(index);
-
-        if (HasTwoAdjacentAttackRows(newRows)) {
-            RowTypes.RemoveAt(index);
-        } else {
-            Debug.LogWarning("Cannot remove row. Configuration does not meet the criteria of two adjacent attack rows after removal.");
-        }
-    }
-
-    public void SetDefaultSettings() {
-        columns = MIN_COLUMN_COUNT;
-        RowTypes = GenerateDefaultRows();
-    }
-    #endregion
-
+    #region Default Generation
     private List<FieldType> GenerateDefaultRows() {
-        return new List<FieldType> { FieldType.Attack, FieldType.Attack };
+        return new List<FieldType> { FieldType.Attack, FieldType.Support };
+    }
+
+    private List<int> GenerateDefaultColumns() {
+        return new List<int> { 1, 1}; // Example default column configuration
+    }
+    #endregion
+
+    public void ResetToDefault() {
+        northRows = GenerateDefaultRows();
+        southRows = GenerateDefaultRows();
+        westColumns = GenerateDefaultColumns();
+        eastColumns = GenerateDefaultColumns();
     }
 }

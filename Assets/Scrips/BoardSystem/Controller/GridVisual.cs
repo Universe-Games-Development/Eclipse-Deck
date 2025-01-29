@@ -1,5 +1,4 @@
 using Cysharp.Threading.Tasks;
-using Cysharp.Threading.Tasks.Triggers;
 using DG.Tweening;
 using System;
 using System.Collections.Generic;
@@ -10,11 +9,9 @@ public class GridVisual : MonoBehaviour {
     [SerializeField] private FieldPool pool;
 
     GridManager gridManager;
-    [Inject] OpponentManager opponentManager;
 
-    private CellSize visualCellSize;
-    private float xOffset;
-    private float yOffset;
+    [SerializeField] private CellSize visualCellSize = new(1.0f, 1.0f);
+
 
     [Header("Board Adjuster")]
     [SerializeField] private Transform origin;
@@ -34,36 +31,30 @@ public class GridVisual : MonoBehaviour {
         pool.InitPool();
     }
 
-    public void UpdateVisualGrid(GridUpdateData gridUpdateData) {
-        UpdateGridDimensions(gridManager.MainGrid);
-        UpdateGrid(gridUpdateData);
+    public void UpdateVisualGrid(BoardUpdateData boardUpdateData) {
+        UpdateGrid(boardUpdateData);
         AdjustCenter();
     }
 
-    public void UpdateGrid(GridUpdateData gridUpdateData) {
-        foreach(Field field in gridUpdateData.addedFields) {
+    public void UpdateGrid(BoardUpdateData boardUpdateData) {
+        foreach(Field field in boardUpdateData.GetAllAddedFields()) {
             AddField(field);
         }
 
-        foreach (Field field in gridUpdateData.removedFields) {
+        foreach (Field field in boardUpdateData.GetAllRemovedFields()) {
+            RemoveField(field);
+        }
+
+        foreach (Field field in boardUpdateData.GetAllEmptyFields()) {
             RemoveField(field);
         }
     }
 
-    private void UpdateGridDimensions(Grid grid) {
-        GridSettings gridSettings = grid.GetConfig();
-
-        visualCellSize.width = gridSettings.cellSize.width;
-        visualCellSize.height= gridSettings.cellSize.height;
-
-        xOffset = visualCellSize.width / 2;
-        yOffset = visualCellSize.height / 2;
-    }
-
     private void AdjustCenter() {
-        Vector3 boardLocalCenter = gridManager.MainGrid.GetGridCenter();
-        Vector3 visualLocalCenter = new Vector3(boardLocalCenter.x * visualCellSize.width, 0, boardLocalCenter.z * visualCellSize.height);
-        Vector3 boardGlobalCenter = origin.TransformPoint(boardLocalCenter);
+        Vector3 boardBalanceAmount = gridManager.GridBoard.GetGridBalanceOffset() / 2;
+        Vector3 visualLocalOffsetBalance = new(boardBalanceAmount.x * visualCellSize.width, 0, boardBalanceAmount.z * visualCellSize.height);
+
+        Vector3 boardGlobalCenter = origin.TransformPoint(visualLocalOffsetBalance);
         Vector3 offset = globalCenter.position - boardGlobalCenter;
         origin.DOMove(origin.position + offset, 0.5f)
             .SetEase(Ease.InOutSine);
@@ -71,9 +62,9 @@ public class GridVisual : MonoBehaviour {
 
     public void AddField(Field field) {
         Vector3 spawnPosition = origin.TransformPoint(new Vector3(
-            field.row * visualCellSize.width + xOffset,
+            field.GetColumn() * visualCellSize.width,
             0f,
-            field.column * visualCellSize.height + yOffset
+            field.GetRow() * visualCellSize.height
         ));
 
         FieldController fieldController = pool.GetField(field, spawnPosition);
@@ -84,7 +75,7 @@ public class GridVisual : MonoBehaviour {
         if (fieldControllers.TryGetValue(field, out FieldController fieldController)) {
             field.RemoveField();
             fieldControllers.Remove(field);
-            pool.ReleaseField(fieldController);
+            fieldController.RemoveController().Forget();
         }
     }
 
@@ -99,6 +90,6 @@ public class GridVisual : MonoBehaviour {
             return null;
         }
 
-        return gridManager.MainGrid.GetGridIndexByWorld(origin, worldPosition);
+        return gridManager.GridBoard.GetGridIndexByWorld(origin, worldPosition);
     }
 }

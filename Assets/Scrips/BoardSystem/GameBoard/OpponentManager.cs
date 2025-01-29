@@ -1,14 +1,17 @@
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zenject;
+using Zenject.SpaceFighter;
 
 public class OpponentManager {
-    private readonly Dictionary<Opponent, OpponentGrid> opponentGrids = new();
+    private const Direction ENEMY_DIRECTION = Direction.North;
+    private const Direction PLAYER_DIRECTION = Direction.South;
+
+    private readonly Dictionary<Opponent, List<CompasGrid>> asiignedGrids = new();
     public List<Opponent> registeredOpponents = new();
-    public OpponentGrid PlayerGrid { get; private set; }
-    public OpponentGrid EnemyGrid { get; private set; }
 
     public int MinPlayers = 2;
 
@@ -21,67 +24,56 @@ public class OpponentManager {
         gridManager.OnGridChanged += HandleGridUpdate;
     }
 
+    // If opponents registered assign all fields to all opponents
+    // 
+    private void HandleGridUpdate(BoardUpdateData data) {
+        UpdateBoard(data.GetUpdateByGlobalDirection(ENEMY_DIRECTION), typeof(Enemy));
+        UpdateBoard(data.GetUpdateByGlobalDirection(PLAYER_DIRECTION), typeof(Player));
+    }
+
+    private void UpdateBoard(GridUpdateData boardUpdateData, Type opponentType) {
+        var opponent = registeredOpponents.Find(opponent => opponent.GetType() == opponentType);
+
+        if (opponent != null) {
+            foreach (var field in boardUpdateData.addedFields) {
+                field.AssignOwner(opponent);
+            }
+
+            foreach (var field in boardUpdateData.removedFields) {
+                field.UnassignOwner();
+            }
+        }
+    }
+
+
     #region Grid Opponent Logic
     public void AssignGrid(Opponent opponent) {
-        if (opponentGrids.ContainsKey(opponent)) return;
+        if (asiignedGrids.ContainsKey(opponent)) return;
 
-        OpponentGrid grid = opponent is Player ? PlayerGrid : opponent is Enemy ? EnemyGrid : null;
-
-        if (grid == null) {
-            Debug.LogError("Wrong opponent to assign");
+        List<CompasGrid> opponentGrids = GetOpponentGrids(opponent);
+        foreach (CompasGrid grid in opponentGrids) {
+            foreach(var row in grid._fields) {
+                foreach (Field field in row) {
+                    field.AssignOwner(opponent);
+                }
+            }
         }
-        grid.AssignGridToOwner(opponent);
 
-        opponentGrids.Add(opponent, grid);
+        asiignedGrids.Add(opponent, opponentGrids);
         Debug.Log($"Grid assigned to opponent {opponent.Name}.");
     }
 
-
-    public OpponentGrid GetGrid(Opponent opponent) {
-        opponentGrids.TryGetValue(opponent, out OpponentGrid grid);
-        return grid;
-    }
-
-    private void HandleGridUpdate(GridUpdateData updateData) {
-        Grid mainGrid = gridManager.MainGrid;
-        GridSettings gridSettings = mainGrid.GetConfig();
-
-        int attackRowIndex = gridSettings.RowTypes.FindIndex(row => row == FieldType.Attack);
-        if (attackRowIndex == -1) {
-            Debug.LogError("No 'Attack' row found in GridSettings.RowTypes.");
-            return;
+    private List<CompasGrid> GetOpponentGrids(Opponent opponent) {
+        if (gridManager.GridBoard == null) {
+            Debug.LogError("GridBoard not initialized during assignment");
         }
 
-        int totalRows = gridSettings.RowTypes.Count;
-
-        PlayerGrid = PlayerGrid == null
-            ? new OpponentGrid(mainGrid, 0, attackRowIndex)
-            : PlayerGrid.BoundToMainGrid(mainGrid, 0, attackRowIndex);
-
-        EnemyGrid = EnemyGrid == null
-            ? new OpponentGrid(mainGrid, attackRowIndex + 1, totalRows - 1)
-            : EnemyGrid.BoundToMainGrid(mainGrid, attackRowIndex + 1, totalRows - 1);
-
-        foreach (Opponent opponent in registeredOpponents) {
-            bool isPlayer = opponent is Player;
-
-            List<Field> addedFields = updateData.addedFields
-                .Where(field => isPlayer ?
-                    field.row <= attackRowIndex :
-                    field.row > attackRowIndex)
-                .ToList();
-
-            List<Field> removedFields = updateData.removedFields
-                .Where(field => isPlayer ?
-                    field.row <= attackRowIndex :
-                    field.row > attackRowIndex)
-                .ToList();
-
-            OpponentGrid opponentGrid = GetGrid(opponent);
-            if (opponentGrid != null) {
-                opponentGrid.AddFields(addedFields);
-                opponentGrid.RemoveFields(removedFields);
-            }
+        if (opponent is Player) {
+            return gridManager.GridBoard.GetGridsByGlobalDirection(Direction.South);
+        } else if (opponent is Enemy) {
+            return gridManager.GridBoard.GetGridsByGlobalDirection(Direction.North);
+        } else {
+            throw new ArgumentException("Received wron opponent to get compas grid");
         }
     }
     #endregion
@@ -108,11 +100,16 @@ public class OpponentManager {
         if (!registeredOpponents.Remove(opponent)) return;
 
         // Try to find and unassign
-        OpponentGrid opponentGrid = GetGrid(opponent);
-        if (opponentGrid != null) {
-            opponentGrid.UnassignGridOwner(opponent);
+        if (asiignedGrids.TryGetValue(opponent, out List<CompasGrid> opponentGrids)) {
+            foreach (CompasGrid grid in opponentGrids) {
+                foreach (var row in grid._fields) {
+                    foreach (Field field in row) {
+                        field.UnassignOwner();
+                    }
+                }
+            }
+            Debug.Log($"Opponent {opponent.Name} unregistered.");
         }
-        Debug.Log($"Opponent {opponent.Name} unregistered.");
     }
 
     public Opponent GetNextOpponent(Opponent current) {
@@ -130,6 +127,10 @@ public class OpponentManager {
         }
 
         return registeredOpponents[UnityEngine.Random.Range(0, registeredOpponents.Count)];
+    }
+
+    internal List<List<Field>> GetOpponentBoard(Opponent currentPlayer) {
+        throw new NotImplementedException();
     }
     #endregion
 }

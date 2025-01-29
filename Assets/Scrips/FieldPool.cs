@@ -21,13 +21,15 @@ public class FieldPool : MonoBehaviour {
             OnTakeFromPool,
             OnReturnToPool,
             OnDestroyField,
-            maxSize: 100
+            maxSize: 50
         );
     }
 
     private FieldController CreateField() {
         GameObject fieldObject = container.InstantiatePrefab(fieldPrefab, parentTransform);
-        return fieldObject.GetComponent<FieldController>();
+        FieldController fieldController = fieldObject.GetComponent<FieldController>();
+        fieldController.SetPool(this);
+        return fieldController;
     }
 
     private void OnTakeFromPool(FieldController fieldController) {
@@ -37,11 +39,10 @@ public class FieldPool : MonoBehaviour {
     }
 
     private void OnReturnToPool(FieldController fieldController) {
+
         if (fieldController != null) {
-            fieldController.levitator.FlyAwayWithCallback(() => {
-                fieldController.Reset();
-                fieldController.gameObject.SetActive(false);
-            });
+            fieldController.Reset();
+            fieldController.gameObject.SetActive(false);
         }
     }
 
@@ -57,7 +58,7 @@ public class FieldPool : MonoBehaviour {
         FieldController fieldController = fieldPool.Get();
         if (fieldController != null) {
             fieldController.transform.localPosition = position;
-            fieldController.gameObject.name = $"Field {fieldData.row} / {fieldData.column}";
+            fieldController.gameObject.name = $"Field {fieldData.row} / {fieldData.column} {fieldData.Type}";
             fieldController.Initialize(fieldData);
             fieldController.InitializeLevitator(position);
         }
