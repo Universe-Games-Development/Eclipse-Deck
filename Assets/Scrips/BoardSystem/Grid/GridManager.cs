@@ -8,35 +8,36 @@ using Zenject;
 public class GridManager {
     [Inject] CommandManager CommandManager;
 
-    public Action<GridUpdateData> OnGridChanged;
-    public Action<GridUpdateData> OnGridInitialized;
+    public Action<BoardUpdateData> OnGridChanged;
+    public Action<BoardUpdateData> OnGridInitialized;
 
-    public Grid MainGrid { get; private set; }
+    public GridBoard GridBoard { get; private set; }
 
     public void UpdateGrid(GridSettings newConfig) {
+
         ICommand command;
-        if (MainGrid == null) {
+        if (GridBoard == null) {
             command = new GridInitCommand(SetMainGrid, newConfig, OnGridInitialized);
         } else {
-            command = new GridUpdateCommand(MainGrid, newConfig, OnGridChanged);
+            command = new BoardUpdateCommand(GridBoard, newConfig, OnGridChanged);
         }
         CommandManager.RegisterCommand(command);
         CommandManager.ExecuteCommands().Forget();
     }
 
-    private void SetMainGrid(Grid mainGrid) {
-        MainGrid = mainGrid;
+    private void SetMainGrid(GridBoard newGridBoard) {
+        GridBoard = newGridBoard;
     }
 }
 
-public class GridInitCommand : BaseGridCommand {
-    private Action<Grid> setMainGrid;
+public class GridInitCommand : BaseBoardCommand {
+    private Action<GridBoard> setMainGrid;
     private GridSettings newConfig;
 
-    public GridInitCommand(Action<Grid> setMainGrid, GridSettings newConfig, Action<GridUpdateData> onGridInitialized) {
+    public GridInitCommand(Action<GridBoard> setMainGrid, GridSettings newConfig, Action<BoardUpdateData> onGridInitialized) {
         this.setMainGrid = setMainGrid;
         this.newConfig = newConfig;
-        OnGridCInitialized = onGridInitialized;
+        OnBoardCInitialized = onGridInitialized;
     }
 
     public override async UniTask Execute() {
@@ -52,32 +53,31 @@ public class GridInitCommand : BaseGridCommand {
     }
 
     protected async UniTask InitGrid(GridSettings config) {
-        grid = new Grid();
-        setMainGrid.Invoke(grid);
+        board = new GridBoard(config);
+        setMainGrid.Invoke(board);
 
-        GridUpdateData gridUpdateData = grid.UpdateGrid(config);
-        UpdateFieldTypes(config);
+        BoardUpdateData gridUpdateData = board.UpdateGlobalGrid(config);
 
-        OnGridCInitialized?.Invoke(gridUpdateData);
+        OnBoardCInitialized?.Invoke(gridUpdateData);
         await UniTask.Yield();
     }
 
 
     protected async UniTask ResetGrid() {
-        OnGridChanged?.Invoke(grid.RemoveAll());
+        OnBoardChanged?.Invoke(board.RemoveAll());
         await UniTask.Yield();
     }
 }
 
-public class GridUpdateCommand : BaseGridCommand {
+public class BoardUpdateCommand : BaseBoardCommand {
     private GridSettings oldSettings;
     private GridSettings newSettings;
     
-    public GridUpdateCommand(Grid grid, GridSettings newSettings, Action<GridUpdateData> onGridChanged) {
-        this.grid = grid;
+    public BoardUpdateCommand(GridBoard board, GridSettings newSettings, Action<BoardUpdateData> onGridChanged) {
+        this.board = board;
         this.newSettings = newSettings;
-        oldSettings = grid.GetConfig();
-        OnGridChanged = onGridChanged;
+        oldSettings = board.Config;
+        OnBoardChanged = onGridChanged;
     }
 
     public override async UniTask Execute() {
@@ -89,51 +89,33 @@ public class GridUpdateCommand : BaseGridCommand {
     }
 
     protected async UniTask UpdateGrid(GridSettings config) {
-        if (!ValidateBoardSettings(oldSettings)) {
+        if (!ValidateBoardSettings(config)) {
             Debug.LogWarning("Invalid BoardSettings. Execution halted.");
             return;
         }
 
-        GridUpdateData updateData = grid.UpdateGrid(config);
-        UpdateFieldTypes(config);
+        BoardUpdateData updateData = board.UpdateGlobalGrid(config);
 
-        OnGridChanged?.Invoke(updateData);
+        OnBoardChanged?.Invoke(updateData);
 
         await UniTask.Yield();
     }
 }
 
 
-public abstract class BaseGridCommand : ICommand {
-    protected Grid grid;
-    public Action<GridUpdateData> OnGridChanged;
-    public Action<GridUpdateData> OnGridCInitialized;
-
-    protected void UpdateFieldTypes(GridSettings config) {
-        foreach (List<Field> row in grid.Fields) {
-            foreach (Field field in row) {
-                if (config.RowTypes[field.row] == FieldType.Attack) {
-                    field.Type = FieldType.Attack;
-                } else {
-                    field.Type = FieldType.Support;
-                }
-            }
-        }
-    }
-
+public abstract class BaseBoardCommand : ICommand {
+    protected GridBoard board;
+    public Action<BoardUpdateData> OnBoardCInitialized;
+    public Action<BoardUpdateData> OnBoardChanged;
+    
     protected bool ValidateBoardSettings(GridSettings settings) {
         if (settings == null) {
             Debug.LogWarning("Accepted config null!");
             return false;
         }
 
-        if (settings.RowTypes.Count < 2 || settings.columns < 2) {
-            Debug.LogWarning("BoardSettings must have at least 2 rows and 2 columns.");
-            return false;
-        }
-
-        if (!HasTwoAdjacentAttackRows(settings.RowTypes)) {
-            Debug.LogWarning("BoardSettings must have exactly 2 adjacent Attack rows.");
+        if (!settings.IsValidConfiguration()) {
+            Debug.LogWarning("BoardSettings wrong configuration");
             return false;
         }
 

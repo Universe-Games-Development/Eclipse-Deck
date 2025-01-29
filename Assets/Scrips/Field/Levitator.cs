@@ -1,4 +1,5 @@
-﻿using DG.Tweening;
+﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System;
 using UnityEngine;
 
@@ -31,6 +32,7 @@ public class Levitator : MonoBehaviour {
     }
 
     private void StartLevitation() {
+        
         if (body == null) {
             Debug.LogError("Body transform is null. Levitation cannot start.");
             return;
@@ -82,8 +84,8 @@ public class Levitator : MonoBehaviour {
         }
     }
 
-
     public void FlyToInitialPosition() {
+        
         // Генеруємо випадкову стартову позицію в світових координатах
         Vector3 randomSpawnPosition = transform.position + new Vector3(
             UnityEngine.Random.insideUnitSphere.x,
@@ -106,7 +108,8 @@ public class Levitator : MonoBehaviour {
     }
 
 
-    public void FlyAwayWithCallback(Action onComplete) {
+    public async UniTask FlyAwayWithCallback() {
+        
         if (levitationTween != null) {
             levitationTween.Kill();
         }
@@ -117,10 +120,7 @@ public class Levitator : MonoBehaviour {
             UnityEngine.Random.insideUnitSphere.z
         );
 
-        body.DOMove(randomFlyPosition, levitationData.flyAwayDuration)
-            .OnComplete(() => {
-                onComplete?.Invoke(); // Викликаємо колбек після завершення анімації
-            });
+        await body.DOMove(randomFlyPosition, levitationData.flyAwayDuration).AsyncWaitForCompletion();
     }
 
 

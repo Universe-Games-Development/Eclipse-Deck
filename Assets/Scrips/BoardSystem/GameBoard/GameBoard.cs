@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 using Zenject;
+using System.Collections.Generic;
 
 // Add states soon
 public class GameBoard {
@@ -10,7 +11,7 @@ public class GameBoard {
     public Action<Opponent> OnTurnBegan;
 
     [Inject] GridVisual boardVisual;
-    [Inject] public OpponentManager opponentManager { get; private set; }
+    [Inject] public OpponentManager OpponentManager { get; private set; }
     [Inject] private GridManager gridManager;
     [Inject] private CommandManager creatureCommands;
 
@@ -25,11 +26,11 @@ public class GameBoard {
         set {
             if (_selectedField != null && _selectedField != value) {
                 Debug.Log($"Deselected : {_selectedField.row} + {_selectedField.column}");
-                _selectedField.DeselectField();
+                _selectedField.ToggleSelection(false);
             }
             _selectedField = value;
             if (_selectedField != null) {
-                _selectedField.SelectField();
+                _selectedField.ToggleSelection(true);
                 Debug.Log($"Selected : {_selectedField.row} + {_selectedField.column}");
             }
         }
@@ -39,7 +40,7 @@ public class GameBoard {
     public GameBoard(OpponentManager opponentManager, GridManager gridManager, CommandManager commandManager) {
         gameContext = new GameContext { gameBoard = this, _gridManager = gridManager };
         this.gridManager = gridManager;
-        this.opponentManager = opponentManager;
+        this.OpponentManager = opponentManager;
     }
 
     public Opponent GetCurrentPlayer() {
@@ -51,10 +52,10 @@ public class GameBoard {
     }
 
     // Used by other classes to allow start game
-    public async UniTask<bool> StartGame(int minPlayers = 2) {
+    public async UniTask<bool> StartGame() {
         await UniTask.Delay(50);
-        if (!opponentManager.IsAllRegistered()) {
-            Debug.Log($"Can't start game because there are only {opponentManager.registeredOpponents.Count} registered players. Need: {MinPlayers}");
+        if (!OpponentManager.IsAllRegistered()) {
+            Debug.Log($"Can't start game because there are only {OpponentManager.registeredOpponents.Count} registered players. Need: {MinPlayers}");
             return false;
         }
 
@@ -65,7 +66,7 @@ public class GameBoard {
 
     private Opponent ChooseFirstPlayer() {
         // Logic to choose the first player, e.g., randomly
-        currentPlayer = opponentManager.GetRandomOpponent();
+        currentPlayer = OpponentManager.GetRandomOpponent();
         Debug.Log($"{currentPlayer.Name} is chosen to start first.");
         return currentPlayer;
     }
@@ -81,12 +82,14 @@ public class GameBoard {
     }
 
     private void GatherPlayerCreaturesActions(Opponent opponent) {
-        foreach (var column in gridManager.MainGrid.Fields) {
-            if (column == null) {
+        List<List<Field>> opponentBoardPart = OpponentManager.GetOpponentBoard(currentPlayer);
+
+        foreach (var row in opponentBoardPart) {
+            if (row == null) {
                 Debug.LogWarning("Column with null");
                 continue;
             }
-            foreach (var field in column) {
+            foreach (var field in row) {
                 var creature = field.OccupiedCreature;
                 if (creature != null) {
                     gameContext.initialField = field;
@@ -100,7 +103,7 @@ public class GameBoard {
     }
 
     private void ChangeTurn() {
-        currentPlayer = opponentManager.GetNextOpponent(currentPlayer);
+        currentPlayer = OpponentManager.GetNextOpponent(currentPlayer);
         Debug.Log($"It is now {currentPlayer.Name}'s turn.");
         OnTurnBegan?.Invoke(currentPlayer);
     }
@@ -131,22 +134,6 @@ public class GameBoard {
 
         return result;
     }
-    private bool ValidateFieldOccupy(Field field, Creature creature) {
-        bool fieldExists = gridManager.MainGrid.FieldExists(field);
-        if (!fieldExists) {
-            Debug.LogWarning($"{field} doesnt exist in main grid : ");
-            return fieldExists;
-        }
-
-        bool validOwner = field.Owner != null;
-        if (!validOwner) {
-            Debug.LogWarning($"{field} can`t be occupied by this owner! ");
-            return validOwner;
-        }
-
-        return true;
-    }
-
 
     // Can get null to deselect field
     public bool SelectField(Field field) {
@@ -154,7 +141,7 @@ public class GameBoard {
             Debug.LogWarning("Gameboard not initialized! Can`t select field");
         }
 
-        if (!gridManager.MainGrid.FieldExists(field)) {
+        if (!gridManager.GridBoard.FieldExists(field)) {
             Debug.Log("Field doesn`t exist! Gameboard can`t select : " + field);
             return false;
         }
@@ -174,25 +161,25 @@ public class GameBoard {
         }
 
         SelectedField = field;
-        SelectedField.SelectField();
+        SelectedField.ToggleSelection(true);
         return true;
     }
 
     public void DeselectField() {
         if (SelectedField != null) {
-            SelectedField.DeselectField();
+            SelectedField.ToggleSelection(false);
             SelectedField = null;
         }
     }
 
 
     public bool IsInitialized() {
-        if (gridManager.MainGrid == null || gridManager.MainGrid.Fields == null || gridManager.MainGrid.Fields.Count == 0) {
+        if (gridManager.GridBoard == null || gridManager.GridBoard.Config == null) {
             Debug.LogWarning("GridManager is not properly initialized: MainGrid is null or empty.");
             return false;
         }
 
-        if (!opponentManager.IsAllRegistered()) {
+        if (!OpponentManager.IsAllRegistered()) {
             Debug.LogWarning("Not all players are registered.");
             return false;
         }
@@ -210,7 +197,7 @@ public class GameBoard {
         return true;
     }
 
-    internal void SetCurrentPlayer(Player player) {
+    public void SetCurrentPlayer(Player player) {
         currentPlayer = player;
     }
 }
