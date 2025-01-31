@@ -4,19 +4,14 @@ using System.Linq;
 using UnityEngine;
 
 [CreateAssetMenu (fileName ="GridBoardSettings", menuName = "GridSettings")]
-public class GridSettings : ScriptableObject {
+public class BoardSettingsSO : ScriptableObject {
     private const int MIN_ATTACK_ROW_COUNT = 1;
 
     public List<FieldType> northRows;
     public List<FieldType> southRows;
     public List<int> westColumns;
     public List<int> eastColumns;
-    public CellSize cellSize = new CellSize() { width = 1, height = 1 };
-
-    public GridSettings() {
-        Debug.LogWarning("Config reset to default!");
-        ResetSettings();
-    }
+    public CellSize cellSize;
 
     #region Validation
     public void OnValidate() {
@@ -44,8 +39,13 @@ public class GridSettings : ScriptableObject {
     }
 
     private bool IsValidRow(List<FieldType> row) {
+        if (row == null) {
+            Debug.LogWarning($"Wrong amount of rows. Need : {MIN_ATTACK_ROW_COUNT}. Now : null");
+            return false;
+        }
+
         if (row == null || row.Count < MIN_ATTACK_ROW_COUNT) {
-            Debug.LogWarning("Wrong amount of rows. Need : " + MIN_ATTACK_ROW_COUNT);
+            Debug.LogWarning($"Wrong amount of rows. Need : {MIN_ATTACK_ROW_COUNT}. Now : {row.Count}");
             return false;
         }
 

@@ -9,12 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aba0ee8dfe8d3844fa6b77ba01b61ae2, type: 3}
-  m_Name: GridBoardSettings
+  m_Script: {fileID: 11500000, guid: 2466b3f37bb97014dbc3c1e3529ef998, type: 3}
+  m_Name: Default Board Settings
   m_EditorClassIdentifier: 
-  northRows: 0200000001000000010000000100000001000000010000000100000001000000
-  southRows: 020000000000000001000000010000000100000002000000
-  westColumns: 0100000000000000000000000000000001000000
+  northRows: 0200000001000000
+  southRows: 0200000001000000
+  westColumns: 0100000001000000
   eastColumns: 0100000001000000
   cellSize:
     width: 1

@@ -3,6 +3,7 @@ using UnityEngine;
 public class FieldMaterializer : MonoBehaviour {
     [SerializeField] private Color attackColor = Color.red;
     [SerializeField] private Color supportColor = Color.green;
+    [SerializeField] private Color emptyColor = Color.gray;
 
     [SerializeField] private Color enemyColor = Color.red;
     [SerializeField] private Color playerColor = Color.green;
@@ -41,11 +42,25 @@ public class FieldMaterializer : MonoBehaviour {
 
     public void UpdateColorBasedOnType(FieldType newType) {
         if (meshRenderer != null) {
-            originalColor = newType == FieldType.Support ? supportColor : attackColor;
+            switch (newType) {
+                case FieldType.Attack:
+                    originalColor = attackColor;
+                    break;
+                case FieldType.Support:
+                    originalColor = supportColor;
+                    break;
+                case FieldType.Empty:
+                    originalColor = emptyColor;
+                    break;
+                default:
+                    originalColor = emptyColor;
+                    break;
+            }
             propBlock.SetColor("_Color", originalColor);
             meshRenderer.SetPropertyBlock(propBlock);
         }
     }
+
 
     public void UpdateColorBasedOnOwner(Opponent opponent) {
         if (meshRenderer != null) {

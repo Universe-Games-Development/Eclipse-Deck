@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 using System.Collections.Generic;
+using Zenject.SpaceFighter;
 
 public class GameboardController : MonoBehaviour {
     //DEBUG
@@ -10,37 +11,39 @@ public class GameboardController : MonoBehaviour {
     [SerializeField] private PlayerController player_c;
     [SerializeField] private EnemyController enemy_c;
 
-    [SerializeField] private GridSettings boardConfig;
+    [SerializeField] private BoardSettingsSO boardConfig;
     [SerializeField] private int taskDelay = 250;
 
     // Scene Context
     [Inject] private GameBoard gameBoard;
-    [Inject] private GridManager gridManager;
-    [Inject] private OpponentManager opponentManager;
+    [Inject] private BoardUpdater gridManager;
+
     // GAme context
     [Inject] ResourceManager resManager;
     [Inject] GridVisual tableController;
 
-    //[SerializeField] Transform debugObject;
+    private Enemy enemy;
+    private Player player;
 
-    private void Awake() {
-        gameBoard.SetBoardSettings(boardConfig);
+    [Inject] OpponentRegistrator OpponentRegistrator;
+
+    public void Construct(OpponentRegistrator opponentRegistrator) {
+        OpponentRegistrator = opponentRegistrator;
+        OpponentRegistrator.OnOpponentRegistered += AssignHPCellToOpponent;
     }
 
     private void Start() {
+        // DEBUG
+        enemy = enemy_c.enemy;
+        player = player_c.player;
+        OpponentRegistrator.RegisterOpponent(player);
+        OpponentRegistrator.RegisterOpponent(enemy);
+
+        
         DebugLogic().Forget();
     }
 
-    private async UniTaskVoid DebugLogic() {
-        //Ініціалізація
-
-        Enemy enemy = enemy_c.enemy;
-        Player player = player_c.player;
-        gameBoard.OpponentManager.RegisterOpponent(player);
-        gameBoard.OpponentManager.RegisterOpponent(enemy);
-        /*
-        await gameBoard.StartGame();
-        gameBoard.SetCurrentPlayer(player);
+    private async UniTask DebugLogic() {
 
         Card playerCard = player.GetTestCard();
         Card enemyCard = enemy.GetTestCard();
@@ -50,93 +53,19 @@ public class GameboardController : MonoBehaviour {
         Creature playerCreature = new(playerCard, data);
         Creature enemyCreature = new(enemyCard, data);
 
-        Field fieldToPlace = gridManager.GridBoard.GetField(-1, -1);
-        await gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
-        */
-
+        if (gridManager.GridBoard != null) {
+            Field fieldToPlace = gridManager.GridBoard.GetFieldAt(-1, -1);
+            gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
+        }
         
         boardConfig.ResetSettings();
         
         await UniTask.Delay(taskDelay);
         boardConfig.SetEastColumns(new List<int> { 0, 1, 1, 0 });
-        gameBoard.SetBoardSettings(boardConfig);
-
-        
-        // Тестування змін конфігурації дошки
-        // 1. Базове тестування колонок
-        await UniTask.Delay(taskDelay);
-        boardConfig.AddSouthRow(FieldType.Support); // Видалення першого рядка
-        gameBoard.SetBoardSettings(boardConfig);
-        
-        
-        await UniTask.Delay(taskDelay);
-        boardConfig.SetEastColumns(GenerateRandomList(2, 6));// Спроба встановити кількість колонок нижче мінімальної
-        gameBoard.SetBoardSettings(boardConfig);
-        
-        await UniTask.Delay(taskDelay);
-        boardConfig.SetWestColumns(new List<int> { 0, 1, 1, 1 });// Спроба встановити кількість колонок нижче мінімальної
-        gameBoard.SetBoardSettings(boardConfig);
-        
-        // 2. Базове тестування рядків
-        await UniTask.Delay(taskDelay);
-        boardConfig.AddSouthRow(FieldType.Support); // Додавання рядка Support
-        gameBoard.SetBoardSettings(boardConfig);
-
-        await UniTask.Delay(taskDelay);
-        boardConfig.RemoveSouthRowAt(1); // Видалення останнього рядка
-        gameBoard.SetBoardSettings(boardConfig);
-        // */
-
-
-        // 4. Тестування мінімальної та максимальної кількості рядків і колонок
-        await UniTask.Delay(taskDelay);
-        boardConfig.SetWestColumns(GenerateRandomList(25, 56));// Спроба встановити кількість колонок нижче мінімальної
-        gameBoard.SetBoardSettings(boardConfig);
-        //*/
-
-        
-        await UniTask.Delay(taskDelay);
-        boardConfig.SetWestColumns(GenerateRandomList(0, 1));// Спроба встановити кількість колонок нижче мінімальної // Тестування мінімальної кількості колонок
-        gameBoard.SetBoardSettings(boardConfig);
-
-
-        await UniTask.Delay(taskDelay);
-        boardConfig.AddSouthRow(FieldType.Support); // Додавання нового рядка
-        boardConfig.AddNorthRow(FieldType.Support); // Додавання Support рядка в початок
-        boardConfig.AddNorthRow(FieldType.Support); // Додавання Support рядка в початок
-        gameBoard.SetBoardSettings(boardConfig);
-       
-
-        // 5. Складні сценарії
-        await UniTask.Delay(taskDelay);
-        boardConfig.SetWestColumns(GenerateRandomList(4, 5)); // Встановлення 4 колонок
-        boardConfig.AddSouthRow(FieldType.Support); // Додавання Support рядка
-        boardConfig.AddSouthRow(FieldType.Attack); // Додавання Attack рядка
-        gameBoard.SetBoardSettings(boardConfig);
-
-        await UniTask.Delay(taskDelay);
-        boardConfig.AddNorthRow(FieldType.Support); // Додавання Support рядка
-        boardConfig.RemoveNorthRowAt(1);
-        gameBoard.SetBoardSettings(boardConfig);
-
-        // 6. Масштабування конфігурації
-        await UniTask.Delay(taskDelay);
-        boardConfig.SetEastColumns(GenerateRandomList(10, 15));  // Встановлення великої кількості колонок
-        gameBoard.SetBoardSettings(boardConfig);
-        /*
-        // 6. Масштабування конфігурації
-        await UniTask.Delay(taskDelay);
-        boardConfig.AddSouthRow(FieldType.Attack); // Додавання Attack рядка
-        gameBoard.SetBoardSettings(boardConfig); 
-        //*/
+        await gridManager.UpdateGrid(boardConfig);
         Debug.Log("DebugLogic завершено.");
     }
 
-
-    public void AssignOpponent(Opponent opponent) {
-        AssignHPCellToOpponent(opponent);
-        gameBoard.OpponentManager.RegisterOpponent(opponent);
-    }
 
     private void AssignHPCellToOpponent(Opponent opponent) {
         if (opponent is Player) {
@@ -144,24 +73,25 @@ public class GameboardController : MonoBehaviour {
         } else { enemyCell.AssignOwner(opponent); }
     }
 
-    internal void UpdateCursorPosition(Vector3? mouseWorldPosition) {
+    public Field GetFieldByWorldPosition(Vector3? mouseWorldPosition) {
         if (!mouseWorldPosition.HasValue) {
-            gameBoard.DeselectField();
-            return;
+            return null;
         }
         Vector2Int? indexes = tableController.GetGridIndex(mouseWorldPosition.Value);
         if (!indexes.HasValue) {
-            gameBoard.DeselectField();
-            return;
+            return null;
         }
 
         Field field = gridManager.GridBoard.GetFieldAt(indexes.Value.x, indexes.Value.y);
-        //debugObject.transform.position = mouseWorldPosition;
-        if (field != null) {
-            gameBoard.SelectField(field);
-        } else {
-            gameBoard.DeselectField();
+
+        if (!gameBoard.IsValidFieldSelected(field)) {
+            if (field != null) {
+                Debug.LogWarning($"Can`t select field : {field.GetTextCoordinates()}");
+            }
         }
+
+        Debug.Log($"Selected : {field.GetTextCoordinates()}");
+        return field;
     }
 
     public List<int> GenerateRandomList(int minSize, int maxSize) {
@@ -182,5 +112,13 @@ public class GameboardController : MonoBehaviour {
         if (boardConfig != null) {
             boardConfig.ResetSettings();
         }
+    }
+
+    public bool PlayCard(Opponent opponent, Card selectedCard, Field field) {
+        // Determine is that creature or spell
+
+        // if creature summon it
+        Creature creature = null;
+        return gameBoard.SummonCreature(opponent, field, creature);
     }
 }

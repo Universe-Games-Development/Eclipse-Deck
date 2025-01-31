@@ -8,7 +8,7 @@ using Zenject;
 public class GridVisual : MonoBehaviour {
     [SerializeField] private FieldPool pool;
 
-    GridManager gridManager;
+    BoardUpdater gridManager;
 
     [SerializeField] private CellSize visualCellSize = new(1.0f, 1.0f);
 
@@ -24,16 +24,17 @@ public class GridVisual : MonoBehaviour {
     private Dictionary<Field, FieldController> fieldControllers = new();
 
     [Inject]
-    public void Construct(GridManager gridManager) {
+    public void Construct(BoardUpdater gridManager) {
         this.gridManager = gridManager;
         gridManager.OnGridInitialized += UpdateVisualGrid;
         gridManager.OnGridChanged += UpdateVisualGrid;
         pool.InitPool();
     }
 
-    public void UpdateVisualGrid(BoardUpdateData boardUpdateData) {
+    public async UniTask UpdateVisualGrid(BoardUpdateData boardUpdateData) {
         UpdateGrid(boardUpdateData);
         AdjustCenter();
+        await UniTask.Yield();
     }
 
     public void UpdateGrid(BoardUpdateData boardUpdateData) {

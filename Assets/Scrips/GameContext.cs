@@ -18,5 +18,5 @@ public class GameContext {
 
     // need By zenject
     public GameBoard gameBoard;
-    public GridManager _gridManager;
+    public BoardUpdater _gridManager;
 }
