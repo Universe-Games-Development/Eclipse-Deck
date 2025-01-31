@@ -48,32 +48,8 @@ public class FieldController : MonoBehaviour {
         }
     }
 
-
     private void SetInteractable(bool value) {
         isInteractable = value;
-        if (field == null) return;
-        if (value) {
-            field.OnSelectToggled += levitator.ToggleLevitation;
-            field.OnSelectToggled += fieldMaterializer.ToggleHighlight;
-        } else {
-            field.OnSelectToggled -= levitator.ToggleLevitation;
-            field.OnSelectToggled -= fieldMaterializer.ToggleHighlight;
-        }
-    }
-
-    public void Reset() {
-        levitator.Reset();
-        fieldMaterializer.Reset();
-
-        isInteractable = false;
-        if (field != null)
-            field.OnSelectToggled -= levitator.ToggleLevitation;
-        field = null;
-    }
-
-    private void OnDestroy() {
-        if (field != null)
-            field.OnSelectToggled -= levitator.ToggleLevitation;
     }
 
     public async UniTask RemoveController() {
@@ -83,5 +59,30 @@ public class FieldController : MonoBehaviour {
 
     public void ReturnToPool() {
         pool.ReleaseField(this);
+    }
+
+    private void OnMouseEnter() {
+        if (isInteractable && field.Owner != null && field.Owner is Player) {
+            levitator.ToggleLevitation(true);
+            fieldMaterializer.ToggleHighlight(true);
+        }
+    }
+
+    private void OnMouseExit() {
+        if (isInteractable && field.Owner != null && field.Owner is Player) {
+            levitator.ToggleLevitation(false);
+            fieldMaterializer.ToggleHighlight(false);
+        }
+    }
+
+    public void Reset() {
+        levitator.Reset();
+        fieldMaterializer.Reset();
+
+        isInteractable = false;
+        field = null;
+    }
+
+    private void OnDestroy() {
     }
 }

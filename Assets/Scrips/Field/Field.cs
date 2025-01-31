@@ -93,7 +93,7 @@ public class Field {
         return PlaceCreature(creature);
     }
 
-    private bool PlaceCreature(Creature creature) {
+    public bool PlaceCreature(Creature creature) {
         if (OccupiedCreature != null) {
             FieldLogger.Warning($"Field at ({row}, {column}) is already occupied by another creature.");
             return false;
@@ -134,5 +134,9 @@ public class Field {
 
     public int GetColumn() {
         return column;
+    }
+
+    public string GetTextCoordinates() {
+        return $"{GetRow()} / {GetColumn()}";
     }
 }

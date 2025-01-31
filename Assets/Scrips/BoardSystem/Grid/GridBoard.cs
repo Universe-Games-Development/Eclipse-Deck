@@ -4,24 +4,25 @@ using UnityEngine;
 
 public class GridBoard {
     private CompasGrid[,] grids = new CompasGrid[2, 2];
-    public GridSettings Config {
+    public BoardSettingsSO Config {
         get => _config;
         set {
             _config = value;
         }
     }
 
-    private GridSettings _config;
+    private BoardSettingsSO _config;
 
-    public GridBoard(GridSettings _config) {
+    public GridBoard() {
         for (int meridian = 0; meridian < grids.GetLength(0); meridian++) {
             for (int zonal = 0; zonal < grids.GetLength(1); zonal++) {
-                grids[meridian, zonal] = new CompasGrid(meridian, zonal);
+                grids[meridian, zonal] = new CompasGrid(this, meridian, zonal);
             }
         }
     }
 
-    public BoardUpdateData UpdateGlobalGrid(GridSettings _config) {
+    #region Update methods
+    public BoardUpdateData UpdateGlobalGrid(BoardSettingsSO _config) {
         if (_config == null || _config.northRows == null || _config.southRows == null || _config.eastColumns == null || _config.westColumns == null) {
             return null;
         }
@@ -49,7 +50,6 @@ public class GridBoard {
         return boardUpdateData;
     }
 
-
     public Field GetFieldAt(int globalRow, int globalColumn) {
         if (globalRow == 0 || globalColumn == 0) {
             return null;
@@ -73,14 +73,7 @@ public class GridBoard {
             : null;
     }
 
-    public CompasGrid GetColumnNeighbourGrid(CompasGrid directionalGrid) {
-        int neighborZonal = directionalGrid.gridColumn == 1 ? 0 : 1;
-        return (neighborZonal >= 0 && neighborZonal < grids.GetLength(1))
-            ? grids[directionalGrid.gridRow, neighborZonal]
-            : null;
-    }
-
-    internal BoardUpdateData RemoveAll() {
+    public BoardUpdateData RemoveAll() {
         BoardUpdateData boardUpdateData = new();
         foreach (CompasGrid grid in grids) {
             boardUpdateData.gridsUpdateData.Add(grid.CleanAll());
@@ -88,30 +81,51 @@ public class GridBoard {
         return boardUpdateData;
     }
 
-    internal bool FieldExists(Field field) {
-        if (field == null) return false;
-        Field fieldInGrids = GetFieldAt(field.GetRow(), field.GetColumn());
-        return field != null && field == fieldInGrids;
+    public void ProcessGrids(Action<Field> fieldAction) {
+        foreach (var grid in GetAllGrids()) {
+            foreach (var row in grid._fields) {
+                foreach (var field in row) {
+                    fieldAction(field);
+                }
+            }
+        }
     }
+    #endregion
 
-    /* This method deprecated and no longer works since we changed from 1 grid to 4 in each compas direction
-     * To DO :
-     *  We have grids thats starts rows and columns starting from 1, 1; -1, 1; -1, -1; 1, -1; in global coordinates
-     *  We have origin that represents center for all 4 grids
-     *  We have world position by wich we need to determine index of field that in bounds of it
-     * 
-     */
-    internal Vector2Int? GetGridIndexByWorld(Transform origin, Vector3 worldPosition) {
+    #region Geometry
+    public Vector2Int? GetGridIndexByWorld(Transform origin, Vector3 worldPosition) {
         if (Config == null) return null;
 
         Vector3 localPosition = origin.InverseTransformPoint(worldPosition);
-        int x = Mathf.FloorToInt(localPosition.x / Config.cellSize.width);
-        int y = Mathf.FloorToInt(localPosition.z / Config.cellSize.height);
 
-        bool validRow = x >= 0 && x < Config.northRows.Count + Config.southRows.Count;
-        bool validColumn = y >= 0 && y < Config.westColumns.Count + Config.eastColumns.Count;
+        float xCellOffset = Config.cellSize.width / 2;
+        float yCellOffset = Config.cellSize.height / 2;
 
-        return (validRow && validColumn) ? new Vector2Int(x, y) : (Vector2Int?)null;
+        //int gapOffsetX = Mathf.FloorToInt((localPosition.x == 0 ? 0 : Mathf.Sign(localPosition.x))); 
+        //int gapOffsetY = Mathf.FloorToInt((localPosition.z == 0 ? 0 : Mathf.Sign(localPosition.z)));
+
+        int row = Mathf.FloorToInt((localPosition.z + yCellOffset) / Config.cellSize.height);
+        int column = Mathf.FloorToInt((localPosition.x + xCellOffset) / Config.cellSize.width);
+
+        bool validRow = row >= 0 && row < Config.northRows.Count + Config.southRows.Count;
+        bool validColumn = column >= 0 && column < Config.eastColumns.Count + Config.westColumns.Count;
+
+        return (validRow && validColumn) ? new Vector2Int(row, column) : (Vector2Int?)null;
+    }
+    public Vector3 GetGridBalanceOffset() {
+        if (grids.Length == 0) return Vector3.zero;
+
+        // Перевірка на існування _fields для північних і південних сіток
+        int northHeight = (grids[1, 0]._fields != null) ? grids[1, 0]._fields.Count : 0;
+        int southHeight = (grids[0, 0]._fields != null) ? grids[0, 0]._fields.Count : 0;
+        int heightDifference = northHeight - southHeight;
+
+        // Перевірка на існування _fields для східних і західних сіток
+        int eastWidth = (grids[0, 1]._fields != null && grids[0, 1]._fields.Count > 0) ? grids[0, 1]._fields[0].Count : 0;
+        int westWidth = (grids[0, 0]._fields != null && grids[0, 0]._fields.Count > 0) ? grids[0, 0]._fields[0].Count : 0;
+        int widthDifference = eastWidth - westWidth;
+
+        return new Vector3(widthDifference, 0, heightDifference);
     }
 
     public Vector3 GetGridCenter() {
@@ -159,18 +173,54 @@ public class GridBoard {
 
         return totalWHeight;
     }
-    /* Each field have coordinates in format (+3, -5)
-     * we need to define it`s direction by values and compare to incoming globalDirection
-     * 
-     * Example : 
-     * Field at - 1; +4 
-     * Direction: North
-     * 
-     * -1 means it on South
-     * +4 means east
-     * 
-     * We make offset like -1; 1 and form direction and check it belongs to globalDirection
-     */
+    #endregion
+
+    #region Field Getters
+    public List<Field> GetFieldsInDirection(Field currentField, int searchDistance, Direction searchDirection) {
+        (int rowOffset, int colOffset) offset = CompassUtil.DirectionOffsets.GetValueOrDefault(searchDirection);
+        List<Field> fields = new List<Field>();
+        for (int i = 1; i <= searchDistance; i++) {
+            Field foundField = GetFieldAt(currentField.GetRow() + offset.rowOffset * i, currentField.GetColumn() + offset.colOffset * i);
+            if (foundField != null) {
+                fields.Add(foundField);
+            }
+        }
+        return fields;
+    }
+
+    public List<Field> GetAdjacentFields(Field currentField) {
+        List<Field> adjacentFields = new();
+        List<(int rowOffset, int colOffset)> offsets = CompassUtil.GetOffsets();
+
+        foreach (var (rowOffset, colOffset) in offsets) {
+            int newRow = currentField.GetRow() + rowOffset;
+            int newCol = currentField.GetColumn() + colOffset;
+            // Ïåðåâ³ðêà, ÷è çíàõîäèòüñÿ íîâå ïîëå â ìåæàõ îñíîâíî¿ ñ³òêè
+            Field field = GetFieldAt(newRow, newCol);
+            if (field != null) {
+                adjacentFields.Add(field);
+            }
+        }
+        Debug.Log($"Found {adjacentFields.Count} adjacent fields");
+        return adjacentFields;
+    }
+
+    public List<Field> GetFlankFields(Field currentField, int flankSize) {
+        List<Field> flankFields = new();
+        flankFields.AddRange(GetFieldsInDirection(currentField, flankSize, Direction.East));
+        flankFields.AddRange(GetFieldsInDirection(currentField, flankSize, Direction.West));
+        return flankFields;
+    }
+
+    #endregion
+
+    #region Field Validators
+    public bool FieldExists(Field field) {
+        if (field == null) return false;
+        Field fieldInGrids = GetFieldAt(field.GetRow(), field.GetColumn());
+        return field != null && field == fieldInGrids;
+    }
+
     public bool IsFieldBelogToDirection(Field currentField, Direction globalDirection) {
         int meridian = currentField.GetRow() > 0 ? 1 : -1;
         int zonal = currentField.GetColumn() > 0 ? 1 : -1;
@@ -178,19 +228,15 @@ public class GridBoard {
         Direction fieldDirection = CompassUtil.GetDirectionFromOffset(meridian, zonal);
         return CompassUtil.BelongsToGlobalDirection(fieldDirection, globalDirection);
     }
+    #endregion
 
-    internal List<Field> GetFieldsInDirection(Field currentField, int moveAmount, Direction moveDirection, bool isRelativeToEnemy) {
-        throw new NotImplementedException();
+    #region Grid Getters
+    public CompasGrid GetColumnNeighbourGrid(CompasGrid directionalGrid) {
+        int neighborZonal = directionalGrid.gridColumn == 1 ? 0 : 1;
+        return (neighborZonal >= 0 && neighborZonal < grids.GetLength(1))
+            ? grids[directionalGrid.gridRow, neighborZonal]
+            : null;
     }
-
-    internal List<Field> GetAdjacentFields(Field currentField) {
-        throw new NotImplementedException();
-    }
-
-    internal List<Field> GetFlankFields(Field currentField, int flankSize, bool isRelativeToEnemy) {
-        throw new NotImplementedException();
-    }
-
     public List<CompasGrid> GetGridsByGlobalDirection(Direction globalDirection) {
         List<CompasGrid> compasGrids = new();
 
@@ -203,20 +249,14 @@ public class GridBoard {
         return compasGrids;
     }
 
-    public Vector3 GetGridBalanceOffset() {
-        if (grids.Length == 0) return Vector3.zero;
+    public List<CompasGrid> GetAllGrids() {
+        List<CompasGrid> compasGrids = new();
 
-        // Перевірка на існування _fields для північних і південних сіток
-        int northHeight = (grids[1, 0]._fields != null) ? grids[1, 0]._fields.Count : 0;
-        int southHeight = (grids[0, 0]._fields != null) ? grids[0, 0]._fields.Count : 0;
-        int heightDifference = northHeight - southHeight;
+        foreach (var compasGrid in grids) {
+            compasGrids.Add(compasGrid);
+        }
 
-        // Перевірка на існування _fields для східних і західних сіток
-        int eastWidth = (grids[0, 1]._fields != null && grids[0, 1]._fields.Count > 0) ? grids[0, 1]._fields[0].Count : 0;
-        int westWidth = (grids[0, 0]._fields != null && grids[0, 0]._fields.Count > 0) ? grids[0, 0]._fields[0].Count : 0;
-        int widthDifference = eastWidth - westWidth;
-
-        return new Vector3(widthDifference, 0, heightDifference);
+        return compasGrids;
     }
-
+    #endregion
 }

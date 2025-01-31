@@ -48,11 +48,11 @@ public class MoveCommand : ICommand {
             bool placeResult = await lastField.PlaceCreatureAsync(creature);
 
             if (!placeResult) {
-                Debug.LogWarning($"Failed to undo move to {lastField.GetRow()} / {lastField.GetColumn()}. Field may be occupied or invalid.");
+                Debug.LogWarning($"Failed to undo move to {lastField.GetTextCoordinates()}. Field may be occupied or invalid.");
                 break;
             }
 
-            Debug.Log($"Undo: Moved back to {lastField.GetRow()} / {lastField.GetColumn()}");
+            Debug.Log($"Undo: Moved back to {lastField.GetTextCoordinates()}");
         }
     }
 
@@ -60,11 +60,11 @@ public class MoveCommand : ICommand {
         creature.CurrentField?.UnAssignCreature();
         bool placeResult = await field.PlaceCreatureAsync(creature);
         if (!placeResult) {
-            Debug.LogWarning($"Failed to move to {field.GetRow()} / {field.GetColumn()}. Field may be occupied or invalid.");
+            Debug.LogWarning($"Failed to move to {field.GetTextCoordinates()}. Field may be occupied or invalid.");
             return false;
         }
 
-        Debug.Log($"Moved to {field.GetRow()} / {field.GetColumn()}");
+        Debug.Log($"Moved to {field.GetTextCoordinates()}");
         return true;
     }
 

@@ -72,14 +72,14 @@ public class Levitator : MonoBehaviour {
             levitationTween = body.DOMoveY(transform.position.y, levitationData.dropDuration)
                 .SetEase(Ease.InOutSine)
                 .OnComplete(() => {
-                    Debug.Log("Levitation stopped and position corrected.");
+                    //Debug.Log("Levitation stopped and position corrected.");
                 });
         } else {
             // Якщо позиція вже правильна, просто зупиняємо левітацію
             levitationTween = body.DOMoveY(transform.position.y, levitationData.dropDuration)
                 .SetEase(Ease.InOutSine)
                 .OnComplete(() => {
-                    Debug.Log("Levitation stopped.");
+                    //Debug.Log("Levitation stopped.");
                 });
         }
     }

@@ -24,22 +24,16 @@ public class PlayerController : MonoBehaviour {
 
     void Update() {
         if (Input.GetMouseButtonDown(0)) {
-            TrySummonCard();
-        }
+            Vector3? mouseWorldPosition = rayService.GetRayMousePosition();
+            Field field = gameboard_c.GetFieldByWorldPosition(mouseWorldPosition);
 
-
-        Vector3? mouseWorldPosition = rayService.GetRayMousePosition();
-
-
-        if (gameboard_c != null) {
-            gameboard_c.UpdateCursorPosition(mouseWorldPosition);
+            TrySummonCard(field);
         }
     }
 
 
-    private void TrySummonCard() {
-        GameObject gameObject = rayService.GetRayObject();
-        if (gameObject && gameObject.TryGetComponent(out FieldController field)) {
+    private void TrySummonCard(Field field) {
+        if (field == null) {
             CardUI selectedUICard = handUI.SelectedCard;
             if (selectedUICard == null) {
                 Debug.Log("No card selected to summon.");
@@ -52,8 +46,11 @@ public class PlayerController : MonoBehaviour {
                 return;
             }
 
-            player.hand.RemoveCard(selectedCard);
-            Debug.Log($"Card {selectedCard.data.Name} summoned to field!");
+            bool isSummoned = gameboard_c.PlayCard(player, selectedCard, field);
+            
+            if (isSummoned) {
+                player.hand.RemoveCard(selectedCard);
+            }
         } else {
             handUI.DeselectCurrentCard();
         }

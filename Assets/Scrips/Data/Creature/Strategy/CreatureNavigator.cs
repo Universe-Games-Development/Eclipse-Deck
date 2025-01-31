@@ -37,8 +37,9 @@ public class CreatureNavigator {
         }
 
         bool isRelativeToEnemy = gridBoard.IsFieldBelogToDirection(CurrentField, Direction.North);
+        if (isRelativeToEnemy) moveDirection = CompassUtil.GetOppositeDirection(moveDirection);
 
-        List<Field> fieldsToMove = gridBoard.GetFieldsInDirection(CurrentField, moveAmount, moveDirection, isRelativeToEnemy);
+        List<Field> fieldsToMove = gridBoard.GetFieldsInDirection(CurrentField, moveAmount, moveDirection);
         if (fieldsToMove == null || fieldsToMove.Count == 0) {
             Debug.LogWarning("No valid fields to move.");
             path.isInterrupted = true;
@@ -67,7 +68,8 @@ public class CreatureNavigator {
 
 
     public List<Field> GetFieldsInDirection(int amount, Direction direction) {
-        return gridBoard.GetFieldsInDirection(CurrentField, amount, direction, IsRelativeToEnemy);
+
+        return gridBoard.GetFieldsInDirection(CurrentField, amount, direction);
     }
 
     public List<Creature> GetCreaturesInDirection(int amount, Direction direction) {
@@ -102,7 +104,7 @@ public class CreatureNavigator {
     }
 
     public List<Field> GetFlankFields(int flankSize) {
-        return gridBoard.GetFlankFields(CurrentField, flankSize, IsRelativeToEnemy);
+        return gridBoard.GetFlankFields(CurrentField, flankSize);
     }
 
 

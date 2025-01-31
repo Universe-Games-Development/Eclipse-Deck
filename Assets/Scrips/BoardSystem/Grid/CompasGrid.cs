@@ -8,9 +8,11 @@ public class CompasGrid {
     public int gridRow;
     public int gridColumn;
     public Direction gridDirection;
-    public CompasGrid(int meridian, int zonal) {
-        this.gridRow = meridian;
-        this.gridColumn = zonal;
+    private GridBoard _board;
+    public CompasGrid(GridBoard gridBoard, int row, int col) {
+        gridRow = row;
+        gridColumn = col;
+        _board = gridBoard;
         _fields = new();
         gridDirection = GetGridDirection2x2Array(gridRow , gridColumn);
     }
@@ -42,14 +44,6 @@ public class CompasGrid {
         return gridUpdateData;
     }
 
-    private void TrimGrid(GridUpdateData gridUpdateData) {
-        TrimEmptyColumns(gridUpdateData);
-        TrimEmptyRows(gridUpdateData);
-
-        // Remove Fields from markedEmpty that are also in removedFields
-        gridUpdateData.markedEmpty.RemoveAll(field => gridUpdateData.removedFields.Contains(field));
-    }
-
     private void UpdateRow(int row, FieldType rowType, List<int> columns, GridUpdateData gridUpdateData) {
         List<Field> fieldRow = _fields[row];
         int maxColumns = Mathf.Max(columns.Count, fieldRow.Count);
@@ -61,7 +55,9 @@ public class CompasGrid {
                     Type = rowType
                 };
                 _fields[row].Add(newField);
-                gridUpdateData.addedFields.Add(newField);
+                if (columns[col] != 0) {
+                    gridUpdateData.addedFields.Add(newField);
+                }
             }
 
             // We dont check exceeded columns because it`s handled in exceeded rows
@@ -76,7 +72,16 @@ public class CompasGrid {
         }
     }
 
+    #region Trimming
+    private void TrimGrid(GridUpdateData gridUpdateData) {
+        TrimEmptyColumns(gridUpdateData);
+        TrimEmptyRows(gridUpdateData);
+
+        // Remove Fields from markedEmpty that are also in removedFields
+        gridUpdateData.markedEmpty.RemoveAll(field => gridUpdateData.removedFields.Contains(field));
+    }
     public void TrimEmptyRows(GridUpdateData gridUpdateData) {
+        
         for (int row = _fields.Count - 1; row >= 0; row--) {
             if (IsRowEmpty(_fields[row])) {
                 RemoveRow(row, gridUpdateData);
@@ -88,11 +93,15 @@ public class CompasGrid {
 
     public void TrimEmptyColumns(GridUpdateData gridUpdateData) {
         if (_fields.Count == 0) return;
-        
-        int columnCount = _fields[0].Count;
+        CompasGrid neigbour = _board.GetColumnNeighbourGrid(this);
 
+        int columnCount = _fields[0].Count;
+         
         for (int col = columnCount - 1; col >= 0; col--) {
-            if (IsColumnEmpty(col)) {
+            bool currentColumnEmpty = IsColumnTypeEmpty(col);
+            if (neigbour == null && currentColumnEmpty)  {
+                gridUpdateData.removedFields.AddRange(RemoveColumn(col));
+            } else if (neigbour != null && currentColumnEmpty && neigbour.HasEmptyColumnAt(col)) {
                 gridUpdateData.removedFields.AddRange(RemoveColumn(col));
             } else {
                 break; // Зупиняємося, якщо колонка не порожня
@@ -100,13 +109,41 @@ public class CompasGrid {
         }
     }
 
+    private bool HasEmptyColumnAt(int col) {
+        bool result = false;
+
+        // We return false because it means start of the initializing we can`t define is it empty because it need time on initialization to define it
+
+        // if fields not initialized
+        if (_fields == null) {
+            return result;
+        }
+
+        // if first row doesn`t exist
+        if (_fields.Count == 0) {
+            return result;
+        }
+
+        // if column is out of bounds it means removed already from grid == Empty
+        if (col >= _fields[0].Count) {
+            result = true;
+            return result;
+        }
+        // if column have all fields with EmptyType
+        if (IsColumnTypeEmpty(col)) {
+            result = true;
+            return result;
+        }
+        return result;
+    }
+    #endregion
+
     private void AddRow(FieldType rowType, int rowIndex, List<int> columns, GridUpdateData gridUpdateData) {
         List<Field> newRow = new();
 
         for (int col = 0; col < columns.Count; col++) {
             Field newField = new(CalculateGlobalCoordinates(rowIndex, col));
 
-            FieldType type;
             if (columns[col] == 0) {
                 newField.Type = FieldType.Empty;
                 gridUpdateData.markedEmpty.Add(newField);
@@ -194,7 +231,7 @@ public class CompasGrid {
         return row.All(f => f.Type == FieldType.Empty);
     }
 
-    private bool IsColumnEmpty(int columnIndex) {
+    private bool IsColumnTypeEmpty(int columnIndex) {
         return _fields.All(row => columnIndex < row.Count && row[columnIndex].Type == FieldType.Empty);
     }
 
