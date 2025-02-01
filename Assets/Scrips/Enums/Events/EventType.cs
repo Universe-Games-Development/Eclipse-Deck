@@ -56,4 +56,5 @@ public enum EventType {
     ON_GAME_STATE_SAVED,  // Стан гри був збережений (наприклад, для продовження або тестування)
     ON_GAME_STATE_LOADED, // Стан гри був завантажений з попереднього збереження
     ON_VICTORY_POINTS_GAINED, // Гравець отримав переможні очки
+    ON_CARD_REMOVED,
 }

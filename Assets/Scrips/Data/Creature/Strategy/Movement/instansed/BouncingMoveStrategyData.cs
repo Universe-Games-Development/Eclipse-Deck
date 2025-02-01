@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "BouncingMoveStrategySO", menuName = "Strategies/Movement/Bouncing")]
-public class BouncingMoveStrategySO : MovementStrategySO {
+public class BouncingMoveStrategyData : MovementStrategyData {
     public Direction initialTurning = Direction.East;
     public int moveAmount = 1;
     public override IMoveStrategy GetInstance() {
@@ -20,15 +20,15 @@ public class BouncingMoveStrategy : InstanceMovementStrategy {
         this.moveAmount = moveAmount;
     }
 
-    protected override List<Path> Move() {
+    public override List<Path> CalculatePath(Field CurrentField) {
         List<Path> paths = new();
-        Path path = navigator.GenerateSimplePath(moveAmount, currentDirection);
+        Path path = navigator.GenerateSimplePath(CurrentField, moveAmount, currentDirection);
         if (path.isInterrupted) {
             isBounced = true;
         }
         if (isBounced) {
             currentDirection = CompassUtil.GetOppositeDirection(currentDirection);
-            path = navigator.GenerateSimplePath(moveAmount, currentDirection);
+            path = navigator.GenerateSimplePath(CurrentField, moveAmount, currentDirection);
         }
         paths.Add(path);
         return paths;

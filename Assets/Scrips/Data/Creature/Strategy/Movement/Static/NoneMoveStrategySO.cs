@@ -1,12 +1,20 @@
-/* The logic of movements for creature:
- * 1. I'm do nothing
- */
 using System.Collections.Generic;
 using UnityEngine;
 
+/* The logic of movements for creature:
+ * 1. I'm do nothing
+ */
+
 [CreateAssetMenu(fileName = "NoneMoveStrategySO", menuName = "Strategies/Movement/None")]
-public class NoneMoveStrategySO : StaticMovementStrategySO {
-    protected override List<Path> Move() {
+public class NoneMoveStrategyData : MovementStrategyData {
+    public override IMoveStrategy GetInstance() {
+        return new NoneMoveStrategy();
+    }
+}
+
+
+public class NoneMoveStrategy : InstanceMovementStrategy {
+    public override List<Path> CalculatePath(Field currentField) {
         List<Path> paths = new();
         return paths;
     }

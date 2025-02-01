@@ -15,4 +15,4 @@ MonoBehaviour:
   Name: Simple
   strategyIcon: {fileID: 0}
   attackStrategy: {fileID: 11400000, guid: 63bcb6d5fe708b5469ad988cb6fae13c, type: 2}
-  supportStrategy: {fileID: 11400000, guid: 8136f0eadc17fb343946abf62b5ae081, type: 2}
+  supportStrategy: {fileID: 11400000, guid: d1dc4a7aa35144c4dbbb0d18a6cefb48, type: 2}

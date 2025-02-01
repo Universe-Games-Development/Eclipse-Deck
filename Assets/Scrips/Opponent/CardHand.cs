@@ -11,9 +11,9 @@ public class CardHand {
 
     private Opponent owner;
     private readonly int maxHandSize;
-    private IEventManager eventManager;
+    private IEventQueue eventManager;
 
-    public CardHand(Opponent owner, IEventManager eventManager, int maxHandSize = DEFAULT_SIZE) {
+    public CardHand(Opponent owner, IEventQueue eventManager, int maxHandSize = DEFAULT_SIZE) {
         this.owner = owner;
         this.maxHandSize = maxHandSize;
         this.eventManager = eventManager;
@@ -23,11 +23,9 @@ public class CardHand {
         if (cardsInHand.Count < maxHandSize) {
             card.ChangeState(CardState.InHand);
 
-            GameContext gameContext = new GameContext();
-            gameContext.sourceCard = card;
-            gameContext.activePlayer = owner;
+            var drawnCardData = new CardHandEventData(owner, card);
+            eventManager.TriggerEvent(EventType.ON_CARD_DRAWN, drawnCardData);
 
-            eventManager.TriggerEventAsync(EventType.ON_CARD_DRAWN, gameContext);
             cardsInHand.Add(card);
             OnCardAdd?.Invoke(card);
         } else {
@@ -38,6 +36,10 @@ public class CardHand {
     public void RemoveCard(Card card) {
         if (cardsInHand.Contains(card)) {
             cardsInHand.Remove(card);
+
+            var removedCardData = new CardHandEventData(owner, card);
+            eventManager.TriggerEvent(EventType.ON_CARD_REMOVED, removedCardData);
+
             OnCardRemove?.Invoke(card);
         }
     }
@@ -58,5 +60,15 @@ public class CardHand {
             return cardsInHand[new Random().Next(cardsInHand.Count)];
         }
         return null;
+    }
+}
+
+public class CardHandEventData {
+    public Opponent Owner { get; private set; }
+    public Card Card { get; private set; }
+
+    public CardHandEventData(Opponent owner, Card card) {
+        Owner = owner;
+        Card = card;
     }
 }

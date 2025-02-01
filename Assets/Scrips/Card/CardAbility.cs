@@ -2,94 +2,95 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
 using UnityEngine;
+using Zenject;
 
 public class CardAbility : IEventListener {
     public CardAbilitySO data;
     private Card card;
-    private bool isRegistered = false;
-    private IEventManager eventManager;
+    private bool isActiveState = false;
+    private IEventQueue eventQueue;
 
-    public CardAbility(CardAbilitySO abilitySO, Card card, IEventManager eventManager) {
+    public CardAbility(CardAbilitySO abilitySO, Card card, IEventQueue eventQueue) {
         this.data = abilitySO;
         this.card = card;
-        this.eventManager = eventManager;
+        this.eventQueue = eventQueue;
 
         card.OnStateChanged += OnCardStateChanged;
 
-        CheckAndRegisterAbility();
+        CheckAndActivateAbility();
 
         //Debug.Log($"CardAbility created for card: {card.data.name} in state: {card.CurrentState}");
     }
 
     ~CardAbility() {
         card.OnStateChanged -= OnCardStateChanged;
-        UnregisterActivation();
+        if (isActiveState)
+            UnregisterActivation();
     }
 
     private void OnCardStateChanged(CardState newState) {
-        CheckAndRegisterAbility();
+        CheckAndActivateAbility();
     }
 
-    private void CheckAndRegisterAbility() {
+    private void CheckAndActivateAbility() {
         if (card.CurrentState == data.activationState) {
-            if (!isRegistered) {
+            if (!isActiveState) {
                 RegisterActivation();
             }
         } else {
-            if (isRegistered) {
+            if (isActiveState) {
                 UnregisterActivation();
             }
         }
     }
 
     public virtual void RegisterActivation() {
-        if (isRegistered) {
+        if (isActiveState) {
             Debug.LogWarning($"Abilities for card {card.data.name} is already registered.");
             return;
         }
 
         //Debug.Log($"Registering ability for card: {card.data.name}");
         foreach (var abilityTrigger in data.eventTriggers) {
-            eventManager.RegisterListener(this, abilityTrigger, ExecutionType.Parallel);
+            eventQueue.RegisterListener(this, abilityTrigger);
         }
 
-        isRegistered = true;
+        isActiveState = true;
     }
 
     public virtual void UnregisterActivation() {
         //Debug.Log($"Unregistering ability for card: {card.data.name}");
         foreach (var abilityTrigger in data.eventTriggers) {
-            eventManager.UnregisterListener(this, abilityTrigger);
+            eventQueue.UnregisterListener(this, abilityTrigger);
         }
 
-        isRegistered = false;
+        isActiveState = false;
     }
 
-    // Обробка події
-    public async UniTask OnEventAsync(EventType eventType, GameContext gameContext, CancellationToken cancellationToken = default) {
-        if (!isRegistered) return; // Перевірка перед виконанням
 
-        //Debug.Log($"Event received: {eventType} for card: {card.data.name}");
+    // Need to return ability command
 
-        try {
-            data.ActivateAbility(gameContext);
+    // SUMMON CRETURE ALSO ABILITY
+    public object OnEventReceived(object data) {
+        ICommand command = null;
 
-            // wait for effects
-            await UniTask.Delay(1000, cancellationToken: cancellationToken);
-
-            if (cancellationToken.IsCancellationRequested) {
-                Debug.Log("Event handling was cancelled.");
-                return;
-            }
-
-            //Debug.Log("Ability executed.");
-        } catch (Exception e) {
-            Debug.LogError($"Error during ability execution for card {card.data.name}: {e.Message}\n{e.StackTrace}");
+        switch (data) {
+            case CardHandEventData cardHandEventData:
+                Debug.Log($"Gathering future action for drawn card with name: {cardHandEventData.Card.data.name}");
+                // Можете додати додаткову логіку тут
+                break;
+            // Додаткові випадки для інших типів даних
+            default:
+                Debug.Log("Unhandled event type");
+                break;
         }
+
+        return command;
     }
+
 
     public void Reset() {
-        if (isRegistered) {
+        if (isActiveState) {
             UnregisterActivation();
         }
 

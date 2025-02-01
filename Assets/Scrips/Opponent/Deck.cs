@@ -3,20 +3,20 @@ using System.Linq;
 
 public class Deck {
     private Stack<Card> deck = new();
-    private IEventManager eventManager;
+    private IEventQueue eventQueue;
 
     private Opponent owner;
 
-    public Deck(Opponent owner, CardCollection collection, IEventManager eventManager) {
+    public Deck(Opponent owner, CardCollection collection, IEventQueue eventQueue) {
         this.owner = owner;
-        this.eventManager = eventManager;
+        this.eventQueue = eventQueue;
         InitializeDeck(collection);
     }
 
     private void InitializeDeck(CardCollection collection) {
         foreach (var cardEntry in collection.cardEntries) {
             for (int i = 0; i < cardEntry.quantity; i++) {
-                Card newCard = new Card(cardEntry.cardSO, owner, eventManager);
+                Card newCard = new Card(cardEntry.cardSO, owner, eventQueue);
                 AddCard(newCard);
                 newCard.ChangeState(CardState.InDeck);
             }

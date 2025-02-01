@@ -1,12 +1,12 @@
 using Cysharp.Threading.Tasks;
+using FMODUnity;
 using System;
+using System.Threading;
 using UnityEngine;
-using System.Collections.Generic;
-using Zenject;
 
 public class GameBoard {
     // Zenject
-    private BoardUpdater _boardUpdater;
+    public BoardUpdater _boardUpdater { get; private set; }
     private TurnManager _turnManager;
 
     public GameBoard(BoardUpdater boardUpdater, TurnManager turnManager) {
@@ -63,60 +63,5 @@ public class GameBoard {
         }
 
         return true;
-    }
-}
-
-
-// This class will handle all actions: Creatures abilities, moves, spells, opponent end turn and other battle actions, Even Dialogues!
-public class BatttleActionManager {
-    private TurnManager TurnManager;
-    private GameContext _gameContext;
-
-    // Zenject
-    private CommandManager _battleActionCommander;
-
-    private GameBoard _gameBoard;
-    private BoardAssigner _boardAssigner;
-
-    [Inject]
-    public void Construct(CommandManager battleActionCommander, GameBoard gameBoard, BoardAssigner boardAssigner) {
-        _gameBoard = gameBoard;
-        _battleActionCommander = battleActionCommander;
-        _boardAssigner = boardAssigner; // ²í'ºêö³ÿ BoardAssigner
-    }
-
-    public async UniTask PerformCreatureActions(Opponent opponent) {
-        try {
-            foreach (var creature in _boardAssigner.GetOpponentCreatures(TurnManager.ActiveOpponent)) {
-                _battleActionCommander.RegisterCommand(creature.GetTurnActions(_gameContext));
-            }
-
-            await _battleActionCommander.ExecuteCommands();
-        } catch (Exception ex) {
-            Debug.LogError($"Error while performing creature actions for opponent {opponent.Name}: {ex.Message}");
-        }
-    }
-}
-
-public class BattleManager {
-    public Action OnBattleStarted;
-    public Action OnBattleFinished;
-
-    [Inject] private OpponentRegistrator Registrator;
-    [Inject] private BoardUpdater _boardUpdater;
-
-    [Inject]
-    private void Construct(OpponentRegistrator registrator) {
-        Registrator = registrator;
-        Registrator.OnOpponentsRegistered += HandleBattleStart;
-    }
-
-    public void HandleBattleStart(List<Opponent> opponents) {
-        StartBattle().Forget();
-    }
-
-    public async UniTask StartBattle() {
-        await _boardUpdater.SpawnBoard();
-        OnBattleStarted?.Invoke();
     }
 }

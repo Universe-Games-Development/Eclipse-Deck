@@ -12,19 +12,19 @@ public class Card {
     public Attack Attack { get; private set; }
     public Health Health { get; private set; }
     public CardState CurrentState { get; private set; }
-    public IEventManager EventManager { get; private set; }
+    public IEventQueue eventQueue { get; private set; }
     public Action<CardState> OnStateChanged { get; internal set; }
 
     public List<CardAbility> abilities;
 
     public CardSO data;
 
-    public Card(CardSO cardSO, Opponent owner, IEventManager eventManager) {
+    public Card(CardSO cardSO, Opponent owner, IEventQueue eventQueue) {
         data = cardSO;
 
         Id = Guid.NewGuid().ToString(); // generate own uni id
         ResourseId = cardSO.resourseId;
-        EventManager = eventManager;
+        this.eventQueue = eventQueue;
         Owner = owner;
 
         Cost = new(MAX_CARD_COST, cardSO.cost);
@@ -33,7 +33,7 @@ public class Card {
 
         abilities = new List<CardAbility>();
         foreach (var abilitySO in cardSO.abilities) {
-            var ability = new CardAbility(abilitySO, this, eventManager);
+            var ability = new CardAbility(abilitySO, this, eventQueue);
             abilities.Add(ability);
         }
 

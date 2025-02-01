@@ -14,6 +14,8 @@ public class ManagerInstaller : MonoInstaller {
         Container.Bind<UIManager>().FromComponentInNewPrefab(uiManagerPrefab).AsSingle().NonLazy();
 
         Container.Bind<ResourceManager>().AsSingle().NonLazy();
-        Container.Bind<IEventManager>().To<EventManager>().AsSingle().NonLazy();
+
+        Container.Bind<IEventQueue>().To<EventQueue>().AsSingle().NonLazy();
+        Container.Bind<CommandManager>().AsSingle().NonLazy();
     }
 }

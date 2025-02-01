@@ -1,4 +1,6 @@
+using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Creature {
@@ -21,9 +23,7 @@ public class Creature {
     }
 
     // TODO: return also attack action
-    public ICommand GetTurnActions(GameContext gameContext) {
-        gameContext.initialField = CurrentField;
-        moveCommand.SetGameContext(gameContext);
+    public ICommand GetEndTurnMove(TurnEndEvent data) {
         return moveCommand;
     }
 
