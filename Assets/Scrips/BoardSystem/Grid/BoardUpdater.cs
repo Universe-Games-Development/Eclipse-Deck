@@ -38,7 +38,7 @@ public class BoardUpdater {
             ? new GridInitCommand(SetMainGrid, newConfig, OnGridInitialized, OnGridChanged)
             : new BoardUpdateCommand(GridBoard, newConfig, OnGridChanged);
 
-        CommandManager.RegisterCommand(command);
+        CommandManager.EnqueueCommand(command);
 
         try {
             await CommandManager.ExecuteCommands(); // Очікуємо виконання команд

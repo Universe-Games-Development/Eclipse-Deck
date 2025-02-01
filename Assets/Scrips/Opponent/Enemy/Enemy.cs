@@ -1,4 +1,5 @@
 public class Enemy : Opponent {
-    public Enemy(IEventManager eventManager, ResourceManager resourceManager) : base(eventManager, resourceManager) {
+    public Enemy(IEventQueue eventQueue, ResourceManager resourceManager) : base(eventQueue, resourceManager) {
+        Name = "Enemy";
     }
 }

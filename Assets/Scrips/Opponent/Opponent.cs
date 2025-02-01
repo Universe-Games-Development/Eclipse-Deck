@@ -14,13 +14,13 @@ public class Opponent {
     public CardCollection cardCollection;
 
     private ResourceManager resourceManager;
-    private IEventManager eventManager;
+    private IEventQueue eventQueue;
 
     public Action<Opponent> OnDefeat { get; internal set; }
 
     [Inject]
-    public Opponent(IEventManager eventManager, ResourceManager resourceManager) {
-        this.eventManager = eventManager;
+    public Opponent(IEventQueue eventQueue, ResourceManager resourceManager) {
+        this.eventQueue = eventQueue;
         this.resourceManager = resourceManager;
         Initialize();
     }
@@ -30,10 +30,10 @@ public class Opponent {
         cardCollection = new CardCollection(resourceManager);
         cardCollection.GenerateTestDeck(20);
 
-        deck = new Deck(this, cardCollection, eventManager);
+        deck = new Deck(this, cardCollection, eventQueue);
         Debug.Log("deck initialized with cards : " + deck.GetCount());
 
-        hand = new CardHand(this, eventManager);
+        hand = new CardHand(this, eventQueue);
     }
 
     public Card GetTestCard() {

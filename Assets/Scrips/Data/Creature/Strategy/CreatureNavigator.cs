@@ -1,34 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public class CreatureNavigator {
     // Zenject needed
-    public GameBoard GameBoard { get; protected set; }
-    public GridBoard gridBoard;
+    public GameBoard GameBoard { get; private set; }
+    public GridBoard GridBoard { get; private set; }
 
-    public GameContext GameContext { get; protected set; }
-    public Field CurrentField { get; protected set; }
-    public Creature CurrentCreature { get; protected set; }
-    public bool IsRelativeToEnemy { get; protected set; } = false;
-    public CreatureNavigator(GameContext gameContext) {
-        UpdateParams(gameContext);
-    }
-
-    public void UpdateParams(GameContext gameContext) {
-        GameContext = gameContext;
-        GameBoard = gameContext.gameBoard;
-
-        CurrentField = gameContext.initialField;
-        CurrentCreature = gameContext.currentCreature;
-
-        gridBoard = gameContext._gridManager.GridBoard;
-
-        IsRelativeToEnemy = gridBoard.IsFieldBelogToDirection(CurrentField, Direction.North);
+    [Inject]
+    public void Construct(GameBoard gameBoard) {
+        GameBoard = gameBoard;
+        GridBoard = gameBoard._boardUpdater.GridBoard;
     }
 
     // Trying to move in the chosen direction
-    // Return the amount of successful moves
-    public Path GenerateSimplePath(int moveAmount, Direction moveDirection) {
+    // Return the path to move
+    public Path GenerateSimplePath(Field CurrentField, int moveAmount, Direction moveDirection) {
         Path path = new();
         if (!ValidateInputs(GameBoard, CurrentField)) {
             path.isInterrupted = true;
@@ -36,10 +23,10 @@ public class CreatureNavigator {
             return path;
         }
 
-        bool isRelativeToEnemy = gridBoard.IsFieldBelogToDirection(CurrentField, Direction.North);
+        bool isRelativeToEnemy = GridBoard.IsFieldBelogToDirection(CurrentField, Direction.North);
         if (isRelativeToEnemy) moveDirection = CompassUtil.GetOppositeDirection(moveDirection);
 
-        List<Field> fieldsToMove = gridBoard.GetFieldsInDirection(CurrentField, moveAmount, moveDirection);
+        List<Field> fieldsToMove = GridBoard.GetFieldsInDirection(CurrentField, moveAmount, moveDirection);
         if (fieldsToMove == null || fieldsToMove.Count == 0) {
             Debug.LogWarning("No valid fields to move.");
             path.isInterrupted = true;
@@ -65,15 +52,13 @@ public class CreatureNavigator {
         return path;
     }
 
+    public List<Field> GetFieldsInDirection(Field currentField, int amount, Direction direction) {
 
-
-    public List<Field> GetFieldsInDirection(int amount, Direction direction) {
-
-        return gridBoard.GetFieldsInDirection(CurrentField, amount, direction);
+        return GridBoard.GetFieldsInDirection(currentField, amount, direction);
     }
 
-    public List<Creature> GetCreaturesInDirection(int amount, Direction direction) {
-        List<Field> path = GetFieldsInDirection(amount, direction);
+    public List<Creature> GetCreaturesInDirection(Field currentField, int amount, Direction direction) {
+        List<Field> path = GetFieldsInDirection(currentField, amount, direction);
         return GetCreaturesOnFields(path);
     }
 
@@ -87,11 +72,15 @@ public class CreatureNavigator {
         return creaturesInDirection;
     }
 
-    public List<Field> GetAdjacentFields() {
-        return gridBoard.GetAdjacentFields(CurrentField);
+    public List<Field> GetAdjacentFields(Field field) {
+        return GridBoard.GetAdjacentFields(field);
     }
 
-    private static bool ValidateInputs(GameBoard gameBoard, Field currentField) {
+    public List<Field> GetFlankFields(Field field, int flankSize) {
+        return GridBoard.GetFlankFields(field, flankSize);
+    }
+
+    private bool ValidateInputs(GameBoard gameBoard, Field currentField) {
         if (currentField == null) {
             Debug.LogError("Current field is null.");
             return false;
@@ -103,22 +92,13 @@ public class CreatureNavigator {
         return true;
     }
 
-    public List<Field> GetFlankFields(int flankSize) {
-        return gridBoard.GetFlankFields(CurrentField, flankSize);
-    }
-
-
-    public static Direction GetOppositeDirection(Direction direction) {
+    public Direction GetOppositeDirection(Direction direction) {
         return CompassUtil.GetOppositeDirection(direction);
     }
 
-    public Opponent GetCurrentOwner() {
-        return CurrentField.Owner;
-    }
-
-    public Direction GetDirectionToField(Field fieldToEscape) {
-        int currentRow = CurrentField.row;
-        int currentColumn = CurrentField.column;
+    public Direction GetDirectionToField(Field currentField, Field fieldToEscape) {
+        int currentRow = currentField.row;
+        int currentColumn = currentField.column;
 
         int targetRow = fieldToEscape.row;
         int targetColumn = fieldToEscape.column;

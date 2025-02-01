@@ -1,5 +1,5 @@
 public class Player : Opponent {
-    public Player(IEventManager eventManager, ResourceManager resourceManager) : base(eventManager, resourceManager) {
+    public Player(IEventQueue eventQueue, ResourceManager resourceManager) : base(eventQueue, resourceManager) {
         Name = "Player";
     }
 }

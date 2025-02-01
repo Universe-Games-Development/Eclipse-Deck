@@ -8,11 +8,8 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
         Container.Bind<TurnManager>().AsSingle();
 
 
-        Container.Bind<CommandManager>().AsTransient();
-
-
         Container.Bind<Player>().AsSingle().NonLazy();
-        Container.Bind<Enemy>().AsTransient().NonLazy();
+        Container.Bind<Enemy>().AsTransient();
 
         // Gameboard
         Container.Bind<GameboardController>().FromComponentInHierarchy().AsSingle();
@@ -23,5 +20,8 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
         Container.Bind<GridVisual>().FromComponentInHierarchy().AsSingle();
         Container.Bind<FieldPool>().FromComponentsInHierarchy().AsSingle();
+
+        // Creature Movement
+        Container.Bind<CreatureNavigator>().AsSingle();
     }
 }

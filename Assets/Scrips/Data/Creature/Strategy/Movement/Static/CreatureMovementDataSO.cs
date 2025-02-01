@@ -7,8 +7,8 @@ public class CreatureMovementDataSO : ScriptableObject {
     public Sprite strategyIcon;
     [Space]
     [Header("Attack Strategy")]
-    public MovementStrategySO attackStrategy;
+    public MovementStrategyData attackStrategy;
     [Space]
     [Header("Support Strategy")]
-    public MovementStrategySO supportStrategy;
+    public MovementStrategyData supportStrategy;
 }

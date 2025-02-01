@@ -1,5 +1,5 @@
 using UnityEngine;
 
-public abstract class MovementStrategySO : ScriptableObject {
+public abstract class MovementStrategyData : ScriptableObject {
     public abstract IMoveStrategy GetInstance();
 }

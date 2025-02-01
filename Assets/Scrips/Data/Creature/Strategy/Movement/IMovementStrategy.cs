@@ -1,5 +1,5 @@
 using System.Collections.Generic;
 
 public interface IMoveStrategy {
-    public List<Path> CalculatePath(GameContext gameContext);
+    public List<Path> CalculatePath(Field initialField);
 }

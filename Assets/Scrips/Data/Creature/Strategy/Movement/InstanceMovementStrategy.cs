@@ -1,17 +1,8 @@
 using System.Collections.Generic;
+using Zenject;
 
 public abstract class InstanceMovementStrategy : IMoveStrategy {
+    [Inject] protected CreatureNavigator navigator;
 
-    protected CreatureNavigator navigator;
-
-    protected abstract List<Path> Move();
-
-    public List<Path> CalculatePath(GameContext gameContext) {
-        if (navigator != null) {
-            navigator.UpdateParams(gameContext);
-        } else {
-            navigator = new CreatureNavigator(gameContext);
-        }
-        return Move();
-    }
+    public abstract List<Path> CalculatePath(Field currentField);
 }

@@ -63,7 +63,6 @@ public class GameboardController : MonoBehaviour {
         await UniTask.Delay(taskDelay);
         boardConfig.SetEastColumns(new List<int> { 0, 1, 1, 0 });
         await gridManager.UpdateGrid(boardConfig);
-        Debug.Log("DebugLogic завершено.");
     }
 
 
