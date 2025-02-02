@@ -1,7 +1,8 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ReflectDamage", menuName = "Cards/Abilities/ReflectDamage")]
-public class ReflectDamageAbilitySO : CardAbilitySO {
+public class ReflectDamageAbilitySO : CreatureAbilitySO {
     public enum ReflectMode {
         FixedAmount,
         Percentage,
@@ -10,41 +11,71 @@ public class ReflectDamageAbilitySO : CardAbilitySO {
     }
 
     [Header("Reflect Damage Settings")]
-    public ReflectMode reflectMode = ReflectMode.FullDamage; // Режим відображення
-    public int fixedDamage = 0;     // Фіксована кількість шкоди (для FixedAmount)
-    [Range(0, 1)] public float damagePercentage = 0.5f; // Відсоток отриманої шкоди (для Percentage)
+    public ReflectMode reflectMode = ReflectMode.FullDamage;
+    public int fixedDamage = 0;
+    [Range(0, 1)] public float damagePercentage = 0.5f;
 
-    public override bool ActivateAbility(GameContext gameContext) {
-        var attacker = gameContext.sourceCard;
-        var defender = gameContext.targetCard;
-
-        if (attacker == null || defender == null) return false;
-
-        int reflectedDamage = 0;
+    public override ICommand GenerateAbility(object data) {
+        CreatureBattleData creatureBattleData = data as CreatureBattleData;
+        if (creatureBattleData == null) {
+            return null;
+        }
 
         switch (reflectMode) {
             case ReflectMode.FixedAmount:
-                reflectedDamage = fixedDamage;
-                break;
+                return new ReflectDamageAbilityCommand(creatureBattleData, fixedDamage);
+
             case ReflectMode.Percentage:
-                reflectedDamage = Mathf.CeilToInt(gameContext.damage * damagePercentage);
-                break;
+                int reflectedDamage = Mathf.CeilToInt(creatureBattleData.damage * damagePercentage);
+                return new ReflectDamageAbilityCommand(creatureBattleData, reflectedDamage);
+
             case ReflectMode.FullDamage:
-                reflectedDamage = gameContext.damage;
-                break;
+                return new ReflectDamageAbilityCommand(creatureBattleData, creatureBattleData.damage);
+
             case ReflectMode.KillAttacker:
-                // Завдаємо смертельну рану нападнику
-                attacker.Health.ApplyDamage(attacker.Health.CurrentValue);
-                // Додаємо візуальний ефект смерті
-                // Відправляємо подію про смерть нападника
-                return true;
+                return new ReflectDamageAbilityCommand(creatureBattleData, true);
         }
 
-        // Наносимо відбиту шкоду нападнику
-        attacker.Health.ApplyDamage(reflectedDamage);
-        // Додаємо візуальний ефект відбиття шкоди
-        // Відправляємо подію про відбиття шкоди
+        return null;
+    }
+}
 
-        return true;
+public class ReflectDamageAbilityCommand : ICommand {
+    private CreatureBattleData creatureBattleData;
+    private int reflectedDamage;
+    private bool killAttacker;
+
+    public ReflectDamageAbilityCommand(CreatureBattleData data, int damage) {
+        creatureBattleData = data;
+        reflectedDamage = damage;
+        killAttacker = false;
+    }
+
+    public ReflectDamageAbilityCommand(CreatureBattleData data, bool kill) {
+        creatureBattleData = data;
+        killAttacker = kill;
+    }
+
+    public async UniTask Execute() {
+        var attacker = creatureBattleData.attacker;
+        var defender = creatureBattleData.defender;
+
+        if (attacker == null || defender == null) {
+            return;
+        }
+
+        if (killAttacker) {
+            attacker.Health.ApplyDamage(attacker.Health.CurrentValue);
+            // Add death visual effect and notify death event
+        } else {
+            attacker.Health.ApplyDamage(reflectedDamage);
+            // Add reflect visual effect and notify reflect event
+        }
+    }
+
+    public async UniTask Undo() {
+        Debug.Log("Empty undo for reflect ability");
+        await UniTask.CompletedTask;
+        // Implement undo logic if needed
     }
 }

@@ -8,9 +8,9 @@ public abstract class AbilitySO : ScriptableObject {
     public CardState activationState;
     public List<EventType> eventTriggers;
 
-    public virtual bool ActivateAbility(GameContext gameContext) {
+    public virtual ICommand GenerateAbility(object eventData) {
         Debug.Log("Base ability activation");
-        return true;
+        return null;
     }
 
     protected void OnValidate() {

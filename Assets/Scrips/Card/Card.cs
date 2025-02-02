@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class Card {
     private const int MAX_CARD_HEALTH = 100;
@@ -32,8 +33,12 @@ public class Card {
         Health = new(MAX_CARD_HEALTH, cardSO.health);
 
         abilities = new List<CardAbility>();
-        foreach (var abilitySO in cardSO.abilities) {
-            var ability = new CardAbility(abilitySO, this, eventQueue);
+        foreach (var cardAbilityData in cardSO.cardAbilities) {
+            if (cardAbilityData == null) {
+                Debug.LogWarning($"Missing ability for {cardSO.Name}");
+                continue;
+            }
+            var ability = new CardAbility(cardAbilityData, this, eventQueue);
             abilities.Add(ability);
         }
 
