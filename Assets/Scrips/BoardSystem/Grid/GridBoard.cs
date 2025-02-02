@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class GridBoard {
@@ -212,6 +213,9 @@ public class GridBoard {
         return flankFields;
     }
 
+    public List<Field> GetAttackFieldsByGlobalDirection(Direction globalDirection) {
+        return GetGridsByGlobalDirection(globalDirection).SelectMany(grid => grid.GetAttackFields()).ToList();
+    }
     #endregion
 
     #region Field Validators

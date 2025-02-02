@@ -42,7 +42,7 @@ public class EventQueue : IEventQueue {
     public void TriggerEvent<T>(T eventType, object eventData) where T : Enum {
         var targetDict = GetDictionary<T>();
         if (targetDict == null || !targetDict.ContainsKey(eventType)) {
-            Debug.Log($"No listeners found for event: {eventType}");
+            //Debug.Log($"No listeners found for event: {eventType}");
             return;
         }
 

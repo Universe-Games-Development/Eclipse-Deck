@@ -4,19 +4,20 @@ using System.Linq;
 using UnityEngine;
 
 public class CompasGrid {
-    public List<List<Field>> _fields = new();
+    public List<List<Field>> _fields;
     public int gridRow;
     public int gridColumn;
     public Direction gridDirection;
     private GridBoard _board;
     public CompasGrid(GridBoard gridBoard, int row, int col) {
+        _fields = new();
         gridRow = row;
         gridColumn = col;
         _board = gridBoard;
-        _fields = new();
         gridDirection = GetGridDirection2x2Array(gridRow , gridColumn);
     }
 
+    // Add or remove missing rows
     public GridUpdateData UpdateGrid(List<FieldType> rowTypes, List<int> columns) {
         GridUpdateData gridUpdateData = new(gridDirection);
 
@@ -44,6 +45,7 @@ public class CompasGrid {
         return gridUpdateData;
     }
 
+    // Iterates through rows to change columns
     private void UpdateRow(int row, FieldType rowType, List<int> columns, GridUpdateData gridUpdateData) {
         List<Field> fieldRow = _fields[row];
         int maxColumns = Mathf.Max(columns.Count, fieldRow.Count);
@@ -62,14 +64,41 @@ public class CompasGrid {
 
             // We dont check exceeded columns because it`s handled in exceeded rows
 
+
             // Mark empty if value of column == 0
             if (col >= columns.Count || columns[col] == 0) {
-                fieldRow[col].Type = FieldType.Empty;
-                gridUpdateData.markedEmpty.Add(fieldRow[col]);
+                if (fieldRow[col].Type != rowType) {
+                    fieldRow[col].Type = FieldType.Empty;
+                    gridUpdateData.markedEmpty.Add(fieldRow[col]);
+                }
+            // Set default rowtype
             } else if (fieldRow[col].Type != rowType) {
                 fieldRow[col].Type = rowType;
             }
         }
+    }
+
+    public Field GetField(int localRow, int localColumn) {
+        if (localRow >= 0 && localRow < _fields.Count &&
+            localColumn >= 0 && localColumn < _fields[localRow].Count) {
+            return _fields[localRow][localColumn];
+        }
+        return null; // якщо координати виход€ть за меж≥ с≥тки
+    }
+
+    public List<Field> GetAttackFields() {
+        return _fields[0];
+    }
+
+    public GridUpdateData CleanAll() {
+        GridUpdateData gridUpdateData = new(gridDirection);
+        foreach (var row in _fields) {
+            foreach (var field in row) {
+                gridUpdateData.removedFields.Add(field);
+            }
+        }
+        _fields.Clear();
+        return gridUpdateData;
     }
 
     #region Trimming
@@ -212,20 +241,12 @@ public class CompasGrid {
         return markedEmptyColumn;
     }
 
-    public Field GetField(int localRow, int localColumn) {
-        if (localRow >= 0 && localRow < _fields.Count &&
-            localColumn >= 0 && localColumn < _fields[localRow].Count) {
-            return _fields[localRow][localColumn];
-        }
-        return null; // якщо координати виход€ть за меж≥ с≥тки
-    }
-
+    //Transforms local field index to global field indexes
     private (int row, int column) CalculateGlobalCoordinates(int localRow, int localColumn) {
         int globalRow = localRow * (gridRow == 0 ? -1 : 1) + (gridRow == 1 ? 1 : -1);
         int globalCol = localColumn * (gridColumn == 0 ? -1 : 1) + (gridColumn == 1 ? 1 : -1);
         return (globalRow, globalCol);
     }
-
 
     private bool IsRowEmpty(List<Field> row) {
         return row.All(f => f.Type == FieldType.Empty);
@@ -233,10 +254,6 @@ public class CompasGrid {
 
     private bool IsColumnTypeEmpty(int columnIndex) {
         return _fields.All(row => columnIndex < row.Count && row[columnIndex].Type == FieldType.Empty);
-    }
-
-    public GridUpdateData CleanAll() {
-        throw new System.NotImplementedException();
     }
 
     private Direction GetGridDirection2x2Array(int row, int column) {

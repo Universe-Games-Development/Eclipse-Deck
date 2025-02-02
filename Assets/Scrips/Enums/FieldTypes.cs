@@ -1,6 +1,5 @@
 public enum FieldType {
-    Empty,
+    Empty, // Used to not reindexte all grid
     Support,
     Attack,
-    // Add other field types as needed
 }
