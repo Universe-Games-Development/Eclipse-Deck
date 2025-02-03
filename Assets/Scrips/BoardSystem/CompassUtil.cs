@@ -51,4 +51,8 @@ public static class CompassUtil {
         }
         throw new System.ArgumentException("Invalid offset values", nameof(meridian));
     }
+
+    internal static bool BelongsToGlobalDirection(object gridDirection, Direction globalDirection) {
+        throw new System.NotImplementedException();
+    }
 }

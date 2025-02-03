@@ -25,7 +25,7 @@ public class Field {
         column = coordinates.column;
     }
 
-    public FieldType Type {
+    public FieldType FieldType {
         get { return type; }
         set {
             if (type != value) {

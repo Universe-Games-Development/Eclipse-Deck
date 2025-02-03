@@ -42,7 +42,7 @@ public class BoardAssigner {
 
     public IEnumerable<Creature> GetOpponentCreatures(Opponent activeOpponent) {
         return GetOpponentGrids(activeOpponent)
-            .SelectMany(grid => grid._fields)
+            .SelectMany(grid => grid.Fields)
             .Where(row => row != null)
             .SelectMany(row => row)
             .Where(field => field?.OccupiedCreature != null)
@@ -65,14 +65,14 @@ public class BoardAssigner {
     // When battle ends
     public void UnassignGrids() {
         // Use LINQ for more concise code
-        _boardUpdater.GridBoard?.GetAllGrids()?.ForEach(grid => grid._fields?.ForEach(row => row?.ForEach(field => field.UnassignOwner())));
+        _boardUpdater.GridBoard?.GetAllGrids()?.ForEach(grid => grid.Fields?.ForEach(row => row?.ForEach(field => field.UnassignOwner())));
     }
 
     // When activated
     public void ReAssignGrids() {
         // Use LINQ and flatten the grid structure for more efficient iteration
         foreach (Opponent opponent in _opponentRegister.GetActiveOpponents()) {
-            GetOpponentGrids(opponent).ForEach(grid => grid._fields.SelectMany(row => row).ToList().ForEach(field => field.AssignOwner(opponent)));
+            GetOpponentGrids(opponent).ForEach(grid => grid.Fields.SelectMany(row => row).ToList().ForEach(field => field.AssignOwner(opponent)));
         }
     }
 

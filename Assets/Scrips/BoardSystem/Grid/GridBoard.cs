@@ -24,25 +24,23 @@ public class GridBoard {
 
     #region Update methods
     public BoardUpdateData UpdateGlobalGrid(BoardSettingsSO _config) {
-        if (_config == null || _config.northRows == null || _config.southRows == null || _config.eastColumns == null || _config.westColumns == null) {
+        if (_config == null) {
             return null;
         }
         Config = _config;
         BoardUpdateData boardUpdateData = new();
 
-        List<FieldType> northRows = Config.northRows;
-        List<FieldType> southRows = Config.southRows;
-
-        List<int> eastColumns = Config.eastColumns;
-        List<int> westColumns = Config.westColumns;
-
         // Оновлюємо кожен DirectionalGrid
         for (int meridian = 0; meridian < grids.GetLength(0); meridian++) {
             for (int zonal = 0; zonal < grids.GetLength(1); zonal++) {
                 // Передаємо відповідні ряди та колонки на основі меридіану та зонального індексу
-                GridUpdateData gridUpdateData = grids[meridian, zonal].UpdateGrid(
-                    rowTypes: meridian == 0 ? southRows : northRows,
-                    columns: zonal == 0 ? westColumns : eastColumns
+
+                CompasGrid updateGrid = grids[meridian, zonal];
+
+                List<List<int>> gridUpdateValues = Config.GetGridDataList(updateGrid.GridDirection);
+
+                GridUpdateData gridUpdateData = updateGrid.UpdateGrid(
+                    gridUpdateValues
                 );
                 boardUpdateData.gridsUpdateData.Add(gridUpdateData);
             }
@@ -84,7 +82,7 @@ public class GridBoard {
 
     public void ProcessGrids(Action<Field> fieldAction) {
         foreach (var grid in GetAllGrids()) {
-            foreach (var row in grid._fields) {
+            foreach (var row in grid.Fields) {
                 foreach (var field in row) {
                     fieldAction(field);
                 }
@@ -108,8 +106,8 @@ public class GridBoard {
         int row = Mathf.FloorToInt((localPosition.z + yCellOffset) / Config.cellSize.height);
         int column = Mathf.FloorToInt((localPosition.x + xCellOffset) / Config.cellSize.width);
 
-        bool validRow = row >= 0 && row < Config.northRows.Count + Config.southRows.Count;
-        bool validColumn = column >= 0 && column < Config.eastColumns.Count + Config.westColumns.Count;
+        bool validRow = row >= 0 && row < Config.northRows + Config.southRows;
+        bool validColumn = column >= 0 && column < Config.columns;
 
         return (validRow && validColumn) ? new Vector2Int(row, column) : (Vector2Int?)null;
     }
@@ -117,13 +115,13 @@ public class GridBoard {
         if (grids.Length == 0) return Vector3.zero;
 
         // Перевірка на існування _fields для північних і південних сіток
-        int northHeight = (grids[1, 0]._fields != null) ? grids[1, 0]._fields.Count : 0;
-        int southHeight = (grids[0, 0]._fields != null) ? grids[0, 0]._fields.Count : 0;
+        int northHeight = (grids[1, 0].Fields != null) ? grids[1, 0].Fields.Count : 0;
+        int southHeight = (grids[0, 0].Fields != null) ? grids[0, 0].Fields.Count : 0;
         int heightDifference = northHeight - southHeight;
 
         // Перевірка на існування _fields для східних і західних сіток
-        int eastWidth = (grids[0, 1]._fields != null && grids[0, 1]._fields.Count > 0) ? grids[0, 1]._fields[0].Count : 0;
-        int westWidth = (grids[0, 0]._fields != null && grids[0, 0]._fields.Count > 0) ? grids[0, 0]._fields[0].Count : 0;
+        int eastWidth = (grids[0, 1].Fields != null && grids[0, 1].Fields.Count > 0) ? grids[0, 1].Fields[0].Count : 0;
+        int westWidth = (grids[0, 0].Fields != null && grids[0, 0].Fields.Count > 0) ? grids[0, 0].Fields[0].Count : 0;
         int widthDifference = eastWidth - westWidth;
 
         return new Vector3(widthDifference, 0, heightDifference);
@@ -136,10 +134,10 @@ public class GridBoard {
         int totalWidth = 0; // Сумарна ширина всіх сіток
 
         foreach (CompasGrid compasGrid in grids) {
-            totalWHeight += compasGrid._fields.Count;
+            totalWHeight += compasGrid.Fields.Count;
 
             int compasGridWidth = 0;
-            foreach (var row in compasGrid._fields) {
+            foreach (var row in compasGrid.Fields) {
                 compasGridWidth = Mathf.Max(compasGridWidth, row.Count);
             }
             totalWidth += compasGridWidth;
@@ -154,7 +152,7 @@ public class GridBoard {
 
         foreach (CompasGrid compasGrid in grids) {
             int compasGridWidth = 0;
-            foreach (var row in compasGrid._fields) {
+            foreach (var row in compasGrid.Fields) {
                 compasGridWidth = Mathf.Max(compasGridWidth, row.Count);
             }
             totalWidth += compasGridWidth;
@@ -169,7 +167,7 @@ public class GridBoard {
         int totalWHeight = 0; // Найбільша кількість рядків у одній сітці
 
         foreach (CompasGrid compasGrid in grids) {
-            totalWHeight += compasGrid._fields.Count;
+            totalWHeight += compasGrid.Fields.Count;
         }
 
         return totalWHeight;
@@ -226,11 +224,15 @@ public class GridBoard {
     }
 
     public bool IsFieldBelogToDirection(Field currentField, Direction globalDirection) {
+        Direction fieldDirection = GetFieldCompasDirection(currentField);
+        return CompassUtil.BelongsToGlobalDirection(fieldDirection, globalDirection);
+    }
+
+    public Direction GetFieldCompasDirection(Field currentField) {
         int meridian = currentField.GetRow() > 0 ? 1 : -1;
         int zonal = currentField.GetColumn() > 0 ? 1 : -1;
 
-        Direction fieldDirection = CompassUtil.GetDirectionFromOffset(meridian, zonal);
-        return CompassUtil.BelongsToGlobalDirection(fieldDirection, globalDirection);
+        return CompassUtil.GetDirectionFromOffset(meridian, zonal);
     }
     #endregion
 
@@ -241,11 +243,12 @@ public class GridBoard {
             ? grids[directionalGrid.gridRow, neighborZonal]
             : null;
     }
+
     public List<CompasGrid> GetGridsByGlobalDirection(Direction globalDirection) {
         List<CompasGrid> compasGrids = new();
 
         foreach (var compasGrid in grids) {
-            if (CompassUtil.BelongsToGlobalDirection(compasGrid.gridDirection, globalDirection)) {
+            if (CompassUtil.BelongsToGlobalDirection(compasGrid.GridDirection, globalDirection)) {
                 compasGrids.Add(compasGrid);
             }
         }

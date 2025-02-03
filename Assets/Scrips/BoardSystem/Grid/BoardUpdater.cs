@@ -52,10 +52,6 @@ public class BoardUpdater {
             Debug.LogWarning("Accepted config null!");
             return false;
         }
-        if (!settings.IsValidConfiguration()) {
-            Debug.LogWarning("BoardSettings wrong configuration");
-            return false;
-        }
         return true;
     }
 

@@ -1784,7 +1784,10 @@ MonoBehaviour:
   player_c: {fileID: 432073392}
   enemy_c: {fileID: 1929906661}
   boardConfig: {fileID: 11400000, guid: e36584430f06fbd4bb261d61a68a5cac, type: 2}
-  taskDelay: 1
+  taskDelay: 500
+  randomTaskAmount: 100
+  randomSizeOffset: 3
+  TesOn: 1
 --- !u!114 &1253212653
 MonoBehaviour:
   m_ObjectHideFlags: 0

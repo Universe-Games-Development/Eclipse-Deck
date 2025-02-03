@@ -41,7 +41,7 @@ public class FieldController : MonoBehaviour {
             return;
         }
         this.field = field;
-        type = field.Type;
+        type = field.FieldType;
         fieldMaterializer.Initialize(field);
         if (field.Owner != null) {
             owner = field.Owner.Name;

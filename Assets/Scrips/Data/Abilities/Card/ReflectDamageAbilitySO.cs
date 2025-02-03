@@ -71,6 +71,7 @@ public class ReflectDamageAbilityCommand : ICommand {
             attacker.Health.ApplyDamage(reflectedDamage);
             // Add reflect visual effect and notify reflect event
         }
+        await UniTask.Yield();
     }
 
     public async UniTask Undo() {

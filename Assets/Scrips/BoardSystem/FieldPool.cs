@@ -58,7 +58,7 @@ public class FieldPool : MonoBehaviour {
         FieldController fieldController = fieldPool.Get();
         if (fieldController != null) {
             fieldController.transform.localPosition = position;
-            fieldController.gameObject.name = $"Field {fieldData.row} / {fieldData.column} {fieldData.Type}";
+            fieldController.gameObject.name = $"Field {fieldData.row} / {fieldData.column} {fieldData.FieldType}";
             fieldController.Initialize(fieldData);
             fieldController.InitializeLevitator(position);
         }
