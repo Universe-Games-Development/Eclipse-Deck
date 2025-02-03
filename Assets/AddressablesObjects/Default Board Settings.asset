@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2466b3f37bb97014dbc3c1e3529ef998, type: 3}
   m_Name: Default Board Settings
   m_EditorClassIdentifier: 
-  northRows: 0200000001000000
-  southRows: 0200000001000000
-  westColumns: 0100000001000000
-  eastColumns: 0100000001000000
+  northRows: 3
+  southRows: 2
+  columns: 8
   cellSize:
     width: 1
     height: 1

@@ -23,13 +23,13 @@ public class CreatureStrategyMovement {
     }
 
     public IMoveStrategy GetStrategy(Field currentField) {
-        if (currentField.Type == FieldType.Attack) {
+        if (currentField.FieldType == FieldType.Attack) {
             if (attackMovementStrategy == null) {
                 Debug.LogError("Attempting to use undefined attack movement strategy!");
                 return null;
             }
             return attackMovementStrategy;
-        } else if (currentField.Type == FieldType.Support) {
+        } else if (currentField.FieldType == FieldType.Support) {
             if (supportMovementStrategy == null) {
                 Debug.LogError("Attempting to use undefined support movement strategy!");
                 return null;

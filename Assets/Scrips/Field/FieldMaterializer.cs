@@ -34,7 +34,7 @@ public class FieldMaterializer : MonoBehaviour {
 
     public void Initialize(Field field) {
         this.field = field;
-        UpdateColorBasedOnType(field.Type);
+        UpdateColorBasedOnType(field.FieldType);
         UpdateColorBasedOnOwner(field.Owner);
         field.OnChangedOwner += UpdateColorBasedOnOwner;
         field.OnChangedType += UpdateColorBasedOnType;

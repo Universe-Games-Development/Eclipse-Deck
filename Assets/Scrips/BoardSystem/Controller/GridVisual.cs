@@ -62,6 +62,11 @@ public class GridVisual : MonoBehaviour {
     }
 
     public void AddField(Field field) {
+
+        if (fieldControllers.ContainsKey(field)) {
+            Debug.Log($"Trying to add exist field at {field.GetTextCoordinates()}");
+            return;
+        }
         Vector3 spawnPosition = origin.TransformPoint(new Vector3(
             field.GetColumn() * visualCellSize.width,
             0f,

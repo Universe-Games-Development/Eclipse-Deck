@@ -14,7 +14,8 @@ public class CardSO : TableGameEntitySO {
     public CardType cardType;
     public int cost;
 
-    public List<CardAbilitySO> abilities;
+    [Header ("Not creature Abilities!")]
+    public List<CardAbilitySO> cardAbilities;
 
     // Soon be separated
     [Header("Creature")]

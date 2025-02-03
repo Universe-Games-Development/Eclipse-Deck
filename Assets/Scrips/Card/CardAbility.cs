@@ -7,7 +7,7 @@ using Zenject;
 public class CardAbility : IEventListener {
     public CardAbilitySO data;
     private Card card;
-    private bool isActiveState = false;
+    private bool InTriggerState = false;
     private IEventQueue eventQueue;
 
     public CardAbility(CardAbilitySO abilitySO, Card card, IEventQueue eventQueue) {
@@ -15,37 +15,27 @@ public class CardAbility : IEventListener {
         this.card = card;
         this.eventQueue = eventQueue;
 
-        card.OnStateChanged += OnCardStateChanged;
-
-        CheckAndActivateAbility();
+        card.OnStateChanged += CheckAndRegisterAbility;
 
         //Debug.Log($"CardAbility created for card: {card.data.name} in state: {card.CurrentState}");
     }
 
     ~CardAbility() {
-        card.OnStateChanged -= OnCardStateChanged;
-        if (isActiveState)
-            UnregisterActivation();
+        card.OnStateChanged -= CheckAndRegisterAbility;
+        if (InTriggerState)
+            UnregisterTrigger();
     }
 
-    private void OnCardStateChanged(CardState newState) {
-        CheckAndActivateAbility();
-    }
-
-    private void CheckAndActivateAbility() {
-        if (card.CurrentState == data.activationState) {
-            if (!isActiveState) {
-                RegisterActivation();
-            }
-        } else {
-            if (isActiveState) {
-                UnregisterActivation();
-            }
+    private void CheckAndRegisterAbility(CardState newState) {
+        if (newState == data.activationState && !InTriggerState) {
+            RegisterTrigger();
+        } else if (InTriggerState) {
+            UnregisterTrigger();
         }
     }
 
-    public virtual void RegisterActivation() {
-        if (isActiveState) {
+    public virtual void RegisterTrigger() {
+        if (InTriggerState) {
             Debug.LogWarning($"Abilities for card {card.data.name} is already registered.");
             return;
         }
@@ -55,16 +45,16 @@ public class CardAbility : IEventListener {
             eventQueue.RegisterListener(this, abilityTrigger);
         }
 
-        isActiveState = true;
+        InTriggerState = true;
     }
 
-    public virtual void UnregisterActivation() {
+    public virtual void UnregisterTrigger() {
         //Debug.Log($"Unregistering ability for card: {card.data.name}");
         foreach (var abilityTrigger in data.eventTriggers) {
             eventQueue.UnregisterListener(this, abilityTrigger);
         }
 
-        isActiveState = false;
+        InTriggerState = false;
     }
 
 
@@ -90,8 +80,8 @@ public class CardAbility : IEventListener {
 
 
     public void Reset() {
-        if (isActiveState) {
-            UnregisterActivation();
+        if (InTriggerState) {
+            UnregisterTrigger();
         }
 
         Debug.Log($"Ability for card {card.data.name} has been reset.");

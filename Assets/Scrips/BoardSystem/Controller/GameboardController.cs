@@ -2,7 +2,6 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 using System.Collections.Generic;
-using Zenject.SpaceFighter;
 
 public class GameboardController : MonoBehaviour {
     //DEBUG
@@ -11,8 +10,13 @@ public class GameboardController : MonoBehaviour {
     [SerializeField] private PlayerController player_c;
     [SerializeField] private EnemyController enemy_c;
 
+    [Header("Test")]
     [SerializeField] private BoardSettingsSO boardConfig;
     [SerializeField] private int taskDelay = 250;
+    [SerializeField] private int randomTaskAmount;
+    [Range(0, 10)]
+    [SerializeField] private int randomSizeOffset;
+    [SerializeField] private bool TesOn;
 
     // Scene Context
     [Inject] private GameBoard gameBoard;
@@ -57,12 +61,63 @@ public class GameboardController : MonoBehaviour {
             Field fieldToPlace = gridManager.GridBoard.GetFieldAt(-1, -1);
             gameBoard.SummonCreature(player, fieldToPlace, playerCreature);
         }
-        
-        boardConfig.ResetSettings();
-        
-        await UniTask.Delay(taskDelay);
-        boardConfig.SetEastColumns(new List<int> { 0, 1, 1, 0 });
+
         await gridManager.UpdateGrid(boardConfig);
+        
+        
+
+        if (!TesOn) return;
+        await UniTask.Delay(taskDelay);
+        boardConfig.RandomizeAllGrids();
+        await gridManager.UpdateGrid(boardConfig);
+
+        await RandomFieldSpawn();
+
+        boardConfig.ResetSettings();
+    }
+
+    private async UniTask RandomFieldSpawn() {
+        for (int i = 0; i < randomTaskAmount; i++) {
+            await UniTask.Delay(taskDelay);
+            boardConfig.RandomizeAllGrids();
+            await gridManager.UpdateGrid(boardConfig);
+        }
+    }
+
+    private async UniTask RandomSizeSpawn() {
+        for (int i = 0; i < randomTaskAmount; i++) {
+            await UniTask.Delay(taskDelay);
+            SetRandomSize();
+            boardConfig.RandomizeAllGrids();
+            await gridManager.UpdateGrid(boardConfig);
+        }
+    }
+
+    private void SetRandomSize() {
+        for (int i = 0; i < randomSizeOffset; i++) {
+            int action = Random.Range(0, 6); // Випадковий вибір одного з шести методів
+
+            switch (action) {
+                case 0:
+                    boardConfig.AddColumn();
+                    break;
+                case 1:
+                    boardConfig.AddNorthRow();
+                    break;
+                case 2:
+                    boardConfig.AddSouthRow();
+                    break;
+                case 3:
+                    boardConfig.RemoveColumn();
+                    break;
+                case 4:
+                    boardConfig.RemoveNorthRow();
+                    break;
+                case 5:
+                    boardConfig.RemoveSouthRow();
+                    break;
+            }
+        }
     }
 
 
@@ -89,7 +144,10 @@ public class GameboardController : MonoBehaviour {
             }
         }
 
-        Debug.Log($"Selected : {field.GetTextCoordinates()}");
+        if (field != null) {
+            Debug.Log($"Selected : {field.GetTextCoordinates()}");
+        }
+
         return field;
     }
 
@@ -107,11 +165,6 @@ public class GameboardController : MonoBehaviour {
         return randomList;
     }
 
-    private void OnDestroy() {
-        if (boardConfig != null) {
-            boardConfig.ResetSettings();
-        }
-    }
 
     public bool PlayCard(Opponent opponent, Card selectedCard, Field field) {
         // Determine is that creature or spell
@@ -119,5 +172,9 @@ public class GameboardController : MonoBehaviour {
         // if creature summon it
         Creature creature = null;
         return gameBoard.SummonCreature(opponent, field, creature);
+    }
+
+    private void OnDisable() {
+        boardConfig.ResetSettings();
     }
 }

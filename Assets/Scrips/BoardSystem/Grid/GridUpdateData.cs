@@ -3,7 +3,11 @@
 public class GridUpdateData {
     public List<Field> addedFields = new();
     public List<Field> removedFields = new();
+
+    // marked empty fields will exist but not for game logic
     public List<Field> markedEmpty = new();
+
+
     public Direction direction;
 
     public GridUpdateData(Direction direction) {
