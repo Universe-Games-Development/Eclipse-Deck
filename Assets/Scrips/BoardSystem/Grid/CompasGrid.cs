@@ -2,6 +2,8 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 public class CompasGrid {
     public List<List<Field>> Fields { get; private set; }
@@ -27,7 +29,7 @@ public class CompasGrid {
         // Adjust rows
         if (currentRowCount < targetRows) {
             for (int row = currentRowCount; row < targetRows; row++) {
-                AddNewRow(row, GetTypeByRow(row), fieldValues[row], gridUpdateData);
+                AddNewRow(row, fieldValues[row], gridUpdateData);
             }
         } else if (currentRowCount > targetRows) {
             for (int row = currentRowCount - 1; row >= targetRows; row--) {
@@ -37,11 +39,10 @@ public class CompasGrid {
 
         // Update existing rows (and columns within those rows)
         for (int row = 0; row < targetRows; row++) {
-            UpdateRow(row, GetTypeByRow(row), fieldValues[row], gridUpdateData);
+            UpdateRow(row, fieldValues[row], gridUpdateData);
         }
 
-        TrimGrid(gridUpdateData);
-        RestoreNecessaryFields(gridUpdateData);
+        //TrimGrid(gridUpdateData);
 
         return gridUpdateData;
     }
@@ -54,10 +55,15 @@ public class CompasGrid {
         }
     }
 
-    private void AddNewRow(int rowIndex, FieldType rowType, List<int> columns, GridUpdateData gridUpdateData) {
+    private void AddNewRow(int rowIndex, List<int> columns, GridUpdateData gridUpdateData) {
         List<Field> newRow = new List<Field>();
+
+        FieldType rowType = GetTypeByRow(rowIndex);
+
         for (int col = 0; col < columns.Count; col++) {
-            Field newField = CreateField(rowIndex, col, rowType, columns[col], gridUpdateData);
+            Field newField = new Field(CalculateGlobalCoordinates(rowIndex, col));
+            DetermineFieldType(newField, columns[col], rowType, gridUpdateData);
+
             newRow.Add(newField);
             if (newField.FieldType != FieldType.Empty) {
                 gridUpdateData.addedFields.Add(newField);
@@ -66,15 +72,18 @@ public class CompasGrid {
         Fields.Add(newRow);
     }
 
-    private void UpdateRow(int rowIndex, FieldType rowType, List<int> columns, GridUpdateData gridUpdateData) {
+    private void UpdateRow(int rowIndex, List<int> columns, GridUpdateData gridUpdateData) {
         List<Field> fieldRow = Fields[rowIndex];
         int targetColumns = columns.Count;
         int currentColumnCount = fieldRow.Count;
 
+        FieldType rowType = GetTypeByRow(rowIndex);
+
         // Adjust columns within the row
         if (currentColumnCount < targetColumns) {
             for (int col = currentColumnCount; col < targetColumns; col++) {
-                Field newField = CreateField(rowIndex, col, rowType, columns[col], gridUpdateData);
+                Field newField = new Field(CalculateGlobalCoordinates(rowIndex, col));
+                DetermineFieldType(newField, columns[col], rowType, gridUpdateData);
                 fieldRow.Add(newField);
             }
         } else if (currentColumnCount > targetColumns) {
@@ -85,30 +94,21 @@ public class CompasGrid {
 
         // Update existing fields in the row
         for (int col = 0; col < targetColumns; col++) {
-            Field field = fieldRow[col];
-            if (columns[col] == 0) {
-                SetFieldType(field, FieldType.Empty, gridUpdateData);
-            } else if (columns[col] != 0) {
-                SetFieldType(field, rowType, gridUpdateData);
-            }
+            DetermineFieldType(fieldRow[col], columns[col], rowType, gridUpdateData);
         }
     }
-
-    private Field CreateField(int row, int col, FieldType rowType, int value, GridUpdateData gridUpdateData) {
-        Field newField = new Field(CalculateGlobalCoordinates(row, col));
+    private void DetermineFieldType(Field field, int value, FieldType rowType, GridUpdateData gridUpdateData) {
         if (value == 0) {
-            SetFieldType(newField, FieldType.Empty, gridUpdateData);
+            SetFieldType(field, FieldType.Empty, gridUpdateData);
         } else {
-            SetFieldType(newField, rowType, gridUpdateData);
+            SetFieldType(field, rowType, gridUpdateData);
         }
-        return newField;
     }
 
     private void SetFieldType(Field field, FieldType newType, GridUpdateData gridUpdateData) {
         FieldType oldFieldType = field.FieldType;
 
         if (oldFieldType != newType) {
-            
 
             // if old was empty and new not we add this to update visual board
             if (oldFieldType == FieldType.Empty) {
@@ -124,7 +124,6 @@ public class CompasGrid {
         }
     }
 
-
     private void RemoveRow(int rowIndex, GridUpdateData gridUpdateData) {
         foreach (var field in Fields[rowIndex]) {
             gridUpdateData.removedFields.Add(field);
@@ -135,39 +134,6 @@ public class CompasGrid {
     private void RemoveField(int rowIndex, int colIndex, GridUpdateData gridUpdateData) {
         gridUpdateData.removedFields.Add(Fields[rowIndex][colIndex]);
         Fields[rowIndex].RemoveAt(colIndex);
-    }
-
-
-    /* How it works?
-     * We need to start iteration through each column
-     * If current FieldType is Empty and neigbout on +1 column index is presend
-     * 
-     * I don`t know how to do it in optimized way :D
-     */
-    private void RestoreNecessaryFields(GridUpdateData updateData) {
-        // ѕеребираЇмо кожен стовпець
-        if (Fields == null || Fields.Count == 0) {
-            //Debug.Log("Current board empty can`t restore fields");
-            return;
-        }
-        for (int col = Fields[0].Count - 1; col >= 0; col--) {
-            // ѕочинаЇмо з останнього р€ду ≥ рухаЇмос€ до першого
-            Field lastNonEmptyField = null; // «м≥нна дл€ збереженн€ останнього не порожнього пол€ в колонц≥
-
-            for (int row = Fields.Count - 1; row >= 0; row--) {
-                Field field = Fields[row][col];
-
-                // якщо поле не порожнЇ, збер≥гаЇмо його
-                if (field.FieldType != FieldType.Empty) {
-                    lastNonEmptyField = field;
-                }
-
-                // якщо поле порожнЇ, перев≥р€Їмо на€вн≥сть не порожнього сус≥да
-                if (field.FieldType == FieldType.Empty && lastNonEmptyField != null) {
-                    RestoreEmpty(updateData, row, field);
-                }
-            }
-        }
     }
 
     private void RestoreEmpty(GridUpdateData updateData, int row, Field field) {

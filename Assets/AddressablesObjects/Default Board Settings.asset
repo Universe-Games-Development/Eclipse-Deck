@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   northRows: 3
   southRows: 2
-  columns: 8
+  columns: 4
   cellSize:
     width: 1
     height: 1

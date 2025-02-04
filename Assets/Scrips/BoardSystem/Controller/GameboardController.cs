@@ -71,9 +71,7 @@ public class GameboardController : MonoBehaviour {
         boardConfig.RandomizeAllGrids();
         await gridManager.UpdateGrid(boardConfig);
 
-        await RandomFieldSpawn();
-
-        boardConfig.ResetSettings();
+        await RandomSizeSpawn();
     }
 
     private async UniTask RandomFieldSpawn() {
@@ -85,7 +83,8 @@ public class GameboardController : MonoBehaviour {
     }
 
     private async UniTask RandomSizeSpawn() {
-        for (int i = 0; i < randomTaskAmount; i++) {
+        while (randomTaskAmount > 0) {
+            randomTaskAmount--;
             await UniTask.Delay(taskDelay);
             SetRandomSize();
             boardConfig.RandomizeAllGrids();
