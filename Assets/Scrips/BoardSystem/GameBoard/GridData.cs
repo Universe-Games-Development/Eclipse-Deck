@@ -24,8 +24,16 @@ public class GridData {
     }
 
     public void ResizeGrid(int newRows, int newColumns) {
-        rows = Mathf.Max(1, newRows);
-        columns = Mathf.Max(1, newColumns);
+        newRows = Mathf.Max(1, newRows);
+        newColumns = Mathf.Max(1, newColumns);
+
+        // Перевіряємо, чи поточна кількість рядів та колонок вже відповідає необхідним
+        if (rows == newRows && columns == newColumns) {
+            return;
+        }
+
+        rows = newRows;
+        columns = newColumns;
 
         // Додаємо або видаляємо рядки
         while (grid.Count < rows) {
@@ -46,6 +54,7 @@ public class GridData {
         }
     }
 
+
     public void RandomizeGrid() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
@@ -61,4 +70,23 @@ public class GridData {
             }
         }
     }
+
+    public bool IsGridValid(int minRows, int minColumns) {
+        if (grid == null) {
+            return false;
+        }
+
+        if (rows < minRows) {
+            return false;
+        }
+
+        foreach (var row in grid) {
+            if (row.Count < minColumns) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 }

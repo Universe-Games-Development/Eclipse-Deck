@@ -6,6 +6,7 @@ using UnityEngine;
 public class BoardSettingsSO : ScriptableObject {
     private const int MIN_ROWS = 1;
     private const int MIN_COLUMNS = 1;
+
     private const int DEFAULT_ROWS = 2;
     private const int DEFAULT_COLUMNS = 4;
 
@@ -32,6 +33,8 @@ public class BoardSettingsSO : ScriptableObject {
             globalGridData.InitializeGrids(northRows, southRows, columns);
         }
         globalGridData.ResizeGrids(northRows, southRows, columns);
+
+        globalGridData.CorrectGridData();
     }
 
     public void AddNorthRow() { northRows++; ValidateSettings(); }
@@ -43,7 +46,12 @@ public class BoardSettingsSO : ScriptableObject {
 
     public void RandomizeAllGrids() => globalGridData.RandomizeAllGrids();
     public void SetAllGrids(int value) => globalGridData.SetAllGrids(value);
-    public void ResetSettings() => globalGridData.ResetGrids(DEFAULT_ROWS, DEFAULT_COLUMNS);
+    public void ResetSettings() {
+        columns = DEFAULT_COLUMNS;
+        northRows = DEFAULT_ROWS;
+        southRows = DEFAULT_ROWS;
+        globalGridData.ResetGrids(DEFAULT_ROWS, DEFAULT_COLUMNS);
+    }
     public GridData GetGridData(Direction dir) => globalGridData.GetGridData(dir);
     public List<List<int>> GetGridDataList(Direction dir) => globalGridData.GetGridDataList(dir);
     public void RandomizeGrid(Direction dir) => globalGridData.RandomizeGrid(dir);

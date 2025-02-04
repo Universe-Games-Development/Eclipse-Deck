@@ -4,9 +4,6 @@ using UnityEngine;
 
 [Serializable]
 public class GlobalGridData {
-    private const int DEFAULT_ROWS = 2;
-    private const int DEFAULT_COLUMNS = 4;
-
     public GridData[,] gridDatas;
 
     public GlobalGridData(int northRows, int southRows, int columns) {
@@ -28,18 +25,8 @@ public class GlobalGridData {
 
     public void ResizeGrids(int northRows, int southRows, int columns) {
         foreach (var grid in gridDatas) {
-            grid.ResizeGrid(grid.GridDirection == Direction.NorthWest || grid.GridDirection == Direction.NorthEast ? northRows : southRows, columns);
+            grid.ResizeGrid(CompassUtil.BelongsToGlobalDirection(grid.GridDirection, Direction.North) ? northRows : southRows, columns);
         }
-
-        CorrectGridData();
-    }
-
-    public void ResetSettings() {
-        foreach (var grid in gridDatas) {
-            grid.ResizeGrid(DEFAULT_ROWS, DEFAULT_COLUMNS);
-        }
-
-        CorrectGridData();
     }
 
     public GridData GetGridData(Direction dir) {
@@ -95,7 +82,40 @@ public class GlobalGridData {
         return globalGridDatas;
     }
 
-    private void CorrectGridData() {
+    public void CorrectGridData() {
+        RestoreNecessaryFields();
+        GenerateNeccessaryAttackFields();
+    }
+
+    private void RestoreNecessaryFields() {
+        foreach (var gridData in gridDatas) {
+            List<List<int>> values = gridData.grid;
+            // Перебираємо кожен стовпець
+            if (values == null || values.Count == 0) {
+                //Debug.Log("Current board empty can`t restore fields");
+                return;
+            }
+            for (int col = values[0].Count - 1; col >= 0; col--) {
+                // Починаємо з останнього ряду і рухаємося до першого
+                int lastNonEmptyField = -1; // Змінна для збереження останнього не порожнього поля в колонці
+
+                for (int rowHeight = values.Count - 1; rowHeight >= 0; rowHeight--) {
+
+                    // Якщо поле не порожнє, зберігаємо його
+                    if (values[rowHeight][col] != 0) {
+                        lastNonEmptyField = rowHeight;
+                    }
+
+                    // Якщо поле порожнє, перевіряємо наявність не порожнього сусіда
+                    if (values[rowHeight][col] == 0 && lastNonEmptyField != -1) {
+                        values[rowHeight][col] = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    private void GenerateNeccessaryAttackFields() {
         int columns = gridDatas[0, 0].grid[0].Count;
         foreach (var grid in gridDatas) {
             if (grid.grid[0].Count != columns) {
