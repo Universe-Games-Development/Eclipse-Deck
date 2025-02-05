@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ReflectDamage", menuName = "Cards/Abilities/ReflectDamage")]
+[CreateAssetMenu(fileName = "ReflectDamage", menuName = "Abilities/CardAbilities")]
 public class ReflectDamageAbilitySO : CreatureAbilitySO {
     public enum ReflectMode {
         FixedAmount,

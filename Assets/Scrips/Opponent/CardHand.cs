@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class CardHand {
     private const int DEFAULT_SIZE = 3;
@@ -20,6 +22,10 @@ public class CardHand {
     }
 
     public void AddCard(Card card) {
+        if (card == null) {
+            Debug.LogWarning("Received null card in card Hand!");
+            return;
+        }
         if (cardsInHand.Count < maxHandSize) {
             card.ChangeState(CardState.InHand);
 
@@ -57,7 +63,7 @@ public class CardHand {
 
     public Card GetRandomCard() {
         if (cardsInHand.Count > 0) {
-            return cardsInHand[new Random().Next(cardsInHand.Count)];
+            return RandomUtil.GetRandomFromList(cardsInHand);
         }
         return null;
     }

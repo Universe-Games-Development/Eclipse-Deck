@@ -74,10 +74,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3768ba637441fc14caecb9fa81e9d07e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  eventManagerPrefab: {fileID: 3591675439603344277, guid: 2e047716d2c54c04e877190388f75439, type: 3}
-  interactionManagerPrefab: {fileID: 7063964422332485875, guid: 99a3ef72470b319448d4b5f5c53d6e6c, type: 3}
-  resourseManagerPrefab: {fileID: 572073012703567263, guid: 00fae2d6b926f3142ba2905e8676ce21, type: 3}
-  audioManagerPrefab: {fileID: 3050898388442481311, guid: 1a85425bb1af8ea4fb63db79a3895e28, type: 3}
-  mapManagerPrefab: {fileID: 3277313483467610089, guid: f99ee504d8d098f4e938777308f74b81, type: 3}
-  levelManagerPrefab: {fileID: 2880237507716942917, guid: d6b4b08073e91d24aa84d09f23ced86d, type: 3}
-  uiManagerPrefab: {fileID: 6696143888716681345, guid: c9ab3a2b46b90414091af4aa395641a3, type: 3}
+  managerPrefabs:
+  - {fileID: 3050898388442481311, guid: 1a85425bb1af8ea4fb63db79a3895e28, type: 3}
+  - {fileID: 2880237507716942917, guid: d6b4b08073e91d24aa84d09f23ced86d, type: 3}
+  - {fileID: 3277313483467610089, guid: f99ee504d8d098f4e938777308f74b81, type: 3}
+  - {fileID: 6696143888716681345, guid: c9ab3a2b46b90414091af4aa395641a3, type: 3}
+  - {fileID: 6696143888716681345, guid: 07ce1f91466ba04488219e082c593155, type: 3}
+  - {fileID: 2880237507716942917, guid: 25346c1b77b9228428eb95bbf57bf568, type: 3}
+  - {fileID: 6696143888716681345, guid: 0ec13bc0f55ba104292f724ca429c49c, type: 3}

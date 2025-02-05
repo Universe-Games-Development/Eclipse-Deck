@@ -1,16 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ResourceType {
-    NONE,
-    CARDS,
-    ENEMIES,
-    MAP_INFO,
-    ROOMS,
-    EFFECTS,
-    CREATURE
-}
-
 public class ResourceManager {
     [Header("Card Data")]
     public List<CardSO> cardDataList = new List<CardSO>();

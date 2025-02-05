@@ -15,6 +15,22 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: ce0d7db0ee5951a4d8e656bf1105679f
   m_SerializeEntries:
+  - m_GUID: 4ce0074197ea76743a9c13e15077a52c
+    m_Address: EmptyFolderKey
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 55eb52e14e1043843b02bc719d5818ba
+    m_Address: EmptyKey
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 62ae755cc869b704a8a9a6b087b416ab
+    m_Address: SewersCards
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sewers
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e36584430f06fbd4bb261d61a68a5cac
     m_Address: DefaulBoardSetting
     m_ReadOnly: 0

@@ -1,92 +1,124 @@
+using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
+public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
+    public Action<CardUI> OnCardExit;
+    public Action<CardUI> OnCardEntered;
+    public Action<CardUI> OnCardClicked;
 
-    [Header("Bottom Layer")]
+    [Header("Params")]
+    [SerializeField] private string id;
+    [SerializeField] private Image rarity;
+    [SerializeField] private TextMeshProUGUI costTMP;
+    [SerializeField] private TextMeshProUGUI healthText;
+    [SerializeField] private TextMeshProUGUI attackText;
+    [SerializeField] private TextMeshProUGUI nameText;
+
+    [Header("Visuals")]
+    [SerializeField] private TextMeshProUGUI authorTMP;
+    [SerializeField] private TextMeshProUGUI descriptionText;
     [SerializeField] private Image cardBackground;
     [SerializeField] private Image characterImage;
 
-    [Header("Middle Layer")]
-    [SerializeField] private TextMeshProUGUI authorTMP;
-    [SerializeField] private TextMeshProUGUI descriptionText;
+    [Header("Layout")]
+    [SerializeField] private RectTransform innerBody;
+    [SerializeField] private ObjectDistributer abilityUIDistributer;
+    [SerializeField] private RectTransform abilityFiller;
 
-    [Header("Top Layer")]
-    [SerializeField] private Image rarity;
-    [SerializeField] private TextMeshProUGUI costTMP;
+    protected List<AbilityUI> abilityUIs = new List<AbilityUI>();
+    protected Card card;
+    private ObjectDistributer pool;
+    private CardAnimator animator;
+    private bool isInteractable;
 
-    private Animator animator;
-    private int originalSiblingIndex;
-    public event System.Action<CardUI> OnCardClicked;
+    public string Id => id;
 
-    private bool isSelected;
+    private void SetInteractable(bool value) => isInteractable = value;
 
-    private void Awake() {
-        animator = GetComponent<Animator>();
-        originalSiblingIndex = transform.GetSiblingIndex();
+    public void SetPool(ObjectDistributer pool) => this.pool = pool;
+
+    public async UniTask RemoveCardController() {
+        if (animator != null) {
+            await animator.FlyAwayWithCallback();
+        }
+        pool?.ReleaseObject(gameObject);
     }
 
-    public override void Initialize(Card card) {
-        base.Initialize(card);
-
+    public void Initialize(Card card) {
         if (card == null) {
             Debug.LogError("Card is null during initialization!");
             return;
         }
 
-        // Top Layer
+        this.card = card;
 
-        rarity.color = card.data.GetRarityColor();
-        authorTMP.text = card.data.AuthorName;
+        // Visuals
+        rarity.color = card.Data.GetRarityColor();
+        authorTMP.text = card.Data.AuthorName;
+        characterImage.sprite = card.Data.CharacterSprite;
 
-        characterImage.sprite = card.data.characterSprite;
-        UpdateAbilities(card.abilities);
+        // Logic
+        AttachmentToCard(card);
 
-        UpdateCost(card?.Cost?.CurrentValue ?? 0, card?.Cost?.CurrentValue ?? 0);
-        card.Cost.OnValueChanged += UpdateCost;
-    }
+        // Show abilities
+        List<CardAbility> cardAbilities = card.cardAbilities;
 
-
-    protected override void UpdateAbilities(List<CardAbility> abilities) {
-        if (abilities == null || abilities.Count == 0) {
+        if (cardAbilities == null || cardAbilities.Count == 0) {
             EnableCardDescription();
             return;
         }
 
-        // Якщо є здібності, приховуємо опис
+        // Hide description if abilities exist
         if (descriptionText != null) {
             descriptionText.gameObject.SetActive(false);
         }
 
-        ClearAbilities();
-        foreach (var ability in abilities) {
-            if (ability != null && ability.data != null) {
-                // Створення нової AbilityUI через дистриб'ютор
-                GameObject newAbilityObj = abilityUIDisctibuter.CreateObject();
-                if (newAbilityObj == null) continue;
+        UpdateAbilities(cardAbilities);
+    }
 
-                AbilityUI abilityUI = newAbilityObj.GetComponent<AbilityUI>();
-                if (abilityUI == null) {
-                    Debug.LogWarning("Created object does not have an AbilityUI component.");
-                    Destroy(newAbilityObj);
-                    continue;
-                }
+    protected virtual void AttachmentToCard(Card card) {
+        if (card == null) return;
 
-                // Налаштування UI об'єкта здібності
-                abilityUI.CreateUISets(ability, true);
-                abilityUIs.Add(abilityUI);
-            }
+        if (card is CreatureCard creatureCard) {
+            UpdateHealth(creatureCard.Health?.CurrentValue ?? 0, creatureCard.Health?.CurrentValue ?? 0);
+            UpdateAttack(creatureCard.Attack?.CurrentValue ?? 0, creatureCard.Attack?.CurrentValue ?? 0);
+            UpdateCost(creatureCard.Cost?.CurrentValue ?? 0, creatureCard.Cost?.CurrentValue ?? 0);
+
+            creatureCard.Health.OnValueChanged += UpdateHealth;
+            creatureCard.Attack.OnValueChanged += UpdateAttack;
+            creatureCard.Cost.OnValueChanged += UpdateCost;
         }
     }
 
-    private void EnableCardDescription() {
-        // Якщо немає здібностей, показуємо опис карти
-        if (descriptionText != null && card != null) {
-            descriptionText.text = card.data.description;
-            descriptionText.gameObject.SetActive(true);  // Активуємо descriptionText
+    public void InitializeAnimator(Vector3 initialPosition) {
+        transform.position = initialPosition;
+        animator?.FlyToOrigin();
+        animator.OnReachedOrigin += () => SetInteractable(true);
+    }
+
+    #region Updaters
+    protected virtual void UpdateName(string newName) {
+        if (nameText != null && !string.IsNullOrEmpty(newName)) {
+            nameText.text = newName;
+        } else {
+            Debug.LogWarning("Attempted to set name to an empty or null value.");
+        }
+    }
+
+    protected virtual void UpdateHealth(int currentHealth, int initialHealth) {
+        if (healthText != null) {
+            healthText.text = currentHealth > 0 ? $"{currentHealth}" : "0";
+        }
+    }
+
+    protected virtual void UpdateAttack(int currentAttack, int initialAttack) {
+        if (attackText != null) {
+            attackText.text = currentAttack >= 0 ? $"{currentAttack}" : "0";
         }
     }
 
@@ -95,85 +127,52 @@ public class CardUI : CardRepresentative, IPointerClickHandler, IPointerEnterHan
             costTMP.text = currentCost >= 0 ? $"{initialCost}" : "0";
         }
     }
+    #endregion
 
-    #region User Interaction
-    public void OnPointerClick(PointerEventData eventData) {
-        OnCardClicked?.Invoke(this);
+    protected void UpdateAbilities(List<CardAbility> abilities) {
+        foreach (var ability in abilities) {
+            if (ability == null || ability.data == null) continue;
+
+            GameObject newAbilityObj = abilityUIDistributer.CreateObject();
+            if (newAbilityObj == null) continue;
+
+            if (!newAbilityObj.TryGetComponent(out AbilityUI abilityUI)) {
+                Debug.LogWarning("Created object does not have an AbilityUI component.");
+                Destroy(newAbilityObj);
+                continue;
+            }
+
+            abilityUI.CreateUISets(ability, true);
+            abilityUIs.Add(abilityUI);
+        }
     }
 
-    public void OnPointerEnter(PointerEventData eventData) {
-        transform.SetSiblingIndex(transform.parent.childCount - 1);
-        if (animator != null) {
-            animator.SetBool("Lift", true);
+    private void EnableCardDescription() {
+        if (descriptionText != null && card != null) {
+            descriptionText.text = card.Data.Description;
+            descriptionText.gameObject.SetActive(true);
         }
+    }
+
+    public void HandleSelection() => characterImage.color = Color.green;
+
+    public void HandleDeselection() => characterImage.color = Color.white;
+
+    public void OnPointerEnter(PointerEventData eventData) {
+        animator?.ToggleHover(true);
+        OnCardEntered?.Invoke(this);
     }
 
     public void OnPointerExit(PointerEventData eventData) {
-        transform.SetSiblingIndex(originalSiblingIndex);
-        if (animator != null) {
-            animator.SetBool("Lift", false);
-        }
+        animator?.ToggleHover(false);
+        OnCardExit?.Invoke(this);
     }
 
-    public void SelectCard() {
-        isSelected = true;
-        if (animator != null) {
-            animator.SetBool("Selected", isSelected);
-        }
-        characterImage.color = Color.green;
-    }
+    public void OnPointerClick(PointerEventData eventData) => OnCardClicked?.Invoke(this);
 
-    public void DeselectCard() {
-        isSelected = false;
-        if (animator != null) {
-            animator.SetBool("Selected", isSelected);
-        }
-        characterImage.color = Color.white;
-    }
-    #endregion
-
-    public override void Reset() {
-        base.Reset();
-        if (card != null) {
-            card.Cost.OnValueChanged -= UpdateCost;
-        }
-
-        // Очистка UI полів
-        if (descriptionText != null) {
-            descriptionText.text = string.Empty;
-            descriptionText.gameObject.SetActive(false);
-        }
-
-        if (authorTMP != null) {
-            authorTMP.text = string.Empty;
-        }
-
-        if (costTMP != null) {
-            costTMP.text = "0";
-        }
-
-        if (characterImage != null) {
-            characterImage.sprite = null;
-            characterImage.color = Color.white;
-        }
-
-        if (rarity != null) {
-            rarity.color = Color.white;
-        }
-
-        ClearAbilities();
+    public void Reset() {
+        animator?.Reset();
+        isInteractable = false;
         card = null;
-        isSelected = false;
-        if (animator != null) {
-            animator.SetBool("Selected", false);
-        }
-    }
-
-    protected override void OnDestroy() {
-        base.OnDestroy();
-
-
-
-        OnCardClicked = null;
     }
 }

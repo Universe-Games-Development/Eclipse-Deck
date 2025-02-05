@@ -6,17 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Level.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Scenes/GameLoading.unity
+    guid: 5b7854ce2b43b7b45ae0c2eeccad29f1
   - enabled: 1
-    path: Assets/Scenes/Level 1.unity
-    guid: 5eab90405b532744f9263f23e431b11c
+    path: Assets/Scenes/Loading.unity
+    guid: 7b6e253a1a3182b43bba2b1ddb0a1b9b
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
     guid: 02a8be19512dc254dade2b26f4c4d015
   - enabled: 1
-    path: Assets/Scenes/Level 2.unity
-    guid: 90c0381418c5b304ea38898ad16b86d1
+    path: Assets/Scenes/Sewers.unity
+    guid: 5eab90405b532744f9263f23e431b11c
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 6489a15eb7f0275439ea7da0689fe660, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

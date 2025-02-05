@@ -24,14 +24,14 @@ public class BatttleActionManager : IEventListener {
 
     //IEventListener
     public object OnEventReceived(object data) {
-        if (data is not TurnEndEvent turnEndEventData) {
+        if (data is not TurnEndEventData turnEndEventData) {
             Debug.LogWarning("Received invalid event data in BattleActionManager.");
             return null;
         }
         return GetCreaturesActions(turnEndEventData);
     }
 
-    public List<ICommand> GetCreaturesActions(TurnEndEvent turnEndEventData) {
+    public List<ICommand> GetCreaturesActions(TurnEndEventData turnEndEventData) {
         
         List<ICommand> commands = new();
 

@@ -82,7 +82,4 @@ public class FieldController : MonoBehaviour {
         isInteractable = false;
         field = null;
     }
-
-    private void OnDestroy() {
-    }
 }

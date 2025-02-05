@@ -8,7 +8,7 @@ using Zenject;
 public class GridVisual : MonoBehaviour {
     [SerializeField] private FieldPool pool;
 
-    BoardUpdater gridManager;
+    BoardUpdater baordUpdater;
 
     [SerializeField] private CellSize visualCellSize = new(1.0f, 1.0f);
 
@@ -25,7 +25,7 @@ public class GridVisual : MonoBehaviour {
 
     [Inject]
     public void Construct(BoardUpdater gridManager) {
-        this.gridManager = gridManager;
+        this.baordUpdater = gridManager;
         gridManager.OnGridInitialized += UpdateVisualGrid;
         gridManager.OnGridChanged += UpdateVisualGrid;
         pool.InitPool();
@@ -52,7 +52,7 @@ public class GridVisual : MonoBehaviour {
     }
 
     private void AdjustCenter() {
-        Vector3 boardBalanceAmount = gridManager.GridBoard.GetGridBalanceOffset() / 2;
+        Vector3 boardBalanceAmount = baordUpdater.GridBoard.GetGridBalanceOffset() / 2;
         Vector3 visualLocalOffsetBalance = new(boardBalanceAmount.x * visualCellSize.width, 0, boardBalanceAmount.z * visualCellSize.height);
 
         Vector3 boardGlobalCenter = origin.TransformPoint(visualLocalOffsetBalance);
@@ -92,10 +92,14 @@ public class GridVisual : MonoBehaviour {
     }
 
     public Vector2Int? GetGridIndex(Vector3 worldPosition) {
+        if (baordUpdater == null || baordUpdater.GridBoard == null) {
+            return null;
+        }
+
         if (Mathf.Abs(worldPosition.y - origin.position.y) > yInteractionRange) {
             return null;
         }
 
-        return gridManager.GridBoard.GetGridIndexByWorld(origin, worldPosition);
+        return baordUpdater.GridBoard.GetGridIndexByWorld(origin, worldPosition);
     }
 }

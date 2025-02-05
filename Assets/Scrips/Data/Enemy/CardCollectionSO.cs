@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewCardCollection", menuName = "Cards/Collection")]
+[CreateAssetMenu(fileName = "NewCardCollection", menuName = "Opponents/Collections")]
 public class CardCollectionSO : ScriptableObject {
     [Header("Collection Details")]
     public string collectionName;
