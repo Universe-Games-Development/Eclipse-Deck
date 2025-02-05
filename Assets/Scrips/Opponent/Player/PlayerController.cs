@@ -18,7 +18,12 @@ public class PlayerController : MonoBehaviour {
         handUI.Initialize(player.hand);
 
         for (int i = 0; i < amountToDraw; i++) {
-            player.hand.AddCard(player.deck.DrawCard());
+            Card card = player.deck.DrawCard();
+            if (card == null) {
+                Debug.LogWarning("Drawn null card!");
+                return;
+            }
+            player.hand.AddCard(card);
         }
     }
 
@@ -33,7 +38,7 @@ public class PlayerController : MonoBehaviour {
 
 
     private void TrySummonCard(Field field) {
-        if (field == null) {
+        if (field != null) {
             CardUI selectedUICard = handUI.SelectedCard;
             if (selectedUICard == null) {
                 Debug.Log("No card selected to summon.");
@@ -46,7 +51,7 @@ public class PlayerController : MonoBehaviour {
                 return;
             }
 
-            bool isSummoned = gameboard_c.PlayCard(player, selectedCard, field);
+            bool isSummoned = gameboard_c.SummonCreature(player, selectedCard, field);
             
             if (isSummoned) {
                 player.hand.RemoveCard(selectedCard);

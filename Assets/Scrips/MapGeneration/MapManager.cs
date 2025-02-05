@@ -9,8 +9,8 @@ public class MapManager : MonoBehaviour {
     private MapGraph currentMap;
 
     // Впровадження ResourceManager
-    [Inject] private ResourceManager resourceManager;
-    public void Construct(ResourceManager resourceManager) {
+    [Inject] private AddressablesResourceManager resourceManager;
+    public void Construct(AddressablesResourceManager resourceManager) {
         this.resourceManager = resourceManager;
     }
 

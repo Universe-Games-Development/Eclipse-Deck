@@ -1,51 +1,76 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using System;
 
 public class LevelManager : MonoBehaviour {
 
+    public Action<Location> OnLocationChanged;
+    public Action<Location> OnLocationLoad;
+
     [Header("Scene data")]
-    public string currentSceneName;
-    [SerializeField] private string mainMenuName;
-    [SerializeField] private string gameSceneName;
+    public Location currentLocation;
 
-    private void OnSceneLoad(Scene scene, LoadSceneMode mode) {
-        currentSceneName = scene.name;
+    // Масив, що містить локації у правильному порядку
+    private Location[] locationOrder = {
+        Location.MainMenu,
+        Location.Sewers,
+        Location.Cave,
+        Location.FloodedCave,
+        Location.Lab,
+        Location.Hell
+    };
+
+    private void OnEnable() {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        Scene scene = SceneManager.GetActiveScene();
+        CheckLocation(scene);
     }
 
-    #region LEVEL LOAD
-    public bool isMainMenu() {
-        return SceneManager.GetActiveScene().name.Equals(mainMenuName);
+    private void OnSceneLoaded(Scene scene, LoadSceneMode arg1) {
+        CheckLocation(scene);
     }
 
-    public void OpenMainMenu() {
-        // To DO : Add check scene valid name
-        SceneManager.LoadScene(mainMenuName);
+    private void CheckLocation(Scene scene) {
+        string sceneName = scene.name;
+        currentLocation = DetermineLocationByName(sceneName);
+        OnLocationChanged?.Invoke(currentLocation);
     }
 
-    public void StartGame() {
-        // Scene Change
-        SceneManager.LoadScene(gameSceneName);
-    }
-    #endregion
-
-    public void Restart() {
-        Scene currentScene = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(currentScene.name);
-    }
-
-    public void SetPause(bool pause) {
-        if (pause) {
-            Time.timeScale = 0f; // Stop game time
-        } else {
-            Time.timeScale = 1f; // Reset game time
+    private Location DetermineLocationByName(string sceneName) {
+        if (LocationMappings.SceneNameToLocation.TryGetValue(sceneName, out Location location)) {
+            return location;
         }
+        Debug.LogError("Unknown scene name: " + sceneName);
+        return Location.MainMenu; // Значення за замовчуванням
     }
 
-    public void ExitGame() {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
+    public void LoadLocation(Location location) {
+        string locationName = location.ToString();
+        SceneManager.LoadScene(locationName);
+        OnLocationChanged?.Invoke(currentLocation);
+    }
+
+    public void LoadNextLocation() {
+        Scene scene = SceneManager.GetActiveScene();
+        int currentIndex = scene.buildIndex;
+        int nextIndex = currentIndex + 1;
+
+        SceneManager.LoadScene(nextIndex);
+        OnLocationChanged?.Invoke(currentLocation);
+    }
+
+    public Location GetNextLocation() {
+        return GetNextLocationFor(currentLocation);
+    }
+
+    public Location GetNextLocationFor(Location currentLocation) {
+        int currentIndex = Array.IndexOf(locationOrder, currentLocation);
+
+        // Якщо локація знайдена і це не остання локація
+        if (currentIndex >= 0 && currentIndex < locationOrder.Length - 1) {
+            return locationOrder[currentIndex + 1];
+        }
+
+        return locationOrder[0];
     }
 }

@@ -13,13 +13,13 @@ public class MainMenuUI : MonoBehaviour {
     [Header("Settings UI :")]
     [SerializeField] private SettingsUI uISettings;
 
-    private LevelManager levelManager;
+    private GameManager gameManager;
 
 
     private StartGameHandler startGameHandler;
     [Inject]
-    public void Contruct(LevelManager levelManager) {
-        this.levelManager = levelManager;
+    public void Contruct(GameManager gameManager) {
+        this.gameManager = gameManager;
     }
 
     private void Awake() {
@@ -31,7 +31,7 @@ public class MainMenuUI : MonoBehaviour {
         // set buttons listeners
         uiStartButton?.onClick.AddListener(() => OnButtonClick(uiStartButton, startGameHandler.StartGame));
 
-        uiExitButton?.onClick.AddListener(() => OnButtonClick(uiExitButton, levelManager.ExitGame));
+        uiExitButton?.onClick.AddListener(() => OnButtonClick(uiExitButton, gameManager.ExitGame));
 
         if (uISettings != null) {
             uiSettingsButton.onClick.AddListener(() => OnButtonClick(uiSettingsButton, uISettings.Show));

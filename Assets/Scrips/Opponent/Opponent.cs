@@ -12,26 +12,19 @@ public class Opponent {
     public Deck discardDeck;
 
     public CardCollection cardCollection;
-
-    private ResourceManager resourceManager;
     private IEventQueue eventQueue;
 
     public Action<Opponent> OnDefeat { get; internal set; }
 
     [Inject]
-    public Opponent(IEventQueue eventQueue, ResourceManager resourceManager) {
+    public Opponent(IEventQueue eventQueue, AssetLoader assetLoader) {
         this.eventQueue = eventQueue;
-        this.resourceManager = resourceManager;
-        Initialize();
-    }
-
-    protected virtual void Initialize() {
         health = new Health(0, 20);
-        cardCollection = new CardCollection(resourceManager);
-        cardCollection.GenerateTestDeck(20);
+        cardCollection = new CardCollection(assetLoader);
+        cardCollection.GenerateTestCollection(20);
 
         deck = new Deck(this, cardCollection, eventQueue);
-        Debug.Log("deck initialized with cards : " + deck.GetCount());
+        //Debug.Log("deck initialized with cards : " + deck.GetCount());
 
         hand = new CardHand(this, eventQueue);
     }

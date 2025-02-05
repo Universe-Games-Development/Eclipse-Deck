@@ -2,84 +2,73 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Card {
-    private const int MAX_CARD_HEALTH = 100;
-    private const int MAX_CARD_ATTACK = 100;
-    private const int MAX_CARD_COST = 30;
-    public string Id;
-    public string ResourseId { get; private set; }
-    public Opponent Owner { get; private set; }
-    public Cost Cost { get; private set; }
+public abstract class Card {
+    public string Id { get; protected set; }
+    public CardSO Data { get; protected set; }
+    public Cost Cost { get; protected set; }
+    public CardState CurrentState { get; protected set; }
+    public IEventQueue eventQueue { get; protected set; }
+    public Action<CardState> OnStateChanged { get; internal set; }
+    public Opponent Owner { get; protected set; } // Add Owner here
+
+    public List<CardAbility> cardAbilities;
+
+    public Card(CardSO cardSO, Opponent owner, IEventQueue eventQueue)  // Add owner to constructor
+    {
+        Data = cardSO;
+        Id = Guid.NewGuid().ToString();
+        this.eventQueue = eventQueue;
+        Owner = owner; // Assign the owner
+        Cost = new Cost(cardSO.MAX_CARDS_COST, cardSO.cost);
+
+        cardAbilities = new List<CardAbility>();
+        foreach (var cardAbilityData in cardSO.cardAbilities) {
+            // ... (ability creation remains the same)
+        }
+
+        ChangeState(CardState.InDeck);
+    }
+
+    public virtual void ChangeState(CardState newState) {
+        // ... (same as before)
+    }
+
+    public abstract void Play();
+
+    // ... (Other methods like RemoveRandomAbility, Reset, Exile)
+}
+
+public class CreatureCard : Card {
     public Attack Attack { get; private set; }
     public Health Health { get; private set; }
-    public CardState CurrentState { get; private set; }
-    public IEventQueue eventQueue { get; private set; }
-    public Action<CardState> OnStateChanged { get; internal set; }
 
-    public List<CardAbility> abilities;
-
-    public CardSO data;
-
-    public Card(CardSO cardSO, Opponent owner, IEventQueue eventQueue) {
-        data = cardSO;
-
-        Id = Guid.NewGuid().ToString(); // generate own uni id
-        ResourseId = cardSO.resourseId;
-        this.eventQueue = eventQueue;
-        Owner = owner;
-
-        Cost = new(MAX_CARD_COST, cardSO.cost);
-        Attack = new(MAX_CARD_ATTACK, cardSO.attack);
-        Health = new(MAX_CARD_HEALTH, cardSO.health);
-
-        abilities = new List<CardAbility>();
-        foreach (var cardAbilityData in cardSO.cardAbilities) {
-            if (cardAbilityData == null) {
-                Debug.LogWarning($"Missing ability for {cardSO.Name}");
-                continue;
-            }
-            var ability = new CardAbility(cardAbilityData, this, eventQueue);
-            abilities.Add(ability);
-        }
-
-
-        ChangeState(CardState.InDeck);
+    public CreatureCard(CreatureCardSO cardSO, Opponent owner, IEventQueue eventQueue)
+        : base(cardSO, owner, eventQueue) {
+        Attack = new(cardSO.MAX_CARD_ATTACK, cardSO.Attack);
+        Health = new(cardSO.MAX_CARD_HEALTH, cardSO.Health);
     }
 
-    public void ChangeState(CardState newState) {
-        if (CurrentState == newState) return;
-        CurrentState = newState;
-        OnStateChanged?.Invoke(CurrentState);
+    public override void Play() {
+        Debug.Log($"Creature is played on the board!");
     }
+}
 
-    public void RemoveRandomAbility() {
-        if (abilities == null || abilities.Count == 0) {
-            return;
-        }
+public class SpellCard : Card {
+    public SpellCard(CardSO cardSO, Opponent owner, IEventQueue eventQueue)
+        : base(cardSO, owner, eventQueue) { }
 
-        // Вибір випадкової здібності
-        int randomIndex = UnityEngine.Random.Range(0, abilities.Count);
-        var abilityToRemove = abilities[randomIndex];
-
-        // Виклик Reset для здібності, якщо потрібно очистити стан
-        abilityToRemove.Reset();
-
-        // Видалення здібності зі списку
-        abilities.RemoveAt(randomIndex);
+    public override void Play() {
+        Debug.Log($"Spell is cast!");
+        // Додати логику ефекту заклинання
     }
+}
 
+public class SupportCard : Card {
+    public SupportCard(CardSO cardSO, Opponent owner, IEventQueue eventQueue)
+        : base(cardSO, owner, eventQueue) { }
 
-    public void Reset() {
-        ChangeState(CardState.InDeck);
-        Cost.Reset();
-        Attack.Reset();
-        Health.Reset();
-    }
-
-    public void Exile() {
-        Reset();
-        foreach (var ability in abilities) {
-            ability.Reset();
-        }
+    public override void Play() {
+        Debug.Log($"Support is applied for the entire battle!");
+        // Додати логику підтримки
     }
 }

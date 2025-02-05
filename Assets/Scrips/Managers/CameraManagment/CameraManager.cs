@@ -54,7 +54,7 @@ public class CameraManager : MonoBehaviour {
 
     public void SwitchCamera(CameraState newState) {
         if (!cameras.ContainsKey(newState)) {
-            Debug.LogError($"CameraState {newState} не знайдено в словнику.");
+            Debug.LogError($"CameraState {newState} not found in dictionary.");
             return;
         }
 

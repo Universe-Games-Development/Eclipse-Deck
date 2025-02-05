@@ -7,10 +7,10 @@ public class StartGameHandler : MonoBehaviour {
     [SerializeField] private Animator monitorAnimator;
     [SerializeField] private AnimationClip monitorMoveUp;
 
-    private LevelManager levelManager;
+    private GameManager gameManager;
     [Inject]
-    public void Contruct(LevelManager levelManager) {
-        this.levelManager = levelManager;
+    public void Contruct(GameManager gameManager) {
+        this.gameManager = gameManager;
     }
 
     private void Awake() {
@@ -34,7 +34,7 @@ public class StartGameHandler : MonoBehaviour {
     }
 
     private void OnCameraMovementComplete() {
-        levelManager.StartGame();
+        gameManager.StartNewGame();
     }
 
     private void OnDestroy() {

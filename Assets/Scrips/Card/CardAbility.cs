@@ -36,7 +36,7 @@ public class CardAbility : IEventListener {
 
     public virtual void RegisterTrigger() {
         if (InTriggerState) {
-            Debug.LogWarning($"Abilities for card {card.data.name} is already registered.");
+            Debug.LogWarning($"Abilities for card {card.Data.name} is already registered.");
             return;
         }
 
@@ -66,7 +66,7 @@ public class CardAbility : IEventListener {
 
         switch (data) {
             case CardHandEventData cardHandEventData:
-                Debug.Log($"Gathering future action for drawn card with name: {cardHandEventData.Card.data.name}");
+                Debug.Log($"Gathering future action for drawn card with name: {cardHandEventData.Card.Data.name}");
                 // Можете додати додаткову логіку тут
                 break;
             // Додаткові випадки для інших типів даних
@@ -84,6 +84,6 @@ public class CardAbility : IEventListener {
             UnregisterTrigger();
         }
 
-        Debug.Log($"Ability for card {card.data.name} has been reset.");
+        Debug.Log($"Ability for card {card.Data.name} has been reset.");
     }
 }
