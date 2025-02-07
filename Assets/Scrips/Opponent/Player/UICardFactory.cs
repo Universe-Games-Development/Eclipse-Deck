@@ -12,7 +12,7 @@ public class UICardFactory : MonoBehaviour {
 
     private CardPool cardPool;
     private CardGhostPool ghostPool;
-    public CardAbilityPool AbilityUIFactory { get; private set; }
+    public CardAbilityPool AbilityUIPool { get; private set; }
 
     private void Awake() {
         InitializePools();
@@ -20,7 +20,7 @@ public class UICardFactory : MonoBehaviour {
 
     private void InitializePools() {
         ghostPool = new CardGhostPool(ghostPrefab, ghostLayoutParent);
-        AbilityUIFactory = new CardAbilityPool(abilityPrefab, cardSpawnPoint);
+        AbilityUIPool = new CardAbilityPool(abilityPrefab, cardSpawnPoint);
 
         cardPool = new CardPool(cardPrefab, ghostPool, cardSpawnPoint); 
     }
@@ -28,13 +28,14 @@ public class UICardFactory : MonoBehaviour {
     public CardUI CreateCardUI(Card card) {
         CardUI cardUI = cardPool.Get();
         cardUI.transform.position = cardSpawnPoint.position;
-        cardUI.Initialize(card);
-        cardUI.SetCardFactory(this); // Передаємо посилання на CardFactory
+        cardUI.SetCardLogic(card);
+        cardUI.SetAbilityPool(AbilityUIPool); // Передаємо посилання на CardFactory
 
         return cardUI;
     }
 
     public void ReleaseCardUI(CardUI cardUI) {
+        cardUI.Reset();
         cardPool.Release(cardUI);
     }
 }

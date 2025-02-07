@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,6 +13,7 @@ public abstract class Card {
     public Opponent Owner { get; protected set; } // Add Owner here
 
     public List<CardAbility> cardAbilities;
+    public CardUI cardUI;
 
     public Card(CardSO cardSO, Opponent owner, IEventQueue eventQueue)  // Add owner to constructor
     {
@@ -34,8 +36,6 @@ public abstract class Card {
     }
 
     public abstract void Play();
-
-    // ... (Other methods like RemoveRandomAbility, Reset, Exile)
 }
 
 public class CreatureCard : Card {

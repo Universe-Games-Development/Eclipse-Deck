@@ -9,7 +9,6 @@ public class GameboardController : MonoBehaviour {
     [Inject] private BoardUpdater gridManager;
 
     // GAme context
-    [Inject] AddressablesResourceManager resManager;
     [Inject] GridVisual gridVisual;
 
     private OpponentRegistrator OpponentRegistrator;
@@ -57,5 +56,9 @@ public class GameboardController : MonoBehaviour {
         }
 
         return field;
+    }
+
+    private void OnDestroy() {
+        OpponentRegistrator.OnOpponentRegistered -= AssignHPCellToOpponent;
     }
 }

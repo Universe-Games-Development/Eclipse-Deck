@@ -1,12 +1,13 @@
+using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
-using Cysharp.Threading.Tasks; // Для використання LINQ
 
 public class CardHandUI : MonoBehaviour {
-    // Приватні поля з [SerializeField]
-    private Dictionary<string, CardUI> idToCardUIMap = new();
+    Dictionary<CardUI, Card> cardPairs = new();
+
     private UICardFactory cardFactory;
-    public CardUI SelectedCard { get; private set; }
 
     private CardHand cardHand;
 
@@ -17,84 +18,93 @@ public class CardHandUI : MonoBehaviour {
         }
     }
 
-    internal void Initialize(CardHand hand) {
+    public void Initialize(CardHand hand) {
         cardHand = hand ?? throw new System.ArgumentNullException(nameof(hand));
 
         hand.OnCardAdd += CreateCardUI;
-        hand.OnCardRemove += RemoveCardUI;
+        hand.OnCardRemove += (Card card) => {
+            RemoveCardUIFor(card).Forget();
+        };
     }
 
     #region ADD / REMOVE
-
     public void CreateCardUI(Card card) {
-        if (idToCardUIMap.ContainsKey(card.Id)) {
-            Debug.LogWarning($"Card with ID {card.Id} already exists in UI.");
-            return;
-        }
+        CardUI cardUI = CreateNewCardUI(card);
+        AttachCardEvents(cardUI, card);
+        UpdateCardsPositionsAsync().Forget();
+    }
 
+    private CardUI CreateNewCardUI(Card card) {
         CardUI cardUI = cardFactory.CreateCardUI(card);
-        updatePositionQu.Enqueue(cardUI);
-        idToCardUIMap.Add(card.Id, cardUI);
-        
-
-        UpdateCardsPositionsAsync().Forget(); // Use Forget() with care, ensure no exceptions are swallowed silently
-
-        cardUI.OnCardClicked += OnCardSelected;
+        card.cardUI = cardUI;
+        cardPairs.Add(cardUI, card);
+        return cardUI;
     }
 
-    private Queue<CardUI> updatePositionQu = new();
-    private async UniTask UpdateCardsPositionsAsync() {
-        while(updatePositionQu.Count > 0) {
-            await UniTask.NextFrame();
-            if (updatePositionQu.Count > 0) {
-                updatePositionQu.Dequeue().UpdateLayout();
-            }
-        }
+    private void AttachCardEvents(CardUI cardUI, Card card) {
+        cardUI.OnCardClicked += OnCardSelection;
     }
 
-    public void RemoveCardUI(Card card) {
+    private void OnCardSelection(CardUI cardUI) {
+        Card card = cardPairs.GetValueOrDefault(cardUI);
         if (card == null) {
-            Debug.LogError("Card is null!");
-            return;
+            Debug.LogError("Selecting null card");
         }
-
-        if (!idToCardUIMap.TryGetValue(card.Id, out var cardUI)) {
-            Debug.LogWarning($"Card with ID {card.Id} can't be found in UI!");
-            return;
-        }
-
-        idToCardUIMap.Remove(card.Id); // More efficient than TryRemove in this case
-
-        cardUI.OnCardClicked -= OnCardSelected;
-        cardFactory.ReleaseCardUI(cardUI); // Important: Release to pooling if you have it
+        cardHand.SelectCard(card);
     }
 
+    private async UniTask RemoveCardUIFor(Card card) {
+        CardUI cardUI = card.cardUI;
 
-    #endregion
-
-    #region SELECT / DESELECT
-
-    private void OnCardSelected(CardUI clickedCard) {
-        if (clickedCard == null) {
-            Debug.LogError("Clicked card is null!");
-            return;
-        }
-
-        if (SelectedCard == clickedCard) return;
-
-        SelectedCard?.HandleDeselection();
-        SelectedCard = clickedCard;
-        SelectedCard.HandleSelection();
-
-        Debug.Log($"Selected card: {SelectedCard.name}");
+        if (cardUI == null) Debug.LogWarning("Can`t find car to Remove");
+        
+        await cardUI.RemoveCardUI(); // Car will define when it released to pool
+        cardFactory.ReleaseCardUI(cardUI);
+        card.cardUI = null;
     }
 
 
     public void DeselectCurrentCard() {
-        SelectedCard?.HandleDeselection(); // Use null-conditional operator
-        SelectedCard = null;
+        cardHand.DeselectCurrentCard();
+    }
+    #endregion
+
+    private CancellationTokenSource updatePositionCts;
+
+    private async UniTask UpdateCardsPositionsAsync(int delayFrames = 3) {
+        updatePositionCts?.Cancel();
+
+        var newCts = new CancellationTokenSource();
+        updatePositionCts = newCts;
+
+        await UniTask.DelayFrame(delayFrames, cancellationToken: updatePositionCts.Token);
+
+        try {
+            foreach (var cardUI in cardPairs.Keys) {
+                if (newCts.IsCancellationRequested) return;
+                await UniTask.NextFrame(newCts.Token);
+                cardUI.UpdateLayout();
+            }
+        } catch (OperationCanceledException) {
+            Debug.Log("UpdateCardsPositionsAsync cancelled.");
+        } finally {
+            if (updatePositionCts == newCts) {
+                updatePositionCts.Dispose();
+                updatePositionCts = null;
+            }
+        }
     }
 
-    #endregion
-}
+    private void OnDestroy() {
+        if (cardHand != null) {
+            cardHand.OnCardAdd -= CreateCardUI;
+        }
 
+        foreach (var pair in cardPairs) {
+            pair.Key.OnCardClicked -= OnCardSelection;
+        }
+
+        updatePositionCts?.Cancel();
+        updatePositionCts?.Dispose();
+    }
+}

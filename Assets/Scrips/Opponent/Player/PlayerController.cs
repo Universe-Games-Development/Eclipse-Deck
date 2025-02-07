@@ -35,15 +35,9 @@ public class PlayerController : MonoBehaviour {
 
     private void TrySummonCard(Field field) {
         if (field != null) {
-            CardUI selectedUICard = handUI.SelectedCard;
-            if (selectedUICard == null) {
-                Debug.Log("No card selected to summon.");
-                return;
-            }
-
-            Card selectedCard = player.hand.GetCardByID(selectedUICard.UIDataInfo.Id);
+            Card selectedCard = player.hand.SelectedCard;
             if (selectedCard == null) {
-                Debug.Log("Selected card not found in hand.");
+                Debug.Log("No card selected to summon.");
                 return;
             }
 
@@ -53,7 +47,7 @@ public class PlayerController : MonoBehaviour {
                 player.hand.RemoveCard(selectedCard);
             }
         } else {
-            handUI.DeselectCurrentCard();
+            player.hand.DeselectCurrentCard();
         }
     }
 

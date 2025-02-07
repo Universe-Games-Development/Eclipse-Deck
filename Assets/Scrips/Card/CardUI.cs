@@ -4,18 +4,19 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
-    public Action<CardUI> OnCardExit;
-    public Action<CardUI> OnCardEntered;
-    public Action<CardUI> OnCardClicked;
-    
+    public Action<bool> OnCardHovered;
+    public Action<CardUI> OnCardClicked; // used by cardHand to define selected card
+    public Action<bool, UniTask> OnCardSelection; // used by animator to lift card or lower
+    public Func<CardUI, UniTask> OnCardRemoval;
+    public Action OnLayoutUpdate;
+
     private bool isInteractable;
+
+    private Card card;
     
     // Components
     [SerializeField] public CardAnimator _doAnimator;
     [SerializeField] public CardUIInfo UIDataInfo;
-    private UICardFactory uICardFactory;
-
-    
 
     private void Awake() {
         InitializeAnimator();
@@ -27,41 +28,48 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
 
     private void SetInteractable(bool value) => isInteractable = value;
 
-    public void SetCardFactory(UICardFactory uICardFactory) {
-        if (uICardFactory == null) {
-            this.uICardFactory = uICardFactory;
-            UIDataInfo.SetAbilityFactory(uICardFactory.AbilityUIFactory);
+    public void SetAbilityPool(CardAbilityPool AbilityUIPool) {
+        if (AbilityUIPool != null) {
+            UIDataInfo.SetAbilityFactory(AbilityUIPool);
         }
     }
 
+    public void SetCardLogic(Card card) {
+        UIDataInfo.FillData(card);
+    }
+
     public async UniTask RemoveCardUI() {
-        if (_doAnimator != null) {
-            await _doAnimator.FlyAwayWithCallback();
+        isInteractable = false;
+        if (OnCardRemoval != null) {
+            await OnCardRemoval.Invoke(this);
         }
-        uICardFactory?.ReleaseCardUI(this);
+        await UniTask.CompletedTask;
     }
 
 
     public void OnPointerEnter(PointerEventData eventData) {
-        _doAnimator?.ToggleHover(true);
-        OnCardEntered?.Invoke(this);
+        if (!isInteractable) return;
+        OnCardHovered?.Invoke(true);
     }
 
     public void OnPointerExit(PointerEventData eventData) {
-        _doAnimator?.ToggleHover(false);
-        OnCardExit?.Invoke(this);
+        if (!isInteractable) return;
+        OnCardHovered?.Invoke(false);
     }
-
-    public void OnPointerClick(PointerEventData eventData) => OnCardClicked?.Invoke(this);
+    public void OnPointerClick(PointerEventData eventData) {
+        if (!isInteractable) return;
+        OnCardClicked?.Invoke(this);
+    }
 
     public void Reset() {
         _doAnimator?.Reset();
         UIDataInfo?.Reset();
         isInteractable = false;
+        card = null;
     }
 
     internal void UpdateLayout() {
-        _doAnimator.FlyByLayout();
+        OnLayoutUpdate?.Invoke();
     }
 
     internal void HandleSelection() {
@@ -70,9 +78,5 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
 
     internal void HandleDeselection() {
         Debug.Log("Do something deselected card");
-    }
-
-    public void Initialize(Card card) {
-        UIDataInfo.FillData(card);
     }
 }

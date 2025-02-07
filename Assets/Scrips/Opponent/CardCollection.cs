@@ -26,6 +26,10 @@ public class CardCollection {
     public void GenerateTestCollection(int count) {
         List<CardSO> cardDatas = assetLoader.CardManager.GetAllCards();
 
+        if (cardDatas == null || cardDatas.Count == 0) {
+            Debug.LogWarning("Generating null collection");
+            return;
+        }
         for (int i = 0; i < count; i++) {
             // Get random Card datas for test
             CardSO cardData = RandomUtil.GetRandomFromList(cardDatas);

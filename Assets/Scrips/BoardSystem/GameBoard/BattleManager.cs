@@ -16,6 +16,10 @@ public class BattleManager {
         Registrator.OnOpponentsRegistered += HandleBattleStart;
     }
 
+    public void RegisterOpponentForBattle(Opponent opponent) {
+        Registrator.RegisterOpponent(opponent);
+    }
+
     public void HandleBattleStart(List<Opponent> opponents) {
         StartBattle().Forget();
     }

@@ -4,7 +4,6 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
 
     public override void InstallBindings() {
-        Container.Bind<OpponentRegistrator>().AsSingle();
         Container.Bind<TurnManager>().AsSingle();
 
 
@@ -23,5 +22,8 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
         // Creature Movement
         Container.Bind<CreatureNavigator>().AsSingle();
+
+        Container.Bind<BattleManager>().AsSingle().NonLazy();
+        Container.Bind<OpponentRegistrator>().AsSingle().NonLazy();
     }
 }
