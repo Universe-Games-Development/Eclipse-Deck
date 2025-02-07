@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
-public class Testing : MonoBehaviour, IEventListener
+public class TestingBoard : MonoBehaviour, IEventListener
 {
     [SerializeField] private GameboardController gameboardController;
 
@@ -28,22 +28,21 @@ public class Testing : MonoBehaviour, IEventListener
     private Enemy enemy;
     private Player player;
 
-    private EventQueue eventQueue;
-    private OpponentRegistrator OpponentRegistrator;
+    private BattleManager _battleManager;
 
     [Inject]
-    public void Construct(OpponentRegistrator opponentRegistrator, EventQueue eventQueue) {
-        OpponentRegistrator = opponentRegistrator;
-        this.eventQueue = eventQueue;
+    public void Construct(BattleManager battleManager) {
+        _battleManager = battleManager;
     }
 
     private void Start() {
         // DEBUG
         enemy = enemy_c.enemy;
         player = player_c.player;
-        OpponentRegistrator.RegisterOpponent(player);
-        OpponentRegistrator.RegisterOpponent(enemy);
+        _battleManager.RegisterOpponentForBattle(player);
+        _battleManager.RegisterOpponentForBattle(enemy);
 
+        if (!TesOn) return;
         DebugLogic().Forget();
     }
 
@@ -52,7 +51,6 @@ public class Testing : MonoBehaviour, IEventListener
 
         await gridManager.UpdateGrid(boardConfig);
 
-        if (!TesOn) return;
         await UniTask.Delay(taskDelay);
         boardConfig.RandomizeAllGrids();
         await gridManager.UpdateGrid(boardConfig);
@@ -144,6 +142,10 @@ public class Testing : MonoBehaviour, IEventListener
             }
         }
         return command;
+    }
+
+    private void OnDestroy() {
+        boardConfig.ResetSettings();
     }
 }
 

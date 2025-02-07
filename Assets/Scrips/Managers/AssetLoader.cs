@@ -48,13 +48,7 @@ public class AssetLoader : MonoBehaviour {
 
 
     public bool HasActualData(Location enumLabel) {
+        if (enumLabel == Location.MainMenu || enumLabel == Location.Loading || enumLabel == Location.GameLoading) return true;
         return CardManager.HasLocationCardData(enumLabel);
     }
-}
-
-public class LocationAssets {
-    public List<CardSO> Cards { get; set; }
-    //public List<Sprite> Sprites { get; set; } // Приклад: інші асети
-    //public AudioClip Music { get; set; } // Приклад: інші асети
-    // ... інші типи асетів для локації
 }

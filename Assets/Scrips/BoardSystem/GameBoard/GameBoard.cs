@@ -44,7 +44,6 @@ public class GameBoard {
         }
 
         if (!_boardUpdater.GridBoard.FieldExists(field)) {
-            Debug.LogWarning("Field doesn’t exist! Gameboard can’t select: " + field);
             return false;
         }
 

@@ -1,19 +1,23 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 public class CardHand {
-    private const int DEFAULT_SIZE = 3;
+    public Action<Card> OnCardAdd;
+    public Action<Card> OnCardRemove;
+    public Action<Card> OnCardSelected;
+    public Action<Card> OnCardDeselected;
+
+    private const int DEFAULT_SIZE = 10;
 
     private List<Card> cardsInHand = new();
-
-    public event Action<Card> OnCardAdd;
-    public event Action<Card> OnCardRemove;
+    private Dictionary<string, Card> idToCardMap = new();
 
     private Opponent owner;
     private readonly int maxHandSize;
     private IEventQueue eventManager;
+
+    public Card SelectedCard { get; private set; }
 
     public CardHand(Opponent owner, IEventQueue eventManager, int maxHandSize = DEFAULT_SIZE) {
         this.owner = owner;
@@ -29,9 +33,9 @@ public class CardHand {
         if (cardsInHand.Count < maxHandSize) {
             card.ChangeState(CardState.InHand);
 
-            var drawnCardData = new CardHandEventData(owner, card);
-            eventManager.TriggerEvent(EventType.ON_CARD_DRAWN, drawnCardData);
+            TriggerCardEvent(EventType.ON_CARD_DRAWN, card);
 
+            idToCardMap[card.Id] = card;
             cardsInHand.Add(card);
             OnCardAdd?.Invoke(card);
         } else {
@@ -39,9 +43,15 @@ public class CardHand {
         }
     }
 
+
     public void RemoveCard(Card card) {
         if (cardsInHand.Contains(card)) {
+            if (card == SelectedCard) {
+                DeselectCurrentCard();
+            }
+
             cardsInHand.Remove(card);
+            idToCardMap.Remove(card.Id);
 
             var removedCardData = new CardHandEventData(owner, card);
             eventManager.TriggerEvent(EventType.ON_CARD_REMOVED, removedCardData);
@@ -50,31 +60,40 @@ public class CardHand {
         }
     }
 
-    public Card GetCard(int index) {
-        if (index >= 0 && index < cardsInHand.Count) {
-            return cardsInHand[index];
-        }
-        return null;
+    private void TriggerCardEvent(EventType eventType, Card card) {
+        var eventData = new CardHandEventData(owner, card);
+        eventManager.TriggerEvent(eventType, eventData);
     }
 
-    public Card GetCardByID(string cardID) {
-        return cardsInHand.Find(card => card.Id == cardID);
+
+    public Card GetCard(int index) {
+        return (index >= 0 && index < cardsInHand.Count) ? cardsInHand[index] : null;
     }
+
+
+    public void SelectCard(Card newCard) {
+        if (newCard == null) return;
+
+        if (SelectedCard == newCard) return;
+
+        DeselectCurrentCard();
+
+        SelectedCard = newCard;
+        Debug.Log("Selected: " + newCard.Data.Name);
+    }
+
+
+    public void DeselectCurrentCard() {
+        if (SelectedCard == null) return;
+        OnCardDeselected?.Invoke(SelectedCard);
+        SelectedCard = null;
+    }
+
 
     public Card GetRandomCard() {
         if (cardsInHand.Count > 0) {
             return RandomUtil.GetRandomFromList(cardsInHand);
         }
         return null;
-    }
-}
-
-public class CardHandEventData {
-    public Opponent Owner { get; private set; }
-    public Card Card { get; private set; }
-
-    public CardHandEventData(Opponent owner, Card card) {
-        Owner = owner;
-        Card = card;
     }
 }

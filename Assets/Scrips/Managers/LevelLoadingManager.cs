@@ -2,7 +2,7 @@
 using UnityEngine.SceneManagement;
 using System;
 
-public class LevelManager : MonoBehaviour {
+public class LevelLoadingManager : MonoBehaviour {
 
     public Action<Location> OnLocationChanged;
     public Action<Location> OnLocationLoad;
@@ -23,24 +23,27 @@ public class LevelManager : MonoBehaviour {
     private void OnEnable() {
         SceneManager.sceneLoaded += OnSceneLoaded;
         Scene scene = SceneManager.GetActiveScene();
-        CheckLocation(scene);
+        DefineLocation(scene);
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode arg1) {
-        CheckLocation(scene);
+        DefineLocation(scene);
     }
 
-    private void CheckLocation(Scene scene) {
+    private void DefineLocation(Scene scene) {
         string sceneName = scene.name;
-        currentLocation = DetermineLocationByName(sceneName);
+        currentLocation = GetCurrentLocation();
         OnLocationChanged?.Invoke(currentLocation);
     }
 
-    private Location DetermineLocationByName(string sceneName) {
-        if (LocationMappings.SceneNameToLocation.TryGetValue(sceneName, out Location location)) {
+    public Location GetCurrentLocation() {
+        string currentSceneName = SceneManager.GetActiveScene().name;
+
+        if (LocationMappings.SceneNameToLocation.TryGetValue(currentSceneName, out Location location)) {
             return location;
         }
-        Debug.LogError("Unknown scene name: " + sceneName);
+
+        Debug.LogError("Unknown scene name: " + currentSceneName);
         return Location.MainMenu; // Значення за замовчуванням
     }
 
@@ -73,4 +76,5 @@ public class LevelManager : MonoBehaviour {
 
         return locationOrder[0];
     }
+
 }

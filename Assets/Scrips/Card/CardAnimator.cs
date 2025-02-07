@@ -4,118 +4,113 @@ using System;
 using UnityEngine;
 
 public class CardAnimator : MonoBehaviour {
-    [SerializeField] private LevitationData levitationData;
-    [SerializeField] private RectTransform body; // Inner body for card animation
+    public Action OnReachedLayout;
 
     private bool isHovered;
     private Tween hoveringTween;
     private CardUI cardUI;
     private int originalSiblingIndex;
-    private Vector3 originalPosition;
-    private Vector3 originalScale;
+    public CardLayoutGhost CardLayoutGhost { get; internal set; }
 
-    public Action OnReachedOrigin;
+    [Header("Layout")]
+    [SerializeField] private RectTransform globalBody;
+    [SerializeField] private RectTransform innerBody;
 
-    private void Awake() {
-        cardUI = GetComponent<CardUI>();
+    private Tween mainFlyingTween;
+
+    public void AttachAnimator(CardUI cardUI) {
+        cardUI.OnLayoutUpdate += FlyByLayout;
         cardUI.OnCardClicked += ShrinkClick;
-
-        originalPosition = body.localPosition;
-        originalScale = body.localScale;
-        originalSiblingIndex = transform.GetSiblingIndex();
+        cardUI.OnCardHovered += ToggleHover;
+        cardUI.OnCardRemoval += RemovalAnimation;
+        originalSiblingIndex = cardUI.transform.GetSiblingIndex();
     }
 
-    private void Update() {
-        if (Camera.main != null && body != null) {
-            Vector3 directionToCamera = body.position - Camera.main.transform.position;
-            directionToCamera.z = 0;
-            body.rotation = Quaternion.LookRotation(directionToCamera);
-        }
+    private void ShrinkClick(CardUI uI) {
+        // Create a sequence for the scaling animation
+        Sequence shrinkSequence = DOTween.Sequence();
+        shrinkSequence.Append(innerBody.DOScale(0.9f, 0.2f));
+        shrinkSequence.Append(innerBody.DOScale(1f, 0.2f));
+        // Play the sequence
+        shrinkSequence.Play();
     }
 
-    public void ToggleHover(bool isEnable) {
-        if (isHovered == isEnable) return;
-        isHovered = isEnable;
-
-        if (isHovered) {
-            StartLifting();
-        } else {
-            StopLifting();
-        }
-    }
-
-    private void StartLifting() {
-        if (body == null) {
-            Debug.LogError("Body transform is null. Levitation cannot start.");
-            return;
+    private void FlyByLayout() {
+        if (mainFlyingTween != null && mainFlyingTween.IsPlaying()) {
+            mainFlyingTween.Kill();
         }
 
-        hoveringTween?.Kill();
-        transform.SetSiblingIndex(transform.parent.childCount - 1);
+        // Отримуємо нову локальну позицію відносно батьківського контейнера
+        Vector3 newLocalPosition = globalBody.parent.InverseTransformPoint(CardLayoutGhost.transform.position);
 
-        hoveringTween = body.DOMoveY(transform.position.y + levitationData.liftHeight, levitationData.liftDuration)
+        mainFlyingTween = globalBody.transform.DOLocalMove(newLocalPosition, 0.8f)
             .SetEase(Ease.InOutSine)
-            .OnComplete(() => {
-                if (isHovered) {
-                    ContinuousHovering();
-                }
+            .OnComplete(() => { {
+                    mainFlyingTween = null;
+                    OnReachedLayout?.Invoke();
+                } 
             });
     }
 
-    private void ContinuousHovering() {
-        hoveringTween?.Kill();
-        hoveringTween = body.DOMoveY(transform.position.y + levitationData.liftHeight + levitationData.levitationRange, levitationData.levitationSpeed)
-            .SetLoops(-1, LoopType.Yoyo)
-            .SetEase(Ease.InOutSine);
+
+    private async UniTask RemovalAnimation(CardUI cardUI) {
+        var sequence = DOTween.Sequence();
+        sequence.Append(globalBody.transform.DOScale(Vector3.zero, 0.3f));
+        sequence.Join(globalBody.transform.DOLocalMoveY(globalBody.transform.position.y - 2f, 0.8f).SetEase(Ease.InOutSine));
+        await sequence.AsyncWaitForCompletion();
     }
 
-    private void StopLifting() {
-        transform.SetSiblingIndex(originalSiblingIndex);
-        hoveringTween?.Kill();
+    private void ToggleHover(bool value) {
+        // Якщо картка вже в потрібному стані (піднята або опущена), ігноруємо повторний виклик
+        if (isHovered == value)
+            return;
 
-        hoveringTween = body.DOMoveY(originalPosition.y, levitationData.dropDuration)
-            .SetEase(Ease.InOutSine);
+        // Оновлюємо поточний стан
+        isHovered = value;
+        ToggleSubling(isHovered);
+
+        // Якщо вже є активна анімація hover, припиняємо її
+        if (hoveringTween != null && hoveringTween.IsActive())
+            hoveringTween.Kill();
+
+        // Обчислюємо цільову позицію по Y.
+        float targetY = value ? 300.5f : 0; // Цільова позиція за умовчанням
+        hoveringTween = innerBody.DOLocalMoveY(targetY, 0.5f).SetEase(Ease.OutQuad);
     }
 
-    public void FlyToOrigin() {
-        Vector3 randomSpawnPosition = transform.position + new Vector3(
-            UnityEngine.Random.insideUnitSphere.x,
-            levitationData.spawnHeight,
-            UnityEngine.Random.insideUnitSphere.z
-        );
+    private int lastSublingIndex;
 
-        body.localPosition = transform.InverseTransformPoint(randomSpawnPosition);
-        body.DOLocalMove(originalPosition, levitationData.spawnDuration)
-            .OnComplete(() => OnReachedOrigin?.Invoke());
+    private void ToggleSubling(bool isHovered) {
+        // Збережемо поточний індекс для повернення
+        if (isHovered) {
+            lastSublingIndex = transform.GetSiblingIndex();
+            transform.SetSiblingIndex(transform.parent.childCount - 1); // Перемістити на передній план
+        } else {
+            // Повернути оригінальний індекс якщо він ще існує
+            if (lastSublingIndex < transform.parent.childCount) {
+                transform.SetSiblingIndex(lastSublingIndex);
+            } else {
+                // Якщо початковий індекс більше ніж кількість дітей, ставимо в кінець
+                transform.SetSiblingIndex(transform.parent.childCount - 1);
+            }
+        }
     }
-
-    public async UniTask FlyAwayWithCallback() {
-        hoveringTween?.Kill();
-
-        Vector3 randomFlyPosition = transform.position + new Vector3(
-            UnityEngine.Random.insideUnitSphere.x,
-            levitationData.flyHeight,
-            UnityEngine.Random.insideUnitSphere.z
-        );
-
-        await body.DOMove(randomFlyPosition, levitationData.flyAwayDuration).AsyncWaitForCompletion();
-    }
-
-    public void ShrinkClick(CardUI cardUI) {
-        body.DOScale(0.9f, 0.1f).OnComplete(() => body.DOScale(1f, 0.1f));
-    }
-
-    public void Reset() {
-        hoveringTween?.Kill();
-        body.localPosition = originalPosition;
-        body.localScale = originalScale;
-        isHovered = false;
-        OnReachedOrigin = null;
+    internal void Reset() {
+        Debug.Log("Reset animator card logic");
     }
 
     private void OnDestroy() {
-        hoveringTween?.Kill();
+        if (cardUI)
         cardUI.OnCardClicked -= ShrinkClick;
     }
 
+    private void OnDrawGizmos() {
+        if (CardLayoutGhost && globalBody) {
+            Gizmos.DrawSphere(CardLayoutGhost.transform.position, 0.05f);
+            Gizmos.color = Color.red;
+            Gizmos.DrawSphere(globalBody.transform.position, 0.05f);
+
+            Gizmos.DrawLine(globalBody.transform.position, CardLayoutGhost.transform.position);
+        }
+    }
 }

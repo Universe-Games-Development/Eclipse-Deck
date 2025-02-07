@@ -106,8 +106,8 @@ public class GridBoard {
         int row = Mathf.FloorToInt((localPosition.z + yCellOffset) / Config.cellSize.height);
         int column = Mathf.FloorToInt((localPosition.x + xCellOffset) / Config.cellSize.width);
 
-        bool validRow = row >= 0 && row < Config.northRows + Config.southRows;
-        bool validColumn = column >= 0 && column < Config.columns;
+        bool validRow = Mathf.Abs(row) < Config.northRows + Config.southRows;
+        bool validColumn = Mathf.Abs(column) < Config.columns;
 
         return (validRow && validColumn) ? new Vector2Int(row, column) : (Vector2Int?)null;
     }

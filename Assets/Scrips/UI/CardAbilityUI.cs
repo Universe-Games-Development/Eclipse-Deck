@@ -4,27 +4,15 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Zenject;
 
-public class AbilityUI : MonoBehaviour, IPointerEnterHandler, ITipProvider {
+public class CardAbilityUI : MonoBehaviour, IPointerEnterHandler {
     [SerializeField] private TextMeshProUGUI abilityName;
     [SerializeField] private Image abilityIcon;
 
     private string description;
 
-    private Canvas parentCanvas;
     [Inject] UIManager uiManager;
 
-    private IObjectDistributer originPool;
-
-    private void Start() {
-        // Отримуємо батьківський Canvas
-        parentCanvas = GetComponentInParent<Canvas>();
-    }
-
-    public void Initialize(IObjectDistributer distributor) {
-        originPool = distributor;
-    }
-
-    public void CreateUISets(CardAbility cardAbility, bool abilityNamesEnabled = false) {
+    public void FillAbilityUI(CardAbility cardAbility, bool abilityNamesEnabled = false) {
         if (cardAbility?.data != null) {
             // Оновити опис
             description = cardAbility.data.Description ?? string.Empty;
@@ -59,7 +47,7 @@ public class AbilityUI : MonoBehaviour, IPointerEnterHandler, ITipProvider {
 
     #region User interaction
     public void OnPointerEnter(PointerEventData eventData) {
-        uiManager.ShowTip(GetInfo());
+        Debug.Log("Abiliti trigger on poiner enter");
     }
     #endregion
 
@@ -75,16 +63,5 @@ public class AbilityUI : MonoBehaviour, IPointerEnterHandler, ITipProvider {
             abilityIcon.sprite = null; // Видалити іконку
             abilityIcon.gameObject.SetActive(true);
         }
-    }
-
-    private void OnDestroy() {
-        ResetUI();
-        if (originPool != null) {
-            originPool.ReleaseObject(gameObject); // Повернення в пул, якщо потрібно
-        }
-    }
-
-    public string GetInfo() {
-        return description;
     }
 }
