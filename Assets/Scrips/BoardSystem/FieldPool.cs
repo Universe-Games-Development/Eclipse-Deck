@@ -3,7 +3,7 @@ using UnityEngine.Pool;
 using Zenject;
 
 public class FieldPool : MonoBehaviour {
-    [SerializeField] private GameObject fieldPrefab;
+    [SerializeField] private FieldController fieldPrefab;
     [SerializeField] private Transform parentTransform;
 
     private ObjectPool<FieldController> fieldPool;
@@ -26,8 +26,7 @@ public class FieldPool : MonoBehaviour {
     }
 
     private FieldController CreateField() {
-        GameObject fieldObject = container.InstantiatePrefab(fieldPrefab, parentTransform);
-        FieldController fieldController = fieldObject.GetComponent<FieldController>();
+        FieldController fieldController = container.InstantiatePrefabForComponent<FieldController>(fieldPrefab, parentTransform);
         fieldController.SetPool(this);
         return fieldController;
     }

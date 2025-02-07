@@ -8,11 +8,7 @@ public class PlayerController : MonoBehaviour {
     [SerializeField] private CardHandUI handUI;
     [SerializeField] private int amountToDraw = 1;
 
-    private RayService rayService;
-    protected void Awake() {
-
-        rayService = GetComponent<RayService>();
-    }
+    [SerializeField] private RayService rayService;
 
     protected void Start() {
         handUI.Initialize(player.hand);
@@ -45,7 +41,7 @@ public class PlayerController : MonoBehaviour {
                 return;
             }
 
-            Card selectedCard = player.hand.GetCardByID(selectedUICard.Id);
+            Card selectedCard = player.hand.GetCardByID(selectedUICard.UIDataInfo.Id);
             if (selectedCard == null) {
                 Debug.Log("Selected card not found in hand.");
                 return;

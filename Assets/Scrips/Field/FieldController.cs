@@ -1,5 +1,4 @@
 using Cysharp.Threading.Tasks;
-using System;
 using UnityEngine;
 
 public class FieldController : MonoBehaviour {
@@ -16,11 +15,6 @@ public class FieldController : MonoBehaviour {
     private FieldPool pool;
 
     bool isInteractable = false;
-
-    private void Awake() {
-        fieldMaterializer = GetComponentInChildren<FieldMaterializer>();
-        levitator = GetComponentInChildren<Levitator>();
-    }
 
     public void InitializeLevitator(Vector3 initialPosition) {
         transform.position = initialPosition;

@@ -1260,8 +1260,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5635097528816772106}
   - component: {fileID: 199238208543599398}
-  - component: {fileID: 330218392422560012}
-  - component: {fileID: 5065088701265242274}
+  - component: {fileID: 7997040698821701614}
+  - component: {fileID: 9047682594767481327}
   m_Layer: 5
   m_Name: Card UI
   m_TagString: Untagged
@@ -1301,46 +1301,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f585b42c01baa54189258f4a2eccce2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Id: 
-  rarity: {fileID: 4496195531667848943}
+  _doAnimator: {fileID: 9047682594767481327}
+  UIDataInfo: {fileID: 7997040698821701614}
+--- !u!114 &7997040698821701614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6924749709543900274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db164abe41194014fbf3bfaad4800b55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  id: 
+  nameText: {fileID: 3452941877714409755}
   costTMP: {fileID: 3119583634898093248}
   healthText: {fileID: 7096259305998617789}
   attackText: {fileID: 653443174712715830}
-  nameText: {fileID: 3452941877714409755}
+  rarity: {fileID: 4496195531667848943}
   authorTMP: {fileID: 5513347134750802712}
   descriptionText: {fileID: 7319854554681851280}
   cardBackground: {fileID: 6738664946296341004}
   characterImage: {fileID: 2169170556893829183}
+  abilityFiller: {fileID: 1120649631300124556}
+--- !u!114 &9047682594767481327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6924749709543900274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24ebf77009418d843afd8062a43cd9c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  globalBody: {fileID: 5635097528816772106}
   innerBody: {fileID: 5839040148191298699}
-  abilityUIDisctibuter: {fileID: 5065088701265242274}
-  abilitieFiller: {fileID: 5758388579295032515}
---- !u!114 &330218392422560012
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6924749709543900274}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91bd0b1ac33fcab47a135e1cbf026c45, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  followSpeed: 10
---- !u!114 &5065088701265242274
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6924749709543900274}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2fef4cbfb6de0944af89ab95925a6e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectPrefab: {fileID: 8976303848240431860, guid: becd115b79fc0994da3324acb5a6816c, type: 3}
-  poolParent: {fileID: 1120649631300124556}
 --- !u!1 &7749432577632792975
 GameObject:
   m_ObjectHideFlags: 0

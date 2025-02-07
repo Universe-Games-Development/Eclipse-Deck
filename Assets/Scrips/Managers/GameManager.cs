@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     [Inject] SceneLoader levelManager;
 
     public void StartNewGame() {
-        sceneLoader.PrepareLocation(Location.Sewers);
+        sceneLoader.ChangeLocation(Location.Sewers);
     }
 
     public void SetPause(bool pause) {

@@ -20,7 +20,8 @@ public class StartGameHandler : MonoBehaviour {
     }
 
     public void StartGame() {
-        StartCoroutine(StartGameCoroutine());
+        gameManager.StartNewGame();
+        //StartCoroutine(StartGameCoroutine());
     }
 
     private IEnumerator StartGameCoroutine() {
