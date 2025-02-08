@@ -18,7 +18,6 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
         
 
         Container.Bind<GridVisual>().FromComponentInHierarchy().AsSingle();
-        Container.Bind<FieldPool>().FromComponentsInHierarchy().AsSingle();
 
         // Creature Movement
         Container.Bind<CreatureNavigator>().AsSingle();
