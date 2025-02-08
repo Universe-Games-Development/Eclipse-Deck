@@ -37,7 +37,7 @@ public class GridBoard {
 
                 CompasGrid updateGrid = grids[meridian, zonal];
 
-                List<List<int>> gridUpdateValues = Config.GetGridDataList(updateGrid.GridDirection);
+                List<List<int>> gridUpdateValues = Config.GetGridValues(updateGrid.GridDirection);
 
                 GridUpdateData gridUpdateData = updateGrid.UpdateGrid(
                     gridUpdateValues
@@ -107,7 +107,7 @@ public class GridBoard {
         int column = Mathf.FloorToInt((localPosition.x + xCellOffset) / Config.cellSize.width);
 
         bool validRow = Mathf.Abs(row) < Config.northRows + Config.southRows;
-        bool validColumn = Mathf.Abs(column) < Config.columns;
+        bool validColumn = Mathf.Abs(column) < Config.eastColumns + Config.westColumns;
 
         return (validRow && validColumn) ? new Vector2Int(row, column) : (Vector2Int?)null;
     }

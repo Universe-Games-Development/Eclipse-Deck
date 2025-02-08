@@ -82,22 +82,28 @@ public class TestingBoard : MonoBehaviour, IEventListener
 
             switch (action) {
                 case 0:
-                    boardConfig.AddColumn();
+                    boardConfig.RemoveRow(Direction.South);
                     break;
                 case 1:
-                    boardConfig.AddNorthRow();
+                    boardConfig.AddRow(Direction.North);
                     break;
                 case 2:
-                    boardConfig.AddSouthRow();
+                    boardConfig.AddRow(Direction.South);
                     break;
                 case 3:
-                    boardConfig.RemoveColumn();
+                    boardConfig.RemoveRow(Direction.North);
                     break;
                 case 4:
-                    boardConfig.RemoveNorthRow();
+                    boardConfig.AddColumn(Direction.East);
                     break;
                 case 5:
-                    boardConfig.RemoveSouthRow();
+                    boardConfig.AddColumn(Direction.West);
+                    break;
+                case 6:
+                    boardConfig.RemoveColumn(Direction.West);
+                    break;
+                case 7:
+                    boardConfig.RemoveColumn(Direction.West);
                     break;
             }
         }
@@ -145,7 +151,7 @@ public class TestingBoard : MonoBehaviour, IEventListener
     }
 
     private void OnDestroy() {
-        boardConfig.ResetSettings();
+        boardConfig.ResetSize();
     }
 }
 
