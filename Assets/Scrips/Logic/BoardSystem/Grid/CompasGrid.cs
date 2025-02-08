@@ -1,9 +1,6 @@
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI;
-using static UnityEngine.Rendering.DebugUI.Table;
 
 public class CompasGrid {
     public List<List<Field>> Fields { get; private set; }
