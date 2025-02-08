@@ -1118,20 +1118,6 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
---- !u!114 &1795986237084724217
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8447790141481888919}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2fef4cbfb6de0944af89ab95925a6e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectPrefab: {fileID: 5057081012966347309, guid: cfd7bc964292aaa498b79a32111aed4e, type: 3}
-  poolParent: {fileID: 6133040419883439728}
 --- !u!4 &1842129380838490032
 Transform:
   m_ObjectHideFlags: 0
@@ -1335,10 +1321,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f619e5253ae4b2c41978cdafb0754351, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pool: {fileID: 7396798430382343266}
   visualCellSize:
     width: 1
     height: 1
+  fieldPrefab: {fileID: -8598723017283129022, guid: b335380be08b2fe48a40fd6efc1a9e25, type: 3}
   origin: {fileID: 7082598241211156398}
   globalCenter: {fileID: 2817643293025039422}
   yInteractionRange: 1
@@ -1717,20 +1703,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5296222697669404746}
   m_LocalEulerAnglesHint: {x: 30, y: -90, z: 0}
---- !u!114 &4353585057546877816
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8447790141481888919}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2fef4cbfb6de0944af89ab95925a6e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectPrefab: {fileID: 5947056477227401689, guid: 564f4c8c8dd0e074481a074487de7f1d, type: 3}
-  poolParent: {fileID: 8069651710249066242}
 --- !u!1 &4452290654612276448
 GameObject:
   m_ObjectHideFlags: 0
@@ -2051,20 +2023,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 0
---- !u!114 &7396798430382343266
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8447790141481888919}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecb0c007860ca7849953d83013db69a7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  fieldPrefab: {fileID: -8598723017283129022, guid: b335380be08b2fe48a40fd6efc1a9e25, type: 3}
-  parentTransform: {fileID: 7082598241211156398}
 --- !u!114 &7410482090641123241
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2273,9 +2231,6 @@ GameObject:
   - component: {fileID: 4994970646039615926}
   - component: {fileID: 985975313922181802}
   - component: {fileID: 3436313093418051562}
-  - component: {fileID: 4353585057546877816}
-  - component: {fileID: 1795986237084724217}
-  - component: {fileID: 7396798430382343266}
   - component: {fileID: 8447790141481888920}
   m_Layer: 0
   m_Name: GameBoard
