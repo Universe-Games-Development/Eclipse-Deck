@@ -1,42 +1,63 @@
-﻿
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Zenject;
 
-public class BoardUpdater {
+public class BoardUpdater :IEventListener {
     [Inject] private BoardAssigner _boardAssigner;
     private BoardSettingsSO initialBoardConfig;
     [Inject] CommandManager CommandManager;
+    private IEventQueue eventQueue;
 
-    public Func<BoardUpdateData, UniTask> OnGridChanged;
+    public Func<BoardUpdateData, UniTask> OnBoardChanged;
     public Func<BoardUpdateData, UniTask> OnGridInitialized;
 
     public GridBoard GridBoard { get; private set; }
     string address = "DefaulBoardSetting";
 
-    public void SetInitialConfig(BoardSettingsSO config) {
-        initialBoardConfig = config;
+    [Inject]
+    public void Construct(IEventQueue eventQueue)
+    {
+        this.eventQueue = eventQueue;
+        eventQueue.RegisterListener(this, EventType.BATTLE_START);
+
+        LoadInitialConfig().Forget();
     }
 
-    public async UniTask SpawnBoard() {
-        if (initialBoardConfig == null) {
-            await LoadBoardSettings(address);
+    public async UniTask LoadInitialConfig() {
+        if (initialBoardConfig != null) {
+            await UniTask.CompletedTask;
         }
+
+        var handle = Addressables.LoadAssetAsync<BoardSettingsSO>(address);
+        await handle.Task;
+
+        if (handle.Status == AsyncOperationStatus.Succeeded) {
+            initialBoardConfig = handle.Result;
+            Debug.Log("Board settings successfully loaded.");
+        } else {
+            Debug.LogError("Failed to load board settings.");
+        }
+    }
+
+    public async UniTask<GridBoard> InitBoard() {
+        await LoadInitialConfig();
         if (initialBoardConfig == null) {
             Debug.LogError("Loaded settings is null");
         }
-        await UpdateGrid(initialBoardConfig);
+
+        GridBoard = new GridBoard(initialBoardConfig);
+        return GridBoard;
     }
 
     public async UniTask UpdateGrid(BoardSettingsSO newConfig) {
         if (!ValidateBoardSettings(newConfig)) return; // Перевірка перед реєстрацією команди
 
         ICommand command = GridBoard == null
-            ? new GridInitCommand(SetMainGrid, newConfig, OnGridInitialized, OnGridChanged)
-            : new BoardUpdateCommand(GridBoard, newConfig, OnGridChanged);
+            ? new GridInitCommand(this, InitBoard)
+            : new BoardUpdateCommand(this, GridBoard, newConfig);
 
         CommandManager.EnqueueCommand(command);
 
@@ -55,104 +76,84 @@ public class BoardUpdater {
         return true;
     }
 
-    private void SetMainGrid(GridBoard newGridBoard) {
-        GridBoard = newGridBoard;
-    }
-
-    public async UniTask LoadBoardSettings(string address) {
-        var handle = Addressables.LoadAssetAsync<BoardSettingsSO>(address);
-        await handle.Task;
-
-        if (handle.Status == AsyncOperationStatus.Succeeded) {
-            initialBoardConfig = handle.Result;
-            Debug.Log("Board settings successfully loaded.");
-        } else {
-            Debug.LogError("Failed to load board settings.");
-        }
+    public object OnEventReceived(object data) {
+        return data switch {
+            BattleStartEventData battleStartEventData => new GridInitCommand(this, InitBoard),
+            _ => null
+        };
     }
 }
 
 
-public class GridInitCommand : BaseBoardCommand {
-    private Action<GridBoard> setMainGrid;
-    private BoardSettingsSO newConfig;
+public class GridInitCommand : ICommand {
+    private Func<UniTask<GridBoard>> initBoard;
+    private BoardUpdater updater;
 
-    public GridInitCommand(Action<GridBoard> setMainGrid, BoardSettingsSO newConfig, Func<BoardUpdateData, UniTask> onGridInitialized, Func<BoardUpdateData, UniTask> onGridChanged) {
-        this.setMainGrid = setMainGrid;
-        this.newConfig = newConfig;
-        OnBoardInitialized = onGridInitialized;
-        OnBoardChanged = onGridChanged;
+    private GridBoard cachedBoard;
+
+    public GridInitCommand(BoardUpdater updater, Func<UniTask<GridBoard>> initBoard) {
+        this.initBoard = initBoard;
+        this.updater = updater;
     }
 
-    public override async UniTask Execute() {
-        await InitGrid(newConfig);
+    public async UniTask Execute() {
+        GridBoard gridBoard = await initBoard.Invoke();
+        await InitGrid(gridBoard);
     }
 
-    public override async UniTask Undo() {
+    public async UniTask Undo() {
         await ResetGrid();
     }
 
-    protected async UniTask InitGrid(BoardSettingsSO config) {
-        board = new GridBoard();
-        setMainGrid(board);
-
-        BoardUpdateData gridUpdateData = board.UpdateGlobalGrid(config);
-        if (OnBoardInitialized != null) {
-            await OnBoardInitialized.Invoke(gridUpdateData);
+    protected async UniTask InitGrid(GridBoard gridBoard) {
+        BoardUpdateData gridUpdateData = gridBoard.UpdateGlobalGrid();
+        if (updater.OnGridInitialized != null) {
+            await updater.OnGridInitialized.Invoke(gridUpdateData);
         }
         await UniTask.CompletedTask;
     }
 
     protected async UniTask ResetGrid() {
-        if (board == null) return;
+        if (cachedBoard == null) return;
 
-        BoardUpdateData updateData = board.RemoveAll();
+        BoardUpdateData updateData = cachedBoard.RemoveAll();
 
-        if (OnBoardChanged != null) {
-            await OnBoardChanged.Invoke(updateData);
+        if (updater.OnBoardChanged != null) {
+            await updater.OnBoardChanged.Invoke(updateData);
         }
-
-        setMainGrid(null); // ⚠️ Видаляє посилання на `GridBoard`
     }
 
 }
 
-public class BoardUpdateCommand : BaseBoardCommand {
+public class BoardUpdateCommand : ICommand {
     private readonly BoardSettingsSO oldSettings;
     private readonly BoardSettingsSO newSettings;
 
-    public BoardUpdateCommand(GridBoard board, BoardSettingsSO newSettings, Func<BoardUpdateData, UniTask> onGridChanged) {
+    private BoardUpdater updater;
+    private GridBoard board;
+
+    public BoardUpdateCommand(BoardUpdater updater, GridBoard board, BoardSettingsSO newSettings) {
         this.board = board;
         this.newSettings = newSettings;
+        this.updater = updater;
         oldSettings = board.Config;
-        OnBoardChanged = onGridChanged;
     }
 
-    public override async UniTask Execute() {
+    public async UniTask Execute() {
         await UpdateBoard(newSettings);
     }
 
-    public override async UniTask Undo() {
+    public async UniTask Undo() {
         await UpdateBoard(oldSettings);
     }
 
     protected async UniTask UpdateBoard(BoardSettingsSO config) {
         BoardUpdateData updateData = board.UpdateGlobalGrid(config);
 
-        if (OnBoardChanged != null) {
-            await OnBoardChanged.Invoke(updateData);
+        if (updater.OnBoardChanged != null) {
+            await updater.OnBoardChanged.Invoke(updateData);
         }
 
         await UniTask.CompletedTask;
     }
-}
-
-
-public abstract class BaseBoardCommand : ICommand {
-    protected GridBoard board;
-    public Func<BoardUpdateData, UniTask> OnBoardInitialized;
-    public Func<BoardUpdateData, UniTask> OnBoardChanged;
-
-    public abstract UniTask Execute();
-    public abstract UniTask Undo();
 }

@@ -36,6 +36,10 @@ public abstract class Card {
     }
 
     public abstract void Play();
+
+    internal IInputCommand GetPlayCardCommand() {
+        throw new NotImplementedException();
+    }
 }
 
 public class CreatureCard : Card {

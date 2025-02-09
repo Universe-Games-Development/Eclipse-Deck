@@ -40,13 +40,14 @@ public class BoardAssigner {
         boardUpdateData?.removedFields?.ForEach(field => field.UnassignOwner());
     }
 
-    public IEnumerable<Creature> GetOpponentCreatures(Opponent activeOpponent) {
+    public List<Creature> GetOpponentCreatures(Opponent activeOpponent) {
         return GetOpponentGrids(activeOpponent)
             .SelectMany(grid => grid.Fields)
             .Where(row => row != null)
             .SelectMany(row => row)
             .Where(field => field?.OccupiedCreature != null)
-            .Select(field => field.OccupiedCreature);
+            .Select(field => field.OccupiedCreature)
+            .ToList();
     }
 
     public List<CompasGrid> GetOpponentGrids(Opponent opponent) {
@@ -79,12 +80,12 @@ public class BoardAssigner {
     // When battle starts
     private void SubscribeGridUpdates() {
         _boardUpdater.OnGridInitialized += HandleGridUpdate;
-        _boardUpdater.OnGridChanged += HandleGridUpdate;
+        _boardUpdater.OnBoardChanged += HandleGridUpdate;
     }
 
     // When battle ends
     public void UnsubscribeGridUpdates() {
         _boardUpdater.OnGridInitialized -= HandleGridUpdate;
-        _boardUpdater.OnGridChanged -= HandleGridUpdate;
+        _boardUpdater.OnBoardChanged -= HandleGridUpdate;
     }
 }

@@ -28,7 +28,7 @@ public class GridVisual : MonoBehaviour {
     public void Construct(BoardUpdater gridManager) {
         this.baordUpdater = gridManager;
         gridManager.OnGridInitialized += UpdateVisualGrid;
-        gridManager.OnGridChanged += UpdateVisualGrid;
+        gridManager.OnBoardChanged += UpdateVisualGrid;
         pool = new FieldPool(fieldPrefab, origin);
     }
 
