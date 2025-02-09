@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 // This class will handle all actions: Creatures abilities, moves, spells, opponent end turn and other battle actions, Even Dialogues!
@@ -24,21 +25,44 @@ public class BatttleActionManager : IEventListener {
 
     //IEventListener
     public object OnEventReceived(object data) {
-        if (data is not TurnEndEventData turnEndEventData) {
+        if (data is not TurnChangeEventData turnChangeEventData) {
             Debug.LogWarning("Received invalid event data in BattleActionManager.");
             return null;
         }
-        return GetCreaturesActions(turnEndEventData);
+        
+        return GetEndTurnActions(turnChangeEventData);
     }
 
-    public List<ICommand> GetCreaturesActions(TurnEndEventData turnEndEventData) {
+    public List<ICommand> GetEndTurnActions(TurnChangeEventData turnChangeEventData) {
         
         List<ICommand> commands = new();
 
-        foreach (var creature in _boardAssigner.GetOpponentCreatures(_turnManager.ActiveOpponent)) {
-            commands.Add(creature.GetEndTurnMove(turnEndEventData));
+        List<Creature> creatures = _boardAssigner.GetOpponentCreatures(turnChangeEventData.activeOpponent);
+
+        foreach (var creature in creatures) {
+            commands.Add(creature.GetEndTurnMove(turnChangeEventData));
         }
 
+        commands.Add(new CreaturesPerformedTurnsCommand(creatures, _eventQueue));
+
         return commands;
+    }
+}
+
+public class CreaturesPerformedTurnsCommand : ICommand {
+    private List<Creature> creatures;
+    private EventQueue eventQueue;
+
+    public CreaturesPerformedTurnsCommand(List<Creature> creatures, EventQueue eventQueue) {
+        this.creatures = creatures;
+        this.eventQueue = eventQueue;
+    }
+
+    public async UniTask Execute() {
+        eventQueue.TriggerEvent(EventType.CREATURES_ACTIONED, new CreaturesPerformedTurnsData(creatures));
+    }
+
+    public async UniTask Undo() {
+        throw new System.NotImplementedException();
     }
 }

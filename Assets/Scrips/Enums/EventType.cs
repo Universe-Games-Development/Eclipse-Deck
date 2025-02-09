@@ -57,4 +57,5 @@ public enum EventType {
     ON_GAME_STATE_LOADED, // Стан гри був завантажений з попереднього збереження
     ON_VICTORY_POINTS_GAINED, // Гравець отримав переможні очки
     ON_CARD_REMOVED,
+    CREATURES_ACTIONED,
 }

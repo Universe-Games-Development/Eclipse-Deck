@@ -19,16 +19,16 @@ public class CardHand {
 
     public Card SelectedCard { get; private set; }
 
-    public CardHand(Opponent owner, IEventQueue eventManager, int maxHandSize = DEFAULT_SIZE) {
+    public CardHand(Opponent owner, IEventQueue eventQueue, int maxHandSize = DEFAULT_SIZE) {
         this.owner = owner;
         this.maxHandSize = maxHandSize;
-        this.eventManager = eventManager;
+        this.eventManager = eventQueue;
     }
 
-    public void AddCard(Card card) {
+    public bool AddCard(Card card) {
         if (card == null) {
             Debug.LogWarning("Received null card in card Hand!");
-            return;
+            return false;
         }
         if (cardsInHand.Count < maxHandSize) {
             card.ChangeState(CardState.InHand);
@@ -38,11 +38,11 @@ public class CardHand {
             idToCardMap[card.Id] = card;
             cardsInHand.Add(card);
             OnCardAdd?.Invoke(card);
+            return true;
         } else {
-            card.ChangeState(CardState.Discarded);
+            return false;
         }
     }
-
 
     public void RemoveCard(Card card) {
         if (cardsInHand.Contains(card)) {
@@ -73,21 +73,24 @@ public class CardHand {
 
     public void SelectCard(Card newCard) {
         if (newCard == null) return;
-
         if (SelectedCard == newCard) return;
 
         DeselectCurrentCard();
 
         SelectedCard = newCard;
         Debug.Log("Selected: " + newCard.Data.Name);
-    }
 
+        OnCardSelected?.Invoke(newCard); // Сповіщення про вибір карти
+    }
 
     public void DeselectCurrentCard() {
         if (SelectedCard == null) return;
-        OnCardDeselected?.Invoke(SelectedCard);
+
+        OnCardDeselected?.Invoke(SelectedCard); // Сповіщення про скасування вибору
+
         SelectedCard = null;
     }
+
 
 
     public Card GetRandomCard() {

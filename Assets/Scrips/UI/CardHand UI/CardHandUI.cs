@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.XR;
 
 public class CardHandUI : MonoBehaviour {
     Dictionary<CardUI, Card> cardPairs = new();
@@ -17,6 +18,7 @@ public class CardHandUI : MonoBehaviour {
             Debug.LogError("UICardFactory not found on this GameObject!");
         }
     }
+
 
     public void Initialize(CardHand hand) {
         cardHand = hand ?? throw new System.ArgumentNullException(nameof(hand));

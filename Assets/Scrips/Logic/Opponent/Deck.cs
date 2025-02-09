@@ -1,42 +1,26 @@
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class Deck {
-    private Stack<Card> deck = new();
+    private Stack<Card> cards = new();
     private IEventQueue eventQueue;
 
     private Opponent owner;
 
-    public Deck(Opponent owner, CardCollection collection, IEventQueue eventQueue) {
+    public Deck(Opponent owner, IEventQueue eventQueue) {
         this.owner = owner;
         this.eventQueue = eventQueue;
-        InitializeDeck(collection);
     }
 
-    private void InitializeDeck(CardCollection collection) {
-        foreach (var cardEntry in collection.cardEntries) {
-            for (int i = 0; i < cardEntry.quantity; i++) {
-                CardSO cardSO = cardEntry.cardSO;
+    public async UniTask Initialize(CardCollection collection) {
+        await collection.GenerateTestCollection(20);
 
-                Card newCard;
-                switch (cardSO.cardType) {
-                    case CardType.CREATURE:
-                        CreatureCardSO creatureCardData = (CreatureCardSO)cardSO;
-                        newCard = new CreatureCard(creatureCardData, owner, eventQueue);
-                        break;
-                    case CardType.SPELL:
-                        SpellCardSO spellCardSO = (SpellCardSO)cardSO;
-                        newCard = new SpellCard(spellCardSO, owner, eventQueue);
-                        break;
-                    case CardType.SUPPORT:
-                        SupportCardSO supportCardSO = (SupportCardSO)cardSO;
-                        newCard = new SupportCard(supportCardSO, owner, eventQueue);
-                        break;
-                    default:
-                        Debug.LogWarning("Wrong CardType for card initializations");
-                        continue;
-                }
+        foreach (var cardEntry in collection.cardEntries) {
+            for (int i = 0; i < cardEntry.Value; i++) {
+                CardSO cardSO = cardEntry.Key;
+                Card newCard = CreateCard(cardSO);
+                if (newCard == null) continue;
 
                 AddCard(newCard);
                 newCard.ChangeState(CardState.InDeck);
@@ -45,28 +29,45 @@ public class Deck {
         ShuffleDeck();
     }
 
+    private Card CreateCard(CardSO cardSO) {
+        return cardSO switch {
+            CreatureCardSO creatureCard => new CreatureCard(creatureCard, owner, eventQueue),
+            SpellCardSO spellCard => new SpellCard(spellCard, owner, eventQueue),
+            SupportCardSO supportCard => new SupportCard(supportCard, owner, eventQueue),
+            _ => null
+        };
+    }
+
 
     public Card DrawCard() {
-        return deck.Count > 0 ? deck.Pop() : null;
+        return cards.Count > 0 ? cards.Pop() : null;
     }
 
     public void ShuffleDeck() {
-        var cards = deck.ToArray();
-        deck.Clear();
-        foreach (var card in cards.OrderBy(x => UnityEngine.Random.value)) {
-            deck.Push(card);
+        List<Card> tempCards = new(cards);
+        cards.Clear();
+        ShuffleList(tempCards);
+        foreach (var card in tempCards) {
+            cards.Push(card);
+        }
+    }
+
+    private void ShuffleList(List<Card> list) {
+        for (int i = list.Count - 1; i > 0; i--) {
+            int randomIndex = Random.Range(0, i + 1);
+            (list[i], list[randomIndex]) = (list[randomIndex], list[i]);
         }
     }
 
     public void AddCard(Card card) {
-        deck.Push(card);
+        cards.Push(card);
     }
 
     public void CleanDeck() {
-        deck.Clear();
+        cards.Clear();
     }
 
     public int GetCount() {
-        return deck.Count();
+        return cards.Count;
     }
 }

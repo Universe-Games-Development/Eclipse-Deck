@@ -61,7 +61,7 @@ public class OpponentRegistrator {
         return player;
     }
 
-    internal IEnumerable<Opponent> GetActiveOpponents() {
+    internal List<Opponent> GetActiveOpponents() {
         return registeredOpponents;
     }
 
@@ -86,87 +86,5 @@ public class OpponentRegistrator {
         int currentIndex = registeredOpponents.IndexOf(ActiveOpponent);
         int nextIndex = (currentIndex + 1) % registeredOpponents.Count;
         return registeredOpponents[nextIndex];
-    }
-}
-
-
-public class TurnManager {
-    public Action<Opponent> OnTurnBegan;
-    public Func<Opponent, UniTask> OnTurnPerform;
-    public Action<Opponent> OnTurnEnd;
-
-    public Opponent ActiveOpponent { get; private set; }
-
-    public OpponentRegistrator registrator;
-
-    [Inject]
-    public void Construct(OpponentRegistrator registrator) {
-       this.registrator = registrator;
-        registrator.OnOpponentsRegistered += InitTurns;
-        registrator.OnOpponentUnregistered += RemoveOpponent;
-    }
-
-    private void InitTurns(List<Opponent> registeredOpponents) {
-        foreach (var opponent in registeredOpponents) {
-            opponent.OnDefeat += RemoveOpponent;
-        }
-
-        if (registeredOpponents.Count > 0) {
-            ActiveOpponent = registeredOpponents[0]; // Встановлюємо першого гравця
-            OnTurnBegan?.Invoke(ActiveOpponent);
-        }
-    }
-
-    public async UniTask PerformTurn(Opponent opponent) {
-        if (opponent != ActiveOpponent) {
-            Debug.LogWarning($"{opponent.Name} cannot perform a turn right now!");
-            return;
-        }
-
-        if (OnTurnPerform != null) {
-            await OnTurnPerform.Invoke(opponent);
-        }
-
-        OnTurnEnd?.Invoke(ActiveOpponent);
-        ChangeTurn();
-    }
-
-    public void ChangeTurn() {
-        if (!registrator.IsAllRegistered()) {
-            Debug.LogWarning("Not all registered opponents left. Game should end.");
-            return;
-        }
-
-        ActiveOpponent = SetNextOpponent();
-
-        if (ActiveOpponent != null) {
-            Debug.Log($"It is now {ActiveOpponent.Name}'s turn.");
-            OnTurnBegan?.Invoke(ActiveOpponent);
-        }
-    }
-
-    public void RemoveOpponent(Opponent opponent) {
-        if (opponent == null) return;
-
-        opponent.OnDefeat -= RemoveOpponent;
-
-        Debug.Log($"Opponent {opponent.Name} unregistered.");
-
-        if (ActiveOpponent == opponent) {
-            ActiveOpponent = SetNextOpponent();
-
-            if (ActiveOpponent != null) {
-                OnTurnBegan?.Invoke(ActiveOpponent);
-            } else {
-                Debug.LogWarning("No more opponents left. Game Over.");
-            }
-        }
-    }
-
-    public Opponent GetActivePlayer() => ActiveOpponent;
-
-    public Opponent SetNextOpponent() {
-        ActiveOpponent = registrator.GetNextOpponent(ActiveOpponent);
-        return ActiveOpponent;
     }
 }

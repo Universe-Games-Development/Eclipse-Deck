@@ -1,8 +1,36 @@
-﻿public class TurnEndEventData {
-    public Opponent activePlayer; // previous player
+﻿using System.Collections.Generic;
 
-    public TurnEndEventData(Opponent activePlayer) {
-        this.activePlayer = activePlayer;
+public class TurnChangeEventData {
+    public Opponent activeOpponent;
+    public Opponent endTurnOpponent;
+
+    public TurnChangeEventData(Opponent activeOpponent, Opponent endTurnOpponent) {
+        this.activeOpponent = activeOpponent;
+        this.endTurnOpponent = endTurnOpponent;
+    }
+}
+
+public class TurnEndEventData {
+    public Opponent endTurnOpponent;
+
+    public TurnEndEventData(Opponent endTurnOpponent) {
+        this.endTurnOpponent = endTurnOpponent;
+    }
+}
+
+public class TurnStartEventData {
+    public Opponent startTurnOpponent;
+
+    public TurnStartEventData(Opponent startTurnOpponent) {
+        this.startTurnOpponent = startTurnOpponent;
+    }
+}
+
+public class BattleStartEventData {
+    private List<Opponent> opponents;
+
+    public BattleStartEventData(List<Opponent> opponents) {
+        this.opponents = opponents;
     }
 }
 

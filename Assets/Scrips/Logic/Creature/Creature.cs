@@ -23,7 +23,7 @@ public class Creature {
     }
 
     // TODO: return also attack action
-    public ICommand GetEndTurnMove(TurnEndEventData data) {
+    public ICommand GetEndTurnMove(TurnChangeEventData data) {
         return moveCommand;
     }
 

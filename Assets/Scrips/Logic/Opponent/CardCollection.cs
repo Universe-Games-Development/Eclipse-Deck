@@ -1,44 +1,66 @@
+Ôªøusing Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
+
 public class CardCollection {
-    public List<CardEntry> cardEntries;
+    public Dictionary<CardSO, int> cardEntries;
     private AssetLoader assetLoader;
+
     public CardCollection(AssetLoader assetLoader) {
         this.assetLoader = assetLoader;
-        cardEntries = new List<CardEntry>();
+        cardEntries = new();
     }
 
-    // ƒÓ‰‡‚‡ÌÌˇ Í‡ÚË ‚ ÍÓÎÂÍˆ≥˛ Á Ó·Î≥ÍÓÏ Í≥Î¸ÍÓÒÚ≥
-    private void AddCardToCollection(CardSO card) {
-        if (card == null) {
-            Debug.LogWarning("Collection generating null card!");
+    private void AddCardToCollection(CardSO cardData) {
+        if (cardData == null) {
+            Debug.LogWarning("Collection adding null card!");
             return;
         }
-        // œÂÂ‚≥Í‡ ˜Ë Í‡Ú‡ ‚ÊÂ ∫ ‚ ÍÓÎÂÍˆ≥ø
-        CardEntry existingEntry = cardEntries.Find(entry => entry.cardSO == card);
-        if (existingEntry != null) {
-            existingEntry.quantity++;
+
+        if (cardEntries.TryGetValue(cardData, out int quantity)) {
+            cardEntries[cardData] = quantity + 1;
         } else {
-            cardEntries.Add(new CardEntry { cardSO = card, quantity = 1 });
+            cardEntries[cardData] = 1;
         }
     }
 
-    public void GenerateTestCollection(int count) {
-        List<CardSO> cardDatas = assetLoader.CardManager.GetAllCards();
+    // –í–∏–¥–∞–ª–µ–Ω–Ω—è –∫–∞—Ä—Ç–∏ –∑ –∫–æ–ª–µ–∫—Ü—ñ—ó
+    public void RemoveCardFromCollection(CardSO cardData) {
+        if (cardData == null) {
+            Debug.LogWarning("Collection removing null card!");
+            return;
+        }
+
+        if (cardEntries.TryGetValue(cardData, out int quantity)) {
+            if (quantity > 1) {
+                cardEntries[cardData] = quantity - 1;  // ‚úÖ –í–∏–ø—Ä–∞–≤–ª–µ–Ω–æ
+            } else {
+                cardEntries.Remove(cardData);  // ‚úÖ –í–∏–¥–∞–ª—è—î–º–æ –∫–∞—Ä—Ç—É —è–∫—â–æ –∑–∞–ª–∏—à–∏–ª–∞—Å—å 1
+            }
+        } else {
+            Debug.LogWarning("Collection removing non-existent card!");
+        }
+    }
+
+    // –ì–µ–Ω–µ—Ä–∞—Ü—ñ—è —Ç–µ—Å—Ç–æ–≤–æ—ó –∫–æ–ª–µ–∫—Ü—ñ—ó
+    public async UniTask GenerateTestCollection(int count) {
+        List<CardSO> cardDatas;
+
+        if (assetLoader.HasActualData(Location.Sewers)) {
+            cardDatas = assetLoader.CardManager.GetAllCards();
+        } else {
+            await assetLoader.LoadLocationAssets(Location.Sewers);
+            cardDatas = assetLoader.CardManager.GetAllCards();
+        }
 
         if (cardDatas == null || cardDatas.Count == 0) {
             Debug.LogWarning("Generating null collection");
             return;
         }
+
         for (int i = 0; i < count; i++) {
-            // Get random Card datas for test
             CardSO cardData = RandomUtil.GetRandomFromList(cardDatas);
             AddCardToCollection(cardData);
         }
-    }
-
-    public class CardEntry {
-        public CardSO cardSO;
-        public int quantity;
     }
 }

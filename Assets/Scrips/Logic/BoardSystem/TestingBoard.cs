@@ -29,10 +29,13 @@ public class TestingBoard : MonoBehaviour, IEventListener
     private Player player;
 
     private BattleManager _battleManager;
+    IEventQueue eventqueue;
 
     [Inject]
-    public void Construct(BattleManager battleManager) {
+    public void Construct(BattleManager battleManager, IEventQueue eventQueue) {
         _battleManager = battleManager;
+        this.eventqueue = eventQueue;
+        eventQueue.RegisterListener(this, EventType.ON_TURN_END);
     }
 
     private void Start() {
@@ -124,14 +127,19 @@ public class TestingBoard : MonoBehaviour, IEventListener
     }
 
     public object OnEventReceived(object data) {
-        ICommand command = new EmptyCommand();
-        ;
-        TurnEndEventData turnEndEvent = (TurnEndEventData)data;
-        if (turnEndEvent != null) {
-            if (turnEndEvent.activePlayer == player) {
+        return data switch {
+            TurnEndEventData turnEndData => GetPlayCardCommand(turnEndData),
+            _ => new EmptyCommand(),
+        };
+    }
 
-                Card playerCard = player.GetTestCard();
-                Card enemyCard = enemy.GetTestCard();
+    private ICommand GetPlayCardCommand(TurnEndEventData turnEndData) {
+        ICommand command = new EmptyCommand();
+        if (turnEndData != null) {
+            if (turnEndData.endTurnOpponent == player) {
+
+                Card playerCard = player.hand.GetRandomCard();
+                Card enemyCard = enemy.hand.GetRandomCard();
 
                 if (playerCard != null || enemyCard != null) {
                     CreatureSO creatureData = resManager.GetRandomResource<CreatureSO>(ResourceType.CREATURE);

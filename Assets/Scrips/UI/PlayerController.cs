@@ -13,14 +13,14 @@ public class PlayerController : MonoBehaviour {
     protected void Start() {
         handUI.Initialize(player.hand);
 
-        for (int i = 0; i < amountToDraw; i++) {
-            Card card = player.deck.DrawCard();
-            if (card == null) {
-                Debug.LogWarning("Drawn null card!");
-                return;
-            }
-            player.hand.AddCard(card);
-        }
+        //for (int i = 0; i < amountToDraw; i++) {
+        //    Card card = player.deck.DrawCard();
+        //    if (card == null) {
+        //        Debug.LogWarning("Drawn null card!");
+        //        return;
+        //    }
+        //    player.hand.AddCard(card);
+        //}
     }
 
     void Update() {

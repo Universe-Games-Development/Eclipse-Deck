@@ -14,7 +14,9 @@ public class GridBoard {
 
     private BoardSettingsSO _config;
 
-    public GridBoard() {
+    public GridBoard(BoardSettingsSO config) {
+        if (config == null) Debug.LogError("Init config is null");
+        _config = config;
         for (int meridian = 0; meridian < grids.GetLength(0); meridian++) {
             for (int zonal = 0; zonal < grids.GetLength(1); zonal++) {
                 grids[meridian, zonal] = new CompasGrid(this, meridian, zonal);
@@ -23,31 +25,32 @@ public class GridBoard {
     }
 
     #region Update methods
-    public BoardUpdateData UpdateGlobalGrid(BoardSettingsSO _config) {
-        if (_config == null) {
+    public BoardUpdateData UpdateGlobalGrid(BoardSettingsSO newConfig = null) {
+        // Використовуємо передану конфігурацію або поточну, якщо newConfig == null
+        Config = newConfig ?? Config;
+
+        if (Config == null) {
+            Debug.LogError("BoardSettingsSO is null!");
             return null;
         }
-        Config = _config;
+
         BoardUpdateData boardUpdateData = new();
 
-        // Оновлюємо кожен DirectionalGrid
+        // Оновлюємо кожен CompasGrid
         for (int meridian = 0; meridian < grids.GetLength(0); meridian++) {
             for (int zonal = 0; zonal < grids.GetLength(1); zonal++) {
-                // Передаємо відповідні ряди та колонки на основі меридіану та зонального індексу
-
                 CompasGrid updateGrid = grids[meridian, zonal];
 
                 List<List<int>> gridUpdateValues = Config.GetGridValues(updateGrid.GridDirection);
 
-                GridUpdateData gridUpdateData = updateGrid.UpdateGrid(
-                    gridUpdateValues
-                );
+                GridUpdateData gridUpdateData = updateGrid.UpdateGrid(gridUpdateValues);
                 boardUpdateData.gridsUpdateData.Add(gridUpdateData);
             }
         }
 
         return boardUpdateData;
     }
+
 
     public Field GetFieldAt(int globalRow, int globalColumn) {
         if (globalRow == 0 || globalColumn == 0) {
