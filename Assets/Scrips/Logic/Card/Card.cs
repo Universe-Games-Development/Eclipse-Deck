@@ -1,25 +1,24 @@
-using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Card {
+public abstract class Card : IAbilitySource {
     public string Id { get; protected set; }
     public CardSO Data { get; protected set; }
     public Cost Cost { get; protected set; }
     public CardState CurrentState { get; protected set; }
-    public IEventQueue eventQueue { get; protected set; }
+    public GameEventBus eventBus { get; protected set; }
     public Action<CardState> OnStateChanged { get; internal set; }
     public Opponent Owner { get; protected set; } // Add Owner here
 
     public List<CardAbility> cardAbilities;
     public CardUI cardUI;
 
-    public Card(CardSO cardSO, Opponent owner, IEventQueue eventQueue)  // Add owner to constructor
+    public Card(CardSO cardSO, Opponent owner, GameEventBus eventBus)  // Add owner to constructor
     {
         Data = cardSO;
         Id = Guid.NewGuid().ToString();
-        this.eventQueue = eventQueue;
+        this.eventBus = eventBus;
         Owner = owner; // Assign the owner
         Cost = new Cost(cardSO.MAX_CARDS_COST, cardSO.cost);
 
@@ -43,13 +42,13 @@ public abstract class Card {
 }
 
 public class CreatureCard : Card {
-    public Attack Attack { get; private set; }
-    public Health Health { get; private set; }
+    public Stat Attack { get; private set; }
+    public Stat HealthStat { get; private set; }
 
-    public CreatureCard(CreatureCardSO cardSO, Opponent owner, IEventQueue eventQueue)
-        : base(cardSO, owner, eventQueue) {
+    public CreatureCard(CreatureCardSO cardSO, Opponent owner, GameEventBus eventBus)
+        : base(cardSO, owner, eventBus) {
         Attack = new(cardSO.MAX_CARD_ATTACK, cardSO.Attack);
-        Health = new(cardSO.MAX_CARD_HEALTH, cardSO.Health);
+        HealthStat = new(cardSO.MAX_CARD_HEALTH, cardSO.Health);
     }
 
     public override void Play() {
@@ -58,8 +57,8 @@ public class CreatureCard : Card {
 }
 
 public class SpellCard : Card {
-    public SpellCard(CardSO cardSO, Opponent owner, IEventQueue eventQueue)
-        : base(cardSO, owner, eventQueue) { }
+    public SpellCard(CardSO cardSO, Opponent owner, GameEventBus eventBus)
+        : base(cardSO, owner, eventBus) { }
 
     public override void Play() {
         Debug.Log($"Spell is cast!");
@@ -68,8 +67,8 @@ public class SpellCard : Card {
 }
 
 public class SupportCard : Card {
-    public SupportCard(CardSO cardSO, Opponent owner, IEventQueue eventQueue)
-        : base(cardSO, owner, eventQueue) { }
+    public SupportCard(CardSO cardSO, Opponent owner, GameEventBus eventBus)
+        : base(cardSO, owner, eventBus) { }
 
     public override void Play() {
         Debug.Log($"Support is applied for the entire battle!");

@@ -2,8 +2,9 @@ using System;
 
 public class Stat : IStat {
     private int currentValue;
+    private int minValue;
     private int maxValue;
-    private int initialValue;  // Природне початкове значення
+    private int initialValue;
 
     public int InitialValue {
         get => initialValue;
@@ -28,12 +29,22 @@ public class Stat : IStat {
         }
     }
 
+    public int MinValue {
+        get => minValue;
+        private set {
+            minValue = Math.Min(maxValue, value);
+            CurrentValue = Math.Clamp(CurrentValue, minValue, MaxValue);
+        }
+    }
+
+
     public event Action<int, int> OnValueChanged;
 
-    public Stat(int maxValue, int initialValue) {
-        this.maxValue = Math.Max(0, maxValue);
+    public Stat(int maxValue, int initialValue, int minValue = 0) {
+        this.minValue = minValue;
+        this.maxValue = Math.Max(minValue, maxValue);
         this.initialValue = initialValue;
-        this.currentValue = Math.Clamp(initialValue, 0, maxValue);
+        this.currentValue = Math.Clamp(initialValue, minValue, maxValue);
     }
 
     public void Modify(int amount) {
@@ -42,6 +53,10 @@ public class Stat : IStat {
 
     public void SetMaxValue(int newMaxValue) {
         MaxValue = newMaxValue;
+    }
+
+    public void SetMinValue(int newMinValue) {
+        MinValue = newMinValue;
     }
 
     // Додавання методу Reset

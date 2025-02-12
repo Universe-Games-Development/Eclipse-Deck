@@ -3,8 +3,10 @@ using System;
 public class Attack : Stat {
     public event Action OnAttackBoosted; // Подія для збільшення атаки
     public event Action OnAttackReduced; // Подія для зменшення атаки
-
-    public Attack(int maxAttack, int initialAttack) : base(maxAttack, initialAttack) { }
+    public GameEventBus eventBus;
+    public Attack(IDamageDealer owner, int maxAttack, int initialAttack, GameEventBus gameEventBus) : base(maxAttack, initialAttack) {
+        eventBus = gameEventBus;
+    }
 
     /// <summary>
     /// Підвищення атаки на вказану кількість.
@@ -26,13 +28,5 @@ public class Attack : Stat {
         Modify(-amount);
         OnAttackReduced?.Invoke();
         Console.WriteLine($"Attack reduced by {amount}. Current attack: {CurrentValue}");
-    }
-
-    /// <summary>
-    /// Використовується для стандартної атаки.
-    /// </summary>
-    public void PerformAttack() {
-        Console.WriteLine($"Performed attack with power: {CurrentValue}");
-        // Тут можна додати ефекти або виклики для пошкодження цілі.
     }
 }

@@ -13,14 +13,14 @@ public class CardAbilityUI : MonoBehaviour, IPointerEnterHandler {
     [Inject] UIManager uiManager;
 
     public void FillAbilityUI(CardAbility cardAbility, bool abilityNamesEnabled = false) {
-        if (cardAbility?.data != null) {
+        if (cardAbility?.abilityData != null) {
             // Оновити опис
-            description = cardAbility.data.Description ?? string.Empty;
+            description = cardAbility.abilityData.Description ?? string.Empty;
 
             // Установити назву
             if (abilityName != null) {
-                if (abilityNamesEnabled && !string.IsNullOrEmpty(cardAbility.data.Name)) {
-                    abilityName.text = cardAbility.data.Name;
+                if (abilityNamesEnabled && !string.IsNullOrEmpty(cardAbility.abilityData.Name)) {
+                    abilityName.text = cardAbility.abilityData.Name;
                     abilityName.gameObject.SetActive(true);
                 } else {
                     abilityName.gameObject.SetActive(false);
@@ -29,8 +29,8 @@ public class CardAbilityUI : MonoBehaviour, IPointerEnterHandler {
 
             // Установити іконку
             if (abilityIcon != null) {
-                if (cardAbility.data.Sprite != null) {
-                    abilityIcon.sprite = cardAbility.data.Sprite;
+                if (cardAbility.abilityData.Sprite != null) {
+                    abilityIcon.sprite = cardAbility.abilityData.Sprite;
                     abilityIcon.gameObject.SetActive(true);
                 } else {
                     abilityIcon.gameObject.SetActive(false);

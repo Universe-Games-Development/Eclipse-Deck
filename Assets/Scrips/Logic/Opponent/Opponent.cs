@@ -2,69 +2,74 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 
-public class Opponent : IEventListener {
-    public Action<CardHand> OnHandInitialized;
-
+public class Opponent : IDisposable, IDamageable {
     public string Name = "Opponent";
-    public Health health;
+    public Health Health {  get; private set; }
 
     public CardHand hand;
     public Deck deck;
     public Deck discardDeck;
 
     public CardCollection cardCollection;
-    private IEventQueue eventQueue;
-
     public PlayCardManager playCardManager;
-    public ICommandFiller commandFiller;
 
     public Action<Opponent> OnDefeat { get; internal set; }
 
-    public Opponent(IEventQueue eventQueue, AssetLoader assetLoader, ICommandFiller commandFiller, CommandManager commandManager) {
-        this.eventQueue = eventQueue;
 
-        eventQueue.RegisterListener(this, EventType.BATTLE_START);
-        eventQueue.RegisterListener(this, EventType.ON_TURN_START);
+    private readonly GameEventBus eventBus;
+    private readonly CommandManager commandManager;
 
-        health = new Health(0, 20);
+    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, ICommandFiller commandFiller, CommandManager commandManager) {
+        this.eventBus = eventBus;
+        this.commandManager = commandManager;
+
+        Health = new Health(this, 0, 20, eventBus);
         cardCollection = new CardCollection(assetLoader);
 
-        hand = new CardHand(this, eventQueue);
+        hand = new CardHand(this, eventBus);
         playCardManager = new PlayCardManager(hand, commandFiller);
+
+        eventBus.SubscribeTo<BattleStartEventData>(StartBattleActions);
+        eventBus.SubscribeTo<TurnStartEventData>(TurnStartActions);
     }
 
-    // Object will be List<IComand> or single ICommand
-    public object OnEventReceived(object data) {
-        return data switch {
-            BattleStartEventData battleStartEventData => new List<ICommand> {
-            new InitDeckCommand(this, 40, cardCollection, eventQueue),
+    private void TurnStartActions(ref TurnStartEventData eventData) {
+        commandManager.EnqueueCommand(new DrawCardCommand(this, 1));
+    }
+
+    private void StartBattleActions(ref BattleStartEventData eventData) {
+        commandManager.EnqueueCommands(new List<ICommand> {
+            new InitDeckCommand(this, 40, cardCollection, eventBus),
             new DrawCardCommand(this, 3),
-            //new InitCardHandCommand(this, eventQueue, commandFiller),
-        },
-        TurnChangeEventData turnChangeEventData => new List<ICommand> {
-            new DrawCardCommand(this, 1),
-        },
-            _ => null
-        };
+        });
     }
 
+    public void Dispose() {
+        if (eventBus != null) {
+            eventBus.UnsubscribeFrom<BattleStartEventData>(StartBattleActions);
+            eventBus.UnsubscribeFrom<TurnStartEventData>(TurnStartActions);
+        }
+
+        GC.SuppressFinalize(this);
+    }
 }
+
 
 public class InitCardHandCommand : ICommand {
     private Opponent opponent;
-    private IEventQueue eventQueue;
+    private GameEventBus eventBus;
     private ICommandFiller commandFiller;
 
-    public InitCardHandCommand(Opponent opponent, IEventQueue eventQueue, ICommandFiller commandFiller) {
+    public InitCardHandCommand(Opponent opponent, GameEventBus eventBus, ICommandFiller commandFiller) {
         this.opponent = opponent;
-        this.eventQueue = eventQueue;
+        this.eventBus = eventBus;
         this.commandFiller = commandFiller;
     }
 
     public async UniTask Execute() {
         CardHand initHand = opponent.hand;
 
-        initHand = new CardHand(opponent, eventQueue);
+        initHand = new CardHand(opponent, eventBus);
         opponent.playCardManager = new PlayCardManager(initHand, commandFiller);
         await UniTask.CompletedTask;
     }
@@ -80,21 +85,21 @@ public class InitDeckCommand : ICommand {
     private Opponent opponent;
     private int deckSize;
     private CardCollection cardCollection;
-    private IEventQueue eventQueue;
+    private GameEventBus eventBus;
 
-    public InitDeckCommand(Opponent opponent, int amount, CardCollection cardCollection, IEventQueue eventQueue) {
+    public InitDeckCommand(Opponent opponent, int amount, CardCollection cardCollection, GameEventBus eventBus) {
         this.opponent = opponent;
         this.deckSize = amount;
         this.cardCollection = cardCollection;
-        this.eventQueue = eventQueue;
+        this.eventBus = eventBus;
     }
 
     public async UniTask Execute() {
-        Deck mainDeck = new Deck(opponent, eventQueue);
+        Deck mainDeck = new Deck(opponent, eventBus);
         await mainDeck.Initialize(cardCollection);
 
         opponent.deck = mainDeck;
-        opponent.discardDeck = new Deck(opponent, eventQueue);
+        opponent.discardDeck = new Deck(opponent, eventBus);
         await UniTask.CompletedTask;
     }
 

@@ -15,14 +15,14 @@ public class CardHand {
 
     private Opponent owner;
     private readonly int maxHandSize;
-    private IEventQueue eventManager;
+    private GameEventBus gameEventBus;
 
     public Card SelectedCard { get; private set; }
 
-    public CardHand(Opponent owner, IEventQueue eventQueue, int maxHandSize = DEFAULT_SIZE) {
+    public CardHand(Opponent owner, GameEventBus gameEventBus, int maxHandSize = DEFAULT_SIZE) {
         this.owner = owner;
         this.maxHandSize = maxHandSize;
-        this.eventManager = eventQueue;
+        this.gameEventBus = gameEventBus;
     }
 
     public bool AddCard(Card card) {
@@ -33,7 +33,8 @@ public class CardHand {
         if (cardsInHand.Count < maxHandSize) {
             card.ChangeState(CardState.InHand);
 
-            TriggerCardEvent(EventType.ON_CARD_DRAWN, card);
+            var drawnCardData = new CardDrawnEvent(owner, card);
+            gameEventBus.Raise(drawnCardData);
 
             idToCardMap[card.Id] = card;
             cardsInHand.Add(card);
@@ -53,18 +54,12 @@ public class CardHand {
             cardsInHand.Remove(card);
             idToCardMap.Remove(card.Id);
 
-            var removedCardData = new CardHandEventData(owner, card);
-            eventManager.TriggerEvent(EventType.ON_CARD_REMOVED, removedCardData);
+            var removedCardData = new CardPullEvent(owner, card);
+            gameEventBus.Raise(removedCardData);
 
             OnCardRemove?.Invoke(card);
         }
     }
-
-    private void TriggerCardEvent(EventType eventType, Card card) {
-        var eventData = new CardHandEventData(owner, card);
-        eventManager.TriggerEvent(eventType, eventData);
-    }
-
 
     public Card GetCard(int index) {
         return (index >= 0 && index < cardsInHand.Count) ? cardsInHand[index] : null;

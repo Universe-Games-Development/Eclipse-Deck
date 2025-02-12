@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
-public class TestingBoard : MonoBehaviour, IEventListener
+public class TestingBoard : MonoBehaviour
 {
     [SerializeField] private GameboardController gameboardController;
 
@@ -24,18 +24,23 @@ public class TestingBoard : MonoBehaviour, IEventListener
 
     // GAme context
     [Inject] AddressablesResourceManager resManager;
+    [Inject] CommandManager commandManager;
 
     private Enemy enemy;
     private Player player;
 
     private BattleManager _battleManager;
-    IEventQueue eventqueue;
+    GameEventBus eventBus;
 
     [Inject]
-    public void Construct(BattleManager battleManager, IEventQueue eventQueue) {
+    public void Construct(BattleManager battleManager, GameEventBus eventBus) {
         _battleManager = battleManager;
-        this.eventqueue = eventQueue;
-        eventQueue.RegisterListener(this, EventType.ON_TURN_END);
+        this.eventBus = eventBus;
+        eventBus.SubscribeTo<TurnEndEvent>(TryPlayCard);
+    }
+
+    private void TryPlayCard(ref TurnEndEvent eventData) {
+        commandManager.EnqueueCommand(GetPlayCardCommand(eventData));
     }
 
     private void Start() {
@@ -126,32 +131,23 @@ public class TestingBoard : MonoBehaviour, IEventListener
         return randomList;
     }
 
-    public object OnEventReceived(object data) {
-        return data switch {
-            TurnEndEventData turnEndData => GetPlayCardCommand(turnEndData),
-            _ => new EmptyCommand(),
-        };
-    }
-
-    private ICommand GetPlayCardCommand(TurnEndEventData turnEndData) {
+    private ICommand GetPlayCardCommand(TurnEndEvent turnEndEvent) {
         ICommand command = new EmptyCommand();
-        if (turnEndData != null) {
-            if (turnEndData.endTurnOpponent == player) {
+        if (turnEndEvent.endTurnOpponent == player) {
 
-                Card playerCard = player.hand.GetRandomCard();
-                Card enemyCard = enemy.hand.GetRandomCard();
+            Card playerCard = player.hand.GetRandomCard();
+            Card enemyCard = enemy.hand.GetRandomCard();
 
-                if (playerCard != null || enemyCard != null) {
-                    CreatureSO creatureData = resManager.GetRandomResource<CreatureSO>(ResourceType.CREATURE);
+            if (playerCard != null || enemyCard != null) {
+                CreatureSO creatureData = resManager.GetRandomResource<CreatureSO>(ResourceType.CREATURE);
 
-                    Creature playerCreature = new(playerCard, creatureData);
-                    Creature enemyCreature = new(enemyCard, creatureData);
+                Creature playerCreature = new(playerCard, creatureData);
+                Creature enemyCreature = new(enemyCard, creatureData);
 
-                    if (gridManager.GridBoard != null) {
+                if (gridManager.GridBoard != null) {
 
-                        Field fieldToPlace = gridManager.GridBoard.GetFieldAt(-1, -1);
-                        command = new PlayCardCommand(player, playerCard, fieldToPlace);
-                    }
+                    Field fieldToPlace = gridManager.GridBoard.GetFieldAt(-1, -1);
+                    command = new PlayCardCommand(player, playerCard, fieldToPlace);
                 }
             }
         }
