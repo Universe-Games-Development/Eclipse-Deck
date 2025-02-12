@@ -1,89 +1,87 @@
-using Cysharp.Threading.Tasks;
 using System;
-using System.Threading;
-using UnityEngine;
-using Zenject;
+using System.Collections.Generic;
 
-public class CardAbility : IEventListener {
-    public CardAbilitySO data;
-    private Card card;
-    private bool InTriggerState = false;
-    private IEventQueue eventQueue;
+public interface IAbilitySource { }
 
-    public CardAbility(CardAbilitySO abilitySO, Card card, IEventQueue eventQueue) {
-        this.data = abilitySO;
-        this.card = card;
-        this.eventQueue = eventQueue;
+public interface IAbility : IDisposable {
+    void Register();
+    void Deregister();
+}
 
-        card.OnStateChanged += CheckAndRegisterAbility;
+public abstract class Ability : IAbility {
+    protected IAbilitySource abilityOwner;
 
-        //Debug.Log($"CardAbility created for card: {card.data.name} in state: {card.CurrentState}");
+    protected readonly GameEventBus EventBus;
+    protected bool IsActive;
+
+    public Ability(IAbilitySource abilityOwner, GameEventBus eventBus) {
+        EventBus = eventBus;
+        this.abilityOwner = abilityOwner;
     }
 
-    ~CardAbility() {
-        card.OnStateChanged -= CheckAndRegisterAbility;
-        if (InTriggerState)
-            UnregisterTrigger();
+    public abstract void Register();
+    public abstract void Deregister();
+
+    public virtual void Dispose() {
+        Deregister();
+        GC.SuppressFinalize(this);
+    }
+}
+
+public abstract class CardAbility : Ability {
+
+    public CardAbilitySO abilityData; // Provides configuration data for ability and trigger activation states
+    protected Card ownerCard; // Used to determine state of card when it can activate ability
+    private readonly HashSet<CardState> _activationStates;
+
+    public CardAbility(CardAbilitySO cardAbilitySO, Card card, GameEventBus eventBus) : base (card, eventBus) {
+        ownerCard = card;
+        abilityData = cardAbilitySO;
+        _activationStates = new HashSet<CardState>(cardAbilitySO.activationStates);
+
+        ownerCard.OnStateChanged += UpdateRegistration;
+        UpdateRegistration(card.CurrentState);
     }
 
-    private void CheckAndRegisterAbility(CardState newState) {
-        if (newState == data.activationState && !InTriggerState) {
-            RegisterTrigger();
-        } else if (InTriggerState) {
-            UnregisterTrigger();
+    private void UpdateRegistration(CardState state) {
+        bool shouldBeActive = abilityData.activationStates.Contains(state);
+
+        if (shouldBeActive && !IsActive) {
+            Register();
+            IsActive = true;
+        } else if (!shouldBeActive && IsActive) {
+            Deregister() ;
+            IsActive = false;
         }
     }
 
-    public virtual void RegisterTrigger() {
-        if (InTriggerState) {
-            Debug.LogWarning($"Abilities for card {card.Data.name} is already registered.");
-            return;
+    public override void Dispose() {
+        if (ownerCard != null || ownerCard.OnStateChanged != null) {
+            ownerCard.OnStateChanged -= UpdateRegistration;
         }
-
-        //Debug.Log($"Registering ability for card: {card.data.name}");
-        foreach (var abilityTrigger in data.eventTriggers) {
-            eventQueue.RegisterListener(this, abilityTrigger);
-        }
-
-        InTriggerState = true;
+        base.Dispose();
     }
+}
 
-    public virtual void UnregisterTrigger() {
-        //Debug.Log($"Unregistering ability for card: {card.data.name}");
-        foreach (var abilityTrigger in data.eventTriggers) {
-            eventQueue.UnregisterListener(this, abilityTrigger);
-        }
+// Creature ability always active when it`s alive so we don`t need check state
+public abstract class CreatureAbility : Ability {
 
-        InTriggerState = false;
+    protected CreatureAbilitySO abilityData; // Provides configuration data for ability
+
+    protected bool InTriggerState = false;
+
+    public CreatureAbility(CreatureAbilitySO creatureAbilitySO, IAbilitySource owner, GameEventBus eventBus) : base(owner, eventBus) {
+        abilityData = creatureAbilitySO;
+        Register();
     }
+}
 
+public struct AbilityActivatedEvent : IEvent {
+    public IAbilitySource Source { get; }
+    public Type AbilityType { get; }
 
-    // Need to return ability command
-
-    // SUMMON CRETURE ALSO ABILITY
-    public object OnEventReceived(object data) {
-        ICommand command = null;
-
-        switch (data) {
-            case CardHandEventData cardHandEventData:
-                Debug.Log($"Gathering future action for drawn card with name: {cardHandEventData.Card.Data.name}");
-                // Можете додати додаткову логіку тут
-                break;
-            // Додаткові випадки для інших типів даних
-            default:
-                Debug.Log("Unhandled event type");
-                break;
-        }
-
-        return command;
-    }
-
-
-    public void Reset() {
-        if (InTriggerState) {
-            UnregisterTrigger();
-        }
-
-        Debug.Log($"Ability for card {card.Data.name} has been reset.");
+    public AbilityActivatedEvent(IAbilitySource source, Type abilityType) {
+        Source = source;
+        AbilityType = abilityType;
     }
 }

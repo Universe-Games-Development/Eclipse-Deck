@@ -43,7 +43,7 @@ public class Field {
             OccupiedCreature.Health.ApplyDamage(damage);
         } else {
             if (Owner != null) {
-                Owner.health.ApplyDamage(damage);
+                Owner.Health.ApplyDamage(damage);
                 FieldLogger.Log($"{Owner.Name} takes {damage} damage.");
             } else {
                 FieldLogger.Log($"Nobody takes {damage} damage");

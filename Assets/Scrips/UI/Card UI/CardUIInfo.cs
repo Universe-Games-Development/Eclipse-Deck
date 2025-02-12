@@ -61,11 +61,11 @@ public class CardUIInfo : MonoBehaviour
         if (card == null) return;
 
         if (card is CreatureCard creatureCard) {
-            UpdateHealth(creatureCard.Health?.CurrentValue ?? 0, creatureCard.Health?.CurrentValue ?? 0);
+            UpdateHealth(creatureCard.HealthStat?.CurrentValue ?? 0, creatureCard.HealthStat?.CurrentValue ?? 0);
             UpdateAttack(creatureCard.Attack?.CurrentValue ?? 0, creatureCard.Attack?.CurrentValue ?? 0);
             UpdateCost(creatureCard.Cost?.CurrentValue ?? 0, creatureCard.Cost?.CurrentValue ?? 0);
 
-            creatureCard.Health.OnValueChanged += UpdateHealth;
+            creatureCard.HealthStat.OnValueChanged += UpdateHealth;
             creatureCard.Attack.OnValueChanged += UpdateAttack;
             creatureCard.Cost.OnValueChanged += UpdateCost;
         }
@@ -100,7 +100,7 @@ public class CardUIInfo : MonoBehaviour
 
     protected void UpdateAbilities(List<CardAbility> abilities) {
         foreach (var ability in abilities) {
-            if (ability == null || ability.data == null) continue;
+            if (ability == null || ability.abilityData == null) continue;
 
             CardAbilityUI abilityUI = cardAbilityPool.Get();
             abilityUI.transform.SetParent(abilityFiller);

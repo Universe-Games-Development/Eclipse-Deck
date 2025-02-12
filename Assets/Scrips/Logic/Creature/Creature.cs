@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Creature {
+public class Creature : IAbilitySource {
     public Field CurrentField { get; private set; }
 
     public Health Health;
@@ -23,7 +23,7 @@ public class Creature {
     }
 
     // TODO: return also attack action
-    public ICommand GetEndTurnMove(TurnChangeEventData data) {
+    public ICommand GetEndTurnMove() {
         return moveCommand;
     }
 

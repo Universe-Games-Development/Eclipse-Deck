@@ -5,11 +5,11 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Zenject;
 
-public class BoardUpdater :IEventListener {
+public class BoardUpdater {
     [Inject] private BoardAssigner _boardAssigner;
     private BoardSettingsSO initialBoardConfig;
     [Inject] CommandManager CommandManager;
-    private IEventQueue eventQueue;
+    private GameEventBus eventBus;
 
     public Func<BoardUpdateData, UniTask> OnBoardChanged;
     public Func<BoardUpdateData, UniTask> OnGridInitialized;
@@ -18,12 +18,14 @@ public class BoardUpdater :IEventListener {
     string address = "DefaulBoardSetting";
 
     [Inject]
-    public void Construct(IEventQueue eventQueue)
-    {
-        this.eventQueue = eventQueue;
-        eventQueue.RegisterListener(this, EventType.BATTLE_START);
+    public void Construct(GameEventBus eventBus) {
+        this.eventBus = eventBus;
 
-        LoadInitialConfig().Forget();
+        eventBus.SubscribeTo<BattleStartEventData>(InitializeBoard);
+    }
+
+    private void InitializeBoard(ref BattleStartEventData eventData) {
+        CommandManager.EnqueueCommand(new GridInitCommand(this, InitBoard));
     }
 
     public async UniTask LoadInitialConfig() {
@@ -74,13 +76,6 @@ public class BoardUpdater :IEventListener {
             return false;
         }
         return true;
-    }
-
-    public object OnEventReceived(object data) {
-        return data switch {
-            BattleStartEventData battleStartEventData => new GridInitCommand(this, InitBoard),
-            _ => null
-        };
     }
 }
 

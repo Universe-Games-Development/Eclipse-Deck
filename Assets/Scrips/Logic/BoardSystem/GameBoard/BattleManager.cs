@@ -5,7 +5,7 @@ using Zenject;
 public class BattleManager {
 
     [Inject] private OpponentRegistrator Registrator;
-    [Inject] IEventQueue eventQueue;
+    [Inject] GameEventBus eventBus;
 
     [Inject]
     private void Construct(OpponentRegistrator registrator) {
@@ -28,12 +28,12 @@ public class BattleManager {
             return;
         }
         BattleStartEventData battleStartData = new BattleStartEventData(Registrator.GetActiveOpponents());
-        eventQueue.TriggerEvent(EventType.BATTLE_START, battleStartData);
+        eventBus.Raise(battleStartData);
     }
 
     public void OnBattleEnd() {
         Opponent testWinner = Registrator.GetPlayer();
         Opponent testLooser = Registrator.GetEnemy();
-        eventQueue.TriggerEvent(EventType.BATTLE_END, new BattleEndEventData(testWinner, testLooser));
+        eventBus.Raise(new BattleEndEventData(testWinner, testLooser));
     }
 }

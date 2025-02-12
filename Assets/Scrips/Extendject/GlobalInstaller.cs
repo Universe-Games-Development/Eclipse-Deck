@@ -16,7 +16,7 @@ public class GlobalInstaller : MonoInstaller {
         }
 
         // Resourses
-        Container.Bind<IEventQueue>().To<EventQueue>().AsSingle().NonLazy();
+        Container.Bind<GameEventBus>().AsSingle().NonLazy();
         Container.Bind<CommandManager>().AsSingle().NonLazy();
         Container.Bind<CardManager>().AsSingle().NonLazy();
         Container.Bind<AddressablesResourceManager>().AsSingle().NonLazy();

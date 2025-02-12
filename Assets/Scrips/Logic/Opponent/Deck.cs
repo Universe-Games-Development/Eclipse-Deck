@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class Deck {
     private Stack<Card> cards = new();
-    private IEventQueue eventQueue;
+    private GameEventBus eventBus;
 
     private Opponent owner;
 
-    public Deck(Opponent owner, IEventQueue eventQueue) {
+    public Deck(Opponent owner, GameEventBus eventBus) {
         this.owner = owner;
-        this.eventQueue = eventQueue;
+        this.eventBus = eventBus;
     }
 
     public async UniTask Initialize(CardCollection collection) {
@@ -31,9 +31,9 @@ public class Deck {
 
     private Card CreateCard(CardSO cardSO) {
         return cardSO switch {
-            CreatureCardSO creatureCard => new CreatureCard(creatureCard, owner, eventQueue),
-            SpellCardSO spellCard => new SpellCard(spellCard, owner, eventQueue),
-            SupportCardSO supportCard => new SupportCard(supportCard, owner, eventQueue),
+            CreatureCardSO creatureCard => new CreatureCard(creatureCard, owner, eventBus),
+            SpellCardSO spellCard => new SpellCard(spellCard, owner, eventBus),
+            SupportCardSO supportCard => new SupportCard(supportCard, owner, eventBus),
             _ => null
         };
     }

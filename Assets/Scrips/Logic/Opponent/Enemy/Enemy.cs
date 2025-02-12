@@ -1,5 +1,7 @@
+using Unity.VisualScripting;
+
 public class Enemy : Opponent {
-    public Enemy(IEventQueue eventQueue, AssetLoader assetLoader, ICommandFiller commandFiller, CommandManager commandManager) : base(eventQueue, assetLoader, commandFiller, commandManager) {
+    public Enemy(GameEventBus eventBus, AssetLoader assetLoader, ICommandFiller commandFiller, CommandManager commandManager) : base(eventBus, assetLoader, commandFiller, commandManager) {
         Name = "Enemy";
     }
 }

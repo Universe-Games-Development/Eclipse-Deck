@@ -1,82 +1,61 @@
-using Cysharp.Threading.Tasks;
+using System;
+using Unity.VisualScripting;
 using UnityEngine;
+using static ReflectDamageAbilitySO;
 
 [CreateAssetMenu(fileName = "ReflectDamage", menuName = "Abilities/CardAbilities")]
 public class ReflectDamageAbilitySO : CreatureAbilitySO {
     public enum ReflectMode {
-        FixedAmount,
         Percentage,
-        FullDamage,
         KillAttacker
     }
 
     [Header("Reflect Damage Settings")]
-    public ReflectMode reflectMode = ReflectMode.FullDamage;
-    public int fixedDamage = 0;
+    public ReflectMode reflectMode = ReflectMode.Percentage;
     [Range(0, 1)] public float damagePercentage = 0.5f;
 
-    public override ICommand GenerateAbility(object data) {
-        CreatureBattleData creatureBattleData = data as CreatureBattleData;
-        if (creatureBattleData == null) {
-            return null;
-        }
-
-        switch (reflectMode) {
-            case ReflectMode.FixedAmount:
-                return new ReflectDamageAbilityCommand(creatureBattleData, fixedDamage);
-
-            case ReflectMode.Percentage:
-                int reflectedDamage = Mathf.CeilToInt(creatureBattleData.damage * damagePercentage);
-                return new ReflectDamageAbilityCommand(creatureBattleData, reflectedDamage);
-
-            case ReflectMode.FullDamage:
-                return new ReflectDamageAbilityCommand(creatureBattleData, creatureBattleData.damage);
-
-            case ReflectMode.KillAttacker:
-                return new ReflectDamageAbilityCommand(creatureBattleData, true);
-        }
-
-        return null;
+    public ReflectDamageAbility GenerateAbility(IAbilitySource owner, GameEventBus eventBus) {
+        return new ReflectDamageAbility(this, owner, eventBus, reflectMode, damagePercentage);
     }
 }
 
-public class ReflectDamageAbilityCommand : ICommand {
-    private CreatureBattleData creatureBattleData;
-    private int reflectedDamage;
-    private bool killAttacker;
+public class ReflectDamageAbility : CreatureAbility {
+    private ReflectMode reflectMode;
+    private float percentageDamage;
 
-    public ReflectDamageAbilityCommand(CreatureBattleData data, int damage) {
-        creatureBattleData = data;
-        reflectedDamage = damage;
-        killAttacker = false;
+    public ReflectDamageAbility(CreatureAbilitySO creatureAbilitySO, IAbilitySource owner, GameEventBus eventBus, ReflectMode reflectMode, float percentage = 0) : base(creatureAbilitySO, owner, eventBus) {
+        eventBus.SubscribeTo<OnDamageTaken>(ReflectDamage);
+        this.reflectMode = reflectMode;
+        if (reflectMode == ReflectMode.Percentage) {
+            percentageDamage = percentage;
+        }
     }
 
-    public ReflectDamageAbilityCommand(CreatureBattleData data, bool kill) {
-        creatureBattleData = data;
-        killAttacker = kill;
-    }
-
-    public async UniTask Execute() {
-        var attacker = creatureBattleData.attacker;
-        var defender = creatureBattleData.defender;
-
-        if (attacker == null || defender == null) {
+    private void ReflectDamage(ref OnDamageTaken eventData) {
+        // Cast attacker to damagable to damage him
+        IDamageable damagableSourse = eventData.Source as IDamageable;
+        if (damagableSourse == null) {
             return;
         }
 
-        if (killAttacker) {
-            attacker.Health.ApplyDamage(attacker.Health.CurrentValue);
-            // Add death visual effect and notify death event
-        } else {
-            attacker.Health.ApplyDamage(reflectedDamage);
-            // Add reflect visual effect and notify reflect event
+        switch (reflectMode) {
+            case ReflectMode.Percentage:
+                int damageAmount = eventData.Amount;
+                int reflectedDamage = Mathf.CeilToInt(damageAmount * percentageDamage);
+                damagableSourse.Health.ApplyDamage(reflectedDamage);
+                break;
+            case ReflectMode.KillAttacker:
+                int fullHpDamage = damagableSourse.Health.MaxValue;
+                damagableSourse.Health.ApplyDamage(fullHpDamage);
+                break;
         }
-        await UniTask.Yield();
     }
 
-    public async UniTask Undo() {
-        Debug.Log("Empty undo for reflect ability");
-        await UniTask.CompletedTask;
-        // Implement undo logic if needed
+    public override void Register() {
+        EventBus.SubscribeTo<OnDamageTaken>(ReflectDamage);
+    }
+
+    public override void Deregister() {
+        EventBus.UnsubscribeFrom<OnDamageTaken>(ReflectDamage);
     }
 }

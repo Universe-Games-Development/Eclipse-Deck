@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-public class TurnChangeEventData {
+public struct TurnChangeEventData : IEvent {
     public Opponent activeOpponent;
     public Opponent endTurnOpponent;
 
@@ -10,15 +10,15 @@ public class TurnChangeEventData {
     }
 }
 
-public class TurnEndEventData {
+public struct TurnEndEvent : IEvent {
     public Opponent endTurnOpponent;
 
-    public TurnEndEventData(Opponent endTurnOpponent) {
+    public TurnEndEvent(Opponent endTurnOpponent) {
         this.endTurnOpponent = endTurnOpponent;
     }
 }
 
-public class TurnStartEventData {
+public struct TurnStartEventData : IEvent {
     public Opponent startTurnOpponent;
 
     public TurnStartEventData(Opponent startTurnOpponent) {
@@ -26,7 +26,7 @@ public class TurnStartEventData {
     }
 }
 
-public class BattleStartEventData {
+public struct BattleStartEventData : IEvent {
     private List<Opponent> opponents;
 
     public BattleStartEventData(List<Opponent> opponents) {
@@ -34,10 +34,12 @@ public class BattleStartEventData {
     }
 }
 
-// Card Events
-public class CardDebufEvent {
-    public Card card;
-    // public Debuff debuff; 
-}
+public struct BattleEndEventData : IEvent {
+    private Opponent testLooser;
+    private Opponent testWinner;
 
-// Creature Events
+    public BattleEndEventData(Opponent testWinner, Opponent testLooser) {
+        this.testWinner = testWinner;
+        this.testLooser = testLooser;
+    }
+}

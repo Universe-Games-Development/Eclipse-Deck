@@ -1,14 +1,15 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
 using Zenject;
 
-public class TurnManager : IEventListener {
+public class TurnManager {
     public Opponent ActiveOpponent { get; private set; }
     public OpponentRegistrator registrator;
 
-    [Inject] private IEventQueue eventQueue;
+    [Inject] private GameEventBus eventBus;
 
     [Inject]
     public void Construct(OpponentRegistrator registrator) {
@@ -17,18 +18,21 @@ public class TurnManager : IEventListener {
         registrator.OnOpponentUnregistered += RemoveOpponent;
 
         // Реєстрація для події CREATURES_ACTIONED
-        eventQueue.RegisterListener(this, EventType.CREATURES_ACTIONED);
+        eventBus.SubscribeTo<EndTurnActionsPerformed>(OnEndTurnACtionsPerformed);
+    }
+
+    private void OnEndTurnACtionsPerformed(ref EndTurnActionsPerformed eventData) {
+        
     }
 
     // Імплементація OnEventReceived з IEventListener
-    public object OnEventReceived(object data) {
+    public void OnEventReceived(object data) {
+
         if (data is CreaturesPerformedTurnsData) {
             // Якщо всі істоти виконали свої дії, розпочинаємо хід наступного опонента
             Debug.Log("All creatures performed their actions. Moving to the next turn.");
             TriggerNextTurn();
         }
-
-        return new EmptyCommand();
     }
 
     private void InitTurns(List<Opponent> registeredOpponents) {
@@ -39,7 +43,7 @@ public class TurnManager : IEventListener {
         if (registeredOpponents.Count > 1) {
             ActiveOpponent = registrator.GetRandomOpponent();
             Opponent NonActiveOpponent = registrator.GetNextOpponent(ActiveOpponent);
-            eventQueue.TriggerEvent(EventType.ON_TURN_START, new TurnChangeEventData(ActiveOpponent, NonActiveOpponent));
+            eventBus.Raise(new TurnChangeEventData(ActiveOpponent, NonActiveOpponent));
         }
     }
 
@@ -57,7 +61,7 @@ public class TurnManager : IEventListener {
         await UniTask.Yield(); // Асинхронне завершення ходу
 
         ActiveOpponent = SetNextOpponent();
-        eventQueue.TriggerEvent(EventType.ON_TURN_END, new TurnEndEventData(endTurnOpponent));
+        eventBus.Raise(new TurnEndEvent(endTurnOpponent));
 
         TriggerNextTurn();
     }
@@ -66,7 +70,8 @@ public class TurnManager : IEventListener {
         // Цей метод буде викликаний після завершення всіх дій істот
         if (ActiveOpponent != null) {
             Debug.Log($"It is now {ActiveOpponent.Name}'s turn.");
-            eventQueue.TriggerEvent(EventType.ON_TURN_START, new TurnChangeEventData(ActiveOpponent, null));
+            eventBus.Raise(new TurnChangeEventData(ActiveOpponent, null));
+            eventBus.Raise(new TurnStartEventData(ActiveOpponent));
         }
     }
 
@@ -94,3 +99,5 @@ public class TurnManager : IEventListener {
         return ActiveOpponent;
     }
 }
+
+
