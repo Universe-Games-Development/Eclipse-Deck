@@ -26,7 +26,8 @@ public class MoveCommand : Command {
         foreach (Path path in paths) {
             for (int i = 0; i < path.fields.Count; i++) {
                 if (path.isInterrupted && i == path.interruptedAt) {
-                    creature.InterruptedMove();
+                    creature.OnInterruptedMove.Invoke();
+                    Debug.Log("INTERRUPTED to MOVE! ANIMATION NEEDED");
                     break;
                 }
 

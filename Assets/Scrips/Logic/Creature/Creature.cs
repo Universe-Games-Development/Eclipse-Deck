@@ -1,12 +1,16 @@
+using Cysharp.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Creature : IAbilityOwner, IDamageDealer, IHasHealth {
     public Field CurrentField { get; private set; }
+    public Action OnInterruptedMove;
 
     public Health Health;
     public Attack Attack;
-
+    public AbilityManager AbilityManager;
+    
     private Card card;
     private CreatureStrategyMovement movementHandler;
     private MoveCommand moveCommand;
@@ -22,7 +26,7 @@ public class Creature : IAbilityOwner, IDamageDealer, IHasHealth {
 
     // TODO: return also attack action
     public Command GetEndTurnAction() {
-        return moveCommand;
+        return new EndTurnActions(moveCommand);
     }
 
     public void AssignField(Field field) {
@@ -41,23 +45,38 @@ public class Creature : IAbilityOwner, IDamageDealer, IHasHealth {
         // - Знищення істоти
     }
 
-    public void InterruptedMove() {
-        Debug.Log("INTERRUPTED to MOVE! ANIMATION NEEDED");
-    }
-
-    internal bool IsAlive() {
-        throw new NotImplementedException();
-    }
-
     public AbilityManager GetAbilityManager() {
-        throw new NotImplementedException();
+        return AbilityManager;
     }
 
     public Attack GetAttack() {
-        throw new NotImplementedException();
+        return Attack;
     }
 
     public Health GetHealth() {
-        throw new NotImplementedException();
+        return Health;
+    }
+}
+
+
+public class EndTurnActions : Command {
+    private Creature creature;
+
+    private CreatureStrategyMovement strategyHandler;
+    private Stack<Field> previousFields = new Stack<Field>();
+    private MoveCommand MoveCommand;
+
+    public EndTurnActions(MoveCommand moveCommand) {
+        MoveCommand = moveCommand;
+    }
+
+    public async override UniTask Execute() {
+        Debug.Log("End Turn actions begin");
+        AddChild(MoveCommand);
+        Debug.Log("End Turn actions end");
+    }
+
+    public async override UniTask Undo() {
+
     }
 }
