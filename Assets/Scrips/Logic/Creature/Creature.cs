@@ -21,7 +21,7 @@ public class Creature : IAbilityOwner, IDamageDealer, IHasHealth {
     }
 
     // TODO: return also attack action
-    public ICommand GetEndTurnMove() {
+    public Command GetEndTurnAction() {
         return moveCommand;
     }
 

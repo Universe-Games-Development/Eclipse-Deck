@@ -21,7 +21,7 @@ public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
     private readonly GameEventBus eventBus;
     private readonly CommandManager commandManager;
 
-    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, ICommandFiller commandFiller, CommandManager commandManager) {
+    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, ICardsInputFiller commandFiller, CommandManager commandManager) {
         this.eventBus = eventBus;
         this.commandManager = commandManager;
 
@@ -40,7 +40,7 @@ public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
     }
 
     private void StartBattleActions(ref BattleStartEventData eventData) {
-        commandManager.EnqueueCommands(new List<ICommand> {
+        commandManager.EnqueueCommands(new List<Command> {
             new InitDeckCommand(this, 40, cardCollection, eventBus),
             new DrawCardCommand(this, 3),
         });
@@ -65,18 +65,18 @@ public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
 }
 
 
-public class InitCardHandCommand : ICommand {
+public class InitCardHandCommand : Command {
     private Opponent opponent;
     private GameEventBus eventBus;
-    private ICommandFiller commandFiller;
+    private ICardsInputFiller commandFiller;
 
-    public InitCardHandCommand(Opponent opponent, GameEventBus eventBus, ICommandFiller commandFiller) {
+    public InitCardHandCommand(Opponent opponent, GameEventBus eventBus, ICardsInputFiller commandFiller) {
         this.opponent = opponent;
         this.eventBus = eventBus;
         this.commandFiller = commandFiller;
     }
 
-    public async UniTask Execute() {
+    public async override UniTask Execute() {
         CardHand initHand = opponent.hand;
 
         initHand = new CardHand(opponent, eventBus);
@@ -84,14 +84,14 @@ public class InitCardHandCommand : ICommand {
         await UniTask.CompletedTask;
     }
 
-    public async UniTask Undo() {
+    public async override UniTask Undo() {
         opponent.hand = null;
         opponent.playCardManager = null;
         await UniTask.CompletedTask;
     }
 }
 
-public class InitDeckCommand : ICommand {
+public class InitDeckCommand : Command {
     private Opponent opponent;
     private int deckSize;
     private CardCollection cardCollection;
@@ -104,7 +104,7 @@ public class InitDeckCommand : ICommand {
         this.eventBus = eventBus;
     }
 
-    public async UniTask Execute() {
+    public async override UniTask Execute() {
         Deck mainDeck = new Deck(opponent, eventBus);
         await mainDeck.Initialize(cardCollection);
 
@@ -113,7 +113,7 @@ public class InitDeckCommand : ICommand {
         await UniTask.CompletedTask;
     }
 
-    public async UniTask Undo() {
+    public async override UniTask Undo() {
         opponent.deck = null;
         await UniTask.CompletedTask;
     }

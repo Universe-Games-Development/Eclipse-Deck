@@ -5,12 +5,12 @@ using Zenject;
 
 public class PlayCardManager : IDisposable {
     private CardHand cardHand;
-    private ICommandFiller commandFiller;
+    private ICardsInputFiller commandFiller;
     [Inject] private CommandManager commandManager;
 
     private Card bufferedCard;
 
-    public PlayCardManager(CardHand cardHand, ICommandFiller commandFiller) {
+    public PlayCardManager(CardHand cardHand, ICardsInputFiller commandFiller) {
         this.cardHand = cardHand;
         this.commandFiller = commandFiller;
 
@@ -24,7 +24,8 @@ public class PlayCardManager : IDisposable {
     private async void OnCardSelected(Card selectedCard) {
         if (bufferedCard != null) return;
 
-        IInputCommand playCommand = selectedCard.GetPlayCardCommand();
+        Field fieldToSummon = null;
+        Command playCommand = selectedCard.GetPlayCardCommand(fieldToSummon);
         if (playCommand == null) {
             Debug.LogWarning("Selected card has no valid play command.");
             return;
@@ -36,7 +37,7 @@ public class PlayCardManager : IDisposable {
 
         bool isValid;
         try {
-            isValid = await commandFiller.FillInputs(playCommand);
+            isValid = await commandFiller.FillCardnputs(selectedCard);
         } catch (Exception ex) {
             Debug.LogError("Error occurred during input filling: " + ex.Message);
             isValid = false;
@@ -52,24 +53,24 @@ public class PlayCardManager : IDisposable {
     }
 }
 
-public interface ICommandFiller {
-    Task<bool> FillInputs(IInputCommand command);
+public interface ICardsInputFiller {
+    Task<bool> FillCardnputs(Card card);
 }
 
-public class PlayerCommandFiller : ICommandFiller {
+public class PlayerCommandFiller : ICardsInputFiller {
     private PlayCardUI playCardUI;
 
     public PlayerCommandFiller(PlayCardUI playCardUI) {
         this.playCardUI = playCardUI;
     }
 
-    public async Task<bool> FillInputs(IInputCommand command) {
-        return await playCardUI.FillInputs(command);
+    public async Task<bool> FillCardnputs(Card card) {
+        return await playCardUI.FillInputs(card);
     }
 }
 
-public class EnemyCommandFiller : ICommandFiller {
-    public async Task<bool> FillInputs(IInputCommand command) {
+public class EnemyCommandFiller : ICardsInputFiller {
+    public async Task<bool> FillCardnputs(Card card) {
         // Soon : Algoritm to fill data by AI
         await Task.Delay(500); // Thinking simulation
         return true;

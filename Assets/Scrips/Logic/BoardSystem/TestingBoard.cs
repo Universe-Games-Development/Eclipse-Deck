@@ -131,8 +131,8 @@ public class TestingBoard : MonoBehaviour
         return randomList;
     }
 
-    private ICommand GetPlayCardCommand(TurnEndEvent turnEndEvent) {
-        ICommand command = new EmptyCommand();
+    private Command GetPlayCardCommand(TurnEndEvent turnEndEvent) {
+        Command command = new EmptyCommand();
         if (turnEndEvent.endTurnOpponent == player) {
 
             Card playerCard = player.hand.GetRandomCard();
@@ -160,25 +160,25 @@ public class TestingBoard : MonoBehaviour
 }
 
 
-public class PlayCardCommand : ICommand {
+public class PlayCardCommand : Command {
     [Inject] GameboardController gameBoardController;
-    private Player player;
+    private Opponent opponent;
     private Card playerCard;
     private Field fieldToPlace;
 
-    public PlayCardCommand(Player player, Card playerCard, Field fieldToPlace) {
-        this.player = player;
+    public PlayCardCommand(Opponent opponent, Card playerCard, Field fieldToPlace) {
+        this.opponent = opponent;
         this.playerCard = playerCard;
         this.fieldToPlace = fieldToPlace;
     }
 
-    public async UniTask Execute() {
+    public async override UniTask Execute() {
         Debug.Log("Play card command");
-        gameBoardController.SummonCreature(player, playerCard, fieldToPlace);
+        gameBoardController.SummonCreature(opponent, playerCard, fieldToPlace);
         await UniTask.CompletedTask;
     }
 
-    public async UniTask Undo() {
+    public async override UniTask Undo() {
         await UniTask.CompletedTask;
     }
 }

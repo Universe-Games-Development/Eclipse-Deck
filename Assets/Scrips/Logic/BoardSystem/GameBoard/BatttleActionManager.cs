@@ -27,12 +27,12 @@ public class BatttleActionManager {
 
     public void GenerateEndTurnActions(ref TurnEndEvent turnEndEvent) {
         
-        List<ICommand> commands = new();
+        List<Command> commands = new();
 
         List<Creature> creatures = _boardAssigner.GetOpponentCreatures(turnEndEvent.endTurnOpponent);
 
         foreach (var creature in creatures) {
-            commands.Add(creature.GetEndTurnMove());
+            commands.Add(creature.GetEndTurnAction());
         }
 
         commands.Add(new CreaturesPerformedTurnsCommand(creatures, eventBus));
@@ -40,7 +40,7 @@ public class BatttleActionManager {
     }
 }
 
-public class CreaturesPerformedTurnsCommand : ICommand {
+public class CreaturesPerformedTurnsCommand : Command {
     private List<Creature> creatures;
     private GameEventBus eventBus;
 
@@ -49,12 +49,12 @@ public class CreaturesPerformedTurnsCommand : ICommand {
         this.eventBus = eventBus;
     }
 
-    public async UniTask Execute() {
+    public async override UniTask Execute() {
         eventBus.Raise(new EndActionsExecutedEvent(creatures));
         await UniTask.CompletedTask;
     }
 
-    public async UniTask Undo() {
+    public async override UniTask Undo() {
         await UniTask.CompletedTask;
     }
 }

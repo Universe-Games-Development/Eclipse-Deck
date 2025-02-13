@@ -59,6 +59,7 @@ public class GameboardController : MonoBehaviour {
     }
 
     private void OnDestroy() {
+        if (OpponentRegistrator != null)
         OpponentRegistrator.OnOpponentRegistered -= AssignHPCellToOpponent;
     }
 }
