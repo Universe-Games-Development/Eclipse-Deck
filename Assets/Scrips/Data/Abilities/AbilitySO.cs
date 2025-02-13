@@ -1,14 +1,8 @@
-
 using System.Collections.Generic;
 using UnityEngine;
 
-
-public abstract class CreatureAbilitySO : AbilitySO {
-
-}
-
-public abstract class CardAbilitySO : AbilitySO {
-    public List<CardState> activationStates;
+public abstract class ActivationConditionSO : ScriptableObject {
+    public abstract bool IsConditionMet(IAbilityOwner owner);
 }
 
 public abstract class AbilitySO : ScriptableObject {
@@ -16,9 +10,32 @@ public abstract class AbilitySO : ScriptableObject {
     public string Description;
     public Sprite Sprite;
 
+    [SerializeField]
+    protected List<ActivationConditionSO> _activationConditions;
+
+    public bool ShouldBeActive(IAbilityOwner owner) {
+        foreach (var condition in _activationConditions) {
+            if (!condition.IsConditionMet(owner)) return false;
+        }
+        return true;
+    }
+
+    // Абстрактний метод без EventBus
+    public abstract Ability GenerateAbility(IAbilityOwner owner);
+
     protected void OnValidate() {
         if (string.IsNullOrEmpty(Name)) {
             Name = GetType().Name;
         }
     }
+}
+
+// Абстрактний клас для здібностей без EventBus
+public abstract class SimpleAbilitySO : AbilitySO {
+    public override abstract Ability GenerateAbility(IAbilityOwner owner);
+}
+
+// Абстрактний клас для здібностей з EventBus
+public abstract class EventDrivenAbilitySO : AbilitySO {
+    public abstract EventDrivenAbility GenerateAbility(IAbilityOwner owner, GameEventBus eventBus);
 }

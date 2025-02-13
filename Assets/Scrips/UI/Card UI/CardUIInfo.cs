@@ -43,7 +43,7 @@ public class CardUIInfo : MonoBehaviour
         AttachmentToCard(card);
 
         // Show abilities or description
-        List<CardAbility> cardAbilities = card.cardAbilities;
+        List<Ability> cardAbilities = card.abilityManager.GetAbilities();
 
         if (cardAbilities == null || cardAbilities.Count == 0) {
             EnableCardDescription();
@@ -61,14 +61,17 @@ public class CardUIInfo : MonoBehaviour
         if (card == null) return;
 
         if (card is CreatureCard creatureCard) {
-            UpdateHealth(creatureCard.HealthStat?.CurrentValue ?? 0, creatureCard.HealthStat?.CurrentValue ?? 0);
-            UpdateAttack(creatureCard.Attack?.CurrentValue ?? 0, creatureCard.Attack?.CurrentValue ?? 0);
-            UpdateCost(creatureCard.Cost?.CurrentValue ?? 0, creatureCard.Cost?.CurrentValue ?? 0);
+            UpdateHealth(creatureCard.HealthStat.CurrentValue, creatureCard.HealthStat.CurrentValue);
+            UpdateAttack(creatureCard.Attack.CurrentValue, creatureCard.Attack.CurrentValue);
+            
 
             creatureCard.HealthStat.OnValueChanged += UpdateHealth;
             creatureCard.Attack.OnValueChanged += UpdateAttack;
-            creatureCard.Cost.OnValueChanged += UpdateCost;
         }
+
+        UpdateCost(card.Cost.CurrentValue, card.Cost.CurrentValue);
+
+        card.Cost.OnValueChanged += UpdateCost;
     }
 
     #region Updaters
@@ -80,27 +83,28 @@ public class CardUIInfo : MonoBehaviour
         }
     }
 
-    protected virtual void UpdateHealth(int currentHealth, int initialHealth) {
-        if (healthText != null) {
-            healthText.text = currentHealth > 0 ? $"{currentHealth}" : "0";
+    protected virtual void UpdateHealth(int beforeAmount, int currentAmount) {
+        UpdateStat(healthText, beforeAmount, currentAmount);
+    }
+
+    protected virtual void UpdateAttack(int beforeAmount, int currentAmount) {
+        UpdateStat(attackText, beforeAmount, currentAmount);
+    }
+
+    protected void UpdateCost(int beforeAmount, int currentAmount) {
+        UpdateStat(costTMP, beforeAmount, currentAmount);
+    }
+
+
+    protected void UpdateStat(TMP_Text textComponent, int beforeAmount, int currentAmount) {
+        if (textComponent != null) {
+            textComponent.text = $"{currentAmount}";
         }
     }
 
-    protected virtual void UpdateAttack(int currentAttack, int initialAttack) {
-        if (attackText != null) {
-            attackText.text = currentAttack >= 0 ? $"{currentAttack}" : "0";
-        }
-    }
-
-    protected void UpdateCost(int currentCost, int initialCost) {
-        if (costTMP != null) {
-            costTMP.text = currentCost >= 0 ? $"{initialCost}" : "0";
-        }
-    }
-
-    protected void UpdateAbilities(List<CardAbility> abilities) {
+    protected void UpdateAbilities(List<Ability> abilities) {
         foreach (var ability in abilities) {
-            if (ability == null || ability.abilityData == null) continue;
+            if (ability == null || ability.AbilityData == null) continue;
 
             CardAbilityUI abilityUI = cardAbilityPool.Get();
             abilityUI.transform.SetParent(abilityFiller);
@@ -128,7 +132,7 @@ public class CardUIInfo : MonoBehaviour
     }
 
     public void SetAbilityFactory(CardAbilityPool abilityUIPool) {
-        if (cardAbilityPool != null) {
+        if (cardAbilityPool == null) {
             cardAbilityPool = abilityUIPool;
         }
     }

@@ -1,29 +1,15 @@
 using System;
 
 public class HealthStat : Stat {
-
-    public event Action<int> OnDebuff;
-    public event Action<int> OnBuff;
     public HealthStat(int maxValue, int initialValue)
          : base(maxValue, initialValue) {
         if (maxValue < 1) throw new ArgumentException("Max value must be at least 1.");
     }
 
-    public void Buff(int  amount) {
-        int newValue = Math.Max(1, CurrentValue + amount);
-        Modify(newValue);
-    }
-
-    public void Debuff(int amount) {
-        int newValue = Math.Max(1, CurrentValue - amount);
-        Modify(newValue);
-    }
+    
 }
 
 public class Attacktat : Stat {
-
-    public event Action<int> OnDebuff;
-    public event Action<int> OnBuff;
     public Attacktat(int maxValue, int initialValue)
          : base(maxValue, initialValue) {
     }
@@ -41,11 +27,12 @@ public class Attacktat : Stat {
 
 
 public class Health : Stat {
-    public IDamageable Owner { get; }
+    public IHasHealth Owner { get; }
     public event Action OnDeath;
+    public event Action<int, IDamageDealer> OnDamageTaken;
     private readonly GameEventBus _eventBus;
 
-    public Health(IDamageable owner, int maxHealth, int initialHealth, GameEventBus eventBus)
+    public Health(IHasHealth owner, int maxHealth, int initialHealth, GameEventBus eventBus)
         : base(maxHealth, initialHealth) {
         Owner = owner ?? throw new ArgumentNullException(nameof(owner));
         _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
@@ -59,6 +46,7 @@ public class Health : Stat {
 
         if (damageSource is IDamageDealer damageDealer) {
             _eventBus.Raise(new OnDamageTaken(damageDealer, Owner, damage));
+            OnDamageTaken?.Invoke(damage, damageDealer);
         }
 
 
@@ -78,14 +66,22 @@ public class Health : Stat {
     internal void Heal(int healAmount) {
         throw new NotImplementedException();
     }
+
+    public bool IsAlive() {
+        return CurrentValue > 0;
+    }
+
+    internal bool IsDamaged() {
+        return CurrentValue < InitialValue;
+    }
 }
 
 public struct OnDamageTaken : IEvent {
     public IDamageDealer Source { get; }
-    public IDamageable Target { get; }
+    public IHasHealth Target { get; }
     public int Amount { get; }
 
-    public OnDamageTaken(IDamageDealer source, IDamageable target, int amount) {
+    public OnDamageTaken(IDamageDealer source, IHasHealth target, int amount) {
         Source = source;
         Target = target;
         Amount = amount;
@@ -93,10 +89,10 @@ public struct OnDamageTaken : IEvent {
 }
 
 public struct OnDeathEvent : IEvent {
-    public IDamageable DeadEntity { get; }
+    public IHasHealth DeadEntity { get; }
     public Health HealthInfo { get; }
 
-    public OnDeathEvent(IDamageable deadEntity, Health healthInfo) {
+    public OnDeathEvent(IHasHealth deadEntity, Health healthInfo) {
         DeadEntity = deadEntity;
         HealthInfo = healthInfo;
     }

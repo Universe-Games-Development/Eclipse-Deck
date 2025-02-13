@@ -1,19 +1,22 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Card : IAbilitySource {
+public abstract class Card : IAbilityOwner {
+    public event Action<Card> OnCardDrawn;
+    public event Action<Card> OnCardShuffled;
+    public event Action<Card> OnCardRDiscarded;
+    public Action<CardState> OnStateChanged { get; internal set; }
+    public CardState CurrentState { get; protected set; }
+
     public string Id { get; protected set; }
     public CardSO Data { get; protected set; }
     public Cost Cost { get; protected set; }
-    public CardState CurrentState { get; protected set; }
     public GameEventBus eventBus { get; protected set; }
-    public Action<CardState> OnStateChanged { get; internal set; }
+    public AbilityManager AbilityManager { get; protected set; }
     public Opponent Owner { get; protected set; } // Add Owner here
 
-    public List<CardAbility> cardAbilities;
     public CardUI cardUI;
-
+    public AbilityManager abilityManager;
     public Card(CardSO cardSO, Opponent owner, GameEventBus eventBus)  // Add owner to constructor
     {
         Data = cardSO;
@@ -22,22 +25,41 @@ public abstract class Card : IAbilitySource {
         Owner = owner; // Assign the owner
         Cost = new Cost(cardSO.MAX_CARDS_COST, cardSO.cost);
 
-        cardAbilities = new List<CardAbility>();
-        foreach (var cardAbilityData in cardSO.cardAbilities) {
-            // ... (ability creation remains the same)
-        }
+        abilityManager = new AbilityManager();
+        abilityManager.InitializeAbilities(this, cardSO.abilities);
+        
 
         ChangeState(CardState.InDeck);
     }
 
     public virtual void ChangeState(CardState newState) {
-        // ... (same as before)
+        if (newState != CurrentState) { 
+            CurrentState = newState;
+            switch (newState) {
+                case CardState.InDeck:
+                    OnCardShuffled?.Invoke(this);
+                    break;
+                case CardState.InHand:
+                    OnCardDrawn?.Invoke(this);
+                    break;
+                case CardState.Discarded:
+                    OnCardRDiscarded?.Invoke(this);
+                    break;
+                default:
+                    throw new ArgumentException("Wrong new state");
+            }
+        }
     }
 
+    // To do: Define how card will play will it be command or simple method
     public abstract void Play();
 
     internal IInputCommand GetPlayCardCommand() {
         throw new NotImplementedException();
+    }
+
+    public AbilityManager GetAbilityManager() {
+        return AbilityManager;
     }
 }
 
@@ -62,7 +84,6 @@ public class SpellCard : Card {
 
     public override void Play() {
         Debug.Log($"Spell is cast!");
-        // Додати логику ефекту заклинання
     }
 }
 

@@ -1,9 +1,7 @@
-using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class Creature : IAbilitySource {
+public class Creature : IAbilityOwner, IDamageDealer, IHasHealth {
     public Field CurrentField { get; private set; }
 
     public Health Health;
@@ -45,5 +43,21 @@ public class Creature : IAbilitySource {
 
     public void InterruptedMove() {
         Debug.Log("INTERRUPTED to MOVE! ANIMATION NEEDED");
+    }
+
+    internal bool IsAlive() {
+        throw new NotImplementedException();
+    }
+
+    public AbilityManager GetAbilityManager() {
+        throw new NotImplementedException();
+    }
+
+    public Attack GetAttack() {
+        throw new NotImplementedException();
+    }
+
+    public Health GetHealth() {
+        throw new NotImplementedException();
     }
 }

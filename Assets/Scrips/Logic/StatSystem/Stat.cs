@@ -5,6 +5,7 @@ public class Stat : IStat {
     private int minValue;
     private int maxValue;
     private int initialValue;
+    public event Action<int, int> OnValueChanged;
 
     public int InitialValue {
         get => initialValue;
@@ -37,30 +38,35 @@ public class Stat : IStat {
         }
     }
 
-
-    public event Action<int, int> OnValueChanged;
-
     public Stat(int maxValue, int initialValue, int minValue = 0) {
         this.minValue = minValue;
         this.maxValue = Math.Max(minValue, maxValue);
         this.initialValue = initialValue;
-        this.currentValue = Math.Clamp(initialValue, minValue, maxValue);
+        currentValue = Math.Clamp(initialValue, minValue, maxValue);
     }
 
     public void Modify(int amount) {
-        CurrentValue += amount;
+        int beforeValue = currentValue;
+        int newValue = Math.Clamp(currentValue + amount, MinValue, MaxValue);
+
+        if (newValue != currentValue) {
+            CurrentValue = newValue; // Сповіщаємо про зміни тільки тоді, коли є різниця
+            OnValueChanged?.Invoke(beforeValue, currentValue);
+        }
     }
 
+
     public void SetMaxValue(int newMaxValue) {
+        if (newMaxValue < MinValue) return;
         MaxValue = newMaxValue;
     }
 
     public void SetMinValue(int newMinValue) {
+        if (newMinValue > MaxValue) return;
         MinValue = newMinValue;
     }
 
-    // Додавання методу Reset
     public void Reset() {
-        CurrentValue = initialValue;  // Скидаємо значення до початкового значення
+        CurrentValue = initialValue;
     }
 }

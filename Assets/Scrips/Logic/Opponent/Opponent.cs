@@ -2,10 +2,12 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 
-public class Opponent : IDisposable, IDamageable {
+public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
+    
     public string Name = "Opponent";
     public Health Health {  get; private set; }
-
+    public AbilityManager AbilityManager { get; private set; }
+    
     public CardHand hand;
     public Deck deck;
     public Deck discardDeck;
@@ -51,6 +53,14 @@ public class Opponent : IDisposable, IDamageable {
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    public AbilityManager GetAbilityManager() {
+        return AbilityManager;
+    }
+
+    public Health GetHealth() {
+        return Health;
     }
 }
 
