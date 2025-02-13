@@ -14,30 +14,10 @@ public class CommandManager {
     private bool _isExecuting = false;
 
     private readonly SemaphoreSlim _executionSemaphore = new(1);
-    private readonly ConcurrentQueue<ICommand> _commandQueue = new();
+    private readonly ConcurrentQueue<Command> _commandQueue = new();
 
     private const int MaxUndoAmount = 10;
-    private readonly Stack<ICommand> _undoStack = new();
-
-    internal void EnqueueCommands(List<ICommand> commands) {
-        foreach (var command in commands) {
-            EnqueueCommand(command);
-        }
-    }
-
-    public void EnqueueCommand(ICommand command) {
-        if (!ValidateCommand(command)) {
-            Debug.Log("Command didn't pass validation");
-            return;
-        }
-
-        _commandQueue.Enqueue(command);
-
-        // If it's Auto mode, try to execute commands.
-        if (Mode == ExecutionMode.Auto) {
-            TryExecuteCommands();
-        }
-    }
+    private readonly Stack<Command> _undoStack = new();
 
     private async void TryExecuteCommands() {
         if (_isExecuting || Mode == ExecutionMode.Manual) return;
@@ -49,18 +29,45 @@ public class CommandManager {
     }
 
     public async UniTask ExecuteCommands() {
-        await _executionSemaphore.WaitAsync();
-        try {
-            // Continue processing commands as they arrive
-            while (_commandQueue.Count > 0) {
-                if (_commandQueue.TryDequeue(out var command)) {
-                    await command.Execute();
-                    _undoStack.Push(command);
-                }
+        while (_commandQueue.TryDequeue(out var command)) {
+            await ExecuteCommandRecursively(command);
+        }
+        CleanupUndoCommands();
+    }
+
+    private async UniTask ExecuteCommandRecursively(Command rootCommand) {
+        Stack<Command> stack = new();
+        stack.Push(rootCommand);
+
+        while (stack.Count > 0) {
+            var command = stack.Pop();
+
+            foreach (var child in command.Children) {
+                stack.Push(child);
             }
-            CleanupUndoCommands();
-        } finally {
-            _executionSemaphore.Release();
+
+            await command.Execute();
+            _undoStack.Push(command);
+        }
+    }
+
+    internal void EnqueueCommands(List<Command> commands) {
+        foreach (var command in commands) {
+            EnqueueCommand(command);
+        }
+    }
+
+    public void EnqueueCommand(Command command) {
+        if (!ValidateCommand(command)) {
+            Debug.Log("Command didn't pass validation");
+            return;
+        }
+
+        _commandQueue.Enqueue(command);
+
+        // If it's Auto mode, try to execute commands.
+        if (Mode == ExecutionMode.Auto) {
+            TryExecuteCommands();
         }
     }
 

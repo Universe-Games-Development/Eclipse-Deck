@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MoveCommand : ICommand {
+public class MoveCommand : Command {
     private Creature creature;
 
     private CreatureStrategyMovement strategyHandler;
@@ -13,7 +13,7 @@ public class MoveCommand : ICommand {
         this.strategyHandler = strategyHandler;
     }
 
-    public async UniTask Execute() {
+    public async override UniTask Execute() {
         Field currentField = creature.CurrentField;
 
         IMoveStrategy moveStrategy = strategyHandler.GetStrategy(currentField);
@@ -26,7 +26,8 @@ public class MoveCommand : ICommand {
         foreach (Path path in paths) {
             for (int i = 0; i < path.fields.Count; i++) {
                 if (path.isInterrupted && i == path.interruptedAt) {
-                    creature.InterruptedMove();
+                    creature.OnInterruptedMove.Invoke();
+                    Debug.Log("INTERRUPTED to MOVE! ANIMATION NEEDED");
                     break;
                 }
 
@@ -40,7 +41,7 @@ public class MoveCommand : ICommand {
         }
     }
 
-    public async UniTask Undo() {
+    public async override UniTask Undo() {
         // Повертаємося до попереднього стану
         while (previousFields.Count > 0) {
             var lastField = previousFields.Pop();

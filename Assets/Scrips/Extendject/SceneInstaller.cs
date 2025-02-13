@@ -8,12 +8,12 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
         // Player
         Container.Bind<Player>().AsSingle().NonLazy();
-        Container.Bind<ICommandFiller>().To<PlayerCommandFiller>().AsSingle().WhenInjectedInto<Player>();
+        Container.Bind<ICardsInputFiller>().To<PlayerCommandFiller>().AsSingle().WhenInjectedInto<Player>();
         Container.Bind<PlayCardUI>().FromComponentInHierarchy().AsSingle();
 
         // Enemy
         Container.Bind<Enemy>().AsTransient();
-        Container.Bind<ICommandFiller>().To<EnemyCommandFiller>().AsTransient().WhenInjectedInto<Enemy>();
+        Container.Bind<ICardsInputFiller>().To<EnemyCommandFiller>().AsTransient().WhenInjectedInto<Enemy>();
 
         // Gameboard
         Container.Bind<GameboardController>().FromComponentInHierarchy().AsSingle();

@@ -9,7 +9,7 @@ public class PlayCardUI : MonoBehaviour
         ui.SetActive(false);
     }
 
-    public async UniTask<bool> FillInputs(IInputCommand playCommand) {
+    public async UniTask<bool> FillInputs(Card card) {
         ui.SetActive(true);
         await UniTask.Delay(4000);
         ui.SetActive(false);

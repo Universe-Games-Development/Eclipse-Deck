@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using UnityEngine;
 
-internal class DrawCardCommand : ICommand {
+internal class DrawCardCommand : Command {
     private Opponent opponent;
     private int drawAmount;
 
@@ -11,7 +11,7 @@ internal class DrawCardCommand : ICommand {
         drawAmount = amount;
     }
 
-    public async UniTask Execute() {
+    public async override UniTask Execute() {
         while (drawAmount > 0) {
             Card card = opponent.deck.DrawCard();
             if (card == null) {
@@ -31,7 +31,7 @@ internal class DrawCardCommand : ICommand {
         await UniTask.CompletedTask;
     }
 
-    public UniTask Undo() {
+    public override UniTask Undo() {
         throw new System.NotImplementedException();
     }
 }

@@ -54,12 +54,12 @@ public abstract class Card : IAbilityOwner {
     // To do: Define how card will play will it be command or simple method
     public abstract void Play();
 
-    internal IInputCommand GetPlayCardCommand() {
-        throw new NotImplementedException();
-    }
-
     public AbilityManager GetAbilityManager() {
         return AbilityManager;
+    }
+
+    public Command GetPlayCardCommand(Field field) {
+        return new PlayCardCommand(Owner, this, field);
     }
 }
 

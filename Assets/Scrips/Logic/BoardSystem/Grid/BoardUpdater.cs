@@ -57,7 +57,7 @@ public class BoardUpdater {
     public async UniTask UpdateGrid(BoardSettingsSO newConfig) {
         if (!ValidateBoardSettings(newConfig)) return; // Перевірка перед реєстрацією команди
 
-        ICommand command = GridBoard == null
+        Command command = GridBoard == null
             ? new GridInitCommand(this, InitBoard)
             : new BoardUpdateCommand(this, GridBoard, newConfig);
 
@@ -80,7 +80,7 @@ public class BoardUpdater {
 }
 
 
-public class GridInitCommand : ICommand {
+public class GridInitCommand : Command {
     private Func<UniTask<GridBoard>> initBoard;
     private BoardUpdater updater;
 
@@ -91,12 +91,12 @@ public class GridInitCommand : ICommand {
         this.updater = updater;
     }
 
-    public async UniTask Execute() {
+    public async override UniTask Execute() {
         GridBoard gridBoard = await initBoard.Invoke();
         await InitGrid(gridBoard);
     }
 
-    public async UniTask Undo() {
+    public async override UniTask Undo() {
         await ResetGrid();
     }
 
@@ -120,7 +120,7 @@ public class GridInitCommand : ICommand {
 
 }
 
-public class BoardUpdateCommand : ICommand {
+public class BoardUpdateCommand : Command {
     private readonly BoardSettingsSO oldSettings;
     private readonly BoardSettingsSO newSettings;
 
@@ -134,11 +134,11 @@ public class BoardUpdateCommand : ICommand {
         oldSettings = board.Config;
     }
 
-    public async UniTask Execute() {
+    public async override UniTask Execute() {
         await UpdateBoard(newSettings);
     }
 
-    public async UniTask Undo() {
+    public async override UniTask Undo() {
         await UpdateBoard(oldSettings);
     }
 
