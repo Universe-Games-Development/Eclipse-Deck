@@ -55,7 +55,7 @@ public class CreaturesPerformedTurnsCommand : ICommand {
     }
 
     public async UniTask Undo() {
-        throw new System.NotImplementedException();
+        await UniTask.CompletedTask;
     }
 }
 

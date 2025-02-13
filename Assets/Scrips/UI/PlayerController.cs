@@ -6,21 +6,10 @@ public class PlayerController : MonoBehaviour {
     [Inject] GameboardController gameboard_c;
 
     [SerializeField] private CardHandUI handUI;
-    [SerializeField] private int amountToDraw = 1;
-
     [SerializeField] private RayService rayService;
 
     protected void Start() {
         handUI.Initialize(player.hand);
-
-        //for (int i = 0; i < amountToDraw; i++) {
-        //    Card card = player.deck.DrawCard();
-        //    if (card == null) {
-        //        Debug.LogWarning("Drawn null card!");
-        //        return;
-        //    }
-        //    player.hand.AddCard(card);
-        //}
     }
 
     void Update() {

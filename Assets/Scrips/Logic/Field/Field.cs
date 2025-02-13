@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 
-public class Field {
+public class Field : IHasHealth {
     [Header("Grid Position")]
     public int row;
     public int column;
@@ -138,5 +138,13 @@ public class Field {
 
     public string GetTextCoordinates() {
         return $"{GetRow()} / {GetColumn()}";
+    }
+
+    public Health GetHealth() {
+        if (Owner == null) {
+            throw new InvalidOperationException("Null owner");
+        }
+
+        return Owner.Health;
     }
 }

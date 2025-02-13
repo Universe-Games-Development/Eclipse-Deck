@@ -12,36 +12,34 @@ public class CardAbilityUI : MonoBehaviour, IPointerEnterHandler {
 
     [Inject] UIManager uiManager;
 
-    public void FillAbilityUI(CardAbility cardAbility, bool abilityNamesEnabled = false) {
-        if (cardAbility?.abilityData != null) {
-            // Оновити опис
-            description = cardAbility.abilityData.Description ?? string.Empty;
+    public void FillAbilityUI(Ability ability, bool abilityNamesEnabled = false) {
+        AbilitySO abilityData = ability.AbilityData;
 
-            // Установити назву
-            if (abilityName != null) {
-                if (abilityNamesEnabled && !string.IsNullOrEmpty(cardAbility.abilityData.Name)) {
-                    abilityName.text = cardAbility.abilityData.Name;
-                    abilityName.gameObject.SetActive(true);
-                } else {
-                    abilityName.gameObject.SetActive(false);
-                }
-            }
-
-            // Установити іконку
-            if (abilityIcon != null) {
-                if (cardAbility.abilityData.Sprite != null) {
-                    abilityIcon.sprite = cardAbility.abilityData.Sprite;
-                    abilityIcon.gameObject.SetActive(true);
-                } else {
-                    abilityIcon.gameObject.SetActive(false);
-                }
-            }
-        } else {
+        if (ability == null || abilityData == null) {
             Debug.LogWarning("CardAbility or its data is null!");
 
-            // Деактивувати всі UI-елементи, якщо даних немає
             if (abilityName != null) abilityName.gameObject.SetActive(false);
             if (abilityIcon != null) abilityIcon.gameObject.SetActive(false);
+        }
+
+        description = abilityData.Description ?? string.Empty;
+
+        if (abilityName != null) {
+            if (abilityNamesEnabled && !string.IsNullOrEmpty(abilityData.Name)) {
+                abilityName.text = abilityData.Name;
+                abilityName.gameObject.SetActive(true);
+            } else {
+                abilityName.gameObject.SetActive(false);
+            }
+        }
+
+        if (abilityIcon != null) {
+            if (abilityData.Sprite != null) {
+                abilityIcon.sprite = abilityData.Sprite;
+                abilityIcon.gameObject.SetActive(true);
+            } else {
+                abilityIcon.gameObject.SetActive(false);
+            }
         }
     }
 
