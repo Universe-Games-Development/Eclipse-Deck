@@ -27,7 +27,7 @@ public class BattleManager {
             Debug.Log("Not all oppponents registered for board battle!");
             return;
         }
-        BattleStartEventData battleStartData = new BattleStartEventData(Registrator.GetActiveOpponents());
+        OnBattleBegin battleStartData = new OnBattleBegin(Registrator.GetActiveOpponents());
         eventBus.Raise(battleStartData);
     }
 

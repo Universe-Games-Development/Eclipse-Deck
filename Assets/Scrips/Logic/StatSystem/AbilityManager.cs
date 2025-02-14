@@ -4,12 +4,20 @@ using System.Linq;
 
 public class AbilityManager {
     private List<Ability> abilities = new();
+    private IAbilityOwner abilityOwner;
+    private GameEventBus eventBus;
 
-    public void InitializeAbilities(IAbilityOwner abilityOwner, List<AbilitySO> abilitiesData) {
+    public AbilityManager(IAbilityOwner abilityOwner, GameEventBus eventBus) { 
+        this.abilityOwner = abilityOwner;
+        this.eventBus = eventBus;
+    }
+
+    public void InitializeAbilities(List<AbilitySO> abilitiesData) {
         foreach (var abilityData in abilitiesData) {
-            Ability ability = abilityData.GenerateAbility(abilityOwner);
+            Ability ability = abilityData.GenerateAbility(abilityOwner, eventBus);
             abilities.Add(ability);
         }
+        // 
     }
 
     public List<Ability> GetNonActiveAbilities() {

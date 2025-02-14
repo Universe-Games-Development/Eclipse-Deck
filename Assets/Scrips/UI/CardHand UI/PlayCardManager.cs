@@ -1,19 +1,22 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
+using System;
+using System.Threading;
 using UnityEngine;
 using Zenject;
 
 public class PlayCardManager : IDisposable {
+    private Opponent opponent;
+
     private CardHand cardHand;
     private ICardsInputFiller commandFiller;
     [Inject] private CommandManager commandManager;
 
     private Card bufferedCard;
 
-    public PlayCardManager(CardHand cardHand, ICardsInputFiller commandFiller) {
-        this.cardHand = cardHand;
+    public PlayCardManager(Opponent opponent, ICardsInputFiller commandFiller) {
         this.commandFiller = commandFiller;
-
+        this.opponent = opponent;
+        cardHand = opponent.hand;
         cardHand.OnCardSelected += OnCardSelected;
     }
 
@@ -25,36 +28,16 @@ public class PlayCardManager : IDisposable {
         if (bufferedCard != null) return;
 
         Field fieldToSummon = null;
-        Command playCommand = selectedCard.GetPlayCardCommand(fieldToSummon);
+        Command playCommand = new PlayCardCommand(selectedCard, opponent, commandFiller);
         if (playCommand == null) {
             Debug.LogWarning("Selected card has no valid play command.");
             return;
         }
-
-        // temporary removes card from hand
-        bufferedCard = selectedCard;
-        cardHand.RemoveCard(selectedCard);
-
-        bool isValid;
-        try {
-            isValid = await commandFiller.FillCardnputs(selectedCard);
-        } catch (Exception ex) {
-            Debug.LogError("Error occurred during input filling: " + ex.Message);
-            isValid = false;
-        }
-
-        if (isValid) {
-            commandManager.EnqueueCommand(playCommand);
-        } else {
-            cardHand.AddCard(bufferedCard);
-        }
-
-        bufferedCard = null; // Clearing buffer
     }
 }
 
 public interface ICardsInputFiller {
-    Task<bool> FillCardnputs(Card card);
+    UniTask<T> RequestInput<T>(CardInputRequirement<T> requirement);
 }
 
 public class PlayerCommandFiller : ICardsInputFiller {
@@ -64,15 +47,61 @@ public class PlayerCommandFiller : ICardsInputFiller {
         this.playCardUI = playCardUI;
     }
 
-    public async Task<bool> FillCardnputs(Card card) {
-        return await playCardUI.FillInputs(card);
+    public UniTask<T> RequestInput<T>(CardInputRequirement<T> requirement) {
+        throw new NotImplementedException();
     }
 }
 
 public class EnemyCommandFiller : ICardsInputFiller {
-    public async Task<bool> FillCardnputs(Card card) {
-        // Soon : Algoritm to fill data by AI
-        await Task.Delay(500); // Thinking simulation
-        return true;
+
+    public UniTask<T> RequestInput<T>(CardInputRequirement<T> requirement) {
+        throw new NotImplementedException();
+    }
+}
+
+public class PlayCardCommand : Command {
+    private readonly ICardsInputFiller cardsInputFiller;
+    private readonly Opponent opponent;
+    private readonly Card selectedCard;
+    private ResourceData spentResources;
+
+    public PlayCardCommand(Card selectedCard, Opponent opponent, ICardsInputFiller cardsInputFiller) {
+        this.selectedCard = selectedCard ?? throw new ArgumentNullException(nameof(selectedCard));
+        this.opponent = opponent ?? throw new ArgumentNullException(nameof(opponent));
+        this.cardsInputFiller = cardsInputFiller ?? throw new ArgumentNullException(nameof(cardsInputFiller));
+    }
+
+    public override async UniTask Execute() {
+        Debug.Log($"Playing card: {selectedCard.Data.Name}");
+
+        // 1. Check for sufficient resources
+        spentResources = opponent.CardResource.TrySpend(selectedCard.Cost.CurrentValue);
+
+        // If not enough resources, stop the execution immediately
+        if (spentResources.Mana + spentResources.Health != selectedCard.Cost.CurrentValue) {
+            Debug.Log("Not enough resources to play card");
+            await Undo();
+            return;
+        }
+
+        if (!opponent.Health.IsAlive()) {
+            Debug.Log("Player died during card play");
+            await Undo(); // одразу відкотити дію
+            return; // зупинити виконання
+        }
+
+        opponent.hand.RemoveCard(selectedCard);
+
+        bool result = await selectedCard.PlayCard(opponent, cardsInputFiller);
+
+        if (!result) {
+            await Undo();
+        }
+    }
+
+    public override async UniTask Undo() {
+        opponent.CardResource.Add(spentResources);
+        opponent.hand.AddCard(selectedCard);
+        await UniTask.CompletedTask;
     }
 }

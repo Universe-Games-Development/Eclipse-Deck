@@ -12,8 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f64da9d112d4c84ba841aec48eb0bd3, type: 3}
   m_Name: Card Self Drawn
   m_EditorClassIdentifier: 
-  Name: Flying
-  Description: Cannot be targeted by non-flying creatures.
+  Name: Self Drawn
+  Description: 
   Sprite: {fileID: 21300000, guid: 8c1948be2e92a394da726075e9b647fe, type: 3}
-  activationState: 2
-  eventTriggers: 0c000000
+  _activationConditions: []

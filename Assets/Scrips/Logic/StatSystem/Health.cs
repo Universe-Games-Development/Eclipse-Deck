@@ -5,8 +5,6 @@ public class HealthStat : Stat {
          : base(maxValue, initialValue) {
         if (maxValue < 1) throw new ArgumentException("Max value must be at least 1.");
     }
-
-    
 }
 
 public class Attacktat : Stat {
@@ -25,7 +23,7 @@ public class Attacktat : Stat {
     }
 }
 
-
+// TO DO: Add regen stat
 public class Health : Stat {
     public IHasHealth Owner { get; }
     public event Action OnDeath;
@@ -38,23 +36,23 @@ public class Health : Stat {
         _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
     }
 
-    public void ApplyDamage(int damage, IDamageDealer? damageSource = null) {
-        if (damage <= 0) return;
+    public int ApplyDamage(int damage, IDamageDealer? damageSource = null) {
+        if (damage <= 0) return 0;
 
         var previousHealth = CurrentValue;
         Modify(-damage);
 
-        if (damageSource is IDamageDealer damageDealer) {
-            _eventBus.Raise(new OnDamageTaken(damageDealer, Owner, damage));
-            OnDamageTaken?.Invoke(damage, damageDealer);
-        }
-
+        IDamageDealer damageDealer = damageSource as IDamageDealer;
+        _eventBus.Raise(new OnDamageTaken(damageDealer, Owner, damage));
+        OnDamageTaken?.Invoke(damage, damageDealer);
 
         if (CurrentValue <= 0 && previousHealth > 0) {
             Die();
         } else {
             Console.WriteLine($"Took {damage} damage. Current health: {CurrentValue}");
         }
+
+        return previousHealth - CurrentValue;
     }
 
     private void Die() {

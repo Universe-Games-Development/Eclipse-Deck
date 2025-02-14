@@ -21,10 +21,10 @@ public class BoardUpdater {
     public void Construct(GameEventBus eventBus) {
         this.eventBus = eventBus;
 
-        eventBus.SubscribeTo<BattleStartEventData>(InitializeBoard);
+        eventBus.SubscribeTo<OnBattleBegin>(InitializeBoard);
     }
 
-    private void InitializeBoard(ref BattleStartEventData eventData) {
+    private void InitializeBoard(ref OnBattleBegin eventData) {
         CommandManager.EnqueueCommand(new GridInitCommand(this, InitBoard));
     }
 

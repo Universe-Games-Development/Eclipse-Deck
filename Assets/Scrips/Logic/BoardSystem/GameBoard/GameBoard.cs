@@ -14,29 +14,6 @@ public class GameBoard {
         _turnManager = turnManager;
     }
 
-    public bool SummonCreature(Opponent opponent, Field field, Creature creature) {
-        if (!IsValidSummon(opponent, field, creature)) return false;
-
-        bool result = field.PlaceCreature(creature);
-        Debug.Log(result
-            ? $"Creature successfully placed at {field.GetTextCoordinates()}"
-            : $"Failed to place creature at {field.row}, {field.column}.");
-        return result;
-    }
-
-    private bool IsValidSummon(Opponent opponent, Field field, Creature creature) {
-        if (field == null || creature == null) {
-            Debug.LogWarning("Invalid summon attempt: Field or creature is null.");
-            return false;
-        }
-
-        if (opponent != field.Owner) {
-            Debug.LogWarning($"{opponent.Name} tried to summon on a field they don't own.");
-            return false;
-        }
-        return true;
-    }
-
     public bool IsValidFieldSelected(Field field) {
         if (!IsInitialized()) {
             Debug.LogWarning("Gameboard not initialized! Can't select field");

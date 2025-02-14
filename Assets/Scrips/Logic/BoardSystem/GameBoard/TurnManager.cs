@@ -43,7 +43,7 @@ public class TurnManager {
         if (registeredOpponents.Count > 1) {
             ActiveOpponent = registrator.GetRandomOpponent();
             Opponent NonActiveOpponent = registrator.GetNextOpponent(ActiveOpponent);
-            eventBus.Raise(new TurnChangeEventData(ActiveOpponent, NonActiveOpponent));
+            eventBus.Raise(new OnTurnChange(ActiveOpponent, NonActiveOpponent));
         }
     }
 
@@ -70,8 +70,8 @@ public class TurnManager {
         // Цей метод буде викликаний після завершення всіх дій істот
         if (ActiveOpponent != null) {
             Debug.Log($"It is now {ActiveOpponent.Name}'s turn.");
-            eventBus.Raise(new TurnChangeEventData(ActiveOpponent, null));
-            eventBus.Raise(new TurnStartEventData(ActiveOpponent));
+            eventBus.Raise(new OnTurnChange(ActiveOpponent, null));
+            eventBus.Raise(new OnTurnStart(ActiveOpponent));
         }
     }
 

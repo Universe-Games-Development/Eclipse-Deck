@@ -11,12 +11,28 @@ public class Creature : IAbilityOwner, IDamageDealer, IHasHealth {
     public Attack Attack;
     public AbilityManager AbilityManager;
     
-    private Card card;
+    private CreatureCard creatureCard;
     private CreatureStrategyMovement movementHandler;
     private MoveCommand moveCommand;
 
-    public Creature(Card myCard, CreatureSO creatuseSO) {
-        card = myCard;
+    public Creature(CreatureCard creatureCard, Opponent owner, GameEventBus eventBus) {
+        this.creatureCard = creatureCard;
+        Health = new Health(this, creatureCard.HealthStat.MaxValue, creatureCard.HealthStat.CurrentValue, eventBus);
+        Attack = new Attack(this, creatureCard.Attack.MaxValue, creatureCard.Attack.CurrentValue, eventBus);
+
+        // Soon we define how to get the creatureSO
+        CreatureSO creatuseSO = null;
+        throw new NotFiniteNumberException();
+        throw new NotFiniteNumberException();
+
+        throw new NotFiniteNumberException();
+
+        throw new NotFiniteNumberException();
+
+        throw new NotFiniteNumberException();
+        throw new NotFiniteNumberException();
+        AbilityManager = new AbilityManager(this, eventBus);
+
         var movementData = creatuseSO.movementStrategy;
         // TO DO : abilities initialization
 

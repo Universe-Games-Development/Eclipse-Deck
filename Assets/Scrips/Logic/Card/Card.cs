@@ -1,7 +1,10 @@
+using Cysharp.Threading.Tasks;
+using NUnit.Framework;
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 
-public abstract class Card : IAbilityOwner {
+public abstract class Card {
     public event Action<Card> OnCardDrawn;
     public event Action<Card> OnCardShuffled;
     public event Action<Card> OnCardRDiscarded;
@@ -12,11 +15,10 @@ public abstract class Card : IAbilityOwner {
     public CardSO Data { get; protected set; }
     public Cost Cost { get; protected set; }
     public GameEventBus eventBus { get; protected set; }
-    public AbilityManager AbilityManager { get; protected set; }
+    
     public Opponent Owner { get; protected set; } // Add Owner here
 
     public CardUI cardUI;
-    public AbilityManager abilityManager;
     public Card(CardSO cardSO, Opponent owner, GameEventBus eventBus)  // Add owner to constructor
     {
         Data = cardSO;
@@ -25,15 +27,11 @@ public abstract class Card : IAbilityOwner {
         Owner = owner; // Assign the owner
         Cost = new Cost(cardSO.MAX_CARDS_COST, cardSO.cost);
 
-        abilityManager = new AbilityManager();
-        abilityManager.InitializeAbilities(this, cardSO.abilities);
-        
-
         ChangeState(CardState.InDeck);
     }
 
     public virtual void ChangeState(CardState newState) {
-        if (newState != CurrentState) { 
+        if (newState != CurrentState) {
             CurrentState = newState;
             switch (newState) {
                 case CardState.InDeck:
@@ -50,16 +48,37 @@ public abstract class Card : IAbilityOwner {
             }
         }
     }
+    
+    public abstract UniTask<bool> PlayCard(Opponent cardPlayer, ICardsInputFiller cardsInputFiller);
+}
 
-    // To do: Define how card will play will it be command or simple method
-    public abstract void Play();
+public class SpellCard : Card, IAbilityOwner {
+    public AbilityManager AbilityManager { get; protected set; }
 
+    public SpellCard(SpellCardSO cardSO, Opponent owner, GameEventBus eventBus)
+        : base(cardSO, owner, eventBus) {
+        AbilityManager = new AbilityManager(this, eventBus);
+        AbilityManager.InitializeAbilities(cardSO.abilities);
+    }
     public AbilityManager GetAbilityManager() {
         return AbilityManager;
     }
 
-    public Command GetPlayCardCommand(Field field) {
-        return new PlayCardCommand(Owner, this, field);
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, ICardsInputFiller cardsInputFiller) {
+        Debug.Log("Spell card played");
+        await UniTask.CompletedTask;
+        return false;
+    }
+}
+
+public class SupportCard : Card {
+    public SupportCard(SupportCardSO cardSO, Opponent owner, GameEventBus eventBus)
+        : base(cardSO, owner, eventBus) { }
+
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, ICardsInputFiller cardsInputFiller) {
+        Debug.Log("Support card played");
+        await UniTask.CompletedTask;
+        return false;
     }
 }
 
@@ -73,26 +92,17 @@ public class CreatureCard : Card {
         HealthStat = new(cardSO.MAX_CARD_HEALTH, cardSO.Health);
     }
 
-    public override void Play() {
-        Debug.Log($"Creature is played on the board!");
-    }
-}
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, ICardsInputFiller cardsInputFiller) {
+        CardInputRequirement<Field> cardInputRequirement = CardInputRequirements.GetByKey<Field>(typeof(FriendlyFieldInputRequirement));
 
-public class SpellCard : Card {
-    public SpellCard(CardSO cardSO, Opponent owner, GameEventBus eventBus)
-        : base(cardSO, owner, eventBus) { }
+        Field fieldToSummon = await cardsInputFiller.RequestInput<Field>(cardInputRequirement);
 
-    public override void Play() {
-        Debug.Log($"Spell is cast!");
-    }
-}
+        if (!fieldToSummon.IsSommonable(cardPlayer)) {
+            await UniTask.FromCanceled();
+        }
 
-public class SupportCard : Card {
-    public SupportCard(CardSO cardSO, Opponent owner, GameEventBus eventBus)
-        : base(cardSO, owner, eventBus) { }
+        Creature creature = new Creature(this, cardPlayer, eventBus);
 
-    public override void Play() {
-        Debug.Log($"Support is applied for the entire battle!");
-        // Додати логику підтримки
+        return await fieldToSummon.SummonCreatureAsync(creature, cardPlayer);
     }
 }

@@ -1,10 +1,10 @@
 using System;
 
 public class Stat : IStat {
-    private int currentValue;
-    private int minValue;
-    private int maxValue;
-    private int initialValue;
+    protected int currentValue;
+    protected int minValue;
+    protected int maxValue;
+    protected int initialValue;
     public event Action<int, int> OnValueChanged;
 
     public int InitialValue {

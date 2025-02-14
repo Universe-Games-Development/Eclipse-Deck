@@ -7,12 +7,12 @@ public enum ReflectMode {
 }
 
 [CreateAssetMenu(fileName = "ReflectDamage", menuName = "Abilities/CardAbilities")]
-public class ReflectDamageAbilitySO : SimpleAbilitySO {
+public class ReflectDamageAbilitySO : AbilitySO {
     public ReflectMode reflectMode = ReflectMode.Percentage;
     [Range(0, 1)] public float damagePercentage = 0.5f;
 
-    public override Ability GenerateAbility(IAbilityOwner owner) {
-        return new ReflectDamageAbility(this, owner, reflectMode, damagePercentage);
+    public override Ability GenerateAbility(IAbilityOwner owner, GameEventBus eventBus) {
+        return new ReflectDamageAbility(this, owner, reflectMode, eventBus, damagePercentage);
     }
 }
 
@@ -20,7 +20,7 @@ public class ReflectDamageAbility : Ability {
     private ReflectMode reflectMode = ReflectMode.Percentage;
     private float percentageDamage;
 
-    public ReflectDamageAbility(AbilitySO abilitySO, IAbilityOwner owner, ReflectMode reflectMode, float percentage = 0) : base(abilitySO, owner) {
+    public ReflectDamageAbility(AbilitySO abilitySO, IAbilityOwner owner, ReflectMode reflectMode, GameEventBus eventBus, float percentage = 0) : base(abilitySO, owner, eventBus) {
 
         this.reflectMode = reflectMode;
         if (reflectMode == ReflectMode.Percentage) {

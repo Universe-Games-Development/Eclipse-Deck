@@ -21,21 +21,11 @@ public abstract class AbilitySO : ScriptableObject {
     }
 
     // Абстрактний метод без EventBus
-    public abstract Ability GenerateAbility(IAbilityOwner owner);
+    public abstract Ability GenerateAbility(IAbilityOwner owner, GameEventBus eventBus);
 
     protected void OnValidate() {
         if (string.IsNullOrEmpty(Name)) {
             Name = GetType().Name;
         }
     }
-}
-
-// Абстрактний клас для здібностей без EventBus
-public abstract class SimpleAbilitySO : AbilitySO {
-    public override abstract Ability GenerateAbility(IAbilityOwner owner);
-}
-
-// Абстрактний клас для здібностей з EventBus
-public abstract class EventDrivenAbilitySO : AbilitySO {
-    public abstract EventDrivenAbility GenerateAbility(IAbilityOwner owner, GameEventBus eventBus);
 }

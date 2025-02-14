@@ -41,20 +41,26 @@ public class CardUIInfo : MonoBehaviour
 
         // Logic
         AttachmentToCard(card);
+        UpdateAbilities(card);
+    }
 
-        // Show abilities or description
-        List<Ability> cardAbilities = card.abilityManager.GetAbilities();
+    private void UpdateAbilities(Card card) {
+        if (card is SpellCard spell) {
+            // Show abilities or description
+            List<Ability> cardAbilities = spell.AbilityManager.GetAbilities();
 
-        if (cardAbilities == null || cardAbilities.Count == 0) {
-            EnableCardDescription();
-        } else {
-            // Hide description if abilities exist
-            if (descriptionText != null) {
-                descriptionText.gameObject.SetActive(false);
+            if (cardAbilities == null || cardAbilities.Count == 0) {
+                EnableCardDescription();
+            } else {
+                // Hide description if abilities exist
+                if (descriptionText != null) {
+                    descriptionText.gameObject.SetActive(false);
+                }
+
+                UpdateAbilities(cardAbilities);
             }
-
-            UpdateAbilities(cardAbilities);
         }
+        
     }
 
     protected virtual void AttachmentToCard(Card card) {
