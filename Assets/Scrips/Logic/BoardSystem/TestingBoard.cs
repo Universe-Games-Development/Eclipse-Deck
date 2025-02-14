@@ -36,11 +36,6 @@ public class TestingBoard : MonoBehaviour
     public void Construct(BattleManager battleManager, GameEventBus eventBus) {
         _battleManager = battleManager;
         this.eventBus = eventBus;
-        eventBus.SubscribeTo<TurnEndEvent>(TryPlayCard);
-    }
-
-    private void TryPlayCard(ref TurnEndEvent eventData) {
-        commandManager.EnqueueCommand(GetPlayCardCommand(eventData));
     }
 
     private void Start() {
@@ -131,54 +126,7 @@ public class TestingBoard : MonoBehaviour
         return randomList;
     }
 
-    private Command GetPlayCardCommand(TurnEndEvent turnEndEvent) {
-        Command command = new EmptyCommand();
-        if (turnEndEvent.endTurnOpponent == player) {
-
-            Card playerCard = player.hand.GetRandomCard();
-            Card enemyCard = enemy.hand.GetRandomCard();
-
-            if (playerCard != null || enemyCard != null) {
-                CreatureSO creatureData = resManager.GetRandomResource<CreatureSO>(ResourceType.CREATURE);
-
-                Creature playerCreature = new(playerCard, creatureData);
-                Creature enemyCreature = new(enemyCard, creatureData);
-
-                if (gridManager.GridBoard != null) {
-
-                    Field fieldToPlace = gridManager.GridBoard.GetFieldAt(-1, -1);
-                    command = new PlayCardCommand(player, playerCard, fieldToPlace);
-                }
-            }
-        }
-        return command;
-    }
-
     private void OnDestroy() {
         boardConfig.ResetSize();
-    }
-}
-
-
-public class PlayCardCommand : Command {
-    [Inject] GameboardController gameBoardController;
-    private Opponent opponent;
-    private Card playerCard;
-    private Field fieldToPlace;
-
-    public PlayCardCommand(Opponent opponent, Card playerCard, Field fieldToPlace) {
-        this.opponent = opponent;
-        this.playerCard = playerCard;
-        this.fieldToPlace = fieldToPlace;
-    }
-
-    public async override UniTask Execute() {
-        Debug.Log("Play card command");
-        gameBoardController.SummonCreature(opponent, playerCard, fieldToPlace);
-        await UniTask.CompletedTask;
-    }
-
-    public async override UniTask Undo() {
-        await UniTask.CompletedTask;
     }
 }

@@ -24,14 +24,6 @@ public class GameboardController : MonoBehaviour {
         } else { enemyCell.AssignOwner(opponent); }
     }
 
-    public bool SummonCreature(Opponent opponent, Card selectedCard, Field field) {
-        // Determine is that creature or spell
-
-        // load resources for creature by card data
-        Creature playerCreature = null;
-        return gameBoard.SummonCreature(opponent, field, playerCreature);
-    }
-
     public Field GetFieldByWorldPosition(Vector3? mouseWorldPosition) {
         if (!mouseWorldPosition.HasValue || gridVisual == null) {
             return null;

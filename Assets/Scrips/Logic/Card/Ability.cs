@@ -10,9 +10,11 @@ public abstract class Ability : IAbility {
     protected IAbilityOwner abilityOwner;
     public AbilitySO AbilityData { get; set; }
     public bool IsActive { get; set; }
+    protected readonly GameEventBus EventBus;
 
-    public Ability(AbilitySO abilityData, IAbilityOwner abilityOwner) {
+    public Ability(AbilitySO abilityData, IAbilityOwner abilityOwner, GameEventBus eventBus) {
         this.abilityOwner = abilityOwner;
+        EventBus = eventBus;
         AbilityData = abilityData;
         SubscribeToEvents();
         UpdateAbilityState();
@@ -70,16 +72,6 @@ public abstract class Ability : IAbility {
         Deregister();
         UnsubscribeFromEvents();
         GC.SuppressFinalize(this);
-    }
-}
-
-// Здібність, яка використовує події
-public abstract class EventDrivenAbility : Ability {
-    protected readonly GameEventBus EventBus;
-
-    public EventDrivenAbility(AbilitySO abilityData, IAbilityOwner abilityOwner, GameEventBus eventBus)
-        : base(abilityData, abilityOwner) {
-        EventBus = eventBus;
     }
 }
 

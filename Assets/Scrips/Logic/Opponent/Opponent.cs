@@ -3,11 +3,15 @@ using System;
 using System.Collections.Generic;
 
 public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
-    
+
     public string Name = "Opponent";
-    public Health Health {  get; private set; }
+
+    public Mana Mana { get; private set; }
+    public Health Health { get; private set; }
     public AbilityManager AbilityManager { get; private set; }
-    
+
+    public CardResource CardResource { get; private set; }
+
     public CardHand hand;
     public Deck deck;
     public Deck discardDeck;
@@ -17,7 +21,6 @@ public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
 
     public Action<Opponent> OnDefeat { get; internal set; }
 
-
     private readonly GameEventBus eventBus;
     private readonly CommandManager commandManager;
 
@@ -26,20 +29,22 @@ public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
         this.commandManager = commandManager;
 
         Health = new Health(this, 0, 20, eventBus);
+        Mana = new Mana(this, 0, 10, eventBus);
+        CardResource = new CardResource(Mana, Health);
+
         cardCollection = new CardCollection(assetLoader);
-
         hand = new CardHand(this, eventBus);
-        playCardManager = new PlayCardManager(hand, commandFiller);
+        playCardManager = new PlayCardManager(this, commandFiller);
 
-        eventBus.SubscribeTo<BattleStartEventData>(StartBattleActions);
-        eventBus.SubscribeTo<TurnStartEventData>(TurnStartActions);
+        eventBus.SubscribeTo<OnBattleBegin>(StartBattleActions);
+        eventBus.SubscribeTo<OnTurnStart>(TurnStartActions);
     }
 
-    private void TurnStartActions(ref TurnStartEventData eventData) {
+    private void TurnStartActions(ref OnTurnStart eventData) {
         commandManager.EnqueueCommand(new DrawCardCommand(this, 1));
     }
 
-    private void StartBattleActions(ref BattleStartEventData eventData) {
+    private void StartBattleActions(ref OnBattleBegin eventData) {
         commandManager.EnqueueCommands(new List<Command> {
             new InitDeckCommand(this, 40, cardCollection, eventBus),
             new DrawCardCommand(this, 3),
@@ -48,8 +53,8 @@ public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
 
     public void Dispose() {
         if (eventBus != null) {
-            eventBus.UnsubscribeFrom<BattleStartEventData>(StartBattleActions);
-            eventBus.UnsubscribeFrom<TurnStartEventData>(TurnStartActions);
+            eventBus.UnsubscribeFrom<OnBattleBegin>(StartBattleActions);
+            eventBus.UnsubscribeFrom<OnTurnStart>(TurnStartActions);
         }
 
         GC.SuppressFinalize(this);
@@ -80,7 +85,7 @@ public class InitCardHandCommand : Command {
         CardHand initHand = opponent.hand;
 
         initHand = new CardHand(opponent, eventBus);
-        opponent.playCardManager = new PlayCardManager(initHand, commandFiller);
+        opponent.playCardManager = new PlayCardManager(opponent, commandFiller);
         await UniTask.CompletedTask;
     }
 

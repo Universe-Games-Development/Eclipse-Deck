@@ -16,27 +16,7 @@ public class PlayerController : MonoBehaviour {
         if (Input.GetMouseButtonDown(0)) {
             Vector3? mouseWorldPosition = rayService.GetRayMousePosition();
             Field field = gameboard_c.GetFieldByWorldPosition(mouseWorldPosition);
-
-            TrySummonCard(field);
-        }
-    }
-
-
-    private void TrySummonCard(Field field) {
-        if (field != null) {
-            Card selectedCard = player.hand.SelectedCard;
-            if (selectedCard == null) {
-                Debug.Log("No card selected to summon.");
-                return;
-            }
-
-            bool isSummoned = gameboard_c.SummonCreature(player, selectedCard, field);
-            
-            if (isSummoned) {
-                player.hand.RemoveCard(selectedCard);
-            }
-        } else {
-            player.hand.DeselectCurrentCard();
+            Debug.Log("Selected: " + field.GetTextCoordinates());
         }
     }
 

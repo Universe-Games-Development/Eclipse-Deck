@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,6 +16,9 @@ public abstract class Command : ICommand {
     public void RemoveChild(Command child) => _children.Remove(child);
     public void ClearChildren() => _children.Clear();
 
+    protected bool HasChild() {
+        throw new NotImplementedException();
+    }
     public abstract UniTask Execute();
     public abstract UniTask Undo();
 

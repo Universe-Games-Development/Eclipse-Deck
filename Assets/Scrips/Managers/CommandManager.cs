@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System;
 
 public enum ExecutionMode {
     Manual, // Manual call by ExecuteCommands
@@ -36,20 +37,19 @@ public class CommandManager {
     }
 
     private async UniTask ExecuteCommandRecursively(Command rootCommand) {
-        Stack<Command> stack = new();
-        stack.Push(rootCommand);
+        try {
+            await rootCommand.Execute();
+            _undoStack.Push(rootCommand);
 
-        while (stack.Count > 0) {
-            var command = stack.Pop();
-
-            foreach (var child in command.Children) {
-                stack.Push(child);
+            foreach (var child in rootCommand.Children) {
+                await ExecuteCommandRecursively(child);
             }
-
-            await command.Execute();
-            _undoStack.Push(command);
+        } catch (Exception ex) {
+            // Логування чи обробка виключень
+            Debug.LogError($"Помилка під час виконання команди: {ex.Message}");
         }
     }
+
 
     internal void EnqueueCommands(List<Command> commands) {
         foreach (var command in commands) {
@@ -91,7 +91,7 @@ public class CommandManager {
         }
     }
 
-    protected virtual bool ValidateCommand(ICommand command) {
+    protected virtual bool ValidateCommand(Command command) {
         return command != null;
     }
 }

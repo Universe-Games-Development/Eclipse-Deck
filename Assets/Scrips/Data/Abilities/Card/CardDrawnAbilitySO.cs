@@ -2,9 +2,9 @@ using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Card Self Drawn", menuName = "Abilities/CardAbilities/Self Drawn")]
-public class CardDrawnAbilitySO : SimpleAbilitySO {
-    public override Ability GenerateAbility(IAbilityOwner owner) {
-        return new CardDrawnSelfAbility(this, owner);
+public class CardDrawnAbilitySO : AbilitySO {
+    public override Ability GenerateAbility(IAbilityOwner owner, GameEventBus eventBus) {
+        return new CardDrawnSelfAbility(this, owner, eventBus);
     }
 }
 
@@ -12,7 +12,7 @@ public class CardDrawnAbilitySO : SimpleAbilitySO {
 public class CardDrawnSelfAbility : Ability {
     private Card card;
 
-    public CardDrawnSelfAbility(AbilitySO abilityData, IAbilityOwner abilityOwner) : base(abilityData, abilityOwner) {
+    public CardDrawnSelfAbility(AbilitySO abilityData, IAbilityOwner abilityOwner, GameEventBus eventBus) : base(abilityData, abilityOwner, eventBus) {
         TrySetCardOwner(abilityOwner);
     }
 

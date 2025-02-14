@@ -79,7 +79,7 @@ public class Field : IHasHealth {
     public async UniTask<bool> SummonCreatureAsync(Creature creature, Opponent summoner, int delayFrames = 1) {
         await UniTask.DelayFrame(delayFrames);
 
-        bool canSummon = IsSommonable(creature, summoner);
+        bool canSummon = IsSommonable(summoner);
         if (!canSummon) {
             Debug.LogError("Summoner for field is nobody!");
             return false;
@@ -121,8 +121,8 @@ public class Field : IHasHealth {
     }
 
     // To summon
-    public bool IsSommonable(Creature creature, Opponent summoner) {
-        return CanPlaceCreature(creature) && summoner == Owner;
+    public bool IsSommonable(Opponent summoner) {
+        return OccupiedCreature == null && summoner == Owner;
     }
 
     public bool HasCreature => OccupiedCreature != null;

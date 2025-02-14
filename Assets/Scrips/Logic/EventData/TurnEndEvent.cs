@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 
-public struct TurnChangeEventData : IEvent {
+public struct OnTurnChange : IEvent {
     public Opponent activeOpponent;
     public Opponent endTurnOpponent;
 
-    public TurnChangeEventData(Opponent activeOpponent, Opponent endTurnOpponent) {
+    public OnTurnChange(Opponent activeOpponent, Opponent endTurnOpponent) {
         this.activeOpponent = activeOpponent;
         this.endTurnOpponent = endTurnOpponent;
     }
@@ -18,18 +18,18 @@ public struct TurnEndEvent : IEvent {
     }
 }
 
-public struct TurnStartEventData : IEvent {
+public struct OnTurnStart : IEvent {
     public Opponent startTurnOpponent;
 
-    public TurnStartEventData(Opponent startTurnOpponent) {
+    public OnTurnStart(Opponent startTurnOpponent) {
         this.startTurnOpponent = startTurnOpponent;
     }
 }
 
-public struct BattleStartEventData : IEvent {
+public struct OnBattleBegin : IEvent {
     private List<Opponent> opponents;
 
-    public BattleStartEventData(List<Opponent> opponents) {
+    public OnBattleBegin(List<Opponent> opponents) {
         this.opponents = opponents;
     }
 }

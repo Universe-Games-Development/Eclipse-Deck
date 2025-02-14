@@ -22,7 +22,9 @@ MonoBehaviour:
   resourseId: 803f9ed4-af07-4b07-8b30-e2a37b36c41f
   rarity: 0
   cost: 2
-  cardAbilities: []
+  abilities:
+  - {fileID: 11400000, guid: c1e66f9d9f1a613498324781dbed4a4c, type: 2}
+  - {fileID: 11400000, guid: 58134fba8d0e3054b801e441635d542f, type: 2}
   MAX_CARD_ATTACK: 100
   MAX_CARD_HEALTH: 100
   Attack: 3
