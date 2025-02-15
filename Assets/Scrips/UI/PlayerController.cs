@@ -16,7 +16,10 @@ public class PlayerController : MonoBehaviour {
         if (Input.GetMouseButtonDown(0)) {
             Vector3? mouseWorldPosition = rayService.GetRayMousePosition();
             Field field = gameboard_c.GetFieldByWorldPosition(mouseWorldPosition);
-            Debug.Log("Selected: " + field.GetTextCoordinates());
+            if (field != null) {
+                Debug.Log("Clicked Field at: " + field.GetTextCoordinates());
+            }
+            
         }
     }
 

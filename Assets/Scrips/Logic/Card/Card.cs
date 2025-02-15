@@ -1,7 +1,5 @@
 using Cysharp.Threading.Tasks;
-using NUnit.Framework;
 using System;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public abstract class Card {
@@ -50,6 +48,14 @@ public abstract class Card {
     }
     
     public abstract UniTask<bool> PlayCard(Opponent cardPlayer, ICardsInputFiller cardsInputFiller);
+
+    internal void Deselect() {
+        Debug.LogError("Deselect");
+    }
+
+    internal void Select() {
+        Debug.LogError("Select");
+    }
 }
 
 public class SpellCard : Card, IAbilityOwner {
@@ -93,16 +99,25 @@ public class CreatureCard : Card {
     }
 
     public override async UniTask<bool> PlayCard(Opponent cardPlayer, ICardsInputFiller cardsInputFiller) {
-        CardInputRequirement<Field> cardInputRequirement = CardInputRequirements.GetByKey<Field>(typeof(FriendlyFieldInputRequirement));
+        IInputRequirementRegistry cardInputRequirements = cardsInputFiller.GetRequirementRegistry();
+        CardInputRequirement<FieldController> cardInputRequirement = cardInputRequirements.GetRequirement<FieldController>(typeof(FriendlyFieldInputRequirement));
 
-        Field fieldToSummon = await cardsInputFiller.RequestInput<Field>(cardInputRequirement);
+        FieldController fieldToSummon = await cardsInputFiller.ProcessRequirementAsync<FieldController>(cardPlayer, cardInputRequirement);
+        if (fieldToSummon == null) {
+            return false;
+        }
+        Field field = fieldToSummon.Logic;
+        if (field == null) {
+            Debug.Log("Field is null");
+            return false;
+        }
 
-        if (!fieldToSummon.IsSommonable(cardPlayer)) {
+        if (!field.IsSommonable(cardPlayer)) {
             await UniTask.FromCanceled();
         }
 
         Creature creature = new Creature(this, cardPlayer, eventBus);
 
-        return await fieldToSummon.SummonCreatureAsync(creature, cardPlayer);
+        return await field.SummonCreatureAsync(creature, cardPlayer);
     }
 }

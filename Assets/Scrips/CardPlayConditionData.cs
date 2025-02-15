@@ -2,111 +2,125 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
+using Zenject;
 
-public static class CardInputRequirements {
-    private static readonly Dictionary<Type, object> _requirements = new();
+public interface IInputRequirementRegistry {
+    CardInputRequirement<T> GetRequirement<T>(Type type) where T : Component;
+}
 
-    static CardInputRequirements() {
+public class InputRequirementRegistry : IInputRequirementRegistry {
+    private readonly Dictionary<Type, object> _requirements = new();
+    private readonly IInstantiator _instantiator; // Залежність від DI-контейнера (наприклад, Zenject)
+
+    public InputRequirementRegistry(IInstantiator instantiator) {
+        _instantiator = instantiator;
         RegisterAllRequirements();
     }
 
-    private static void RegisterAllRequirements() {
+    private void RegisterAllRequirements() {
         var requirementType = typeof(CardInputRequirement<>);
-
         var derivedTypes = Assembly.GetExecutingAssembly()
             .GetTypes()
-            .Where(t => t.IsClass && !t.IsAbstract)
-            .Select(t => new { Type = t, Base = GetBaseGenericType(t, requirementType) })
-            .Where(t => t.Base != null)
+            .Where(t => t.IsClass && !t.IsAbstract && IsSubclassOfRawGeneric(requirementType, t))
             .ToList();
 
-        foreach (var typeInfo in derivedTypes) {
-            var instance = Activator.CreateInstance(typeInfo.Type);
-            if (instance == null) continue;
-
-            _requirements[typeInfo.Base.GenericTypeArguments[0]] = instance;
+        foreach (var type in derivedTypes) {
+            var instance = _instantiator.Instantiate(type);
+            _requirements[type] = instance;
         }
     }
 
-    private static Type? GetBaseGenericType(Type type, Type genericBaseType) {
-        while (type != null && type != typeof(object)) {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == genericBaseType) {
-                return type;
-            }
-            type = type.BaseType!;
+    public CardInputRequirement<T> GetRequirement<T>(Type type) where T : Component {
+        // Пошук найбільш конкретного типу в ієрархії
+        var targetType = type.GetAllBaseTypesAndInterfaces()
+            .FirstOrDefault(t => _requirements.ContainsKey(t));
+
+        if (targetType != null && _requirements.TryGetValue(targetType, out var requirement)) {
+            return (CardInputRequirement<T>)requirement;
         }
-        return null;
+
+        throw new KeyNotFoundException($"Requirement for type {type} not found");
     }
 
-    public static CardInputRequirement<T> GetByKey<T>(Type type) where T : class {
-        if (_requirements.TryGetValue(type, out var requirement) && requirement is CardInputRequirement<T> typedRequirement) {
-            return typedRequirement;
+    private static bool IsSubclassOfRawGeneric(Type generic, Type toCheck) {
+        while (toCheck != null && toCheck != typeof(object)) {
+            var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
+            if (generic == cur) return true;
+            toCheck = toCheck.BaseType;
         }
-
-        // Шукаємо найближчий відповідний базовий клас або інтерфейс
-        var closestType = _requirements.Keys.FirstOrDefault(t => t.IsAssignableFrom(type));
-        if (closestType != null && _requirements.TryGetValue(closestType, out var closestRequirement) && closestRequirement is CardInputRequirement<T> castedRequirement) {
-            return castedRequirement;
-        }
-
-        throw new KeyNotFoundException($"No valid requirement registered for type {type}");
+        return false;
     }
 }
 
+public static class TypeExtensions {
+    public static IEnumerable<Type> GetAllBaseTypesAndInterfaces(this Type type) {
+        var types = new List<Type>();
 
+        for (var current = type; current != null; current = current.BaseType) {
+            types.Add(current);
+            types.AddRange(current.GetInterfaces());
+        }
 
-public class AnyCardInputRequirement : CardInputRequirement<Card> {
+        return types.Distinct();
+    }
+}
+
+public class AnyCardInputRequirement : CardInputRequirement<CardUI> {
     public override string Instruction => "Choose any card";
 
     public override string WrongTypeMessage => "You must select a card";
 
-    protected override bool ValidateCondition(Opponent cardPlayer, Card card, out string callBackMessage) {
-        callBackMessage = $"Card {card} selected";
+    protected override bool ValidateCondition(Opponent cardPlayer, CardUI cardView, out string callBackMessage) {
+        callBackMessage = $"Card {cardView} selected";
         return true;
     }
 }
 
 #region DamageableInputRequirements
 
-public class DamageableInputRequirement : CardInputRequirement<IHasHealth> {
-    public override string Instruction => "Choose any target for damage";
-    public override string WrongTypeMessage => "You must select a damagable object";
-    protected override bool ValidateCondition(Opponent cardPlayer, IHasHealth damagable, out string callBackMessage) {
-        callBackMessage = $"Damagable object {damagable} selected";
-        return true;
-    }
-}
+public class GenericDamageableRequirement : CardInputRequirement<MonoBehaviour> {
+    public override string Instruction => "Choose a valid damageable target";
+    public override string WrongTypeMessage => "You must select a valid damageable object";
 
-public class  EnemyDamagableRequirement : CardInputRequirement<IHasHealth> {
-    public override string Instruction => "Choose enemy for damage";
-    public override string WrongTypeMessage => "Need enemy damagable";
-    protected override bool ValidateCondition(Opponent cardPlayer, IHasHealth damagable, out string callBackMessage) {
-        callBackMessage = $"Damagable object {damagable} selected";
+    protected override bool ValidateCondition(Opponent cardPlayer, MonoBehaviour input, out string callBackMessage) {
+        var logicHolder = input as ILogicHolder<object>; // Отримуємо ILogicHolder
+        if (logicHolder == null) {
+            callBackMessage = "Selected object does not contain logic";
+            return false;
+        }
+
+        if (logicHolder.Logic is not IHasHealth health) {
+            callBackMessage = "Selected object is not damageable";
+            return false;
+        }
+
+        callBackMessage = $"Damageable object {health} selected";
         return true;
     }
 }
 
 #endregion
 
-public class OpponentInputRequirement : CardInputRequirement<Opponent> {
+public class OpponentInputRequirement : CardInputRequirement<OpponentController> {
     public override string Instruction => "Choose any opponent";
 
     public override string WrongTypeMessage => "Select opponent";
 
-    protected override bool ValidateCondition(Opponent cardPlayer, Opponent targetOpponent, out string callBackMessage) {
-        callBackMessage = $"Opponent {targetOpponent.Name} selected";
+    protected override bool ValidateCondition(Opponent cardPlayer, OpponentController targetOpponent, out string callBackMessage) {
+        callBackMessage = $"Opponent {targetOpponent.Logic.Name} selected";
         return true;
     }
 }
 
 #region CreatureInputRequirements
-public class CreatureInputRequirement : CardInputRequirement<Creature> {
+public class CreatureInputRequirement : CardInputRequirement<CreatureController> {
     public override string Instruction => "Choose any creature";
 
     public override string WrongTypeMessage => "You must select a creature";
 
-    protected override bool ValidateCondition(Opponent cardPlayer, Creature creature, out string callBackMessage) {
-        callBackMessage = $"Creature {creature} selected";
+    protected override bool ValidateCondition(Opponent cardPlayer, CreatureController creatureView, out string callBackMessage) {
+        callBackMessage = $"Creature {creatureView} selected";
         return true;
     }
 
@@ -118,12 +132,12 @@ public class CreatureInputRequirement : CardInputRequirement<Creature> {
 public class FriendlyCreatureRequirement : CreatureInputRequirement {
     public override string Instruction => "Choose a friendly creature";
     public string WrongCreatureMessage => "You must select a friendly creature";
-    protected override bool ValidateCondition(Opponent cardPlayer, Creature creature, out string callBackMessage) {
-        if (!IsFriendly(cardPlayer, creature)) {
-            callBackMessage = callBackMessage = $"{WrongCreatureMessage}: Enemy {creature} does not belong to {cardPlayer.Name}"; 
+    protected override bool ValidateCondition(Opponent cardPlayer, CreatureController creatureView, out string callBackMessage) {
+        if (!IsFriendly(cardPlayer, creatureView.Logic)) {
+            callBackMessage = callBackMessage = $"{WrongCreatureMessage}: Enemy {creatureView} does not belong to {cardPlayer.Name}"; 
             return false;
         }
-        callBackMessage = $"Friendly creature {creature} selected";
+        callBackMessage = $"Friendly creature {creatureView} selected";
         return true;
     }
 }
@@ -131,25 +145,25 @@ public class FriendlyCreatureRequirement : CreatureInputRequirement {
 public class EnemyCreatureRequirement : CreatureInputRequirement {
     public override string Instruction => "Choose an enemy creature";
     public string WrongCreatureMessage => "You must select an enemy creature";
-    protected override bool ValidateCondition(Opponent cardPlayer, Creature creature, out string callBackMessage) {
-        if (IsFriendly(cardPlayer, creature)) {
-            callBackMessage = WrongCreatureMessage + $"Friendly {creature} is belong to {cardPlayer.Name}";
+    protected override bool ValidateCondition(Opponent cardPlayer, CreatureController creatureView, out string callBackMessage) {
+        if (IsFriendly(cardPlayer, creatureView.Logic)) {
+            callBackMessage = WrongCreatureMessage + $"Friendly {creatureView} is belong to {cardPlayer.Name}";
             return false;
         }
-        callBackMessage = $"Enemy creature {creature} selected";
+        callBackMessage = $"Enemy creature {creatureView} selected";
         return true;
     }
 }
 #endregion
 
 public class FriendlyFieldInputRequirement : FieldInputRequirement {
-
-    protected override bool ValidateCondition(Opponent cardPlayer, Field field, out string callBackMessage) {
-        if (!IsFriendly(cardPlayer, field)) {
-            callBackMessage = $"Field {field} does not belong to {cardPlayer.Name}";
+    public override string Instruction => "Choose friendly field";
+    protected override bool ValidateCondition(Opponent cardPlayer, FieldController fieldView, out string callBackMessage) {
+        if (!IsFriendly(cardPlayer, fieldView.Logic)) {
+            callBackMessage = $"Field {fieldView} does not belong to {cardPlayer.Name}";
             return false;
         }
-        callBackMessage = $"Field {field} selected";
+        callBackMessage = $"Field {fieldView} selected";
         return true;
     }
 
@@ -159,12 +173,12 @@ public class FriendlyFieldInputRequirement : FieldInputRequirement {
 }
 
 
-public class FieldInputRequirement : CardInputRequirement<Field> {
+public class FieldInputRequirement : CardInputRequirement<FieldController> {
     public override string Instruction => "Choose any field";
 
     public override string WrongTypeMessage => "You must select a field";
 
-    protected override bool ValidateCondition(Opponent cardPlayer, Field field, out string callBackMessage) {
+    protected override bool ValidateCondition(Opponent cardPlayer, FieldController field, out string callBackMessage) {
         callBackMessage = $"Field {field} selected";
         return true;
     }
@@ -174,11 +188,18 @@ public class FieldInputRequirement : CardInputRequirement<Field> {
     }
 }
 
-public abstract class CardInputRequirement<T> {
+public abstract class CardInputRequirement<T> where T : Component {
     public abstract string Instruction { get; }
     public abstract string WrongTypeMessage { get; }
 
-    public bool ValidateInput(Opponent cardPlayer, object input, out string callBackMessage) {
+    public bool ValidateInput(Opponent cardPlayer, T input, out string callBackMessage) {
+        if (input == null) {
+            callBackMessage = "No input selected";
+            return false;
+        }
+
+        input.GetComponent<T>();
+
         if (input is not T typedInput) {
             callBackMessage = WrongTypeMessage;
             return false;
@@ -186,5 +207,6 @@ public abstract class CardInputRequirement<T> {
 
         return ValidateCondition(cardPlayer, typedInput, out callBackMessage);
     }
+
     protected abstract bool ValidateCondition(Opponent cardPlayer, T input, out string callBackMessage);
 }

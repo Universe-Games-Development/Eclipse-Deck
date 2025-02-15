@@ -7,13 +7,16 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
         Container.Bind<TurnManager>().AsSingle();
 
         // Player
-        Container.Bind<Player>().AsSingle().NonLazy();
-        Container.Bind<ICardsInputFiller>().To<PlayerCommandFiller>().AsSingle().WhenInjectedInto<Player>();
-        Container.Bind<PlayCardUI>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<Player>().AsSingle();
+        Container.Bind<ICardsInputFiller>().To<CardInputUI>().FromComponentInHierarchy().AsSingle().WhenInjectedInto<Player>();
 
         // Enemy
         Container.Bind<Enemy>().AsTransient();
         Container.Bind<ICardsInputFiller>().To<EnemyCommandFiller>().AsTransient().WhenInjectedInto<Enemy>();
+        
+        Container.Bind<IInputRequirementRegistry>()
+            .To<InputRequirementRegistry>()
+            .AsSingle();
 
         // Gameboard
         Container.Bind<GameboardController>().FromComponentInHierarchy().AsSingle();

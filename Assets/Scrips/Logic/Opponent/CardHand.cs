@@ -71,7 +71,6 @@ public class CardHand {
         if (SelectedCard == newCard) return;
 
         DeselectCurrentCard();
-
         SelectedCard = newCard;
         Debug.Log("Selected: " + newCard.Data.Name);
 
