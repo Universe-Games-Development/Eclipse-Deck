@@ -13,7 +13,7 @@ public class CardAbilityUI : MonoBehaviour, IPointerEnterHandler {
     [Inject] UIManager uiManager;
 
     public void FillAbilityUI(Ability ability, bool abilityNamesEnabled = false) {
-        AbilitySO abilityData = ability.AbilityData;
+        AbilityData abilityData = ability.AbilityData;
 
         if (ability == null || abilityData == null) {
             Debug.LogWarning("CardAbility or its data is null!");

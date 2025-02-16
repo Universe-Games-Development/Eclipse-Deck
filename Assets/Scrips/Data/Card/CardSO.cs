@@ -19,7 +19,9 @@ public abstract class CardSO : ScriptableObject {
     public Rarity rarity;
     public int cost;
 
-    
+    public List<CardAbilityData> abilities;
+
+
     private static readonly Dictionary<Rarity, Color> rarityColors = new Dictionary<Rarity, Color> {
         { Rarity.Common, Color.gray },
         { Rarity.Uncommon, Color.green },

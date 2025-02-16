@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 
-public abstract class Card {
+public abstract class Card : IAbilitiesCaster {
     public event Action<Card> OnCardDrawn;
     public event Action<Card> OnCardShuffled;
     public event Action<Card> OnCardRDiscarded;
@@ -17,6 +17,7 @@ public abstract class Card {
     public Opponent Owner { get; protected set; } // Add Owner here
 
     public CardUI cardUI;
+    public AbilityManager AbilityManager { get; protected set; }
     public Card(CardSO cardSO, Opponent owner, GameEventBus eventBus)  // Add owner to constructor
     {
         Data = cardSO;
@@ -26,6 +27,9 @@ public abstract class Card {
         Cost = new Cost(cardSO.MAX_CARDS_COST, cardSO.cost);
 
         ChangeState(CardState.InDeck);
+
+        AbilityManager = new AbilityManager(this, eventBus);
+        AbilityManager.InitializeAbilities(cardSO.abilities);
     }
 
     public virtual void ChangeState(CardState newState) {
@@ -56,15 +60,18 @@ public abstract class Card {
     internal void Select() {
         Debug.LogError("Select");
     }
+
+    public AbilityManager GetAbilityManager() {
+        throw new NotImplementedException();
+    }
 }
 
-public class SpellCard : Card, IAbilityOwner {
-    public AbilityManager AbilityManager { get; protected set; }
+public class SpellCard : Card, IAbilitiesCaster {
+    
 
     public SpellCard(SpellCardSO cardSO, Opponent owner, GameEventBus eventBus)
         : base(cardSO, owner, eventBus) {
-        AbilityManager = new AbilityManager(this, eventBus);
-        AbilityManager.InitializeAbilities(cardSO.abilities);
+        
     }
     public AbilityManager GetAbilityManager() {
         return AbilityManager;

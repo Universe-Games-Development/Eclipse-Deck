@@ -54,11 +54,12 @@ public class LoadingScreen : MonoBehaviour {
     }
 
     private async UniTask WaitForBarFill() {
-        while(_progressFill.value < _targetProgress) {
-            await UniTask.Delay(1);
+        while (!Mathf.Approximately(_progressFill.value, _targetProgress)) {
+            await UniTask.Yield();
         }
         await UniTask.Delay(TimeSpan.FromSeconds(0.15));
     }
+
 
     private async UniTask UpdateProgressBar() {
         while (_canvas.enabled) {

@@ -7,20 +7,21 @@ public enum ReflectMode {
 }
 
 [CreateAssetMenu(fileName = "ReflectDamage", menuName = "Abilities/CardAbilities")]
-public class ReflectDamageAbilitySO : AbilitySO {
+public class ReflectDamageAbilitySO : EntityAbilityData {
     public ReflectMode reflectMode = ReflectMode.Percentage;
     [Range(0, 1)] public float damagePercentage = 0.5f;
 
-    public override Ability GenerateAbility(IAbilityOwner owner, GameEventBus eventBus) {
+    public override Ability GenerateAbility(IAbilitiesCaster owner, GameEventBus eventBus) {
+
         return new ReflectDamageAbility(this, owner, reflectMode, eventBus, damagePercentage);
     }
 }
 
-public class ReflectDamageAbility : Ability {
+public class ReflectDamageAbility : EntityPassiveAbility {
     private ReflectMode reflectMode = ReflectMode.Percentage;
     private float percentageDamage;
 
-    public ReflectDamageAbility(AbilitySO abilitySO, IAbilityOwner owner, ReflectMode reflectMode, GameEventBus eventBus, float percentage = 0) : base(abilitySO, owner, eventBus) {
+    public ReflectDamageAbility(EntityAbilityData abilitySO, IAbilitiesCaster entity, ReflectMode reflectMode, GameEventBus eventBus, float percentage = 0) : base(abilitySO, entity, eventBus) {
 
         this.reflectMode = reflectMode;
         if (reflectMode == ReflectMode.Percentage) {
@@ -30,7 +31,7 @@ public class ReflectDamageAbility : Ability {
 
     private void ReflectDamage(int damage, IDamageDealer damageDealer) {
         // Cast attacker to damagable to damage him
-        if (!(damageDealer is IHasHealth healthableSource)) {
+        if (!(damageDealer is IHealthEntity healthableSource)) {
             return;
         }
 
@@ -48,19 +49,13 @@ public class ReflectDamageAbility : Ability {
         }
     }
 
-    public override void Register() {
-        if (abilityOwner is IHasHealth healthProvider) {
-            Health health = healthProvider.GetHealth();
-            health.OnDamageTaken += ReflectDamage;
-            IsActive = true;
-        }
+    public override void RegisterTrigger() {
+        Health health = Entity.GetHealth();
+        health.OnDamageTaken += ReflectDamage;
     }
 
-    public override void Deregister() {
-        if (abilityOwner is IHasHealth healthProvider) {
-            Health health = healthProvider.GetHealth();
-            health.OnDamageTaken -= ReflectDamage;
-            IsActive = true;
-        }
+    public override void DeregisterTrigger() {
+        Health health = Entity.GetHealth();
+        health.OnDamageTaken -= ReflectDamage;
     }
 }
