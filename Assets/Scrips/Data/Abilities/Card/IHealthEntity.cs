@@ -1,6 +1,6 @@
 ﻿using System;
 
-public interface IHasHealth {
+public interface IHealthEntity {
     Health GetHealth();
 }
 
@@ -8,6 +8,6 @@ public interface IDamageDealer {
     Attack GetAttack();
 }
 
-public interface IAbilityOwner {
+public interface IAbilitiesCaster {
     AbilityManager GetAbilityManager();
 }

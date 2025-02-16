@@ -25,12 +25,12 @@ public class Attacktat : Stat {
 
 // TO DO: Add regen stat
 public class Health : Stat {
-    public IHasHealth Owner { get; }
+    public IHealthEntity Owner { get; }
     public event Action OnDeath;
     public event Action<int, IDamageDealer> OnDamageTaken;
     private readonly GameEventBus _eventBus;
 
-    public Health(IHasHealth owner, int maxHealth, int initialHealth, GameEventBus eventBus)
+    public Health(IHealthEntity owner, int maxHealth, int initialHealth, GameEventBus eventBus)
         : base(maxHealth, initialHealth) {
         Owner = owner ?? throw new ArgumentNullException(nameof(owner));
         _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
@@ -76,10 +76,10 @@ public class Health : Stat {
 
 public struct OnDamageTaken : IEvent {
     public IDamageDealer Source { get; }
-    public IHasHealth Target { get; }
+    public IHealthEntity Target { get; }
     public int Amount { get; }
 
-    public OnDamageTaken(IDamageDealer source, IHasHealth target, int amount) {
+    public OnDamageTaken(IDamageDealer source, IHealthEntity target, int amount) {
         Source = source;
         Target = target;
         Amount = amount;
@@ -87,10 +87,10 @@ public struct OnDamageTaken : IEvent {
 }
 
 public struct OnDeathEvent : IEvent {
-    public IHasHealth DeadEntity { get; }
+    public IHealthEntity DeadEntity { get; }
     public Health HealthInfo { get; }
 
-    public OnDeathEvent(IHasHealth deadEntity, Health healthInfo) {
+    public OnDeathEvent(IHealthEntity deadEntity, Health healthInfo) {
         DeadEntity = deadEntity;
         HealthInfo = healthInfo;
     }

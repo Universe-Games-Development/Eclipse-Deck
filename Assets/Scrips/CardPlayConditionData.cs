@@ -90,7 +90,7 @@ public class GenericDamageableRequirement : CardInputRequirement<MonoBehaviour> 
             return false;
         }
 
-        if (logicHolder.Logic is not IHasHealth health) {
+        if (logicHolder.Logic is not IHealthEntity health) {
             callBackMessage = "Selected object is not damageable";
             return false;
         }

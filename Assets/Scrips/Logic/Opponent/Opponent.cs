@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 
-public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
+public class Opponent : IDisposable, IHealthEntity, IAbilitiesCaster {
 
     public string Name = "Opponent";
 
@@ -41,6 +41,7 @@ public class Opponent : IDisposable, IHasHealth, IAbilityOwner {
     }
 
     private void TurnStartActions(ref OnTurnStart eventData) {
+        if (eventData.startTurnOpponent == this)
         commandManager.EnqueueCommand(new DrawCardCommand(this, 1));
     }
 

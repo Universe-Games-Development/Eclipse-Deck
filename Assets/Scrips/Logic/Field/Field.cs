@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 
-public class Field : IHasHealth {
+public class Field : IHealthEntity {
     [Header("Grid Position")]
     public int row;
     public int column;

@@ -2,40 +2,37 @@ using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Card Self Drawn", menuName = "Abilities/CardAbilities/Self Drawn")]
-public class CardDrawnAbilitySO : AbilitySO {
-    public override Ability GenerateAbility(IAbilityOwner owner, GameEventBus eventBus) {
-        return new CardDrawnSelfAbility(this, owner, eventBus);
+public class CardDrawnAbilitySO : CardAbilityData {
+    string description = "When player draw this card ability activate";
+
+    public override Ability GenerateAbility(IAbilitiesCaster owner, GameEventBus eventBus) {
+        return new CardDrawnSelfAbility(description, this, owner, eventBus);
     }
 }
 
 // When player draw this card ability activate
-public class CardDrawnSelfAbility : Ability {
-    private Card card;
+public class CardDrawnSelfAbility : CardPassiveAbility {
+    private string description;
 
-    public CardDrawnSelfAbility(AbilitySO abilityData, IAbilityOwner abilityOwner, GameEventBus eventBus) : base(abilityData, abilityOwner, eventBus) {
-        TrySetCardOwner(abilityOwner);
+    public CardDrawnSelfAbility(string description, CardAbilityData abilityData, IAbilitiesCaster card, GameEventBus eventBus) : base(abilityData, card, eventBus) {
+        this.description = description;
     }
 
-    private void TrySetCardOwner(IAbilityOwner abilityOwner) {
-        if (abilityOwner is Card card) {
-            this.card = card;
-        }
+    private void OnCardDrawn(Card card) {
+        DrawCardAbility();
     }
 
-    public override void Register() {
-        if (card == null) {
-            TrySetCardOwner(abilityOwner);
-            if (card == null) return;
-        }
-        card.OnCardDrawn += AbilityActivation;
+    public void DrawCardAbility() {
+        if (Card.Data != null)
+            Debug.Log($"Card {Card.Data.Name} drawn ability ACtivation for state : {Card.CurrentState}");
+        Debug.Log(description);
+
+    }
+    public override void RegisterTrigger() {
+        Card.OnCardDrawn += OnCardDrawn;
     }
 
-    private void AbilityActivation(Card card) {
-        if (card.Data != null)
-            Debug.Log($"Card {card.Data.Name} drawn ability ACtivation for state : {card.CurrentState}");
-    }
-
-    public override void Deregister() {
-        card.OnCardDrawn -= AbilityActivation;
+    public override void DeregisterTrigger() {
+        Card.OnCardDrawn -= OnCardDrawn;
     }
 }
