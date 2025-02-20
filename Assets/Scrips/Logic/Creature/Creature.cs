@@ -3,35 +3,25 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Creature : IAbilitiesCaster, IDamageDealer, IHealthEntity {
+public class Creature : IHealthEntity, IDamageDealer {
     public Field CurrentField { get; private set; }
     public Action OnInterruptedMove;
-
-    public Health Health;
-    public Attack Attack;
-    public AbilityManager AbilityManager;
     
     private CreatureCard creatureCard;
     private CreatureStrategyMovement movementHandler;
     private MoveCommand moveCommand;
 
+    protected Health _health;
+    protected Attack _attack;
+    
     public Creature(CreatureCard creatureCard, Opponent owner, GameEventBus eventBus) {
         this.creatureCard = creatureCard;
-        Health = new Health(this, creatureCard.HealthStat.MaxValue, creatureCard.HealthStat.CurrentValue, eventBus);
-        Attack = new Attack(this, creatureCard.Attack.MaxValue, creatureCard.Attack.CurrentValue, eventBus);
-
+        _health = new Health(this, creatureCard.Health, eventBus);
+        _attack = new Attack(this, creatureCard.Attack, eventBus);
+        
         // Soon we define how to get the creatureSO
         CreatureSO creatuseSO = null;
         throw new NotFiniteNumberException();
-        throw new NotFiniteNumberException();
-
-        throw new NotFiniteNumberException();
-
-        throw new NotFiniteNumberException();
-
-        throw new NotFiniteNumberException();
-        throw new NotFiniteNumberException();
-        AbilityManager = new AbilityManager(this, eventBus);
 
         var movementData = creatuseSO.movementStrategy;
         // TO DO : abilities initialization
@@ -61,16 +51,12 @@ public class Creature : IAbilitiesCaster, IDamageDealer, IHealthEntity {
         // - Знищення істоти
     }
 
-    public AbilityManager GetAbilityManager() {
-        return AbilityManager;
+    public Health GetHealth() {
+        return _health;
     }
 
     public Attack GetAttack() {
-        return Attack;
-    }
-
-    public Health GetHealth() {
-        return Health;
+        return _attack;
     }
 }
 

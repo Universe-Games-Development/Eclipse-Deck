@@ -3,20 +3,24 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
-using UnityEngine.XR;
 
 public class CardHandUI : MonoBehaviour {
     Dictionary<CardUI, Card> cardPairs = new();
 
-    private UICardFactory cardFactory;
+    //private UICardFactory cardFactory;
+    [SerializeField] private Transform cardSpawnPoint;
+    [SerializeField] private Transform ghostLayoutParent;
+
+    [SerializeField] private CardUI cardPrefab;
+    [SerializeField] private CardLayoutGhost ghostPrefab;
 
     private CardHand cardHand;
 
     private void Awake() {
-        cardFactory = GetComponent<UICardFactory>();
-        if (cardFactory == null) {
-            Debug.LogError("UICardFactory not found on this GameObject!");
-        }
+        //cardFactory = GetComponent<UICardFactory>();
+        //if (cardFactory == null) {
+        //    Debug.LogError("UICardFactory not found on this GameObject!");
+        //}
     }
 
 
@@ -37,7 +41,11 @@ public class CardHandUI : MonoBehaviour {
     }
 
     private CardUI CreateNewCardUI(Card card) {
-        CardUI cardUI = cardFactory.CreateCardUI(card);
+        CardUI cardUI = Instantiate(cardPrefab, cardSpawnPoint);
+        CardLayoutGhost ghost = Instantiate(ghostPrefab, ghostLayoutParent);
+        cardUI.DoTweenAnimator.CardLayoutGhost = ghost;
+
+        //cardFactory.CreateCardUI(card);
         card.cardUI = cardUI;
         cardPairs.Add(cardUI, card);
         return cardUI;
@@ -57,11 +65,14 @@ public class CardHandUI : MonoBehaviour {
 
     private async UniTask RemoveCardUIFor(Card card) {
         CardUI cardUI = card.cardUI;
+        if (cardUI == null) Debug.LogWarning("Can`t find card to Remove");
 
-        if (cardUI == null) Debug.LogWarning("Can`t find car to Remove");
+        await cardUI.RemoveCardUI(); // Card will define when it released to pool
+        cardPairs.Remove(cardUI);
+        UpdateCardsPositionsAsync().Forget();
+
         
-        await cardUI.RemoveCardUI(); // Car will define when it released to pool
-        cardFactory.ReleaseCardUI(cardUI);
+        //cardFactory.ReleaseCardUI(cardUI);
         card.cardUI = null;
     }
 

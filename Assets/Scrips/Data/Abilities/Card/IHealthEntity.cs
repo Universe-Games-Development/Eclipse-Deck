@@ -9,5 +9,5 @@ public interface IDamageDealer {
 }
 
 public interface IAbilitiesCaster {
-    AbilityManager GetAbilityManager();
+    CardAbilityManager GetAbilityManager();
 }

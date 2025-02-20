@@ -41,13 +41,13 @@ public class CardUIInfo : MonoBehaviour
 
         // Logic
         AttachmentToCard(card);
-        UpdateAbilities(card);
+        UpdateDescriptionContent(card);
     }
 
-    private void UpdateAbilities(Card card) {
+    private void UpdateDescriptionContent(Card card) {
         if (card is SpellCard spell) {
             // Show abilities or description
-            List<Ability> cardAbilities = spell.AbilityManager.GetAbilities();
+            List<CardAbility> cardAbilities = spell.AbilityManager.GetAbilities();
 
             if (cardAbilities == null || cardAbilities.Count == 0) {
                 EnableCardDescription();
@@ -67,11 +67,11 @@ public class CardUIInfo : MonoBehaviour
         if (card == null) return;
 
         if (card is CreatureCard creatureCard) {
-            UpdateHealth(creatureCard.HealthStat.CurrentValue, creatureCard.HealthStat.CurrentValue);
+            UpdateHealth(creatureCard.Health.CurrentValue, creatureCard.Health.CurrentValue);
             UpdateAttack(creatureCard.Attack.CurrentValue, creatureCard.Attack.CurrentValue);
             
 
-            creatureCard.HealthStat.OnValueChanged += UpdateHealth;
+            creatureCard.Health.OnValueChanged += UpdateHealth;
             creatureCard.Attack.OnValueChanged += UpdateAttack;
         }
 
@@ -108,7 +108,7 @@ public class CardUIInfo : MonoBehaviour
         }
     }
 
-    protected void UpdateAbilities(List<Ability> abilities) {
+    protected void UpdateAbilities(List<CardAbility> abilities) {
         foreach (var ability in abilities) {
             if (ability == null || ability.AbilityData == null) continue;
 

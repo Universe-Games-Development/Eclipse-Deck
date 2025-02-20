@@ -2,13 +2,17 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 
-public class Opponent : IDisposable, IHealthEntity, IAbilitiesCaster {
+public interface IMannable {
+    Mana GetMana();
+}
+
+public class Opponent : IDisposable, IHealthEntity, IAbilitiesCaster, IMannable {
 
     public string Name = "Opponent";
 
     public Mana Mana { get; private set; }
     public Health Health { get; private set; }
-    public AbilityManager AbilityManager { get; private set; }
+    public CardAbilityManager AbilityManager { get; private set; }
 
     public CardResource CardResource { get; private set; }
 
@@ -24,17 +28,19 @@ public class Opponent : IDisposable, IHealthEntity, IAbilitiesCaster {
     private readonly GameEventBus eventBus;
     private readonly CommandManager commandManager;
 
-    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, ICardsInputFiller commandFiller, CommandManager commandManager) {
+    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, IAbilityInputter abilityInputter, CommandManager commandManager) {
         this.eventBus = eventBus;
         this.commandManager = commandManager;
 
-        Health = new Health(this, 0, 20, eventBus);
-        Mana = new Mana(this, 0, 10, eventBus);
+        Stat healthSat = new Stat(20, 20);
+        Stat manaStat = new Stat(0, 10);
+        Health = new Health(this, healthSat, eventBus);
+        Mana = new Mana(this, manaStat, eventBus);
         CardResource = new CardResource(Mana, Health);
 
         cardCollection = new CardCollection(assetLoader);
         hand = new CardHand(this, eventBus);
-        playCardManager = new PlayCardManager(this, commandFiller);
+        playCardManager = new PlayCardManager(this, abilityInputter);
 
         eventBus.SubscribeTo<OnBattleBegin>(StartBattleActions);
         eventBus.SubscribeTo<OnTurnStart>(TurnStartActions);
@@ -61,39 +67,16 @@ public class Opponent : IDisposable, IHealthEntity, IAbilitiesCaster {
         GC.SuppressFinalize(this);
     }
 
-    public AbilityManager GetAbilityManager() {
+    public CardAbilityManager GetAbilityManager() {
         return AbilityManager;
     }
 
     public Health GetHealth() {
         return Health;
     }
-}
 
-
-public class InitCardHandCommand : Command {
-    private Opponent opponent;
-    private GameEventBus eventBus;
-    private ICardsInputFiller commandFiller;
-
-    public InitCardHandCommand(Opponent opponent, GameEventBus eventBus, ICardsInputFiller commandFiller) {
-        this.opponent = opponent;
-        this.eventBus = eventBus;
-        this.commandFiller = commandFiller;
-    }
-
-    public async override UniTask Execute() {
-        CardHand initHand = opponent.hand;
-
-        initHand = new CardHand(opponent, eventBus);
-        opponent.playCardManager = new PlayCardManager(opponent, commandFiller);
-        await UniTask.CompletedTask;
-    }
-
-    public async override UniTask Undo() {
-        opponent.hand = null;
-        opponent.playCardManager = null;
-        await UniTask.CompletedTask;
+    public Mana GetMana() {
+        return Mana;
     }
 }
 

@@ -4,7 +4,7 @@ public class Attack : Stat {
     public event Action OnAttackBoosted; // Подія для збільшення атаки
     public event Action OnAttackReduced; // Подія для зменшення атаки
     public GameEventBus eventBus;
-    public Attack(IDamageDealer owner, int maxAttack, int initialAttack, GameEventBus gameEventBus) : base(maxAttack, initialAttack) {
+    public Attack(IDamageDealer owner, Stat attack, GameEventBus gameEventBus) : base(attack.CurrentValue, attack.MaxValue) {
         eventBus = gameEventBus;
     }
 

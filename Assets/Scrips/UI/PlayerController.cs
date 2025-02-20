@@ -6,7 +6,7 @@ public class PlayerController : MonoBehaviour {
     [Inject] GameboardController gameboard_c;
 
     [SerializeField] private CardHandUI handUI;
-    [SerializeField] private RayService rayService;
+    [SerializeField] private RaycastService rayService;
 
     protected void Start() {
         handUI.Initialize(player.hand);

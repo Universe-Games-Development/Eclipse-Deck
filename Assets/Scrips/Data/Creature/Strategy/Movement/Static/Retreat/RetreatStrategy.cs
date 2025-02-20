@@ -80,7 +80,7 @@ public class RetreatStrongEnemies : RetreatStrategy {
 
     protected override bool ConditionToEscape(Field currentField) {
         var enemies = navigator.GetCreaturesInDirection(currentField,retreatAmount, checkDirection);
-        return enemies.Any(enemy => enemy.Attack.CurrentValue > currentField.OccupiedCreature.Attack.CurrentValue);
+        return enemies.Any(enemy => enemy.GetAttack().CurrentValue > currentField.OccupiedCreature.GetAttack().CurrentValue);
     }
 }
 
@@ -116,7 +116,7 @@ public class RetreatWillDamaged : RetreatStrategy {
 
     protected override bool ConditionToEscape(Field currentField) {
         var enemies = navigator.GetCreaturesInDirection(currentField, retreatAmount, checkDirection);
-        return enemies.Any(enemy => enemy.Attack.CurrentValue > _minDamagedScared);
+        return enemies.Any(enemy => enemy.GetAttack().CurrentValue > _minDamagedScared);
     }
 }
 

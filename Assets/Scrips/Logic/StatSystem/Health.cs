@@ -1,76 +1,63 @@
 using System;
-
-public class HealthStat : Stat {
-    public HealthStat(int maxValue, int initialValue)
-         : base(maxValue, initialValue) {
-        if (maxValue < 1) throw new ArgumentException("Max value must be at least 1.");
-    }
-}
-
-public class Attacktat : Stat {
-    public Attacktat(int maxValue, int initialValue)
-         : base(maxValue, initialValue) {
-    }
-
-    public void Buff(int amount) {
-        int newValue = Math.Max(0, CurrentValue + amount);
-        Modify(newValue);
-    }
-
-    public void Debuff(int amount) {
-        int newValue = Math.Max(0, CurrentValue - amount);
-        Modify(newValue);
-    }
-}
+using static Unity.VisualScripting.Member;
 
 // TO DO: Add regen stat
-public class Health : Stat {
-    public IHealthEntity Owner { get; }
-    public event Action OnDeath;
-    public event Action<int, IDamageDealer> OnDamageTaken;
+public interface IHealth {
+    int Current { get; }
+    int Max { get; }
+    void TakeDamage(int amount, IDamageDealer source = null);
+    void Heal(int amount);
+    event Action OnDeath;
+}
+
+public class Health : IHealth {
+    private readonly Stat _stat;
+    private readonly IHealthEntity _owner;
     private readonly GameEventBus _eventBus;
 
-    public Health(IHealthEntity owner, int maxHealth, int initialHealth, GameEventBus eventBus)
-        : base(maxHealth, initialHealth) {
-        Owner = owner ?? throw new ArgumentNullException(nameof(owner));
-        _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+    public event Action OnDeath;
+    public int Current => _stat.CurrentValue;
+    public int Max => _stat.MaxValue;
+
+    public Health(IHealthEntity owner, Stat stat, GameEventBus eventBus) {
+        _owner = owner;
+        _stat = stat;
+        _eventBus = eventBus;
+
+        _stat.OnValueChanged += HandleStatChange;
     }
 
-    public int ApplyDamage(int damage, IDamageDealer? damageSource = null) {
-        if (damage <= 0) return 0;
+    public Action<int, IDamageDealer> OnDamageTaken { get; internal set; }
 
-        var previousHealth = CurrentValue;
-        Modify(-damage);
+    public void TakeDamage(int amount, IDamageDealer source = null) {
+        if (amount <= 0) return;
 
-        IDamageDealer damageDealer = damageSource as IDamageDealer;
-        _eventBus.Raise(new OnDamageTaken(damageDealer, Owner, damage));
-        OnDamageTaken?.Invoke(damage, damageDealer);
+        var damage = Math.Min(amount, _stat.CurrentValue);
+        _stat.Modify(-damage);
 
-        if (CurrentValue <= 0 && previousHealth > 0) {
-            Die();
-        } else {
-            Console.WriteLine($"Took {damage} damage. Current health: {CurrentValue}");
+        _eventBus.Raise(new OnDamageTaken(_owner, source, damage));
+
+        if (_stat.CurrentValue <= 0) {
+            OnDeath?.Invoke();
+            _eventBus.Raise(new DeathEvent(_owner));
         }
-
-        return previousHealth - CurrentValue;
     }
 
-    private void Die() {
-        OnDeath?.Invoke();
-        _eventBus.Raise(new OnDeathEvent(Owner, this));
-        Console.WriteLine("Character has died.");
+    public void Heal(int amount) {
+        if (amount <= 0) return;
+        _stat.Modify(amount);
     }
 
-    internal void Heal(int healAmount) {
-        throw new NotImplementedException();
+    private void HandleStatChange(int oldValue, int newValue) {
+        // Додаткова логіка при зміні здоров'я
     }
 
     public bool IsAlive() {
-        return CurrentValue > 0;
+        return Current > 0;
     }
 
-    internal bool IsDamaged() {
-        return CurrentValue < InitialValue;
+    internal void SetMaxValue(int healthIncrease) {
+        _stat.SetMaxValue(healthIncrease);
     }
 }
 
@@ -79,19 +66,17 @@ public struct OnDamageTaken : IEvent {
     public IHealthEntity Target { get; }
     public int Amount { get; }
 
-    public OnDamageTaken(IDamageDealer source, IHealthEntity target, int amount) {
+    public OnDamageTaken(IHealthEntity target, IDamageDealer source, int amount) {
         Source = source;
         Target = target;
         Amount = amount;
     }
 }
 
-public struct OnDeathEvent : IEvent {
+public struct DeathEvent : IEvent {
     public IHealthEntity DeadEntity { get; }
-    public Health HealthInfo { get; }
 
-    public OnDeathEvent(IHealthEntity deadEntity, Health healthInfo) {
+    public DeathEvent(IHealthEntity deadEntity) {
         DeadEntity = deadEntity;
-        HealthInfo = healthInfo;
     }
 }

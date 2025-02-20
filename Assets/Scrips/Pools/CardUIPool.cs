@@ -17,11 +17,11 @@ public class CardUIPool : BasePool<CardUI> {
     }
     protected override void OnTakeFromPool(CardUI card) {
         base.OnTakeFromPool(card);
-        card._doAnimator.CardLayoutGhost = ghostPool.Get();;
+        card.DoTweenAnimator.CardLayoutGhost = ghostPool.Get();;
     }
 
     protected override void OnReturnToPool(CardUI card) {
-        ghostPool.Release(card._doAnimator.CardLayoutGhost);
+        ghostPool.Release(card.DoTweenAnimator.CardLayoutGhost);
         card.Reset();
         base.OnReturnToPool(card);
     }

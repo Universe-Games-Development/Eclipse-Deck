@@ -46,7 +46,7 @@ public class CommandManager {
             }
         } catch (Exception ex) {
             // Логування чи обробка виключень
-            Debug.LogError($"Command Manager error: {ex.Message}");
+            Debug.LogError($"Command Manager error: {rootCommand} : {ex.Message}");
         }
     }
 
