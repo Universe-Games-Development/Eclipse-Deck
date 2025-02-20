@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 
-public abstract class Card {
+public abstract class Card : IAbilityOwner {
     public event Action<Card> OnCardDrawn;
     public event Action<Card> OnCardShuffled;
     public event Action<Card> OnCardRDiscarded;
@@ -17,6 +17,7 @@ public abstract class Card {
     public Opponent Owner { get; protected set; } // Add Owner here
 
     public CardUI cardUI;
+    public AbilityManager<CardAbilityData, Card> _abilityManager;
     public Card(CardSO cardSO, Opponent owner, GameEventBus eventBus)  // Add owner to constructor
     {
         Data = cardSO;
@@ -25,6 +26,8 @@ public abstract class Card {
         Owner = owner; // Assign the owner
         Cost = new Cost(cardSO.MAX_CARDS_COST, cardSO.cost);
 
+        _abilityManager = new AbilityManager<CardAbilityData, Card>(this, eventBus);
+        _abilityManager.AddAbilities(cardSO.abilities);
         ChangeState(CardState.InDeck);
     }
 
@@ -58,19 +61,14 @@ public abstract class Card {
     }
 }
 
-public class SpellCard : Card, IAbilitiesCaster {
+public class SpellCard : Card {
 
-    public CardAbilityManager AbilityManager { get; protected set; }
+    
     public SpellCard(SpellCardSO cardSO, Opponent owner, GameEventBus eventBus)
         : base(cardSO, owner, eventBus) {
-        AbilityManager = new CardAbilityManager(this, eventBus);
-        AbilityManager.InitializeAbilities(cardSO.abilities);
     }
 
-    public CardAbilityManager GetAbilityManager() {
-        return AbilityManager;
-    }
-
+    
     public override async UniTask<bool> PlayCard(Opponent cardPlayer, IAbilityInputter abilityInputter) {
         Debug.Log("Spell card played");
         await UniTask.CompletedTask;

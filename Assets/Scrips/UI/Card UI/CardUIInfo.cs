@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -45,22 +46,19 @@ public class CardUIInfo : MonoBehaviour
     }
 
     private void UpdateDescriptionContent(Card card) {
-        if (card is SpellCard spell) {
-            // Show abilities or description
-            List<CardAbility> cardAbilities = spell.AbilityManager.GetAbilities();
+        List<Ability<CardAbilityData, Card>> cardAbilities = card._abilityManager.GetAbilities();
 
-            if (cardAbilities == null || cardAbilities.Count == 0) {
-                EnableCardDescription();
-            } else {
-                // Hide description if abilities exist
-                if (descriptionText != null) {
-                    descriptionText.gameObject.SetActive(false);
-                }
-
-                UpdateAbilities(cardAbilities);
+        if (cardAbilities == null || cardAbilities.Count == 0) {
+            EnableCardDescription();
+        } else {
+            // Hide description if abilities exist
+            if (descriptionText != null) {
+                descriptionText.gameObject.SetActive(false);
             }
+
+            UpdateAbilities(cardAbilities);
         }
-        
+
     }
 
     protected virtual void AttachmentToCard(Card card) {
@@ -108,9 +106,9 @@ public class CardUIInfo : MonoBehaviour
         }
     }
 
-    protected void UpdateAbilities(List<CardAbility> abilities) {
+    protected void UpdateAbilities(List<Ability<CardAbilityData, Card>> abilities) {
         foreach (var ability in abilities) {
-            if (ability == null || ability.AbilityData == null) continue;
+            if (ability == null || ability.Data == null) continue;
 
             CardAbilityUI abilityUI = cardAbilityPool.Get();
             abilityUI.transform.SetParent(abilityFiller);

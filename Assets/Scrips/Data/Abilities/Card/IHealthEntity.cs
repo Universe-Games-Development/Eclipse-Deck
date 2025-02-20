@@ -8,6 +8,5 @@ public interface IDamageDealer {
     Attack GetAttack();
 }
 
-public interface IAbilitiesCaster {
-    CardAbilityManager GetAbilityManager();
+public interface IAbilityOwner {
 }

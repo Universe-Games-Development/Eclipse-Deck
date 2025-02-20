@@ -12,8 +12,8 @@ public class CardAbilityUI : MonoBehaviour, IPointerEnterHandler {
 
     [Inject] UIManager uiManager;
 
-    public void FillAbilityUI(Ability ability, bool abilityNamesEnabled = false) {
-        AbilityData abilityData = ability.AbilityData;
+    public void FillAbilityUI(Ability<CardAbilityData, Card> ability, bool abilityNamesEnabled = false) {
+        CardAbilityData abilityData = ability.Data;
 
         if (ability == null || abilityData == null) {
             Debug.LogWarning("CardAbility or its data is null!");
@@ -34,8 +34,8 @@ public class CardAbilityUI : MonoBehaviour, IPointerEnterHandler {
         }
 
         if (abilityIcon != null) {
-            if (abilityData.Sprite != null) {
-                abilityIcon.sprite = abilityData.Sprite;
+            if (abilityData.Icon != null) {
+                abilityIcon.sprite = abilityData.Icon;
                 abilityIcon.gameObject.SetActive(true);
             } else {
                 abilityIcon.gameObject.SetActive(false);
