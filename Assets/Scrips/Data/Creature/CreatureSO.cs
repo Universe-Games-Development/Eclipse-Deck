@@ -9,5 +9,5 @@ public class CreatureSO : TableGameEntitySO {
     public AttackStrategySO attackStrategy;
 
     [Header("Abilities")]
-    private List<AbilityData> abilities;
+    private List<Ability<CreatureAbilityData, Creature>> abilities;
 }

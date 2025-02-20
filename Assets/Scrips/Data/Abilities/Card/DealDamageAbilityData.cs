@@ -11,26 +11,23 @@ public enum ReflectMode {
 public class DealDamageAbilityData : CardAbilityData {
     public int damage = 1;
     // IAbilitiesCaster is CreatureCard or Opponent
-    public override CardAbility GenerateAbility(Card spellCard, GameEventBus eventBus) {
-        if (!(spellCard is SpellCard spell)) throw new ArgumentException("Owner must be a CreatureCard");
-        return new FireballCardAbility(spell, this, eventBus);
+    public override Ability<CardAbilityData, Card> CreateAbility(Card abilityCard, GameEventBus eventBus) {
+        return new FireballCardAbility(abilityCard, this, eventBus);
     }
 }
 
-public class FireballCardAbility : ActiveCardAbility {
+public class FireballCardAbility : CardACtiveAbility {
     private IRequirement<Creature> enemyCreatureRequirement;
     private DealDamageAbilityData abilityData;
-    private SpellCard spellCard;
+    private SpellCard abilityCard;
 
-    public FireballCardAbility(SpellCard spellCard, DealDamageAbilityData abilityData, GameEventBus eventBus) : base(abilityData, eventBus) {
-        this.abilityData = abilityData;
-        this.spellCard = spellCard;
+    public FireballCardAbility(Card abilityCard, DealDamageAbilityData abilityData, GameEventBus eventBus) : base(abilityData, abilityCard, eventBus) {
         RequirementBuilder<Creature> requirementBuilder = new();
-        enemyCreatureRequirement = requirementBuilder.Add(new EnemyCreatureRequirement(spellCard.Owner)).Build();
+        enemyCreatureRequirement = requirementBuilder.Add(new EnemyCreatureRequirement(abilityCard.Owner)).Build();
     }
 
     public override async UniTask<bool> PerformAbility(IAbilityInputter filler) {
-        Creature enemyCreature = await filler.ProcessRequirementAsync(spellCard.Owner, enemyCreatureRequirement);
+        Creature enemyCreature = await filler.ProcessRequirementAsync(abilityCard.Owner, enemyCreatureRequirement);
         if (enemyCreature == null) return false;
 
         enemyCreature.GetHealth().TakeDamage(abilityData.damage);

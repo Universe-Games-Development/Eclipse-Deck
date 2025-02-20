@@ -6,13 +6,12 @@ public interface IMannable {
     Mana GetMana();
 }
 
-public class Opponent : IDisposable, IHealthEntity, IAbilitiesCaster, IMannable {
+public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
 
     public string Name = "Opponent";
 
     public Mana Mana { get; private set; }
     public Health Health { get; private set; }
-    public CardAbilityManager AbilityManager { get; private set; }
 
     public CardResource CardResource { get; private set; }
 
@@ -65,10 +64,6 @@ public class Opponent : IDisposable, IHealthEntity, IAbilitiesCaster, IMannable 
         }
 
         GC.SuppressFinalize(this);
-    }
-
-    public CardAbilityManager GetAbilityManager() {
-        return AbilityManager;
     }
 
     public Health GetHealth() {

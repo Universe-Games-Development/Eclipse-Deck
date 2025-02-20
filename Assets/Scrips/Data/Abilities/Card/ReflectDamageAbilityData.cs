@@ -1,37 +1,29 @@
 using System;
 using UnityEngine;
-using static CardAbility;
 
 [CreateAssetMenu(fileName = "ReflectDamage", menuName = "Abilities/CreatureAbilities")]
 public class ReflectDamageAbilityData : CreatureAbilityData {
     public ReflectMode reflectMode = ReflectMode.Percentage;
     [Range(0, 1)] public float damagePercentage = 0.5f;
 
-    public override CreatureAbility GenerateAbility(Creature owner, GameEventBus eventBus) {
+    public override Ability<CreatureAbilityData, Creature> CreateAbility(Creature owner, GameEventBus eventBus) {
         if (!(owner is Creature creature)) throw new ArgumentException("Owner must be a CreatureCard");
         return new ReflectDamageAbility(creature, this, eventBus);
     }
 }
 
-public class ReflectDamageAbility : PassiveCreatureAbility {
+public class ReflectDamageAbility : CreaturePassiveAbility {
     private ReflectMode reflectMode = ReflectMode.Percentage;
     private float percentageDamage;
     protected Creature creature;
-    private IRequirement<Creature> isCreatureAliveReq;
     public ReflectDamageAbilityData ReflectAbilityData { get; set; }
 
-    public ReflectDamageAbility(Creature creature, ReflectDamageAbilityData abilityData, GameEventBus eventBus) : base(creature, abilityData, eventBus) {
+    public ReflectDamageAbility(Creature creature, ReflectDamageAbilityData abilityData, GameEventBus eventBus) : base(abilityData, creature, eventBus) {
         // Dara initialization
-        this.creature = creature;
         reflectMode = abilityData.reflectMode;
         if (reflectMode == ReflectMode.Percentage) {
             percentageDamage = abilityData.damagePercentage;
         }
-
-        //Passive Requirements
-        isCreatureAliveReq = new RequirementBuilder<Creature>()
-            .And(new CreatureAliveRequirement())
-            .Build();
     }
 
     private void ReflectDamage(int damage, IDamageDealer damageDealer) {
@@ -53,17 +45,17 @@ public class ReflectDamageAbility : PassiveCreatureAbility {
                 break;
         }
     }
-    public override void RegisterTrigger() {
+    protected override void ActivateAbilityTriggers() {
         Health health = creature.GetHealth();
         health.OnDamageTaken += ReflectDamage;
     }
 
-    public override void DeregisterTrigger() {
+    protected override void DeactivateAbilityTriggers() {
         Health health = creature.GetHealth();
         health.OnDamageTaken -= ReflectDamage;
     }
 
-    public override bool ActivationCondition() {
-        return isCreatureAliveReq.IsMet(creature, out string error);
+    protected override bool CheckActivationConditions() {
+        return abilityActivationRequirement.IsMet(creature, out string error);
     }
 }

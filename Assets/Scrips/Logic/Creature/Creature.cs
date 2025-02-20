@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Creature : IHealthEntity, IDamageDealer {
+public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     public Field CurrentField { get; private set; }
     public Action OnInterruptedMove;
     
