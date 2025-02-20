@@ -40,10 +40,10 @@ public class Field : IHealthEntity {
 
     public void ReceiveAttack(int damage) {
         if (OccupiedCreature != null) {
-            OccupiedCreature.Health.ApplyDamage(damage);
+            OccupiedCreature.GetHealth().TakeDamage(damage);
         } else {
             if (Owner != null) {
-                Owner.Health.ApplyDamage(damage);
+                Owner.Health.TakeDamage(damage);
                 FieldLogger.Log($"{Owner.Name} takes {damage} damage.");
             } else {
                 FieldLogger.Log($"Nobody takes {damage} damage");

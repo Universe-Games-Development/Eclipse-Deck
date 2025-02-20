@@ -13,10 +13,12 @@ public class CardResource {
 
     public void EnableMana() {
         IsManaEnabled = true;
+        mana.EnableManaRestoreation();
     }
 
     public void DisableMana() {
         IsManaEnabled = false;
+        mana.DisableManaRestoreation();
     }
 
     // Try to spend mana, if not enough mana - spend health
@@ -32,34 +34,23 @@ public class CardResource {
     }
 
     private int TrySpendMana(int amount) {
-        if (IsManaEnabled && mana.CurrentValue > 0) {
+        if (IsManaEnabled && mana.Current > 0) {
             return mana.Spend(amount);
         }
         return 0;
     }
 
     private int SpendHealth(int amount) {
-        if (health.CurrentValue > 0) {
-            return health.ApplyDamage(amount);
+        if (health.Current > 0) {
+            health.TakeDamage(amount);
+            return amount;
         }
         return 0;
     }
 
-    // Restore resources when undoing
-    public void Add(ResourceData resources) {
-        RestoreMana(resources.Mana);
-        HealHealth(resources.Health);
-    }
-
-    private void RestoreMana(int amount) {
-        if (IsManaEnabled && amount > 0) {
-            mana.Modify(amount);
-        }
-    }
-
     private void HealHealth(int amount) {
         if (amount > 0) {
-            health.Modify(amount);
+            health.Heal(amount);
         }
     }
 }

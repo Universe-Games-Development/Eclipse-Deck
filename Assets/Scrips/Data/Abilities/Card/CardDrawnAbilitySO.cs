@@ -1,38 +1,40 @@
-using System;
 using UnityEngine;
+using static CardAbility;
 
 [CreateAssetMenu(fileName = "Card Self Drawn", menuName = "Abilities/CardAbilities/Self Drawn")]
 public class CardDrawnAbilitySO : CardAbilityData {
-    string description = "When player draw this card ability activate";
+    public string testMessage = "When player draw this card ability activate";
 
-    public override Ability GenerateAbility(IAbilitiesCaster owner, GameEventBus eventBus) {
-        return new CardDrawnSelfAbility(description, this, owner, eventBus);
+    public override CardAbility GenerateAbility(Card castingCard, GameEventBus eventBus) {
+        return new CardDrawnSelfAbility(castingCard, this, eventBus);
     }
 }
 
 // When player draw this card ability activate
-public class CardDrawnSelfAbility : CardPassiveAbility {
-    private string description;
+public class CardDrawnSelfAbility : PassiveCardAbility {
+    private string testMessage;
 
-    public CardDrawnSelfAbility(string description, CardAbilityData abilityData, IAbilitiesCaster card, GameEventBus eventBus) : base(abilityData, card, eventBus) {
-        this.description = description;
+    public CardDrawnSelfAbility(Card card, CardDrawnAbilitySO abilityData, GameEventBus eventBus) : base(card, abilityData, eventBus) {
+        this.testMessage = abilityData.testMessage;
+        AbilityData = abilityData;
+        castingCard = card;
     }
-
+    
     private void OnCardDrawn(Card card) {
-        DrawCardAbility();
+        if (castingCard.Data != null)
+            Debug.Log($"Card {castingCard.Data.Name} drawn ability ACtivation for state : {castingCard.CurrentState}");
+        Debug.Log(testMessage);
     }
 
-    public void DrawCardAbility() {
-        if (Card.Data != null)
-            Debug.Log($"Card {Card.Data.Name} drawn ability ACtivation for state : {Card.CurrentState}");
-        Debug.Log(description);
-
+    public override bool ActivationCondition() {
+        return true;
     }
+
     public override void RegisterTrigger() {
-        Card.OnCardDrawn += OnCardDrawn;
+        castingCard.OnCardDrawn += OnCardDrawn;
     }
 
     public override void DeregisterTrigger() {
-        Card.OnCardDrawn -= OnCardDrawn;
+        castingCard.OnCardDrawn -= OnCardDrawn;
     }
 }

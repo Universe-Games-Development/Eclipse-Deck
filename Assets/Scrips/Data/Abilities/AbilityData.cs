@@ -6,7 +6,6 @@ public abstract class AbilityData: ScriptableObject {
     public string Description;
     public Sprite Sprite;
 
-    public abstract Ability GenerateAbility(IAbilitiesCaster owner, GameEventBus eventBus);
 
     protected void OnValidate() {
         if (string.IsNullOrEmpty(Name)) {
@@ -17,7 +16,9 @@ public abstract class AbilityData: ScriptableObject {
 
 public abstract class CardAbilityData : AbilityData {
     public List<CardState> ActiveStates = new();
+    public abstract CardAbility GenerateAbility(Card card, GameEventBus eventBus);
 }
 
-public abstract class EntityAbilityData: AbilityData {
+public abstract class CreatureAbilityData: AbilityData {
+    public abstract CreatureAbility GenerateAbility(Creature creature, GameEventBus eventBus);
 }

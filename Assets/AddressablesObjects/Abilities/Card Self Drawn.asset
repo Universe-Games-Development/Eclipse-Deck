@@ -15,4 +15,4 @@ MonoBehaviour:
   Name: Self Drawn
   Description: 
   Sprite: {fileID: 21300000, guid: 8c1948be2e92a394da726075e9b647fe, type: 3}
-  _activationConditions: []
+  ActiveStates: 

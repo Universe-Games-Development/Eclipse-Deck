@@ -15,15 +15,15 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
     private Card card;
     
     // Components
-    [SerializeField] public CardAnimator _doAnimator;
+    [SerializeField] public CardAnimator DoTweenAnimator;
     [SerializeField] public CardUIInfo UIDataInfo;
 
     private void Awake() {
         InitializeAnimator();
     }
     public void InitializeAnimator() {
-        _doAnimator.AttachAnimator(this);
-        _doAnimator.OnReachedLayout += () => SetInteractable(true);
+        DoTweenAnimator.AttachAnimator(this);
+        DoTweenAnimator.OnReachedLayout += () => SetInteractable(true);
     }
 
     private void SetInteractable(bool value) => isInteractable = value;
@@ -44,6 +44,10 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
             await OnCardRemoval.Invoke(this);
         }
         await UniTask.CompletedTask;
+        if (DoTweenAnimator.CardLayoutGhost != null) {
+            Destroy(DoTweenAnimator.CardLayoutGhost.gameObject);
+        }
+        Destroy(gameObject);
     }
 
 
@@ -62,7 +66,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
     }
 
     public void Reset() {
-        _doAnimator?.Reset();
+        DoTweenAnimator?.Reset();
         UIDataInfo?.Reset();
         isInteractable = false;
         card = null;

@@ -1,60 +1,27 @@
 using System;
 
 public class Stat : IStat {
-    protected int currentValue;
-    protected int minValue;
-    protected int maxValue;
-    protected int initialValue;
+    public int CurrentValue { get; private set; }
+    public int MinValue { get; private set; }
+    public int MaxValue { get; private set; }
+    public int InitialValue { get; private set; }
     public event Action<int, int> OnValueChanged;
 
-    public int InitialValue {
-        get => initialValue;
-        private set {
-            initialValue = Math.Clamp(value, 0, MaxValue);
-        }
-    }
-
-    public int CurrentValue {
-        get => currentValue;
-        private set {
-            currentValue = Math.Clamp(value, 0, MaxValue);
-            OnValueChanged?.Invoke(currentValue, InitialValue);
-        }
-    }
-
-    public int MaxValue {
-        get => maxValue;
-        private set {
-            maxValue = Math.Max(0, value);
-            CurrentValue = Math.Clamp(CurrentValue, 0, maxValue);
-        }
-    }
-
-    public int MinValue {
-        get => minValue;
-        private set {
-            minValue = Math.Min(maxValue, value);
-            CurrentValue = Math.Clamp(CurrentValue, minValue, MaxValue);
-        }
-    }
-
-    public Stat(int maxValue, int initialValue, int minValue = 0) {
-        this.minValue = minValue;
-        this.maxValue = Math.Max(minValue, maxValue);
-        this.initialValue = initialValue;
-        currentValue = Math.Clamp(initialValue, minValue, maxValue);
+    public Stat(int initialValue, int maxValue, int minValue = 0) {
+        MinValue = minValue;
+        MaxValue = Math.Max(minValue, maxValue);
+        InitialValue = initialValue;
+        CurrentValue = Math.Clamp(initialValue, minValue, maxValue);
     }
 
     public void Modify(int amount) {
-        int beforeValue = currentValue;
-        int newValue = Math.Clamp(currentValue + amount, MinValue, MaxValue);
-
-        if (newValue != currentValue) {
-            CurrentValue = newValue; // —пов≥щаЇмо про зм≥ни т≥льки тод≥, коли Ї р≥зниц€
-            OnValueChanged?.Invoke(beforeValue, currentValue);
+        int beforeValue = CurrentValue;
+        int newValue = Math.Clamp(CurrentValue + amount, MinValue, MaxValue);
+        if (newValue != CurrentValue) {
+            CurrentValue = newValue;
+            OnValueChanged?.Invoke(beforeValue, CurrentValue);
         }
     }
-
 
     public void SetMaxValue(int newMaxValue) {
         if (newMaxValue < MinValue) return;
@@ -67,6 +34,6 @@ public class Stat : IStat {
     }
 
     public void Reset() {
-        CurrentValue = initialValue;
+        CurrentValue = InitialValue;
     }
 }

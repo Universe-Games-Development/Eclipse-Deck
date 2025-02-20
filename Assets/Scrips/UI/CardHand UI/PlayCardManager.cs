@@ -8,13 +8,13 @@ public class PlayCardManager : IDisposable {
     private Opponent opponent;
 
     private CardHand cardHand;
-    private ICardsInputFiller commandFiller;
+    private IAbilityInputter abilityInputter;
     [Inject] private CommandManager commandManager;
 
     private Card bufferedCard;
 
-    public PlayCardManager(Opponent opponent, ICardsInputFiller commandFiller) {
-        this.commandFiller = commandFiller;
+    public PlayCardManager(Opponent opponent, IAbilityInputter abilityInputter) {
+        this.abilityInputter = abilityInputter;
         this.opponent = opponent;
         cardHand = opponent.hand;
         cardHand.OnCardSelected += OnCardSelected;
@@ -33,14 +33,17 @@ public class PlayCardManager : IDisposable {
         // Intent = card.GetIntent();
 
         cardHand.DeselectCurrentCard();
-        bool result = await card.PlayCard(opponent, commandFiller);
+        bufferedCard = card;
+        cardHand.RemoveCard(card);
+
+        bool result = await card.PlayCard(opponent, abilityInputter);
         
         if (result) {
-            bufferedCard = card;
-            cardHand.RemoveCard(card);
+            Debug.LogWarning("Card playing successsful");
         } else {
             cardHand.AddCard(bufferedCard);
-            Debug.LogWarning("Selected card has no valid play.");
+            Debug.LogWarning("Card playing canceled");
         }
+        bufferedCard = null;
     }
 }

@@ -3,13 +3,8 @@ using System;
 using UnityEngine;
 using Zenject;
 
-public class EnemyCommandFiller : ICardsInputFiller {
-    [Inject] IInputRequirementRegistry RequirementRegistry;
-    public IInputRequirementRegistry GetRequirementRegistry() {
-        return RequirementRegistry;
-    }
-
-    public UniTask<T> ProcessRequirementAsync<T>(Opponent cardPlayer, CardInputRequirement<T> requirement) where T : MonoBehaviour {
+public class EnemyCommandFiller : IAbilityInputter {
+    public UniTask<T> ProcessRequirementAsync<T>(Opponent requestingPlayer, IRequirement<T> requirement) where T : class {
         throw new NotImplementedException();
     }
 }

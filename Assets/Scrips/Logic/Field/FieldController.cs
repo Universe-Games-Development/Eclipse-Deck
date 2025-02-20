@@ -1,10 +1,10 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-public class FieldController : MonoBehaviour, ILogicHolder<Field> {
+public class FieldController : MonoBehaviour {
     public FieldType type;
     public string owner;
 
-    public Field Logic { get; private set; }
+    public Field LinkedField;
 
     [SerializeField] public FieldUI fieldUI;
 
@@ -34,7 +34,7 @@ public class FieldController : MonoBehaviour, ILogicHolder<Field> {
             Debug.LogError("null field data");
             return;
         }
-        Logic = field;
+        LinkedField = field;
         type = field.FieldType;
         fieldMaterializer.Initialize(field);
         if (field.Owner != null) {
@@ -57,14 +57,14 @@ public class FieldController : MonoBehaviour, ILogicHolder<Field> {
     }
 
     private void OnMouseEnter() {
-        if (isInteractable && Logic.Owner != null && Logic.Owner is Player) {
+        if (isInteractable && LinkedField.Owner != null && LinkedField.Owner is Player) {
             levitator.ToggleLevitation(true);
             fieldMaterializer.ToggleHighlight(true);
         }
     }
 
     private void OnMouseExit() {
-        if (isInteractable && Logic.Owner != null && Logic.Owner is Player) {
+        if (isInteractable && LinkedField.Owner != null && LinkedField.Owner is Player) {
             levitator.ToggleLevitation(false);
             fieldMaterializer.ToggleHighlight(false);
         }
@@ -75,6 +75,6 @@ public class FieldController : MonoBehaviour, ILogicHolder<Field> {
         fieldMaterializer.Reset();
 
         isInteractable = false;
-        Logic = null;
+        LinkedField = null;
     }
 }

@@ -10,7 +10,7 @@ public class UICardFactory : MonoBehaviour {
     [SerializeField] private CardLayoutGhost ghostPrefab;
     [SerializeField] private CardAbilityUI abilityPrefab;
 
-    private CardUIPool cardPool;
+    private CardUIPool cardPairPool;
     private CardGhostPool ghostPool;
 
     private void Awake() {
@@ -21,11 +21,11 @@ public class UICardFactory : MonoBehaviour {
         ghostPool = new CardGhostPool(ghostPrefab, ghostLayoutParent);
         CardAbilityPool abilityUIPool = new CardAbilityPool(abilityPrefab, cardSpawnPoint);
 
-        cardPool = new CardUIPool(cardPrefab, ghostPool, abilityUIPool, cardSpawnPoint); 
+        cardPairPool = new CardUIPool(cardPrefab, ghostPool, abilityUIPool, cardSpawnPoint); 
     }
 
     public CardUI CreateCardUI(Card card) {
-        CardUI cardUI = cardPool.Get();
+        CardUI cardUI = cardPairPool.Get();
         cardUI.transform.position = cardSpawnPoint.position;
         cardUI.SetCardLogic(card);
         return cardUI;
@@ -33,6 +33,6 @@ public class UICardFactory : MonoBehaviour {
 
     public void ReleaseCardUI(CardUI cardUI) {
         cardUI.Reset();
-        cardPool.Release(cardUI);
+        cardPairPool.Release(cardUI);
     }
 }

@@ -1,11 +1,11 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class RayService : MonoBehaviour {
+public class RaycastService : MonoBehaviour {
     public Camera raycastCamera;
 
     [Header("Table View")]
-    [SerializeField] private float tableRayDistance = 20f;
+    [SerializeField] private float rayDistance = 20f;
 
     private void Awake() {
         raycastCamera = Camera.main;
@@ -30,9 +30,9 @@ public class RayService : MonoBehaviour {
 
     private RaycastHit? GetRaycastHit() {
         Ray ray = raycastCamera.ScreenPointToRay(Input.mousePosition);
-        Debug.DrawRay(ray.origin, ray.direction * tableRayDistance, Color.red, 1f); // Debug ray for visualization
+        Debug.DrawRay(ray.origin, ray.direction * rayDistance, Color.red, 1f); // Debug ray for visualization
 
-        if (Physics.Raycast(ray, out RaycastHit hit, tableRayDistance, -1, QueryTriggerInteraction.Ignore)) {
+        if (Physics.Raycast(ray, out RaycastHit hit, rayDistance, -1, QueryTriggerInteraction.Ignore)) {
             Debug.DrawLine(ray.origin, hit.point, Color.green, 1f); // Debug line to hit point
             return hit;
         }
