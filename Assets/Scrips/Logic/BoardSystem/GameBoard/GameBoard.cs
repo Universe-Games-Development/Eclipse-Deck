@@ -6,11 +6,11 @@ using UnityEngine;
 
 public class GameBoard {
     // Zenject
-    public BoardUpdater _boardUpdater { get; private set; }
+    public GameBoardManager boardManager { get; private set; }
     private TurnManager _turnManager;
 
-    public GameBoard(BoardUpdater boardUpdater, TurnManager turnManager) {
-        _boardUpdater = boardUpdater;
+    public GameBoard(GameBoardManager boardManager, TurnManager turnManager) {
+        this.boardManager = boardManager;
         _turnManager = turnManager;
     }
 
@@ -20,7 +20,7 @@ public class GameBoard {
             return false;
         }
 
-        if (!_boardUpdater.GridBoard.FieldExists(field)) {
+        if (!boardManager.GridBoard.FieldExists(field)) {
             return false;
         }
 
@@ -33,7 +33,7 @@ public class GameBoard {
     }
 
     public bool IsInitialized() {
-        if (_boardUpdater.GridBoard == null || _boardUpdater.GridBoard.Config == null) {
+        if (boardManager.GridBoard == null || boardManager.GridBoard.Config == null) {
             Debug.LogWarning("GridManager is not properly initialized: Global grid is null or empty.");
             return false;
         }

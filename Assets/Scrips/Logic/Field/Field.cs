@@ -10,6 +10,7 @@ public class Field : IHealthEntity {
     [Header("Actions")]
     public Action<Opponent> OnChangedOwner;
     public Action<FieldType> OnChangedType;
+    public Action<Creature> OnCreatureSummoned;
     public Action<Creature> OnCreaturePlaced;
     public Action<Creature> OnCreatureRemoved;
 
@@ -76,12 +77,11 @@ public class Field : IHealthEntity {
     #endregion
 
     #region Creature Logic
-    public async UniTask<bool> SummonCreatureAsync(Creature creature, Opponent summoner, int delayFrames = 1) {
-        await UniTask.DelayFrame(delayFrames);
+    public bool SummonCreature(Creature creature, Opponent summoner) {
 
         bool canSummon = IsSommonable(summoner);
         if (!canSummon) {
-            Debug.LogError("Summoner for field is nobody!");
+            Debug.LogWarning("Card or Summoner for field is nobody!");
             return false;
         }
 
@@ -146,5 +146,9 @@ public class Field : IHealthEntity {
         }
 
         return Owner.Health;
+    }
+
+    internal Vector3 GetCoordinates() {
+        return new Vector3(row, 0, column);
     }
 }

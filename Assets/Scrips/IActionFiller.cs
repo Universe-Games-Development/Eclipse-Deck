@@ -1,5 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 
-public interface IAbilityInputter {
+public interface IActionFiller {
     UniTask<T> ProcessRequirementAsync<T>(Opponent requestingPlayer, IRequirement<T> requirement) where T : class;
 }

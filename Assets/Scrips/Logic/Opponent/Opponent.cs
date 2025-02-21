@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using Zenject;
 
 public interface IMannable {
     Mana GetMana();
@@ -20,16 +21,14 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
     public Deck discardDeck;
 
     public CardCollection cardCollection;
-    public PlayCardManager playCardManager;
-
+    public IActionFiller actionFiller;
     public Action<Opponent> OnDefeat { get; internal set; }
-
     private readonly GameEventBus eventBus;
     private readonly CommandManager commandManager;
-
-    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, IAbilityInputter abilityInputter, CommandManager commandManager) {
+    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, IActionFiller actionFiller, CommandManager commandManager) {
         this.eventBus = eventBus;
         this.commandManager = commandManager;
+        this.actionFiller = actionFiller;
 
         Stat healthSat = new Stat(20, 20);
         Stat manaStat = new Stat(0, 10);
@@ -39,7 +38,7 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
 
         cardCollection = new CardCollection(assetLoader);
         hand = new CardHand(this, eventBus);
-        playCardManager = new PlayCardManager(this, abilityInputter);
+        
 
         eventBus.SubscribeTo<OnBattleBegin>(StartBattleActions);
         eventBus.SubscribeTo<OnTurnStart>(TurnStartActions);
@@ -53,7 +52,7 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
     private void StartBattleActions(ref OnBattleBegin eventData) {
         commandManager.EnqueueCommands(new List<Command> {
             new InitDeckCommand(this, 40, cardCollection, eventBus),
-            new DrawCardCommand(this, 3),
+            new DrawCardCommand(this, 10),
         });
     }
 

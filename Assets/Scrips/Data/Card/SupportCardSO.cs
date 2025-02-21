@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
 [CreateAssetMenu(fileName = "SupportCard", menuName = "TGE/Cards/SupportCard")]
-public class SupportCardSO : CardSO {
+public class SupportCardSO : CardData {
 
 }

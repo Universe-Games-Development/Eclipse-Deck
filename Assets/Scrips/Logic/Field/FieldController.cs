@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System;
 using UnityEngine;
 public class FieldController : MonoBehaviour {
     public FieldType type;
@@ -6,9 +7,9 @@ public class FieldController : MonoBehaviour {
 
     public Field LinkedField;
 
+    [SerializeField] public Transform spawnPoint;
+
     [SerializeField] public FieldUI fieldUI;
-
-
     [SerializeField] private FieldMaterializer fieldMaterializer;
     [SerializeField] public Levitator levitator;
 
@@ -76,5 +77,9 @@ public class FieldController : MonoBehaviour {
 
         isInteractable = false;
         LinkedField = null;
+    }
+
+    internal Transform GetSpawnOrigin() {
+        return spawnPoint;
     }
 }

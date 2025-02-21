@@ -11,8 +11,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
     public Action OnLayoutUpdate;
 
     private bool isInteractable;
-
-    private Card card;
     
     // Components
     [SerializeField] public CardAnimator DoTweenAnimator;
@@ -69,7 +67,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
         DoTweenAnimator?.Reset();
         UIDataInfo?.Reset();
         isInteractable = false;
-        card = null;
     }
 
     internal void UpdateLayout() {

@@ -1,7 +1,7 @@
-using System;
+using Zenject;
 
 public class Player : Opponent {
-    public Player(GameEventBus eventBus, AssetLoader assetLoader, IAbilityInputter abilityInputter, CommandManager commandManager) : base(eventBus, assetLoader, abilityInputter, commandManager) {
+    public Player(GameEventBus eventBus, AssetLoader assetLoader, IActionFiller abilityInputter, CommandManager commandManager) : base(eventBus, assetLoader, abilityInputter, commandManager) {
         Name = "Player";
     }
 }

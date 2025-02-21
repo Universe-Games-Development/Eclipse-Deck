@@ -26,7 +26,7 @@ public class FireballCardAbility : CardACtiveAbility {
         enemyCreatureRequirement = requirementBuilder.Add(new EnemyCreatureRequirement(abilityCard.Owner)).Build();
     }
 
-    public override async UniTask<bool> PerformAbility(IAbilityInputter filler) {
+    public override async UniTask<bool> PerformAbility(IActionFiller filler) {
         Creature enemyCreature = await filler.ProcessRequirementAsync(abilityCard.Owner, enemyCreatureRequirement);
         if (enemyCreature == null) return false;
 

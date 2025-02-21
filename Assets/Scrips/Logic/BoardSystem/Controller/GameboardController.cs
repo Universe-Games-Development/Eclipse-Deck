@@ -1,57 +1,51 @@
 using UnityEngine;
 using Zenject;
 
-public class GameboardController : MonoBehaviour {
-    [SerializeField] private HealthCellController playerCell;
-    [SerializeField] private HealthCellController enemyCell;
+public class GameBoardController : MonoBehaviour {
     // Scene Context
     [Inject] private GameBoard gameBoard;
-    [Inject] private BoardUpdater gridManager;
+    [Inject] private GameBoardManager boardManager;
+    [SerializeField] public CreatureSpawner CreatureSpawner;
 
-    // GAme context
-    [Inject] GridVisual gridVisual;
+    [Header("Grid Interaction Params")]
+    [Range(0, 10)]
+    public float yInteractionRange = 1f;
 
-    private OpponentRegistrator OpponentRegistrator;
-    [Inject]
-    public void Construct(OpponentRegistrator opponentRegistrator) {
-        OpponentRegistrator = opponentRegistrator;
-        OpponentRegistrator.OnOpponentRegistered += AssignHPCellToOpponent;
-    }
-
-    private void AssignHPCellToOpponent(Opponent opponent) {
-        if (opponent is Player) {
-            playerCell.AssignOwner(opponent);
-        } else { enemyCell.AssignOwner(opponent); }
-    }
+    // Game context
+    [Inject] private GridVisual boardVisual;
 
     public Field GetFieldByWorldPosition(Vector3? mouseWorldPosition) {
-        if (!mouseWorldPosition.HasValue || gridVisual == null) {
+        if (!mouseWorldPosition.HasValue || boardVisual == null) {
             return null;
         }
 
+        Transform origin = boardVisual.GetBoardOrigin();
+        Vector3 worldPosition = mouseWorldPosition.Value;
 
-        Vector2Int? indexes = gridVisual.GetGridIndex(mouseWorldPosition.Value);
-        if (!indexes.HasValue) {
+        // Check if the click is within the y range
+        if (Mathf.Abs(worldPosition.y - origin.position.y) > yInteractionRange) {
             return null;
         }
 
-        Field field = gridManager.GridBoard.GetFieldAt(indexes.Value.x, indexes.Value.y);
+        // Get grid index by world position
+        Vector2Int? gridIndex = boardManager.GridBoard.GetGridIndexByWorld(origin, worldPosition);
+        if (!gridIndex.HasValue) {
+            return null;
+        }
 
-        if (!gameBoard.IsValidFieldSelected(field)) {
+        // ѕолучаем поле по индексам
+        Field field = boardManager.GridBoard.GetFieldAt(gridIndex.Value.x, gridIndex.Value.y);
+
+        // ≈сли поле не может быть выбрано Ц выводим предупреждение и выходим
+        if (field == null || !gameBoard.IsValidFieldSelected(field)) {
             if (field != null) {
-                Debug.LogWarning($"Can`t select field : {field.GetTextCoordinates()}");
+                Debug.LogWarning($"Can't select field: {field.GetTextCoordinates()}");
             }
+            return null;
         }
 
-        if (field != null) {
-            Debug.Log($"Selected : {field.GetTextCoordinates()}");
-        }
-
+        Debug.Log($"Selected: {field.GetTextCoordinates()}");
         return field;
     }
-
-    private void OnDestroy() {
-        if (OpponentRegistrator != null)
-        OpponentRegistrator.OnOpponentRegistered -= AssignHPCellToOpponent;
-    }
 }
+

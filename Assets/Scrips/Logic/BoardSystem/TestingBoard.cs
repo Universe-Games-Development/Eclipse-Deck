@@ -5,7 +5,7 @@ using Zenject;
 
 public class TestingBoard : MonoBehaviour
 {
-    [SerializeField] private GameboardController gameboardController;
+    [SerializeField] private GameBoardController gameboardController;
 
     [SerializeField] private PlayerController player_c;
     [SerializeField] private EnemyController enemy_c;
@@ -20,7 +20,7 @@ public class TestingBoard : MonoBehaviour
 
     // Scene Context
     [Inject] private GameBoard gameBoard;
-    [Inject] private BoardUpdater gridManager;
+    [Inject] private GameBoardManager boardManager;
 
     // GAme context
     [Inject] AddressablesResourceManager resManager;
@@ -52,11 +52,11 @@ public class TestingBoard : MonoBehaviour
 
     private async UniTask DebugLogic() {
 
-        await gridManager.UpdateGrid(boardConfig);
+        await boardManager.UpdateGrid(boardConfig);
 
         await UniTask.Delay(taskDelay);
         boardConfig.RandomizeAllGrids();
-        await gridManager.UpdateGrid(boardConfig);
+        await boardManager.UpdateGrid(boardConfig);
 
         await RandomSizeSpawn();
     }
@@ -65,7 +65,7 @@ public class TestingBoard : MonoBehaviour
         for (int i = 0; i < randomTaskAmount; i++) {
             await UniTask.Delay(taskDelay);
             boardConfig.RandomizeAllGrids();
-            await gridManager.UpdateGrid(boardConfig);
+            await boardManager.UpdateGrid(boardConfig);
         }
     }
 
@@ -75,7 +75,7 @@ public class TestingBoard : MonoBehaviour
             await UniTask.Delay(taskDelay);
             SetRandomSize();
             boardConfig.RandomizeAllGrids();
-            await gridManager.UpdateGrid(boardConfig);
+            await boardManager.UpdateGrid(boardConfig);
         }
     }
 

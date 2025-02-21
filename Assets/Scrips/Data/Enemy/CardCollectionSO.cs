@@ -6,5 +6,5 @@ public class CardCollectionSO : ScriptableObject {
     [Header("Collection Details")]
     public string collectionName;
     public string description;
-    public List<CardSO> cards;
+    public List<CardData> cards;
 }

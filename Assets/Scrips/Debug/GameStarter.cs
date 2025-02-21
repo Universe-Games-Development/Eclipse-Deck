@@ -27,7 +27,6 @@ public class LoadingScreen : MonoBehaviour {
     [SerializeField] private float _barSpeed;
 
     private float _targetProgress;
-    private bool _isProgress;
 
     public async UniTask Loading(Queue<ILoadingOperation> operations) {
         _canvas.enabled = true;
@@ -44,7 +43,6 @@ public class LoadingScreen : MonoBehaviour {
 
     private void ResetFill() {
         _progressFill.value = 0;
-        _isProgress = false;
         _barSpeed = 0;
         _targetProgress = 0;
     }
