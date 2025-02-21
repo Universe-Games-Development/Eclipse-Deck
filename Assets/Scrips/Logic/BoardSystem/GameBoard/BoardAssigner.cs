@@ -14,14 +14,14 @@ public class BoardAssigner {
              { typeof(Enemy), ENEMY_DIRECTION }
          };
 
-    private readonly BoardUpdater _boardUpdater;
+    private readonly GameBoardManager boardManager;
 
     private readonly OpponentRegistrator _opponentRegister;
 
     [Inject]
-    public BoardAssigner(OpponentRegistrator opponentRegister, BoardUpdater boardUpdater) {
+    public BoardAssigner(OpponentRegistrator opponentRegister, GameBoardManager boardManager) {
         _opponentRegister = opponentRegister;
-        _boardUpdater = boardUpdater;
+        this.boardManager = boardManager;
 
         SubscribeGridUpdates(); // temporary soon be bounded to game start event
     }
@@ -51,13 +51,13 @@ public class BoardAssigner {
     }
 
     public List<CompasGrid> GetOpponentGrids(Opponent opponent) {
-        if (_boardUpdater.GridBoard == null) {
+        if (boardManager.GridBoard == null) {
             Debug.LogError("GridBoard not initialized during assignment");
             return new List<CompasGrid>();
         }
 
         if (_opponentDirections.TryGetValue(opponent.GetType(), out var direction)) {
-            return _boardUpdater.GridBoard.GetGridsByGlobalDirection(direction);
+            return boardManager.GridBoard.GetGridsByGlobalDirection(direction);
         } else {
             throw new ArgumentException($"Received an unexpected opponent type: {opponent.GetType()}");
         }
@@ -66,7 +66,7 @@ public class BoardAssigner {
     // When battle ends
     public void UnassignGrids() {
         // Use LINQ for more concise code
-        _boardUpdater.GridBoard?.GetAllGrids()?.ForEach(grid => grid.Fields?.ForEach(row => row?.ForEach(field => field.UnassignOwner())));
+        boardManager.GridBoard?.GetAllGrids()?.ForEach(grid => grid.Fields?.ForEach(row => row?.ForEach(field => field.UnassignOwner())));
     }
 
     // When activated
@@ -79,13 +79,13 @@ public class BoardAssigner {
 
     // When battle starts
     private void SubscribeGridUpdates() {
-        _boardUpdater.OnGridInitialized += HandleGridUpdate;
-        _boardUpdater.OnBoardChanged += HandleGridUpdate;
+        boardManager.OnGridInitialized += HandleGridUpdate;
+        boardManager.OnBoardChanged += HandleGridUpdate;
     }
 
     // When battle ends
     public void UnsubscribeGridUpdates() {
-        _boardUpdater.OnGridInitialized -= HandleGridUpdate;
-        _boardUpdater.OnBoardChanged -= HandleGridUpdate;
+        boardManager.OnGridInitialized -= HandleGridUpdate;
+        boardManager.OnBoardChanged -= HandleGridUpdate;
     }
 }

@@ -1,14 +1,10 @@
+﻿using System;
 using UnityEngine;
 
 public class HealthCellController : MonoBehaviour {
-    private void Awake() {
-
-    }
-
-    public void AssignOwner(Opponent opponent) {
-    }
-
-    private void OnHealhChanged(int newHealth) {
-
+    private Health health;
+    internal void AssignOwner(Opponent opponent) {
+        health = opponent.Health;
+        
     }
 }

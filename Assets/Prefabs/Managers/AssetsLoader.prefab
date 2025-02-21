@@ -44,3 +44,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5ca1e051fc0d3e49b4110119f3aa4bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mainMenuLabel:
+    m_LabelString: MainMenu
+  sewersLabel:
+    m_LabelString: Sewers
+  caveLabel:
+    m_LabelString: Cave
+  floodedCaveLabel:
+    m_LabelString: FloodedCave
+  labLabel:
+    m_LabelString: Lab
+  hellLabel:
+    m_LabelString: Hell

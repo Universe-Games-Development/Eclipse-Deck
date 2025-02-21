@@ -3,7 +3,8 @@ using Zenject;
 
 public class PlayerController : MonoBehaviour {
     [Inject] public Player player;
-    [Inject] GameboardController gameboard_c;
+    [Inject] GameBoardController gameboard_c;
+    [Inject] DiContainer container;
 
     [SerializeField] private CardHandUI handUI;
     [SerializeField] private RaycastService rayService;

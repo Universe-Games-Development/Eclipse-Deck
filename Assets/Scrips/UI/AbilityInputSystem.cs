@@ -37,7 +37,7 @@ public class FieldEntityProvider : IEntityProvider {
 }
 
 
-public class AbilityInputSystem : MonoBehaviour, IAbilityInputter {
+public class AbilityInputSystem : MonoBehaviour, IActionFiller {
     [SerializeField] private TMP_Text _instructionText;
     [SerializeField] private GameObject _inputPanel;
     [SerializeField] private int _timeout = 5;

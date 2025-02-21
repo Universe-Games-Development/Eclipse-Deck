@@ -14,16 +14,15 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     protected Health _health;
     protected Attack _attack;
     
-    public Creature(CreatureCard creatureCard, Opponent owner, GameEventBus eventBus) {
+    public Creature(CreatureCard creatureCard, GameEventBus eventBus) {
         this.creatureCard = creatureCard;
         _health = new Health(this, creatureCard.Health, eventBus);
         _attack = new Attack(this, creatureCard.Attack, eventBus);
         
         // Soon we define how to get the creatureSO
-        CreatureSO creatuseSO = null;
-        throw new NotFiniteNumberException();
+        CreatureCardData creatureData = creatureCard.creatureCardData;
 
-        var movementData = creatuseSO.movementStrategy;
+        var movementData = creatureData.movementStrategy;
         // TO DO : abilities initialization
 
         movementHandler = new CreatureStrategyMovement(movementData, this);
@@ -75,10 +74,11 @@ public class EndTurnActions : Command {
     public async override UniTask Execute() {
         Debug.Log("End Turn actions begin");
         AddChild(MoveCommand);
+        await UniTask.CompletedTask;
         Debug.Log("End Turn actions end");
     }
 
     public async override UniTask Undo() {
-
+        await UniTask.CompletedTask;
     }
 }

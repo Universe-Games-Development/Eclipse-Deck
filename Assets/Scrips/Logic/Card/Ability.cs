@@ -16,7 +16,7 @@ public interface IPassiveAbility {
 }
 
 public interface IActiveAbility {
-    UniTask<bool> PerformAbility(IAbilityInputter inputter);
+    UniTask<bool> PerformAbility(IActionFiller inputter);
 }
 
 
@@ -38,7 +38,7 @@ public abstract class ActiveAbility<TData, TOwner>
     protected ActiveAbility(TData data, TOwner owner, GameEventBus eventBus) : base(data, owner, eventBus) {
     }
 
-    public abstract UniTask<bool> PerformAbility(IAbilityInputter inputter);
+    public abstract UniTask<bool> PerformAbility(IActionFiller inputter);
 }
 
 public abstract class PassiveAbility<TData, TOwner>

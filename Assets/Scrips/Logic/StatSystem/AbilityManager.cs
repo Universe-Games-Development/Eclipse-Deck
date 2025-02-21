@@ -22,20 +22,42 @@ public class AbilityManager<TAbilityData, TOwner> : IDisposable
         }
     }
 
-    public void AddAbility(TAbilityData cardabilityData) {
-        if (cardabilityData == null) {
+    public void AddAbility(TAbilityData abilityData) {
+        if (abilityData == null) {
             Debug.LogWarning("Ability data is null");
             return;
         }
-        Ability<TAbilityData, TOwner> ability = cardabilityData.CreateAbility(_owner, _eventBus);
+
+        var ability = abilityData.CreateAbility(_owner, _eventBus);
+
+        if (ability == null) {
+            Debug.LogError($"Failed to create ability from {abilityData.name}");
+            return;
+        }
+
         _abilities.Add(ability);
     }
 
     public void RemoveAbility(Ability<TAbilityData, TOwner> ability) {
+        if (!_abilities.Contains(ability)) {
+            Debug.LogWarning("Ability not found in manager");
+            return;
+        }
+
         if (ability is IDisposable disposable) {
             disposable.Dispose();
         }
         _abilities.Remove(ability);
+    }
+
+    public void ClearAbilities() {
+        foreach (var ability in _abilities) {
+            if (ability is IPassiveAbility passive)
+                passive.Deactivate();
+
+            (ability as IDisposable)?.Dispose();
+        }
+        _abilities.Clear();
     }
 
     internal List<Ability<TAbilityData, TOwner>> GetAbilities() {
@@ -43,11 +65,7 @@ public class AbilityManager<TAbilityData, TOwner> : IDisposable
     }
 
     public void Dispose() {
-        foreach (var ability in _abilities.OfType<IDisposable>()) {
-            ability.Dispose();
-        }
-        _abilities.Clear();
-        GC.SuppressFinalize(this);
+        ClearAbilities();
     }
 }
 

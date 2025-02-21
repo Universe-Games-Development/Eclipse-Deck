@@ -10,7 +10,7 @@ public class CreatureNavigator {
     [Inject]
     public void Construct(GameBoard gameBoard) {
         GameBoard = gameBoard;
-        GridBoard = gameBoard._boardUpdater.GridBoard;
+        GridBoard = gameBoard.boardManager.GridBoard;
     }
 
     // Trying to move in the chosen direction

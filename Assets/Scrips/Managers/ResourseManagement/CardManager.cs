@@ -7,21 +7,21 @@ using UnityEngine.AddressableAssets;
 
 public class CardManager {
 
-    private Dictionary<Location, List<CardSO>> loadedCards = new Dictionary<Location, List<CardSO>>();
+    private Dictionary<Location, List<CardData>> loadedCards = new Dictionary<Location, List<CardData>>();
     public async UniTask LoadCardsForLocation(AssetLabelReference locationLabel, Location location) {
         if (!loadedCards.ContainsKey(location)) {
-            loadedCards[location] = new List<CardSO>();
+            loadedCards[location] = new List<CardData>();
             string key = location.ToString();
-            await Addressables.LoadAssetsAsync<CardSO>(locationLabel, cards => {
+            await Addressables.LoadAssetsAsync<CardData>(locationLabel, cards => {
                 loadedCards[location].Add(cards);
             });
         }
     }
 
-    public List<CardSO> GetCardsForLocation(Location location) {
-        if (!HasLocationCardData(location)) return new List<CardSO>(); ;
+    public List<CardData> GetCardsForLocation(Location location) {
+        if (!HasLocationCardData(location)) return new List<CardData>(); ;
 
-        return loadedCards.TryGetValue(location, out var cards) ? cards : new List<CardSO>();
+        return loadedCards.TryGetValue(location, out var cards) ? cards : new List<CardData>();
     }
 
     public void UnloadCards(Location location) {
@@ -44,8 +44,8 @@ public class CardManager {
         return loadedCards.ContainsKey(location);
     }
 
-    public List<CardSO> GetAllCards() {
-        List<CardSO> allCards = new List<CardSO>();
+    public List<CardData> GetAllCards() {
+        List<CardData> allCards = new List<CardData>();
 
         foreach (var kvp in loadedCards) {
             if (kvp.Value != null && kvp.Value.Count > 0) {

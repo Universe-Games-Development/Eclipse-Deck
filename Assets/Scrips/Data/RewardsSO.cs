@@ -8,7 +8,7 @@ public abstract class RewardSO : ScriptableObject {
 
 [CreateAssetMenu(fileName = "NewCardReward", menuName = "Rewards/CardReward")]
 public class CardRewardSO : RewardSO {
-    public List<CardSO> cards;
+    public List<CardData> cards;
 
     public override void ApplyReward(Opponent opponent) {
         Debug.Log("card to pick");

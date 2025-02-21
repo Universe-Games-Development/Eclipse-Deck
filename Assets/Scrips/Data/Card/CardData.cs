@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public abstract class CardSO : ScriptableObject {
+public abstract class CardData : ScriptableObject {
     [Header("Global Card Settings")]
     public int MAX_CARDS_COST = 30;
     public CardType cardType;

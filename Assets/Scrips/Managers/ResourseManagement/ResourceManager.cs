@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class ResourceManager {
     [Header("Card Data")]
-    public List<CardSO> cardDataList = new List<CardSO>();
+    public List<CardData> cardDataList = new List<CardData>();
 
     [Header("Enemy Data")]
     public List<EnemySO> enemyDataList = new List<EnemySO>();

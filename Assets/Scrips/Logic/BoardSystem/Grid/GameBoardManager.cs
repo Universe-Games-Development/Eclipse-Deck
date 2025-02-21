@@ -5,7 +5,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Zenject;
 
-public class BoardUpdater {
+public class GameBoardManager {
     [Inject] private BoardAssigner _boardAssigner;
     private BoardSettingsSO initialBoardConfig;
     [Inject] CommandManager CommandManager;
@@ -82,13 +82,13 @@ public class BoardUpdater {
 
 public class GridInitCommand : Command {
     private Func<UniTask<GridBoard>> initBoard;
-    private BoardUpdater updater;
+    private GameBoardManager boardManager;
 
     private GridBoard cachedBoard;
 
-    public GridInitCommand(BoardUpdater updater, Func<UniTask<GridBoard>> initBoard) {
+    public GridInitCommand(GameBoardManager boardManager, Func<UniTask<GridBoard>> initBoard) {
         this.initBoard = initBoard;
-        this.updater = updater;
+        this.boardManager = boardManager;
     }
 
     public async override UniTask Execute() {
@@ -102,8 +102,8 @@ public class GridInitCommand : Command {
 
     protected async UniTask InitGrid(GridBoard gridBoard) {
         BoardUpdateData gridUpdateData = gridBoard.UpdateGlobalGrid();
-        if (updater.OnGridInitialized != null) {
-            await updater.OnGridInitialized.Invoke(gridUpdateData);
+        if (boardManager.OnGridInitialized != null) {
+            await boardManager.OnGridInitialized.Invoke(gridUpdateData);
         }
         await UniTask.CompletedTask;
     }
@@ -113,8 +113,8 @@ public class GridInitCommand : Command {
 
         BoardUpdateData updateData = cachedBoard.RemoveAll();
 
-        if (updater.OnBoardChanged != null) {
-            await updater.OnBoardChanged.Invoke(updateData);
+        if (boardManager.OnBoardChanged != null) {
+            await boardManager.OnBoardChanged.Invoke(updateData);
         }
     }
 
@@ -124,13 +124,13 @@ public class BoardUpdateCommand : Command {
     private readonly BoardSettingsSO oldSettings;
     private readonly BoardSettingsSO newSettings;
 
-    private BoardUpdater updater;
+    private GameBoardManager boardManager;
     private GridBoard board;
 
-    public BoardUpdateCommand(BoardUpdater updater, GridBoard board, BoardSettingsSO newSettings) {
+    public BoardUpdateCommand(GameBoardManager boardManager, GridBoard board, BoardSettingsSO newSettings) {
         this.board = board;
         this.newSettings = newSettings;
-        this.updater = updater;
+        this.boardManager = boardManager;
         oldSettings = board.Config;
     }
 
@@ -145,8 +145,8 @@ public class BoardUpdateCommand : Command {
     protected async UniTask UpdateBoard(BoardSettingsSO config) {
         BoardUpdateData updateData = board.UpdateGlobalGrid(config);
 
-        if (updater.OnBoardChanged != null) {
-            await updater.OnBoardChanged.Invoke(updateData);
+        if (boardManager.OnBoardChanged != null) {
+            await boardManager.OnBoardChanged.Invoke(updateData);
         }
 
         await UniTask.CompletedTask;

@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class AbilityData<TAbilityData, TOwner> : ScriptableObject
-    where TAbilityData : AbilityData<TAbilityData, TOwner>
+public abstract class AbilityData<TSelf, TOwner> : ScriptableObject
+    where TSelf : AbilityData<TSelf, TOwner>
     where TOwner : IAbilityOwner {
     public string Name;
     public string Description;
     public Sprite Icon;
 
-    public abstract Ability<TAbilityData, TOwner> CreateAbility(TOwner owner, GameEventBus eventBus);
+    public abstract Ability<TSelf, TOwner> CreateAbility(TOwner owner, GameEventBus eventBus);
 }
 
 

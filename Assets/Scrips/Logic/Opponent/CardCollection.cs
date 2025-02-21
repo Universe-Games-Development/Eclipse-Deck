@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CardCollection {
-    public Dictionary<CardSO, int> cardEntries;
+    public Dictionary<CardData, int> cardEntries;
     private AssetLoader assetLoader;
 
     public CardCollection(AssetLoader assetLoader) {
@@ -11,7 +11,7 @@ public class CardCollection {
         cardEntries = new();
     }
 
-    private void AddCardToCollection(CardSO cardData) {
+    private void AddCardToCollection(CardData cardData) {
         if (cardData == null) {
             Debug.LogWarning("Collection adding null card!");
             return;
@@ -25,7 +25,7 @@ public class CardCollection {
     }
 
     // Видалення карти з колекції
-    public void RemoveCardFromCollection(CardSO cardData) {
+    public void RemoveCardFromCollection(CardData cardData) {
         if (cardData == null) {
             Debug.LogWarning("Collection removing null card!");
             return;
@@ -44,7 +44,7 @@ public class CardCollection {
 
     // Генерація тестової колекції
     public async UniTask GenerateTestCollection(int count) {
-        List<CardSO> cardDatas;
+        List<CardData> cardDatas;
 
         if (assetLoader.HasActualData(Location.Sewers)) {
             cardDatas = assetLoader.CardManager.GetAllCards();
@@ -59,7 +59,7 @@ public class CardCollection {
         }
 
         for (int i = 0; i < count; i++) {
-            CardSO cardData = RandomUtil.GetRandomFromList(cardDatas);
+            CardData cardData = RandomUtil.GetRandomFromList(cardDatas);
             AddCardToCollection(cardData);
         }
     }

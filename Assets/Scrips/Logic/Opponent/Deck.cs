@@ -18,7 +18,7 @@ public class Deck {
 
         foreach (var cardEntry in collection.cardEntries) {
             for (int i = 0; i < cardEntry.Value; i++) {
-                CardSO cardSO = cardEntry.Key;
+                CardData cardSO = cardEntry.Key;
                 Card newCard = CreateCard(cardSO);
                 if (newCard == null) continue;
 
@@ -29,9 +29,9 @@ public class Deck {
         ShuffleDeck();
     }
 
-    private Card CreateCard(CardSO cardSO) {
+    private Card CreateCard(CardData cardSO) {
         return cardSO switch {
-            CreatureCardSO creatureCard => new CreatureCard(creatureCard, owner, eventBus),
+            CreatureCardData creatureCard => new CreatureCard(creatureCard, owner, eventBus),
             SpellCardSO spellCard => new SpellCard(spellCard, owner, eventBus),
             SupportCardSO supportCard => new SupportCard(supportCard, owner, eventBus),
             _ => null

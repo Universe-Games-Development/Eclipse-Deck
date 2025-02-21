@@ -9,7 +9,7 @@ using Zenject;
 public class GridVisual : MonoBehaviour {
     private FieldPool pool;
 
-    BoardUpdater baordUpdater;
+    GameBoardManager boardManager;
 
     [SerializeField] private CellSize visualCellSize = new(1.0f, 1.0f);
     [Header("Field Data")]
@@ -18,15 +18,11 @@ public class GridVisual : MonoBehaviour {
     [SerializeField] private Transform origin;
     [SerializeField] private Transform globalCenter;
 
-    [Header("Grid Interaction Params")]
-    [Range(0, 10)]
-    public float yInteractionRange = 1f;
-
     private Dictionary<Field, FieldController> fieldControllers = new();
 
     [Inject]
-    public void Construct(BoardUpdater gridManager) {
-        this.baordUpdater = gridManager;
+    public void Construct(GameBoardManager gridManager) {
+        this.boardManager = gridManager;
         gridManager.OnGridInitialized += UpdateVisualGrid;
         gridManager.OnBoardChanged += UpdateVisualGrid;
         pool = new FieldPool(fieldPrefab, origin);
@@ -53,7 +49,7 @@ public class GridVisual : MonoBehaviour {
     }
 
     private void AdjustCenter() {
-        Vector3 boardBalanceAmount = baordUpdater.GridBoard.GetGridBalanceOffset() / 2;
+        Vector3 boardBalanceAmount = boardManager.GridBoard.GetGridBalanceOffset() / 2;
         Vector3 visualLocalOffsetBalance = new(boardBalanceAmount.x * visualCellSize.width, 0, boardBalanceAmount.z * visualCellSize.height);
 
         Vector3 boardGlobalCenter = origin.TransformPoint(visualLocalOffsetBalance);
@@ -98,15 +94,15 @@ public class GridVisual : MonoBehaviour {
         }
     }
 
-    public Vector2Int? GetGridIndex(Vector3 worldPosition) {
-        if (baordUpdater == null || baordUpdater.GridBoard == null) {
+    internal Transform GetBoardOrigin() {
+        return origin;
+    }
+
+    internal FieldController GetController(Field targetField) {
+        if (!fieldControllers.TryGetValue(targetField, out FieldController controller)) {
+            Debug.LogWarning("No controller for field : " + targetField.GetCoordinates());
             return null;
         }
-
-        if (Mathf.Abs(worldPosition.y - origin.position.y) > yInteractionRange) {
-            return null;
-        }
-
-        return baordUpdater.GridBoard.GetGridIndexByWorld(origin, worldPosition);
+        return controller;
     }
 }
