@@ -23,7 +23,7 @@ MonoBehaviour:
   rarity: 0
   cost: 0
   abilities: []
-  creatureModel: {fileID: -2816284890589717409, guid: 99b198968a77ad04189b263494fab21c, type: 3}
+  viewPrefab: {fileID: 5337255668681381628, guid: e13ac05a01d85734b99643d6ccc6c528, type: 3}
   MAX_CARD_ATTACK: 100
   MAX_CARD_HEALTH: 100
   Attack: 0
