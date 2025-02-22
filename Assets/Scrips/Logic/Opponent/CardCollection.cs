@@ -59,7 +59,7 @@ public class CardCollection {
         }
 
         for (int i = 0; i < count; i++) {
-            CardData cardData = RandomUtil.GetRandomFromList(cardDatas);
+            CardData cardData = cardDatas.GetRandomElement();
             AddCardToCollection(cardData);
         }
     }

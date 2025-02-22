@@ -78,9 +78,7 @@ public class Field : IHealthEntity {
 
     #region Creature Logic
     public bool SummonCreature(Creature creature, Opponent summoner) {
-
-        bool canSummon = IsSommonable(summoner);
-        if (!canSummon) {
+        if (summoner == null || creature == null) {
             Debug.LogWarning("Card or Summoner for field is nobody!");
             return false;
         }
@@ -118,11 +116,6 @@ public class Field : IHealthEntity {
     // To walk
     public bool CanPlaceCreature(Creature creature) {
         return !HasCreature && creature != null;
-    }
-
-    // To summon
-    public bool IsSommonable(Opponent summoner) {
-        return OccupiedCreature == null && summoner == Owner;
     }
 
     public bool HasCreature => OccupiedCreature != null;

@@ -7,18 +7,13 @@ using Zenject;
 public class PlayManagerRegistrator : IDisposable {
     private readonly Dictionary<Opponent, CardPlayService> cardPlayServices = new();
     private GameBoardController boardController; // Используется для розыгрыша карт
-    private OpponentRegistrator registrator; // Для работы с руками противников
 
     [Inject]
-    private void Construct(OpponentRegistrator registrator, GameBoardController boardController) {
+    private void Construct(GameBoardController boardController) {
         this.boardController = boardController ?? throw new ArgumentNullException(nameof(boardController));
-        this.registrator = registrator ?? throw new ArgumentNullException(nameof(registrator));
-
-        registrator.OnOpponentsRegistered += InitPlayCardManagers;
-        registrator.OnOpponentUnregistered += StopPlaying;
     }
 
-    private void InitPlayCardManagers(List<Opponent> opponents) {
+    public void EnablePlayCardServices(List<Opponent> opponents) {
         foreach (var opponent in opponents) {
             if (!cardPlayServices.ContainsKey(opponent)) {
                 var service = new CardPlayService(opponent, boardController);
@@ -30,7 +25,7 @@ public class PlayManagerRegistrator : IDisposable {
         }
     }
 
-    private void StopPlaying(Opponent opponent) {
+    public void StopPlaying(Opponent opponent) {
         if (opponent == null) return;
 
         if (cardPlayServices.TryGetValue(opponent, out var service)) {
@@ -43,12 +38,6 @@ public class PlayManagerRegistrator : IDisposable {
     }
 
     public void Dispose() {
-        if (registrator != null) {
-            registrator.OnOpponentsRegistered -= InitPlayCardManagers;
-            registrator.OnOpponentUnregistered -= StopPlaying;
-            registrator = null;
-        }
-
         foreach (var service in cardPlayServices.Values) {
             service.Dispose();
         }
@@ -61,9 +50,10 @@ public class CardPlayService : IDisposable {
     private readonly GameBoardController boardController;
     private readonly Opponent opponent;
     private readonly CardHand cardHand;
+    private bool _isPlaying;
 
     private Card bufferedCard;
-
+    
     public CardPlayService(Opponent opponent, GameBoardController boardController) {
         this.boardController = boardController ?? throw new ArgumentNullException(nameof(boardController));
         this.opponent = opponent ?? throw new ArgumentNullException(nameof(opponent));
@@ -77,24 +67,20 @@ public class CardPlayService : IDisposable {
     }
 
     private void OnCardSelected(Card selectedCard) {
-        if (selectedCard == null) return;
-        // Если уже запущена попытка розыгрыша, не начинаем новую.
-        if (bufferedCard != null) return;
+        if (selectedCard == null || _isPlaying) return;
 
-        TryPlayCard(selectedCard).Forget();
+        BeginPlayCard(selectedCard).Forget();
     }
 
-    private async UniTask TryPlayCard(Card card) {
+    private async UniTask BeginPlayCard(Card card) {
+        _isPlaying = true;
         try {
-            // Сохраняем карту для возможного восстановления
             bufferedCard = card;
 
-            // Удаляем карту из руки и снимаем выбор
             cardHand.DeselectCurrentCard();
             cardHand.RemoveCard(card);
 
-            // Пытаемся разыграть карту
-            bool playResult = await card.PlayCard(opponent, boardController, opponent.actionFiller);
+            bool playResult = await card.PlayCard(opponent, boardController);
 
             if (playResult) {
                 Debug.Log("Card playing successful");
@@ -105,9 +91,9 @@ public class CardPlayService : IDisposable {
             }
         } catch (Exception ex) {
             Debug.LogError($"Error while playing card: {ex.Message}");
-            // В случае ошибки возвращаем карту в руку
             cardHand.AddCard(bufferedCard);
         } finally {
+            _isPlaying = false;
             bufferedCard = null;
         }
     }

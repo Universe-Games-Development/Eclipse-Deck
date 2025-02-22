@@ -9,12 +9,11 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     
     private CreatureCard creatureCard;
     private CreatureStrategyMovement movementHandler;
-    private MoveCommand moveCommand;
 
     protected Health _health;
     protected Attack _attack;
     
-    public Creature(CreatureCard creatureCard, GameEventBus eventBus) {
+    public Creature(CreatureCard creatureCard, IMovementStrategyFactory strategyFactory, GameEventBus eventBus) {
         this.creatureCard = creatureCard;
         _health = new Health(this, creatureCard.Health, eventBus);
         _attack = new Attack(this, creatureCard.Attack, eventBus);
@@ -25,12 +24,13 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
         var movementData = creatureData.movementStrategy;
         // TO DO : abilities initialization
 
-        movementHandler = new CreatureStrategyMovement(movementData, this);
-        moveCommand = new MoveCommand(this, movementHandler);
+        movementHandler = new CreatureStrategyMovement(strategyFactory, movementData);
     }
 
     // TODO: return also attack action
     public Command GetEndTurnAction() {
+        IMoveStrategy moveStrategy = movementHandler.GetStrategy(CurrentField);
+        MoveCommand moveCommand = new MoveCommand(this, moveStrategy);
         return new EndTurnActions(moveCommand);
     }
 

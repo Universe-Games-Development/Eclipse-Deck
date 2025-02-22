@@ -179,7 +179,7 @@ public class GridBoard {
 
     #region Field Getters
     public List<Field> GetFieldsInDirection(Field currentField, int searchDistance, Direction searchDirection) {
-        (int rowOffset, int colOffset) offset = CompassUtil.DirectionOffsets.GetValueOrDefault(searchDirection);
+        (int colOffset, int rowOffset) offset = CompassUtil.DirectionOffsets.GetValueOrDefault(searchDirection);
         List<Field> fields = new List<Field>();
         for (int i = 1; i <= searchDistance; i++) {
             Field foundField = GetFieldAt(currentField.GetRow() + offset.rowOffset * i, currentField.GetColumn() + offset.colOffset * i);

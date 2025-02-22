@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System;
+using System.ComponentModel;
 using UnityEngine;
 
 public abstract class Card : IAbilityOwner {
@@ -50,7 +51,7 @@ public abstract class Card : IAbilityOwner {
         }
     }
     
-    public abstract UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, IActionFiller abilityInputter);
+    public abstract UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController);
 
     internal void Deselect() {
         Debug.LogError("Deselect");
@@ -69,7 +70,7 @@ public class SpellCard : Card {
     }
 
     
-    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, IActionFiller abilityInputter) {
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController) {
         Debug.Log("Spell card played");
         await UniTask.CompletedTask;
         return false;
@@ -80,7 +81,7 @@ public class SupportCard : Card {
     public SupportCard(SupportCardSO cardSO, Opponent owner, GameEventBus eventBus)
         : base(cardSO, owner, eventBus) { }
 
-    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, IActionFiller abilityInputter) {
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController) {
         Debug.Log("Support card played");
         await UniTask.CompletedTask;
         return false;
@@ -91,34 +92,28 @@ public class CreatureCard : Card {
     public Stat Health { get; private set; }
     public Stat Attack { get; private set; }
     public CreatureCardData creatureCardData;
-
+    private IRequirement<Field> friendlyFieldRequirement;
 
     public CreatureCard(CreatureCardData cardSO, Opponent owner, GameEventBus eventBus)
         : base(cardSO, owner, eventBus) {
         creatureCardData = cardSO;
         Health = new(cardSO.MAX_CARD_HEALTH, cardSO.Health);
         Attack = new(cardSO.MAX_CARD_ATTACK, cardSO.Attack);
-    }
 
-    public override async UniTask<bool> PlayCard(Opponent summoner, GameBoardController boardController, IActionFiller abilityInputter) {
         RequirementBuilder<Field> requirementBuilder = new RequirementBuilder<Field>();
-        IRequirement<Field> friendlyFieldRequirement = requirementBuilder
-            .Add(new OwnerFieldRequirement(summoner))
+        friendlyFieldRequirement = requirementBuilder
+            .Add(new OwnerFieldRequirement(owner))
             .Add(new EmptyFieldRequirement())
             .Build();
+    }
 
-
-        Field field = await abilityInputter.ProcessRequirementAsync(summoner, friendlyFieldRequirement);
+    public override async UniTask<bool> PlayCard(Opponent summoner, GameBoardController boardController) {
+        Field field = await summoner.actionFiller.ProcessRequirementAsync(summoner, friendlyFieldRequirement);
         if (field == null) {
             Debug.Log("Field is null");
             return false;
         }
 
-        if (!field.IsSommonable(summoner)) {
-            await UniTask.FromCanceled();
-            return false;
-        }
-
-        return await boardController.CreatureSpawner.SpawnCreature(summoner, this, field);
+        return await boardController.CreatureSpawner.SpawnCreature(this, field, summoner);
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Zenject;
+using Zenject.SpaceFighter;
 
 public class PlayerController : MonoBehaviour {
     [Inject] public Player player;
@@ -23,5 +24,4 @@ public class PlayerController : MonoBehaviour {
             
         }
     }
-
 }

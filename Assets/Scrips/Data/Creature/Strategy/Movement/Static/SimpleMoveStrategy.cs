@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-public class SimpleMoveStrategy : InstanceMovementStrategy {
+public class SimpleMoveStrategy : MovementStrategy {
     public int defaultMoveAmount;
     public Direction defaultMoveDirection;
 

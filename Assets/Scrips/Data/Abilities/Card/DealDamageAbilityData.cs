@@ -16,7 +16,7 @@ public class DealDamageAbilityData : CardAbilityData {
     }
 }
 
-public class FireballCardAbility : CardACtiveAbility {
+public class FireballCardAbility : CardActiveAbility {
     private IRequirement<Creature> enemyCreatureRequirement;
     private DealDamageAbilityData abilityData;
     private SpellCard abilityCard;

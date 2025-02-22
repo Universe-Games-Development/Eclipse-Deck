@@ -84,9 +84,9 @@ public abstract class PassiveAbility<TData, TOwner>
     }
 }
 
-public abstract class CardACtiveAbility : ActiveAbility<CardAbilityData, Card> {
+public abstract class CardActiveAbility : ActiveAbility<CardAbilityData, Card> {
     protected Card card;
-    public CardACtiveAbility(CardAbilityData data, Card owner, GameEventBus eventBus)
+    public CardActiveAbility(CardAbilityData data, Card owner, GameEventBus eventBus)
         : base(data, owner, eventBus) {
         card = owner;
     }

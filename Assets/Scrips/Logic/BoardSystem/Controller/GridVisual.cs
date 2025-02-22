@@ -1,9 +1,7 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 using Zenject;
 
 public class GridVisual : MonoBehaviour {
@@ -21,10 +19,10 @@ public class GridVisual : MonoBehaviour {
     private Dictionary<Field, FieldController> fieldControllers = new();
 
     [Inject]
-    public void Construct(GameBoardManager gridManager) {
-        this.boardManager = gridManager;
-        gridManager.OnGridInitialized += UpdateVisualGrid;
-        gridManager.OnBoardChanged += UpdateVisualGrid;
+    public void Construct(GameBoardManager boardManager) {
+        this.boardManager = boardManager;
+        boardManager.OnGridInitialized += UpdateVisualGrid;
+        boardManager.OnBoardChanged += UpdateVisualGrid;
         pool = new FieldPool(fieldPrefab, origin);
     }
 
@@ -104,5 +102,11 @@ public class GridVisual : MonoBehaviour {
             return null;
         }
         return controller;
+    }
+
+    private void OnDestroy() {
+        foreach(var pair in fieldControllers) {
+            Destroy(pair.Value);
+        }
     }
 }

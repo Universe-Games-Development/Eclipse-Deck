@@ -29,12 +29,12 @@ public class TestingBoard : MonoBehaviour
     private Enemy enemy;
     private Player player;
 
-    private BattleManager _battleManager;
+    private OpponentRegistrator _registrator;
     GameEventBus eventBus;
 
     [Inject]
-    public void Construct(BattleManager battleManager, GameEventBus eventBus) {
-        _battleManager = battleManager;
+    public void Construct(OpponentRegistrator registrator, GameEventBus eventBus) {
+        _registrator = registrator;
         this.eventBus = eventBus;
     }
 
@@ -42,8 +42,8 @@ public class TestingBoard : MonoBehaviour
         // DEBUG
         enemy = enemy_c.enemy;
         player = player_c.player;
-        _battleManager.RegisterOpponentForBattle(player);
-        _battleManager.RegisterOpponentForBattle(enemy);
+        _registrator.RegisterOpponent(player);
+        _registrator.RegisterOpponent(enemy);
 
         if (!TesOn) return;
         DebugLogic().Forget();

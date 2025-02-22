@@ -17,7 +17,7 @@ public class RetreatStrategyData : SimpleMoveStrategyData {
     public int _forwardCheck = 1;
     public int minDamagedScared = 1;
 
-    public override IMoveStrategy GetInstance() {
+    public override MovementStrategy GetInstance() {
         return strategyType switch {
             RetreatStrategyType.Default => new RetreatStrategy(_retreatAmount, _checkDirection, moveAmount, moveDirection),
             RetreatStrategyType.StrongEnemies => new RetreatStrongEnemies(_retreatAmount, _checkDirection, moveAmount, moveDirection),
@@ -30,7 +30,6 @@ public class RetreatStrategyData : SimpleMoveStrategyData {
 public class RetreatStrategy : SimpleMoveStrategy {
     public int retreatAmount;
     public Direction checkDirection;
-
     public RetreatStrategy(int retreatAmount, Direction checkDirection, int defaultMoveAmount, Direction defaultMoveDirection)
         : base(defaultMoveAmount, defaultMoveDirection) {
         this.retreatAmount = retreatAmount;
@@ -64,7 +63,7 @@ public class RetreatStrategy : SimpleMoveStrategy {
                 return escapePath;
             }
 
-            Field fieldToEscape = RandomUtil.GetRandomFromList(freeFields);
+            Field fieldToEscape = freeFields.GetRandomElement();
             Direction directionToEscape = navigator.GetDirectionToField(currentField, fieldToEscape);
             escapePath = navigator.GenerateSimplePath(currentField, retreatAmount, directionToEscape);
         }

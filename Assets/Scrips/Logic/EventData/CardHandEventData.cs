@@ -22,11 +22,3 @@ public struct CardDrawnEvent : IEvent {
         Card = card;
     }
 }
-
-public struct EndTurnActionsPerformed : IEvent {
-    public List<Creature> creatures;
-
-    public EndTurnActionsPerformed(List<Creature> creatures) {
-        this.creatures = creatures;
-    }
-}
