@@ -1,3 +1,5 @@
+using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
@@ -10,14 +12,25 @@ public class CreatureNavigator {
     [Inject]
     public void Construct(GameBoard gameBoard) {
         GameBoard = gameBoard;
-        GridBoard = gameBoard.boardManager.GridBoard;
+        gameBoard.boardManager.OnGridInitialized += BoardUpdated;
+        
+    }
+
+    // Used this way because grid not initialized at start
+    private async UniTask BoardUpdated(BoardUpdateData data) {
+        GameBoardManager boardManager = GameBoard.boardManager;
+        if (GridBoard == null) {
+            GridBoard = boardManager.GridBoard;
+        }
+        boardManager.OnGridInitialized -= BoardUpdated;
+        await UniTask.CompletedTask;
     }
 
     // Trying to move in the chosen direction
     // Return the path to move
     public Path GenerateSimplePath(Field CurrentField, int moveAmount, Direction moveDirection) {
         Path path = new();
-        if (!ValidateInputs(GameBoard, CurrentField)) {
+        if (!ValidateInputs(CurrentField)) {
             path.isInterrupted = true;
             path.interruptedAt = 0;
             return path;
@@ -80,12 +93,12 @@ public class CreatureNavigator {
         return GridBoard.GetFlankFields(field, flankSize);
     }
 
-    private bool ValidateInputs(GameBoard gameBoard, Field currentField) {
+    private bool ValidateInputs(Field currentField) {
         if (currentField == null) {
             Debug.LogError("Current field is null.");
             return false;
         }
-        if (gameBoard == null) {
+        if (GridBoard == null) {
             Debug.LogError("Board data missing");
             return false;
         }

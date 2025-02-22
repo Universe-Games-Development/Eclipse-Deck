@@ -5,19 +5,21 @@ using UnityEngine;
 public class BouncingMoveStrategyData : MovementStrategyData {
     public Direction initialTurning = Direction.East;
     public int moveAmount = 1;
-    public override IMoveStrategy GetInstance() {
+    public override MovementStrategy GetInstance() {
         return new BouncingMoveStrategy(moveAmount, initialTurning);
     }
 }
 
-public class BouncingMoveStrategy : InstanceMovementStrategy {
+public class BouncingMoveStrategy : MovementStrategy {
     private bool isBounced = false;
 
     private Direction currentDirection;
     private readonly int moveAmount;
+    private CreatureNavigator navigator;
     public BouncingMoveStrategy(int moveAmount, Direction initialDirection) {
         this.currentDirection = initialDirection;
         this.moveAmount = moveAmount;
+        this.navigator = navigator;
     }
 
     public override List<Path> CalculatePath(Field CurrentField) {

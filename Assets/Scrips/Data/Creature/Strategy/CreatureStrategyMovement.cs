@@ -1,43 +1,47 @@
-using UnityEngine;
+using System;
+using Zenject;
+
+public interface IMovementStrategyFactory {
+    IMoveStrategy CreateStrategy(MovementStrategyData config);
+}
+
+public class MovementStrategyFactory : IMovementStrategyFactory {
+    [Inject] private CreatureNavigator _navigator;
+
+    public IMoveStrategy CreateStrategy(MovementStrategyData config) {
+        if (config == null) return new NoneMoveStrategy();
+
+        var strategy = config.GetInstance();
+        strategy.Initialize(_navigator);
+        return strategy;
+    }
+}
 
 public class CreatureStrategyMovement {
-    private readonly IMoveStrategy attackMovementStrategy;
-    private readonly IMoveStrategy supportMovementStrategy;
+    private readonly IMoveStrategy _attackStrategy;
+    private readonly IMoveStrategy _supportStrategy;
 
-    public CreatureStrategyMovement(CreatureMovementDataSO movementData, Creature creature) {
-        // Thinking to make just GetMoveStrategy method but there will be much enums
-        attackMovementStrategy = movementData.attackStrategy?.GetInstance();
-        supportMovementStrategy = movementData.supportStrategy?.GetInstance();
-
-        ValidateStrategies();
+    public CreatureStrategyMovement(
+        IMovementStrategyFactory strategyFactory,
+        CreatureMovementDataSO movementData
+    ) {
+        _attackStrategy = CreateStrategy(strategyFactory, movementData.attackStrategy);
+        _supportStrategy = CreateStrategy(strategyFactory, movementData.supportStrategy);
     }
 
-    private void ValidateStrategies() {
-        if (attackMovementStrategy == null) {
-            Debug.LogWarning("Attack movement strategy is not defined!");
-        }
-
-        if (supportMovementStrategy == null) {
-            Debug.LogWarning("Support movement strategy is not defined!");
-        }
+    private IMoveStrategy CreateStrategy(
+        IMovementStrategyFactory factory,
+        MovementStrategyData config
+    ) {
+        var strategy = factory.CreateStrategy(config);
+        return strategy ?? new NoneMoveStrategy();
     }
 
     public IMoveStrategy GetStrategy(Field currentField) {
-        if (currentField.FieldType == FieldType.Attack) {
-            if (attackMovementStrategy == null) {
-                Debug.LogError("Attempting to use undefined attack movement strategy!");
-                return null;
-            }
-            return attackMovementStrategy;
-        } else if (currentField.FieldType == FieldType.Support) {
-            if (supportMovementStrategy == null) {
-                Debug.LogError("Attempting to use undefined support movement strategy!");
-                return null;
-            }
-            return supportMovementStrategy;
-        }
-
-        Debug.LogError("No movement strategy for this creature");
-        return null;
+        return currentField.FieldType switch {
+            FieldType.Attack => _attackStrategy,
+            FieldType.Support => _supportStrategy,
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 }

@@ -1,103 +1,123 @@
-﻿using Cysharp.Threading.Tasks;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using UnityEngine;
 using Zenject;
+using Zenject.SpaceFighter;
 
-public class TurnManager {
-    public Opponent ActiveOpponent { get; private set; }
-    public OpponentRegistrator registrator;
-
+public class BattleManager {
+    private static readonly int OPPONENTS_TO_PLAY = 2;
     [Inject] private GameEventBus eventBus;
+    public void StartBattle(List<Opponent> registeredOpponents) {
+        ValidateOpponents(registeredOpponents);
+        eventBus.Raise(new BattleStartedEvent(registeredOpponents));
+    }
+
+    public void EndBattle(Opponent testLooser) {
+        eventBus.Raise(new BattleEndEventData(testLooser));
+    }
+
+    private void ValidateOpponents(List<Opponent> registeredOpponents) {
+        if (registeredOpponents == null || registeredOpponents.Count < OPPONENTS_TO_PLAY) {
+            throw new ArgumentException($"Requires at least {OPPONENTS_TO_PLAY} opponents");
+        }
+    }
+}
+
+public class TurnManager : IDisposable {
+    public Action<Opponent> OnOpponentChanged;
+    
+    private List<Opponent> currentOpponents = new(2);
+    public Opponent ActiveOpponent { get; private set; }
+    private GameEventBus eventBus;
+    private bool inTransition = false;
+    private bool isDisabled = true;
 
     [Inject]
-    public void Construct(OpponentRegistrator registrator) {
-        this.registrator = registrator;
-        registrator.OnOpponentsRegistered += InitTurns;
-        registrator.OnOpponentUnregistered += RemoveOpponent;
-
-        // Реєстрація для події CREATURES_ACTIONED
-        eventBus.SubscribeTo<EndTurnActionsPerformed>(OnEndTurnACtionsPerformed);
+    public void Construct(GameEventBus eventBus) {
+        this.eventBus = eventBus;
+        eventBus.SubscribeTo<EndActionsExecutedEvent>(OnEndTurnActionsPerformed);
     }
 
-    private void OnEndTurnACtionsPerformed(ref EndTurnActionsPerformed eventData) {
-        
+    public void InitTurns(List<Opponent> registeredOpponents) {
+        isDisabled = false;
+        currentOpponents = new List<Opponent>(registeredOpponents);
+        SwitchToNextOpponent(currentOpponents.GetRandomElement());
     }
 
-    // Імплементація OnEventReceived з IEventListener
-    public void OnEventReceived(object data) {
 
-        if (data is CreaturesPerformedTurnsData) {
-            // Якщо всі істоти виконали свої дії, розпочинаємо хід наступного опонента
-            Debug.Log("All creatures performed their actions. Moving to the next turn.");
-            TriggerNextTurn();
-        }
-    }
-
-    private void InitTurns(List<Opponent> registeredOpponents) {
-        foreach (var opponent in registeredOpponents) {
-            opponent.OnDefeat += RemoveOpponent;
-        }
-
-        if (registeredOpponents.Count > 1) {
-            ActiveOpponent = registrator.GetRandomOpponent();
-            Opponent NonActiveOpponent = registrator.GetNextOpponent(ActiveOpponent);
-            eventBus.Raise(new OnTurnChange(ActiveOpponent, NonActiveOpponent));
-        }
-    }
-
-    public async void EndTurn(Opponent endTurnOpponent) {
-        if (endTurnOpponent == null || endTurnOpponent != ActiveOpponent) {
-            Debug.LogWarning($"{endTurnOpponent.Name} cannot perform a turn right now!");
+    public void EndTurnRequest(Opponent endTurnOpponent) {
+        if (inTransition || isDisabled) {
+            Debug.LogWarning($"Turn cannot be ended right now. Transition: {inTransition}, Disabled: {isDisabled}");
             return;
         }
 
-        if (!registrator.IsAllRegistered()) {
-            Debug.LogWarning("Not all registered opponents left. Game should end?");
+        if (endTurnOpponent != ActiveOpponent) {
+            Debug.LogWarning($"{endTurnOpponent?.Name} is not the active opponent and cannot end the turn.");
             return;
         }
 
-        await UniTask.Yield(); // Асинхронне завершення ходу
-
-        ActiveOpponent = SetNextOpponent();
-        eventBus.Raise(new TurnEndEvent(endTurnOpponent));
-
-        TriggerNextTurn();
+        inTransition = true;
+        eventBus.Raise(new TurnEndStartedEvent(ActiveOpponent));
     }
 
-    private void TriggerNextTurn() {
-        // Цей метод буде викликаний після завершення всіх дій істот
-        if (ActiveOpponent != null) {
-            Debug.Log($"It is now {ActiveOpponent.Name}'s turn.");
-            eventBus.Raise(new OnTurnChange(ActiveOpponent, null));
-            eventBus.Raise(new OnTurnStart(ActiveOpponent));
-        }
+
+    private void OnEndTurnActionsPerformed(ref EndActionsExecutedEvent eventData) {
+        SwitchToNextOpponent();
+        inTransition = false;
     }
 
-    public void RemoveOpponent(Opponent opponent) {
-        if (opponent == null) return;
+    private void SwitchToNextOpponent(Opponent starterOpponent = null) {
+        var previous = ActiveOpponent;
+        ActiveOpponent = (starterOpponent != null && currentOpponents.Contains(starterOpponent))
+            ? starterOpponent
+            : GetNextOpponent();
 
-        opponent.OnDefeat -= RemoveOpponent;
-        Debug.Log($"Opponent {opponent.Name} unregistered. Maybe end game?");
 
-        if (ActiveOpponent == opponent) {
-            ActiveOpponent = SetNextOpponent();
-        }
-
-        // Перевірка кількості опонентів після видалення
-        if (registrator.GetActiveOpponents().Count <= 1) {
-            Debug.Log("Game Over. Only one or no opponents left.");
-            // Тут можна викликати подію завершення гри
-        }
+        Debug.Log($"Turn started for {ActiveOpponent.Name}");
+        OnOpponentChanged?.Invoke(ActiveOpponent);
+        eventBus.Raise(new OnTurnStart(ActiveOpponent));
+        eventBus.Raise(new TurnChangedEvent(previous, ActiveOpponent));
     }
 
-    public Opponent GetActivePlayer() => ActiveOpponent;
 
-    public Opponent SetNextOpponent() {
-        ActiveOpponent = registrator.GetNextOpponent(ActiveOpponent);
-        return ActiveOpponent;
+    private Opponent GetNextOpponent() {
+        if (currentOpponents.Count == 0) return null;
+        int index = (currentOpponents.IndexOf(ActiveOpponent) + 1) % currentOpponents.Count;
+        return currentOpponents[index];
+    }
+
+    public void ResetTurnManager() {
+        currentOpponents.Clear();
+        isDisabled = true;
+    }
+
+    public void Dispose() {
+        ResetTurnManager();
+        eventBus.UnsubscribeFrom<EndActionsExecutedEvent>(OnEndTurnActionsPerformed);
     }
 }
 
 
+public struct TurnEndStartedEvent : IEvent {
+    public Opponent endTurnOpponent;
+
+    public TurnEndStartedEvent(Opponent endTurnOpponent) {
+        this.endTurnOpponent = endTurnOpponent;
+    }
+}
+public struct TurnChangedEvent : IEvent {
+    public Opponent activeOpponent;
+    public Opponent endTurnOpponent;
+
+    public TurnChangedEvent(Opponent previous, Opponent next) {
+        this.activeOpponent = previous;
+        this.endTurnOpponent = next;
+    }
+}
+public struct OnTurnStart : IEvent {
+    public Opponent startTurnOpponent;
+
+    public OnTurnStart(Opponent startTurnOpponent) {
+        this.startTurnOpponent = startTurnOpponent;
+    }
+}

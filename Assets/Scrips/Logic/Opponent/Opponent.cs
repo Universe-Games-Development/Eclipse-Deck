@@ -22,6 +22,7 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
 
     public CardCollection cardCollection;
     public IActionFiller actionFiller;
+
     public Action<Opponent> OnDefeat { get; internal set; }
     private readonly GameEventBus eventBus;
     private readonly CommandManager commandManager;
@@ -40,25 +41,25 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
         hand = new CardHand(this, eventBus);
         
 
-        eventBus.SubscribeTo<OnBattleBegin>(StartBattleActions);
+        eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
         eventBus.SubscribeTo<OnTurnStart>(TurnStartActions);
     }
 
-    private void TurnStartActions(ref OnTurnStart eventData) {
+    protected virtual void TurnStartActions(ref OnTurnStart eventData) {
         if (eventData.startTurnOpponent == this)
         commandManager.EnqueueCommand(new DrawCardCommand(this, 1));
     }
 
-    private void StartBattleActions(ref OnBattleBegin eventData) {
+    private void StartBattleActions(ref BattleStartedEvent eventData) {
         commandManager.EnqueueCommands(new List<Command> {
             new InitDeckCommand(this, 40, cardCollection, eventBus),
             new DrawCardCommand(this, 10),
         });
     }
 
-    public void Dispose() {
+    public virtual void Dispose() {
         if (eventBus != null) {
-            eventBus.UnsubscribeFrom<OnBattleBegin>(StartBattleActions);
+            eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
             eventBus.UnsubscribeFrom<OnTurnStart>(TurnStartActions);
         }
 

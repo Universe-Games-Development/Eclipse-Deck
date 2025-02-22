@@ -1,7 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using Zenject;
 // This class will handle all actions: Creatures abilities, moves, spells, opponent end turn and other battle actions, Even Dialogues!
@@ -22,10 +20,10 @@ public class BatttleActionManager {
         _turnManager = turnManager;
 
         this.eventBus = eventBus;
-        eventBus.SubscribeTo<TurnEndEvent>(GenerateEndTurnActions);
+        eventBus.SubscribeTo<TurnEndStartedEvent>(GenerateEndTurnActions);
     }
 
-    public void GenerateEndTurnActions(ref TurnEndEvent turnEndEvent) {
+    public void GenerateEndTurnActions(ref TurnEndStartedEvent turnEndEvent) {
         
         List<Command> commands = new();
 

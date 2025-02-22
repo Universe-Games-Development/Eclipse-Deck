@@ -62,27 +62,4 @@ public class OpponentRegistrator {
     internal List<Opponent> GetActiveOpponents() {
         return registeredOpponents;
     }
-
-    public Opponent GetRandomOpponent() {
-        if (registeredOpponents.Count == 0) {
-            Debug.LogWarning("No registered opponents available.");
-            return null;
-        }
-        return registeredOpponents[UnityEngine.Random.Range(0, registeredOpponents.Count)];
-    }
-
-    public Opponent GetNextOpponent(Opponent ActiveOpponent) {
-        if (registeredOpponents.Count == 0) {
-            Debug.LogWarning("No registered opponents available.");
-            return null;
-        }
-
-        if (ActiveOpponent == null || !registeredOpponents.Contains(ActiveOpponent)) {
-            return registeredOpponents[0];
-        }
-
-        int currentIndex = registeredOpponents.IndexOf(ActiveOpponent);
-        int nextIndex = (currentIndex + 1) % registeredOpponents.Count;
-        return registeredOpponents[nextIndex];
-    }
 }

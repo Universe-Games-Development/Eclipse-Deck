@@ -5,18 +5,16 @@ using UnityEngine;
 public class MoveCommand : Command {
     private Creature creature;
 
-    private CreatureStrategyMovement strategyHandler;
+    private IMoveStrategy moveStrategy;
     private Stack<Field> previousFields = new Stack<Field>();
 
-    public MoveCommand(Creature creature, CreatureStrategyMovement strategyHandler) {
+    public MoveCommand(Creature creature, IMoveStrategy moveStrategy) {
         this.creature = creature;
-        this.strategyHandler = strategyHandler;
+        this.moveStrategy = moveStrategy;
     }
 
     public async override UniTask Execute() {
         Field currentField = creature.CurrentField;
-
-        IMoveStrategy moveStrategy = strategyHandler.GetStrategy(currentField);
 
         List<Path> paths = moveStrategy.CalculatePath(currentField);
         if (paths.Count == 0) {

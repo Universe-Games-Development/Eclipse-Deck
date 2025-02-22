@@ -7,7 +7,7 @@
 public class SimpleMoveStrategyData : MovementStrategyData {
     public Direction moveDirection = Direction.East;
     public int moveAmount = 1;
-    public override IMoveStrategy GetInstance() {
+    public override MovementStrategy GetInstance() {
         return new SimpleMoveStrategy(moveAmount, moveDirection);
     }
 }

@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class CardHand {
@@ -19,6 +20,7 @@ public class CardHand {
     private GameEventBus gameEventBus;
 
     public Card SelectedCard { get; private set; }
+    
 
     public CardHand(Opponent owner, GameEventBus gameEventBus, int maxHandSize = DEFAULT_SIZE) {
         this.owner = owner;
@@ -62,10 +64,7 @@ public class CardHand {
         }
     }
 
-    public Card GetCard(int index) {
-        return (index >= 0 && index < cardsInHand.Count) ? cardsInHand[index] : null;
-    }
-
+    public Card GetCardById(string id) => cardsInHand.FirstOrDefault(c => c.Id == id);
 
     public void SelectCard(Card newCard) {
         if (newCard == null) return;
@@ -88,7 +87,7 @@ public class CardHand {
 
     public Card GetRandomCard() {
         if (cardsInHand.Count > 0) {
-            return RandomUtil.GetRandomFromList(cardsInHand);
+            return cardsInHand.GetRandomElement();
         }
         return null;
     }

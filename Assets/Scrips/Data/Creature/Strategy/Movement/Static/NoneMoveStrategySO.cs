@@ -7,13 +7,13 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "NoneMoveStrategySO", menuName = "Strategies/Movement/None")]
 public class NoneMoveStrategyData : MovementStrategyData {
-    public override IMoveStrategy GetInstance() {
+    public override MovementStrategy GetInstance() {
         return new NoneMoveStrategy();
     }
 }
 
 
-public class NoneMoveStrategy : InstanceMovementStrategy {
+public class NoneMoveStrategy : MovementStrategy {
     public override List<Path> CalculatePath(Field currentField) {
         List<Path> paths = new();
         return paths;
