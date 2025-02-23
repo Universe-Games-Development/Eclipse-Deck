@@ -79,7 +79,7 @@ public class FieldController : MonoBehaviour {
         LinkedField = null;
     }
 
-    internal Transform GetSpawnOrigin() {
+    internal Transform GetCreaturePlace() {
         return spawnPoint;
     }
 }

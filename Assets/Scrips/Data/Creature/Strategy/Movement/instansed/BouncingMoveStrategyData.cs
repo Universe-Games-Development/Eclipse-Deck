@@ -15,11 +15,9 @@ public class BouncingMoveStrategy : MovementStrategy {
 
     private Direction currentDirection;
     private readonly int moveAmount;
-    private CreatureNavigator navigator;
     public BouncingMoveStrategy(int moveAmount, Direction initialDirection) {
         this.currentDirection = initialDirection;
         this.moveAmount = moveAmount;
-        this.navigator = navigator;
     }
 
     public override List<Path> CalculatePath(Field CurrentField) {

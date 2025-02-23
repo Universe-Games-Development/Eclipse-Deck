@@ -41,13 +41,17 @@ public class BoardAssigner {
     }
 
     public List<Creature> GetOpponentCreatures(Opponent activeOpponent) {
-        return GetOpponentGrids(activeOpponent)
-            .SelectMany(grid => grid.Fields)
-            .Where(row => row != null)
-            .SelectMany(row => row)
-            .Where(field => field?.OccupiedCreature != null)
-            .Select(field => field.OccupiedCreature)
-            .ToList();
+        List<Creature> creatures = new();
+        foreach (var grid in GetOpponentGrids(activeOpponent)) {
+            foreach (var row in grid.Fields) {
+                foreach (var field in row) {
+                    if (field != null && field.OccupiedCreature != null) {
+                        creatures.Add(field.OccupiedCreature);
+                    }
+                }
+            }
+        }
+        return creatures;
     }
 
     public List<CompasGrid> GetOpponentGrids(Opponent opponent) {

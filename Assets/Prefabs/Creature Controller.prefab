@@ -46,7 +46,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9c0450ba7fb77f4baf11c841a1260c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modelParent: {fileID: 3014905427485992743}
+  viewParent: {fileID: 3014905427485992743}
+  spawnHeightOffset: 2
 --- !u!1 &5202781582429457750
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,12 +19,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
     private void Awake() {
         InitializeAnimator();
     }
+
     public void InitializeAnimator() {
         DoTweenAnimator.AttachAnimator(this);
         DoTweenAnimator.OnReachedLayout += () => SetInteractable(true);
     }
 
-    private void SetInteractable(bool value) => isInteractable = value;
+    public void SetInteractable(bool value) => isInteractable = value;
 
     public void SetAbilityPool(CardAbilityPool AbilityUIPool) {
         if (AbilityUIPool != null) {
@@ -71,13 +72,5 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
 
     internal void UpdateLayout() {
         OnLayoutUpdate?.Invoke();
-    }
-
-    internal void HandleSelection() {
-        Debug.Log("Do something selected card");
-    }
-
-    internal void HandleDeselection() {
-        Debug.Log("Do something deselected card");
     }
 }

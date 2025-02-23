@@ -77,28 +77,14 @@ public class Field : IHealthEntity {
     #endregion
 
     #region Creature Logic
-    public bool SummonCreature(Creature creature, Opponent summoner) {
-        if (summoner == null || creature == null) {
-            Debug.LogWarning("Card or Summoner for field is nobody!");
-            return false;
-        }
 
-        return PlaceCreature(creature);
-    }
-
-    public async UniTask<bool> PlaceCreatureAsync(Creature creature, int delayFrames = 1) {
-        await UniTask.DelayFrame(delayFrames); // Імітація асинхронності (можна замінити на анімацію або затримку)
-        return PlaceCreature(creature);
-    }
-
-    public bool PlaceCreature(Creature creature) {
+    public bool AssignCreature(Creature creature) {
         if (OccupiedCreature != null) {
             FieldLogger.Warning($"Field at ({row}, {column}) is already occupied by another creature.");
             return false;
         }
 
         OccupiedCreature = creature;
-        OccupiedCreature.AssignField(this);
         OnCreaturePlaced?.Invoke(creature); // Викликаємо подію
         FieldLogger.Log($"Creature placed on field ({row}, {column}).");
         return true;
@@ -143,5 +129,17 @@ public class Field : IHealthEntity {
 
     internal Vector3 GetCoordinates() {
         return new Vector3(row, 0, column);
+    }
+
+    internal bool CanSummonCreature(Opponent summoner) {
+        if (summoner == null && summoner != Owner) {
+            Debug.Log("Wrong opponent to summon creture");
+            return false;
+        }
+        if (OccupiedCreature != null) {
+            Debug.Log("Field is already occupied");
+            return false;
+        }
+        return true;
     }
 }

@@ -91,4 +91,9 @@ public class CardHand {
         }
         return null;
     }
+
+    public Action<bool> OnInteractionChanged;
+    internal void SetInteraction(bool value) {
+        OnInteractionChanged?.Invoke(value);
+    }
 }

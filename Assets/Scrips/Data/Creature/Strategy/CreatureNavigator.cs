@@ -12,8 +12,11 @@ public class CreatureNavigator {
     [Inject]
     public void Construct(GameBoard gameBoard) {
         GameBoard = gameBoard;
-        gameBoard.boardManager.OnGridInitialized += BoardUpdated;
-        
+        if (gameBoard.boardManager.GridBoard == null) {
+            gameBoard.boardManager.OnGridInitialized += BoardUpdated;
+        } else {
+            GridBoard = gameBoard.boardManager.GridBoard;
+        }
     }
 
     // Used this way because grid not initialized at start
