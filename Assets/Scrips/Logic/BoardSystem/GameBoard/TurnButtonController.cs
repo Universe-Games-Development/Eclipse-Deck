@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using UnityEngine;
 using Zenject;
 
@@ -27,10 +28,8 @@ public class TurnButtonController : MonoBehaviour {
             return;
         }
 
-        if (turnManager.ActiveOpponent == player) {
-            turnManager.EndTurnRequest(player);
-        } else {
-            Debug.LogWarning("Not player turn!");
+        if (turnManager.EndTurnRequest(player)) {
+            turnButtonView.SetInteractive(false);
         }
     }
 

@@ -16,7 +16,7 @@ public class CreatureEntityProvider : IEntityProvider {
     public bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class {
         entity = null;
         var controller = uiObject.GetComponent<CreatureController>();
-        if (controller != null && controller.LinkedCard is T card) {
+        if (controller != null && controller.Creature.creatureCard is T card) {
             entity = card;
             return true;
         }

@@ -77,6 +77,7 @@ public class CardPlayService : IDisposable {
         try {
             bufferedCard = card;
 
+            cardHand.SetInteraction(false);
             cardHand.DeselectCurrentCard();
             cardHand.RemoveCard(card);
 
@@ -95,6 +96,7 @@ public class CardPlayService : IDisposable {
         } finally {
             _isPlaying = false;
             bufferedCard = null;
+            cardHand.SetInteraction(true);
         }
     }
 }

@@ -5,9 +5,11 @@ using UnityEngine;
 
 public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     public Field CurrentField { get; private set; }
-    public Action OnInterruptedMove;
+    public Func<UniTask> OnInterruptedMove { get; internal set; }
+    public Func<Field, UniTask> OnMoved { get; internal set; }
+    public Func<Field, UniTask> OnSpawned { get; internal set; }
     
-    private CreatureCard creatureCard;
+    public CreatureCard creatureCard;
     private CreatureStrategyMovement movementHandler;
 
     protected Health _health;
@@ -30,8 +32,14 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     // TODO: return also attack action
     public Command GetEndTurnAction() {
         IMoveStrategy moveStrategy = movementHandler.GetStrategy(CurrentField);
-        MoveCommand moveCommand = new MoveCommand(this, moveStrategy);
+        MoveCommand moveCommand = new MoveCommand(this, moveStrategy, OnMoved, OnInterruptedMove);
         return new EndTurnActions(moveCommand);
+    }
+
+    public void Spawn(Field fieldToSpawn) {
+        fieldToSpawn.AssignCreature(this);
+        AssignField(fieldToSpawn);
+        OnSpawned?.Invoke(fieldToSpawn);
     }
 
     public void AssignField(Field field) {

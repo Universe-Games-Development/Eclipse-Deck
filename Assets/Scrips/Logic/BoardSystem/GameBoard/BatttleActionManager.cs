@@ -24,7 +24,6 @@ public class BatttleActionManager {
     }
 
     public void GenerateEndTurnActions(ref TurnEndStartedEvent turnEndEvent) {
-        
         List<Command> commands = new();
 
         List<Creature> creatures = _boardAssigner.GetOpponentCreatures(turnEndEvent.endTurnOpponent);

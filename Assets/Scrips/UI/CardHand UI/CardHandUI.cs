@@ -15,6 +15,7 @@ public class CardHandUI : MonoBehaviour {
     [SerializeField] private CardLayoutGhost ghostPrefab;
 
     private CardHand cardHand;
+    private bool isInteractable = true;
 
     private void Awake() {
         //cardFactory = GetComponent<UICardFactory>();
@@ -27,6 +28,7 @@ public class CardHandUI : MonoBehaviour {
     public void Initialize(CardHand hand) {
         cardHand = hand ?? throw new System.ArgumentNullException(nameof(hand));
 
+        hand.OnInteractionChanged += SetInteractable;
         hand.OnCardAdd += CreateCardUI;
         hand.OnCardRemove += (Card card) => {
             RemoveCardUIFor(card).Forget();
@@ -48,6 +50,7 @@ public class CardHandUI : MonoBehaviour {
         //cardFactory.CreateCardUI(card);
         card.cardUI = cardUI;
         cardPairs.Add(cardUI, card);
+        cardUI.SetInteractable(isInteractable);
         return cardUI;
     }
 
@@ -63,11 +66,12 @@ public class CardHandUI : MonoBehaviour {
         cardHand.SelectCard(card);
     }
 
+    // Card will define when it released to pool
     private async UniTask RemoveCardUIFor(Card card) {
         CardUI cardUI = card.cardUI;
         if (cardUI == null) Debug.LogWarning("Can`t find card to Remove");
 
-        await cardUI.RemoveCardUI(); // Card will define when it released to pool
+        await cardUI.RemoveCardUI(); 
         cardPairs.Remove(cardUI);
         UpdateCardsPositionsAsync().Forget();
 
@@ -105,6 +109,13 @@ public class CardHandUI : MonoBehaviour {
                 updatePositionCts.Dispose();
                 updatePositionCts = null;
             }
+        }
+    }
+
+    public void SetInteractable(bool value) {
+        isInteractable = value;
+        foreach (var cardUI in cardPairs.Keys) {
+            cardUI.SetInteractable(value);
         }
     }
 

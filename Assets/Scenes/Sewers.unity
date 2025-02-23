@@ -3005,7 +3005,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   creaturePrefab: {fileID: 3659937684394865477, guid: 26050d19d77ed9140a507c638bc492f2, type: 3}
-  height: 0
 --- !u!114 &8485998731868696912
 MonoBehaviour:
   m_ObjectHideFlags: 0

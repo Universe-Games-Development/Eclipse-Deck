@@ -23,8 +23,7 @@ public class CreatureStrategyMovement {
 
     public CreatureStrategyMovement(
         IMovementStrategyFactory strategyFactory,
-        CreatureMovementDataSO movementData
-    ) {
+        CreatureMovementDataSO movementData) {
         _attackStrategy = CreateStrategy(strategyFactory, movementData.attackStrategy);
         _supportStrategy = CreateStrategy(strategyFactory, movementData.supportStrategy);
     }

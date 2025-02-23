@@ -45,19 +45,20 @@ public class TurnManager : IDisposable {
     }
 
 
-    public void EndTurnRequest(Opponent endTurnOpponent) {
+    public bool EndTurnRequest(Opponent endTurnOpponent) {
         if (inTransition || isDisabled) {
             Debug.LogWarning($"Turn cannot be ended right now. Transition: {inTransition}, Disabled: {isDisabled}");
-            return;
+            return false;
         }
 
         if (endTurnOpponent != ActiveOpponent) {
             Debug.LogWarning($"{endTurnOpponent?.Name} is not the active opponent and cannot end the turn.");
-            return;
+            return false;
         }
 
         inTransition = true;
         eventBus.Raise(new TurnEndStartedEvent(ActiveOpponent));
+        return true;
     }
 
 

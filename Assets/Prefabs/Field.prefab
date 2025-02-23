@@ -83,7 +83,7 @@ MonoBehaviour:
   enemyColor: {r: 0.8584906, g: 0, b: 0, a: 1}
   playerColor: {r: 0.18511927, g: 0.6037736, b: 0.33130926, a: 1}
   highlightIntensity: 2
-  meshRenderer: {fileID: 0}
+  meshRenderer: {fileID: 3989146654983234561}
 --- !u!114 &4168959685813866078
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -277,5 +277,10 @@ PrefabInstance:
 --- !u!4 &2816833770654097262 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b91345e0f44605d459d9843cd35dea87, type: 3}
+  m_PrefabInstance: {fileID: 2350278803631388805}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &3989146654983234561 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: b91345e0f44605d459d9843cd35dea87, type: 3}
   m_PrefabInstance: {fileID: 2350278803631388805}
   m_PrefabAsset: {fileID: 0}
