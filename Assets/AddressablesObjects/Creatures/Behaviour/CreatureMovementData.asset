@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6118108db6244ac4e96955e4f9619848, type: 3}
+  m_Name: CreatureMovementData
+  m_EditorClassIdentifier: 
+  Name: Simple Forward
+  strategyIcon: {fileID: 0}
+  attackStrategy: {fileID: 11400000, guid: 488a90e04b018054591d42e9b78871e5, type: 2}
+  supportStrategy: {fileID: 11400000, guid: e5db56f88c99c9e49af02d1c0a358720, type: 2}

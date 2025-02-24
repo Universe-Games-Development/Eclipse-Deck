@@ -8,7 +8,7 @@ public enum RetreatStrategyType {
     HeroAmbitions
 }
 
-[CreateAssetMenu(fileName = "RetreatMovementData", menuName = "Strategies/Movement/Retreat")]
+[CreateAssetMenu(fileName = "RetreatMovementData", menuName = "Behaviour/Strategies/Movement/Retreat")]
 public class RetreatStrategyData : SimpleMoveStrategyData {
     public RetreatStrategyType strategyType = RetreatStrategyType.Default;
     public Direction _checkDirection = Direction.East;
@@ -36,12 +36,13 @@ public class RetreatStrategy : SimpleMoveStrategy {
         this.checkDirection = checkDirection;
     }
 
-    public override List<Path> CalculatePath(Field currentField) {
+    public override List<Path> CalculatePath() {
         List<Path> paths = new();
+        Field currentField = creature.CurrentField;
         if (ConditionToEscape(currentField)) {
             paths.Add(CalculateEscape(currentField));
         } else {
-            paths = base.CalculatePath(currentField);
+            paths = base.CalculatePath();
         }
 
         return paths;

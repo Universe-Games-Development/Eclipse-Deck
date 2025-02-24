@@ -38,7 +38,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _EffectTexture:
-        m_Texture: {fileID: 2800000, guid: 6cb943eb88ee1a64c82b30a58c888262, type: 3}
+        m_Texture: {fileID: 2800000, guid: ee4cf20f88365cb45b74484db54f7103, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Noise:
@@ -74,16 +74,16 @@ Material:
     - _ColorNess: 30
     - _Color_Fresnel_Power: 1
     - _Effect_Frequency: 0.7
-    - _Emission: 0.42
+    - _Emission: 0.8
     - _Frequency: 1
-    - _Level: 1.02
+    - _Level: 0.33
     - _Paralax: 20
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Wave_Frequency: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _MainColor: {r: 0.47058824, g: 0.023529412, b: 0.023930026, a: 1}
+    - _MainColor: {r: 1, g: 0.050882287, b: 0, a: 1}
     - _SOMETHING: {r: 0, g: 0.47, b: 0, a: 0}
     - _Wave_Amplitude: {r: 0.1, g: 0.22, b: 0, a: 0}
     - _Wave_Frequency: {r: 1, g: 1, b: 0, a: 0}

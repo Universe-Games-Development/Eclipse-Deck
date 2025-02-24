@@ -39,7 +39,7 @@ public class Field : IHealthEntity {
     [Header("Game Board Params")]
     public Creature OccupiedCreature { get; private set; }
 
-    public void ReceiveAttack(int damage) {
+    public void ApplyDamage(int damage) {
         if (OccupiedCreature != null) {
             OccupiedCreature.GetHealth().TakeDamage(damage);
         } else {

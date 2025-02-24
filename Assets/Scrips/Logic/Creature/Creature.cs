@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
@@ -10,12 +11,12 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     public Func<Field, UniTask> OnSpawned { get; internal set; }
     
     public CreatureCard creatureCard;
-    private CreatureStrategyMovement movementHandler;
+    private CraetureBehaviour craetureBehaviour;
 
     protected Health _health;
     protected Attack _attack;
     
-    public Creature(CreatureCard creatureCard, IMovementStrategyFactory strategyFactory, GameEventBus eventBus) {
+    public Creature(CreatureCard creatureCard, CraetureBehaviour craetureBehaviour, GameEventBus eventBus) {
         this.creatureCard = creatureCard;
         _health = new Health(this, creatureCard.Health, eventBus);
         _attack = new Attack(this, creatureCard.Attack, eventBus);
@@ -23,17 +24,24 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
         // Soon we define how to get the creatureSO
         CreatureCardData creatureData = creatureCard.creatureCardData;
 
-        var movementData = creatureData.movementStrategy;
+        var movementData = creatureData.movementData;
+        if (movementData == null) throw new ArgumentNullException("Movement Data not set in " + GetType().Name);
         // TO DO : abilities initialization
 
-        movementHandler = new CreatureStrategyMovement(strategyFactory, movementData);
+        this.craetureBehaviour = craetureBehaviour;
+        craetureBehaviour.InitStrategies(this, creatureData);
     }
 
     // TODO: return also attack action
     public Command GetEndTurnAction() {
-        IMoveStrategy moveStrategy = movementHandler.GetStrategy(CurrentField);
-        MoveCommand moveCommand = new MoveCommand(this, moveStrategy, OnMoved, OnInterruptedMove);
-        return new EndTurnActions(moveCommand);
+        IMoveStrategy moveStrategy = craetureBehaviour.GetMovementStrategy(CurrentField);
+        CreatureMoveCommand moveCommand = new CreatureMoveCommand(this, moveStrategy, OnMoved, OnInterruptedMove);
+        IAttackStrategy attackStrategy = craetureBehaviour.GetAttackStrategy(CurrentField);
+        CreatureAttackCommand attackCommand = new CreatureAttackCommand(this, attackStrategy);
+        EndTurnActions endTurnCreatureCommands = new EndTurnActions();
+        endTurnCreatureCommands.AddChild(moveCommand);
+        endTurnCreatureCommands.AddChild(attackCommand);
+        return endTurnCreatureCommands;
     }
 
     public void Spawn(Field fieldToSpawn) {
@@ -69,24 +77,40 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
 
 
 public class EndTurnActions : Command {
-    private Creature creature;
-
-    private CreatureStrategyMovement strategyHandler;
-    private Stack<Field> previousFields = new Stack<Field>();
-    private MoveCommand MoveCommand;
-
-    public EndTurnActions(MoveCommand moveCommand) {
-        MoveCommand = moveCommand;
-    }
-
     public async override UniTask Execute() {
         Debug.Log("End Turn actions begin");
-        AddChild(MoveCommand);
         await UniTask.CompletedTask;
         Debug.Log("End Turn actions end");
     }
 
     public async override UniTask Undo() {
         await UniTask.CompletedTask;
+    }
+}
+
+public class CreatureAttackCommand : Command {
+    private Creature creature;
+    private IAttackStrategy attackStrategy;
+
+    public CreatureAttackCommand(Creature creature, IAttackStrategy attackStrategy) {
+        this.creature = creature;
+        this.attackStrategy = attackStrategy;
+    }
+
+    public override async UniTask Execute() {
+        AttackData attackData = attackStrategy.CalculateAttackData();
+        if (attackData.fieldDamageData == null) {
+            Debug.LogWarning("Empty attack data in " + GetType().Name);
+            return;
+        }
+        foreach (var fieldDAmage in attackData.fieldDamageData) {
+            Field field = fieldDAmage.Key;
+            field.ApplyDamage(fieldDAmage.Value);
+        }
+        await UniTask.CompletedTask;
+    }
+
+    public override UniTask Undo() {
+        throw new NotImplementedException();
     }
 }
