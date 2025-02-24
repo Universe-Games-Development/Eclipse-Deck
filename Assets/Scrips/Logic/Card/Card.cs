@@ -64,7 +64,6 @@ public abstract class Card : IAbilityOwner {
 
 public class SpellCard : Card {
 
-    
     public SpellCard(SpellCardSO cardSO, Opponent owner, GameEventBus eventBus)
         : base(cardSO, owner, eventBus) {
     }

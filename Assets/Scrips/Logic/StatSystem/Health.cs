@@ -11,33 +11,34 @@ public interface IHealth {
 }
 
 public class Health : IHealth {
-    private readonly Stat _stat;
+    public Stat Stat { get; private set; }
     private readonly IHealthEntity _owner;
     private readonly GameEventBus _eventBus;
 
     public event Action OnDeath;
-    public int Current => _stat.CurrentValue;
-    public int Max => _stat.MaxValue;
+    public int Current => Stat.CurrentValue;
+    public int Max => Stat.MaxValue;
 
     public Health(IHealthEntity owner, Stat stat, GameEventBus eventBus) {
         _owner = owner;
-        _stat = stat;
+        Stat = stat;
         _eventBus = eventBus;
 
-        _stat.OnValueChanged += HandleStatChange;
+        Stat.OnValueChanged += HandleStatChange;
     }
 
     public Action<int, IDamageDealer> OnDamageTaken { get; internal set; }
+    public Action<int, int> OnChangedMaxValue { get; internal set; }
 
     public void TakeDamage(int amount, IDamageDealer source = null) {
         if (amount <= 0) return;
 
-        var damage = Math.Min(amount, _stat.CurrentValue);
-        _stat.Modify(-damage);
+        var damage = Math.Min(amount, Stat.CurrentValue);
+        Stat.Modify(-damage);
 
         _eventBus.Raise(new OnDamageTaken(_owner, source, damage));
 
-        if (_stat.CurrentValue <= 0) {
+        if (Stat.CurrentValue <= 0) {
             OnDeath?.Invoke();
             _eventBus.Raise(new DeathEvent(_owner));
         }
@@ -45,7 +46,7 @@ public class Health : IHealth {
 
     public void Heal(int amount) {
         if (amount <= 0) return;
-        _stat.Modify(amount);
+        Stat.Modify(amount);
     }
 
     private void HandleStatChange(int oldValue, int newValue) {
@@ -57,7 +58,7 @@ public class Health : IHealth {
     }
 
     internal void SetMaxValue(int healthIncrease) {
-        _stat.SetMaxValue(healthIncrease);
+        Stat.SetMaxValue(healthIncrease);
     }
 }
 

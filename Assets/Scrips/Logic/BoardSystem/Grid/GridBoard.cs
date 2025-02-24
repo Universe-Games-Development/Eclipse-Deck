@@ -179,16 +179,25 @@ public class GridBoard {
 
     #region Field Getters
     public List<Field> GetFieldsInDirection(Field currentField, int searchDistance, Direction searchDirection) {
-        (int colOffset, int rowOffset) offset = CompassUtil.DirectionOffsets.GetValueOrDefault(searchDirection);
+        (int rowOffset, int colOffset) offset = CompassUtil.DirectionOffsets.GetValueOrDefault(searchDirection);
         List<Field> fields = new List<Field>();
+
         for (int i = 1; i <= searchDistance; i++) {
-            Field foundField = GetFieldAt(currentField.GetRow() + offset.rowOffset * i, currentField.GetColumn() + offset.colOffset * i);
+            int row = currentField.GetRow() + offset.rowOffset * i;
+            int column = currentField.GetColumn() + offset.colOffset * i;
+
+            // Пропускаємо координату (0,0)
+            if (row == 0) row += Math.Sign(offset.rowOffset);
+            if (column == 0) column += Math.Sign(offset.colOffset);
+
+            Field foundField = GetFieldAt(row, column);
             if (foundField != null) {
                 fields.Add(foundField);
             }
         }
         return fields;
     }
+
 
     public List<Field> GetAdjacentFields(Field currentField) {
         List<Field> adjacentFields = new();

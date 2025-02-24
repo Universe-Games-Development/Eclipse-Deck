@@ -2,8 +2,8 @@
 using Zenject;
 
 public class GameBoardHealthSystem : MonoBehaviour {
-    [SerializeField] private HealthCellController playerCell;
-    [SerializeField] private HealthCellController enemyCell;
+    [SerializeField] private HealthCellView playerCell;
+    [SerializeField] private HealthCellView enemyCell;
     private OpponentRegistrator OpponentRegistrator;
     [Inject]
     public void Construct(OpponentRegistrator opponentRegistrator) {

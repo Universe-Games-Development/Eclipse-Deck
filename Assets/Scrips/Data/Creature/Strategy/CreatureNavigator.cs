@@ -60,7 +60,9 @@ public class CreatureNavigator {
                 path.interruptedAt = i;
                 break;
             }
-            correctFields.Add(fieldsToMove[i]);
+            if (fieldsToMove[i] != CurrentField) {
+                correctFields.Add(fieldsToMove[i]);
+            }
         }
 
         // Результат

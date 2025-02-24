@@ -13,9 +13,8 @@ public class CreatureCardData : CardData {
     public int Health;
 
     [Header("Strategy")]
-    public CreatureMovementDataSO movementStrategy;
-    public AttackStrategySO attackStrategy;
-
+    public CreatureMovementData movementData;
+    public CreatureAttackData attackData;
     [Header("Creature Abilities")]
     private List<Ability<CreatureAbilityData, Creature>> creatureAbilities = new();
 }

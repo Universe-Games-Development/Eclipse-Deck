@@ -1,20 +1,19 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using System;
-using Unity.VisualScripting;
 using UnityEngine;
 using Zenject;
 
 public class CreatureController : MonoBehaviour {
     [Inject] GridVisual gridVisual;
-    [Inject] private MovementStrategyFactory movementStrategyFactory;
+    [Inject] CraetureBehaviour craetureBehaviour;
+
     [Inject] GameEventBus eventBus;
     public Creature Creature { get; internal set; }
     
     [SerializeField] Transform viewParent;
     [SerializeField] private float spawnHeightOffset = 1f;
     public void Initialize(CreatureCard creatureCard, Field targetField) {
-        Creature = new Creature(creatureCard, movementStrategyFactory, eventBus);
+        Creature = new Creature(creatureCard, craetureBehaviour, eventBus);
         Creature.OnMoved += PerformMovement;
         Creature.OnSpawned += SpawnOnField;
         SetView(creatureCard.creatureCardData.viewPrefab);
@@ -27,6 +26,7 @@ public class CreatureController : MonoBehaviour {
 
         Vector3 creaturePointPosition = creaturePoint.position;
         await transform.DOMove(creaturePointPosition, 1).AsyncWaitForCompletion();
+        transform.position = creaturePointPosition;
     }
 
     public async UniTask SpawnOnField(Field targetField) {
@@ -61,6 +61,8 @@ public class CreatureController : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        Creature.OnMoved -= PerformMovement;
+        if (Creature != null && Creature.OnMoved != null) {
+            Creature.OnMoved -= PerformMovement;
+        }
     }
 }
