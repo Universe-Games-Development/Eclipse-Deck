@@ -30,7 +30,7 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
         // Creature Movement
         Container.Bind<CreatureNavigator>().AsSingle();
-        Container.Bind<CraetureBehaviour>().AsTransient();
+        Container.Bind<CreatureBehaviour>().AsTransient();
 
         Container.Bind<OpponentRegistrator>().AsSingle().NonLazy();
         Container.BindInterfacesAndSelfTo<GameInitializer>().AsSingle();

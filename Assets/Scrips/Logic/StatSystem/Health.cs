@@ -29,9 +29,10 @@ public class Health : IHealth {
 
     public Action<int, IDamageDealer> OnDamageTaken { get; internal set; }
     public Action<int, int> OnChangedMaxValue { get; internal set; }
+    public bool isDead = false;
 
     public void TakeDamage(int amount, IDamageDealer source = null) {
-        if (amount <= 0) return;
+        if (amount <= 0 || isDead) return;
 
         var damage = Math.Min(amount, Stat.CurrentValue);
         Stat.Modify(-damage);
@@ -39,6 +40,7 @@ public class Health : IHealth {
         _eventBus.Raise(new OnDamageTaken(_owner, source, damage));
 
         if (Stat.CurrentValue <= 0) {
+            isDead = true;
             OnDeath?.Invoke();
             _eventBus.Raise(new DeathEvent(_owner));
         }
@@ -54,7 +56,7 @@ public class Health : IHealth {
     }
 
     public bool IsAlive() {
-        return Current > 0;
+        return Current > 0 || isDead;
     }
 
     internal void SetMaxValue(int healthIncrease) {

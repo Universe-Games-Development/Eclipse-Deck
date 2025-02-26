@@ -3,7 +3,7 @@ using Zenject;
 using UnityEngine;
 
 // TO DO: Generic Handlers to handle attack and movement?
-public class CraetureBehaviour {
+public class CreatureBehaviour {
     [Inject] private CreatureNavigator navigator;
 
     private CreatureMovementHandler _movementHandler;

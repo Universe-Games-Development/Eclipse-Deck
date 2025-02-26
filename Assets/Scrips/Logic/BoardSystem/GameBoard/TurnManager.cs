@@ -45,8 +45,6 @@ public class TurnManager : IDisposable {
 
 
     public bool EndTurnRequest(Opponent endTurnOpponent) {
-        if (endTurnOpponent is Player)
-        endTurnOpponent.Health.TakeDamage(2);
         if (inTransition || isDisabled) {
             Debug.LogWarning($"Turn cannot be ended right now. Transition: {inTransition}, Disabled: {isDisabled}");
             return false;

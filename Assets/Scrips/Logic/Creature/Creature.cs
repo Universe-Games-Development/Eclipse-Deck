@@ -1,7 +1,5 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
@@ -11,12 +9,12 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     public Func<Field, UniTask> OnSpawned { get; internal set; }
     
     public CreatureCard creatureCard;
-    private CraetureBehaviour craetureBehaviour;
+    private CreatureBehaviour craetureBehaviour;
 
     protected Health _health;
     protected Attack _attack;
     
-    public Creature(CreatureCard creatureCard, CraetureBehaviour craetureBehaviour, GameEventBus eventBus) {
+    public Creature(CreatureCard creatureCard, CreatureBehaviour craetureBehaviour, GameEventBus eventBus) {
         this.creatureCard = creatureCard;
         _health = new Health(this, creatureCard.Health, eventBus);
         _attack = new Attack(this, creatureCard.Attack, eventBus);
