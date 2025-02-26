@@ -37,7 +37,7 @@ public class FieldEntityProvider : IEntityProvider {
 }
 
 
-public class AbilityInputSystem : MonoBehaviour, IActionFiller {
+public class ActionInputSystem : MonoBehaviour, IActionFiller {
     [SerializeField] private TMP_Text _instructionText;
     [SerializeField] private GameObject _inputPanel;
     [SerializeField] private int _timeout = 5;
@@ -66,11 +66,15 @@ public class AbilityInputSystem : MonoBehaviour, IActionFiller {
         _cancelButton.onClick.AddListener(Cancel);
     }
 
-    public async UniTask<T> ProcessRequirementAsync<T>(Opponent requestingPlayer, IRequirement<T> requirement) where T : class {
+    public async UniTask<T> ProcessRequirementAsync<T>(Opponent requestingPlayer, IRequirement<T> requirement, CancellationToken externalCt) where T : class {
         CancellationToken timeoutToken = timeoutController.Timeout(TimeSpan.FromSeconds(_timeout));
         _cts = new CancellationTokenSource();
 
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, timeoutToken);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+            _cts.Token,
+            timeoutToken,
+            externalCt
+        );
         var token = linkedCts.Token;
 
         try {

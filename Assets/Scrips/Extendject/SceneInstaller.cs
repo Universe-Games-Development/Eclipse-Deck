@@ -11,7 +11,7 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
         // Player
         Container.Bind<Player>().AsSingle();
-        Container.Bind<IActionFiller>().To<AbilityInputSystem>().FromComponentInHierarchy().AsSingle().WhenInjectedInto<Player>();
+        Container.Bind<IActionFiller>().To<ActionInputSystem>().FromComponentInHierarchy().AsSingle().WhenInjectedInto<Player>();
 
         // Enemy
         Container.Bind<Enemy>().AsTransient();

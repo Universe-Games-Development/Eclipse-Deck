@@ -684,7 +684,7 @@ Transform:
   m_GameObject: {fileID: 700473088}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.61, y: 0.3699999, z: 3.78}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.52, y: 0.52, z: 0.52}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -938,7 +938,7 @@ Transform:
   m_GameObject: {fileID: 754010040}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.61, y: 0.37, z: -3.77}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.52, y: 0.52, z: 0.52}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -3049,7 +3049,7 @@ Transform:
   m_GameObject: {fileID: 3224771594368198410}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.7268841, y: 2.7901545, z: 0.14262104}
+  m_LocalPosition: {x: 0, y: 2.8, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3095,7 +3095,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   maxLevel: 1.5
   minLevel: -1.5
-  duration: 4
+  duration: 2
 --- !u!4 &6669154861771624942
 Transform:
   m_ObjectHideFlags: 0
@@ -3407,7 +3407,7 @@ Transform:
   m_GameObject: {fileID: 5451227271061783860}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.7268841, y: 2.7901545, z: 0.14262104}
+  m_LocalPosition: {x: -1.27, y: 2.8, z: 4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3434,16 +3434,34 @@ MonoBehaviour:
       time: 0
       value: 0
       inSlope: 0
-      outSlope: 1
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
+      time: 0.4019603
+      value: 0.7900892
+      inSlope: 0.9999999
+      outSlope: 0.9999999
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.60392046
+      value: 0.9245311
+      inSlope: -0.23869513
+      outSlope: -0.23869513
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.47401142
+    - serializedVersion: 3
       time: 1
       value: 1
       inSlope: 1
-      outSlope: 0
+      outSlope: 1
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -3453,7 +3471,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   maxLevel: 1.5
   minLevel: -1.5
-  duration: 4
+  duration: 2
 --- !u!1 &8447790141481888919
 GameObject:
   m_ObjectHideFlags: 0

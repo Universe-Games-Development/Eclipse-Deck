@@ -62,38 +62,38 @@ public class HealthCellView : MonoBehaviour {
     }
 
     private async UniTaskVoid SmoothUpdateLiquidLevel() {
-        // Скасовуємо попередню анімацію
         CancelCurrentAnimation();
-        animationCTS = new CancellationTokenSource();
-        CancellationToken token = animationCTS.Token;
+
+        // Створюємо НОВИЙ CTS для цієї конкретної анімації
+        var localCTS = new CancellationTokenSource();
+        animationCTS = localCTS; // Записуємо посилання в поле класу
+        var token = localCTS.Token;
+
         try {
-            // Отримуємо початковий рівень з поточного стану
             liquidRenderer.GetPropertyBlock(propertyBlock);
             float startLevel = propertyBlock.GetFloat(LevelProperty);
             float targetLevel = CalculateLiquidLevel();
 
             float elapsed = 0f;
             while (elapsed < duration) {
-                if (token.IsCancellationRequested) {
-                    break;
-                }
+                if (token.IsCancellationRequested) break;
+
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
                 float curvedT = animationCurve.Evaluate(t);
-                float lerped = Mathf.Lerp(startLevel, targetLevel, curvedT);
-                UpdateLiquidLevel(lerped);
+                UpdateLiquidLevel(Mathf.Lerp(startLevel, targetLevel, curvedT));
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
 
-            // Фінальне оновлення після завершення
             if (!token.IsCancellationRequested) {
                 UpdateLiquidLevel(targetLevel);
             }
-        } catch (OperationCanceledException) {
-            // Очікуване скасування - ігноруємо
-        } finally {
-            animationCTS?.Dispose();
-            animationCTS = null;
+        } catch (OperationCanceledException) { } finally {
+            // Видаляємо тільки якщо це ТЕКУЩА анімація
+            if (animationCTS == localCTS) {
+                localCTS.Dispose();
+                animationCTS = null;
+            }
         }
     }
 

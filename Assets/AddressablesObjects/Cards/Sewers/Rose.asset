@@ -21,7 +21,7 @@ MonoBehaviour:
   biomeIamge: {fileID: 21300000, guid: 7888acd02a647e94eab785656df8d04c, type: 3}
   resourseId: a58871c5-f682-4238-87ba-9873e5af83b5
   rarity: 0
-  cost: 0
+  cost: 2
   abilities: []
   viewPrefab: {fileID: 4316387962452926198, guid: e13ac05a01d85734b99643d6ccc6c528, type: 3}
   MAX_CARD_ATTACK: 100
