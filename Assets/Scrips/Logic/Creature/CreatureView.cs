@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using Zenject.SpaceFighter;
 using Zenject;
-
 public class CreatureView : MonoBehaviour {
     [SerializeField]
     Animator _animator = null;

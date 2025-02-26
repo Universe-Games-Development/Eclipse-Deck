@@ -9,9 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2441930562313997681}
-  - component: {fileID: 3659937684394865477}
+  - component: {fileID: 8992983510157702227}
+  - component: {fileID: 4436160389360976013}
   m_Layer: 0
-  m_Name: Creature Controller
+  m_Name: Creature Presenter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -34,7 +35,7 @@ Transform:
   - {fileID: 5296174849972545055}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3659937684394865477
+--- !u!114 &8992983510157702227
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,11 +44,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 1231422103275852155}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d9c0450ba7fb77f4baf11c841a1260c8, type: 3}
+  m_Script: {fileID: 11500000, guid: eb4c3b7f2d36c21469c3b3e01b5a0aa3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dotweenAnimator: {fileID: 4436160389360976013}
   viewParent: {fileID: 3014905427485992743}
-  spawnHeightOffset: 2
+--- !u!114 &4436160389360976013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1231422103275852155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d5f58589a807c4e902b3eaebf8b5d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveDuration: 0.5
+  moveEase: 7
+  spawnHeight: 1.5
 --- !u!1 &5202781582429457750
 GameObject:
   m_ObjectHideFlags: 0

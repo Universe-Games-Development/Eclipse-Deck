@@ -4,7 +4,7 @@ using Zenject;
 
 public class CreatureSpawner : MonoBehaviour {
     
-    [SerializeField] private CreatureController creaturePrefab;
+    [SerializeField] private CreaturePresenter creaturePrefab;
     [Inject] DiContainer container;
 
     public async UniTask<bool> SpawnCreature(CreatureCard creatureCard, Field targetField, Opponent summoner) {
@@ -14,7 +14,7 @@ public class CreatureSpawner : MonoBehaviour {
             return false;
         }
         
-        CreatureController creatureController = container.InstantiatePrefabForComponent<CreatureController>(creaturePrefab);
+        CreaturePresenter creatureController = container.InstantiatePrefabForComponent<CreaturePresenter>(creaturePrefab);
         creatureController.Initialize(creatureCard, targetField);
         await UniTask.CompletedTask;
         return true;

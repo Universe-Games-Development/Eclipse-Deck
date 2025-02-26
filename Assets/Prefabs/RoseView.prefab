@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2113178606150575845}
-  - component: {fileID: 5337255668681381628}
+  - component: {fileID: 4316387962452926198}
   m_Layer: 0
   m_Name: RoseView
   m_TagString: Untagged
@@ -33,7 +33,7 @@ Transform:
   - {fileID: 1362148381433690160}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5337255668681381628
+--- !u!114 &4316387962452926198
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -42,7 +42,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4363488412660020488}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4d5f58589a807c4e902b3eaebf8b5d3, type: 3}
+  m_Script: {fileID: 11500000, guid: 6abb9a6bbc018de4f9ab4db9c5f54654, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _animator: {fileID: 6576628903326536621}

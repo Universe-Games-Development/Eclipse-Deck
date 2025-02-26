@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 
 public class HealthCellView : MonoBehaviour {
@@ -9,6 +8,7 @@ public class HealthCellView : MonoBehaviour {
     [SerializeField] private AnimationCurve animationCurve = AnimationCurve.Linear(0, 0, 1, 1);
     [SerializeField] private float maxLevel = 1.5f;
     [SerializeField] private float minLevel = -1.5f;
+    [SerializeField] private float duration = 4f;
 
     private Health health;
     private MaterialPropertyBlock propertyBlock;
@@ -42,71 +42,66 @@ public class HealthCellView : MonoBehaviour {
         health = opponent.Health;
 
         SubscribeToHealthEvents();
-        UpdateVisualImmediately();
+        UpdateHealthBar();
     }
 
     private void SubscribeToHealthEvents() {
         health.Stat.OnValueChanged += UpdateHealthBar;
-        health.OnChangedMaxValue += HandleMaxHealthChanged;
+        health.OnChangedMaxValue += UpdateHealthBar;
     }
 
     private void UnsubscribeFromPreviousHealth() {
         if (health != null) {
             health.Stat.OnValueChanged -= UpdateHealthBar;
-            health.OnChangedMaxValue -= HandleMaxHealthChanged;
+            health.OnChangedMaxValue -= UpdateHealthBar;
         }
     }
 
-    private void UpdateVisualImmediately() {
-        CancelCurrentAnimation();
-        UpdateLiquidLevel(CalculateLiquidLevel());
-    }
-
-    private void HandleMaxHealthChanged(int previousMax, int newMax) {
-        if (newMax <= 0) return;
-        SmoothUpdateLiquidLevel().Forget();
-    }
-
-    private void UpdateHealthBar(int previousValue, int newValue) {
+    private void UpdateHealthBar(int previousValue = 0, int newValue = 0) {
         SmoothUpdateLiquidLevel().Forget();
     }
 
     private async UniTaskVoid SmoothUpdateLiquidLevel() {
-        
-        using var animationCTS = new CancellationTokenSource();
-
+        // Скасовуємо попередню анімацію
+        CancelCurrentAnimation();
+        animationCTS = new CancellationTokenSource();
+        CancellationToken token = animationCTS.Token;
         try {
-            CancelCurrentAnimation();
-            
-
-            float targetLevel = CalculateLiquidLevel();
+            // Отримуємо початковий рівень з поточного стану
+            liquidRenderer.GetPropertyBlock(propertyBlock);
             float startLevel = propertyBlock.GetFloat(LevelProperty);
-            float duration = 0.5f;
-            float elapsed = 0f;
+            float targetLevel = CalculateLiquidLevel();
 
-            while (elapsed < duration && !animationCTS.Token.IsCancellationRequested) {
+            float elapsed = 0f;
+            while (elapsed < duration) {
+                if (token.IsCancellationRequested) {
+                    break;
+                }
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
                 float curvedT = animationCurve.Evaluate(t);
-                UpdateLiquidLevel(Mathf.Lerp(startLevel, targetLevel, curvedT));
-                await UniTask.Yield(PlayerLoopTiming.Update, animationCTS.Token);
+                float lerped = Mathf.Lerp(startLevel, targetLevel, curvedT);
+                UpdateLiquidLevel(lerped);
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
 
-            if (!animationCTS.Token.IsCancellationRequested) {
+            // Фінальне оновлення після завершення
+            if (!token.IsCancellationRequested) {
                 UpdateLiquidLevel(targetLevel);
             }
         } catch (OperationCanceledException) {
-            // Animation canceled it`s normal
+            // Очікуване скасування - ігноруємо
+        } finally {
+            animationCTS?.Dispose();
+            animationCTS = null;
         }
     }
 
-    private float CalculateLiquidLevel() {
-        if (health == null || health.Max <= 0) return minLevel; // Встановлюємо мінімальний рівень при нульовому здоров'ї
-
-        float normalizedLevel = (float)health.Current / health.Max; // Значення від 0 до 1
-        return Mathf.Lerp(minLevel, maxLevel, normalizedLevel); // Масштабуємо до [-1.5, 1.5]
+    private void CancelCurrentAnimation() {
+        animationCTS?.Cancel();
+        animationCTS?.Dispose();
+        animationCTS = null;
     }
-
 
     private void UpdateLiquidLevel(float level) {
         if (liquidRenderer == null) return;
@@ -116,10 +111,11 @@ public class HealthCellView : MonoBehaviour {
         liquidRenderer.SetPropertyBlock(propertyBlock);
     }
 
-    private void CancelCurrentAnimation() {
-        animationCTS?.Cancel();
-        animationCTS?.Dispose();
-        animationCTS = null;
+    private float CalculateLiquidLevel() {
+        if (health == null || health.Max <= 0) return minLevel;
+
+        float normalizedLevel = (float)health.Current / health.Max;
+        return Mathf.Lerp(minLevel, maxLevel, normalizedLevel);
     }
 
     private void OnDestroy() {
