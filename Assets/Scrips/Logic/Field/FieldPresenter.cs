@@ -1,11 +1,12 @@
 using Cysharp.Threading.Tasks;
+using System;
 using UnityEngine;
 
 public class FieldPresenter : MonoBehaviour {
     public FieldType type;
     public string owner;
 
-    public Field LinkedField;
+    public Field Field;
 
     [SerializeField] public Transform creatureSpawnPoint;
 
@@ -30,17 +31,26 @@ public class FieldPresenter : MonoBehaviour {
     }
 
     public void Initialize(Field field) {
-        
         if (field == null) {
             Debug.LogError("null field data");
             return;
         }
-        LinkedField = field;
+        Field = field;
         type = field.FieldType;
         fieldMaterializer.Initialize(field);
+        field.OnCreaturePlaced += OnOccupy;
+        field.OnCreatureRemoved += OnDeOccupy;
         if (field.Owner != null) {
             owner = field.Owner.Name;
         }
+    }
+
+    private void OnOccupy(Creature creature) {
+        fieldMaterializer.UpdateOccupyEmission(creature);
+    }
+
+    private void OnDeOccupy(Creature creature) {
+        fieldMaterializer.UpdateOccupyEmission();
     }
 
     private void SetInteractable(bool value) {
@@ -58,14 +68,14 @@ public class FieldPresenter : MonoBehaviour {
     }
 
     private void OnMouseEnter() {
-        if (isInteractable && LinkedField.Owner != null && LinkedField.Owner is Player) {
+        if (isInteractable && Field.Owner != null && Field.Owner is Player) {
             levitator.ToggleLevitation(true);
             fieldMaterializer.ToggleHovered(true);
         }
     }
 
     private void OnMouseExit() {
-        if (isInteractable && LinkedField.Owner != null && LinkedField.Owner is Player) {
+        if (isInteractable && Field.Owner != null && Field.Owner is Player) {
             levitator.ToggleLevitation(false);
             fieldMaterializer.ToggleHovered(false);
         }
@@ -76,10 +86,16 @@ public class FieldPresenter : MonoBehaviour {
         fieldMaterializer.Reset();
 
         isInteractable = false;
-        LinkedField = null;
+        Field = null;
     }
 
     internal Transform GetCreaturePlace() {
         return creatureSpawnPoint;
+    }
+
+    private void OnDestroy() {
+        if (Field == null) return;
+        Field.OnCreaturePlaced -= OnOccupy;
+        Field.OnCreatureRemoved -= OnDeOccupy;
     }
 }

@@ -45,8 +45,6 @@ public class FieldMaterializer : MonoBehaviour {
         UpdateColorBasedOnOwner(field.Owner);
         field.OnChangedOwner += UpdateColorBasedOnOwner;
         field.OnChangedType += UpdateColorBasedOnType;
-        field.OnCreaturePlaced += UpdateOccupyEmission;
-        field.OnCreatureRemoved += UpdateOccupyEmission;
     }
 
     public void UpdateColorBasedOnType(FieldType newType) {
@@ -83,8 +81,10 @@ public class FieldMaterializer : MonoBehaviour {
     }
     
 
-    private void UpdateOccupyEmission(Creature creature) {
-        Color hoverEmissionColor = creature == null ? freeColor : occupyColor;
+    public void UpdateOccupyEmission(Creature creature = null) {
+        bool isOccupied = creature != null;
+
+        Color hoverEmissionColor = isOccupied ? occupyColor : freeColor;
         propBlock.SetColor(emissiveColorName, hoverEmissionColor);
         meshRenderer.SetPropertyBlock(propBlock);
 
@@ -107,8 +107,6 @@ public class FieldMaterializer : MonoBehaviour {
         if (field != null) {
             field.OnChangedOwner -= UpdateColorBasedOnOwner;
             field.OnChangedType -= UpdateColorBasedOnType;
-            field.OnCreaturePlaced -= UpdateOccupyEmission;
-            field.OnCreatureRemoved -= UpdateOccupyEmission;
             field = null;
         }
         
@@ -124,8 +122,6 @@ public class FieldMaterializer : MonoBehaviour {
         if (field != null) {
             field.OnChangedOwner -= UpdateColorBasedOnOwner;
             field.OnChangedType -= UpdateColorBasedOnType;
-            field.OnCreaturePlaced -= UpdateOccupyEmission;
-            field.OnCreatureRemoved -= UpdateOccupyEmission;
         }
     }
 }

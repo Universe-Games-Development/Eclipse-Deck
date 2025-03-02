@@ -28,7 +28,7 @@ public class FieldEntityProvider : IEntityProvider {
     public bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class {
         entity = null;
         var controller = uiObject.GetComponent<FieldPresenter>();
-        if (controller != null && controller.LinkedField is T field) {
+        if (controller != null && controller.Field is T field) {
             entity = field;
             return true;
         }
