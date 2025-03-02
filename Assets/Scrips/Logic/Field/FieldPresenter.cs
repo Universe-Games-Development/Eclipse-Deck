@@ -1,10 +1,9 @@
 using Cysharp.Threading.Tasks;
-using System;
 using UnityEngine;
 
 public class FieldPresenter : MonoBehaviour {
     public FieldType type;
-    public string owner;
+    public string ownerName;
 
     public Field Field;
 
@@ -37,12 +36,26 @@ public class FieldPresenter : MonoBehaviour {
         }
         Field = field;
         type = field.FieldType;
-        fieldMaterializer.Initialize(field);
+
+        fieldMaterializer.UpdateColorBasedOnType(field.FieldType);
+        fieldMaterializer.UpdateColorBasedOnOwner(field.Owner);
+
+        field.OnChangedOwner += OnOwnerChanged;
+        field.OnChangedType += OnTypeChanged;
         field.OnCreaturePlaced += OnOccupy;
         field.OnCreatureRemoved += OnDeOccupy;
+
         if (field.Owner != null) {
-            owner = field.Owner.Name;
+            ownerName = field.Owner.Name;
         }
+    }
+
+    private void OnTypeChanged(FieldType type) {
+        fieldMaterializer.UpdateColorBasedOnType(type);
+    }
+
+    private void OnOwnerChanged(Opponent opponent) {
+        fieldMaterializer.UpdateColorBasedOnOwner(opponent);
     }
 
     private void OnOccupy(Creature creature) {
@@ -67,6 +80,10 @@ public class FieldPresenter : MonoBehaviour {
         pool.Release(this);
     }
 
+    public Transform GetCreaturePlace() {
+        return creatureSpawnPoint;
+    }
+
     private void OnMouseEnter() {
         if (isInteractable && Field.Owner != null && Field.Owner is Player) {
             levitator.ToggleLevitation(true);
@@ -89,13 +106,13 @@ public class FieldPresenter : MonoBehaviour {
         Field = null;
     }
 
-    internal Transform GetCreaturePlace() {
-        return creatureSpawnPoint;
-    }
-
     private void OnDestroy() {
         if (Field == null) return;
+
+        Field.OnChangedOwner -= OnOwnerChanged;
+        Field.OnChangedType -= OnTypeChanged;
         Field.OnCreaturePlaced -= OnOccupy;
         Field.OnCreatureRemoved -= OnDeOccupy;
     }
+
 }
