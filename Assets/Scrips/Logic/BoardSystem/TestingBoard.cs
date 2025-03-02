@@ -19,8 +19,7 @@ public class TestingBoard : MonoBehaviour
     [SerializeField] private bool TesOn;
 
     // Scene Context
-    [Inject] private GameBoard gameBoard;
-    [Inject] private GameBoardManager boardManager;
+    [Inject] private GameboardBuilder boardManager;
 
     // GAme context
     [Inject] AddressablesResourceManager resManager;

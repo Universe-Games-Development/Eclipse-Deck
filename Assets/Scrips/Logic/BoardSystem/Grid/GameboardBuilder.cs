@@ -5,8 +5,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Zenject;
 
-public class GameBoardManager {
-    [Inject] private BoardAssigner _boardAssigner;
+public class GameboardBuilder {
     private BoardSettingsSO initialBoardConfig;
     [Inject] CommandManager CommandManager;
     private GameEventBus eventBus;
@@ -82,11 +81,11 @@ public class GameBoardManager {
 
 public class GridInitCommand : Command {
     private Func<UniTask<GridBoard>> initBoard;
-    private GameBoardManager boardManager;
+    private GameboardBuilder boardManager;
 
     private GridBoard cachedBoard;
 
-    public GridInitCommand(GameBoardManager boardManager, Func<UniTask<GridBoard>> initBoard) {
+    public GridInitCommand(GameboardBuilder boardManager, Func<UniTask<GridBoard>> initBoard) {
         this.initBoard = initBoard;
         this.boardManager = boardManager;
     }
@@ -124,10 +123,10 @@ public class BoardUpdateCommand : Command {
     private readonly BoardSettingsSO oldSettings;
     private readonly BoardSettingsSO newSettings;
 
-    private GameBoardManager boardManager;
+    private GameboardBuilder boardManager;
     private GridBoard board;
 
-    public BoardUpdateCommand(GameBoardManager boardManager, GridBoard board, BoardSettingsSO newSettings) {
+    public BoardUpdateCommand(GameboardBuilder boardManager, GridBoard board, BoardSettingsSO newSettings) {
         this.board = board;
         this.newSettings = newSettings;
         this.boardManager = boardManager;

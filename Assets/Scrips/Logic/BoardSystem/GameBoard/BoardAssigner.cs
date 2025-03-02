@@ -14,12 +14,12 @@ public class BoardAssigner {
              { typeof(Enemy), ENEMY_DIRECTION }
          };
 
-    private readonly GameBoardManager boardManager;
+    private readonly GameboardBuilder boardManager;
 
     private readonly OpponentRegistrator _opponentRegister;
 
     [Inject]
-    public BoardAssigner(OpponentRegistrator opponentRegister, GameBoardManager boardManager) {
+    public BoardAssigner(OpponentRegistrator opponentRegister, GameboardBuilder boardManager) {
         _opponentRegister = opponentRegister;
         this.boardManager = boardManager;
 

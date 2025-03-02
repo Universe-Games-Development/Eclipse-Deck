@@ -7,7 +7,7 @@ using Zenject;
 public class GridVisual : MonoBehaviour {
     private FieldPool pool;
 
-    GameBoardManager boardManager;
+    GameboardBuilder boardManager;
 
     [SerializeField] private CellSize visualCellSize = new(1.0f, 1.0f);
     [Header("Field Data")]
@@ -19,7 +19,7 @@ public class GridVisual : MonoBehaviour {
     private Dictionary<Field, FieldController> fieldControllers = new();
 
     [Inject]
-    public void Construct(GameBoardManager boardManager) {
+    public void Construct(GameboardBuilder boardManager) {
         this.boardManager = boardManager;
         boardManager.OnGridInitialized += UpdateVisualGrid;
         boardManager.OnBoardChanged += UpdateVisualGrid;

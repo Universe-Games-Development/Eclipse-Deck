@@ -22,8 +22,7 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
         // Gameboard
         Container.Bind<GameBoardController>().FromComponentInHierarchy().AsSingle();
-        Container.Bind<GameBoard>().AsTransient();
-        Container.Bind<GameBoardManager>().AsSingle();
+        Container.Bind<GameboardBuilder>().AsSingle();
         Container.Bind<BoardAssigner>().AsSingle();
 
         Container.Bind<GridVisual>().FromComponentInHierarchy().AsSingle();
@@ -35,5 +34,4 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
         Container.Bind<OpponentRegistrator>().AsSingle().NonLazy();
         Container.BindInterfacesAndSelfTo<GameInitializer>().AsSingle();
     }
-
 }

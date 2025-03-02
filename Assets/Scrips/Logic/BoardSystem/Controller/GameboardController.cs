@@ -2,10 +2,10 @@ using UnityEngine;
 using Zenject;
 
 public class GameBoardController : MonoBehaviour {
-    // Scene Context
-    [Inject] private GameBoard gameBoard;
-    [Inject] private GameBoardManager boardManager;
     [SerializeField] public CreatureSpawner CreatureSpawner;
+    // Scene Context
+    [Inject] private GameboardBuilder _boardManager;
+    [Inject] private TurnManager _turnManager;
 
     [Header("Grid Interaction Params")]
     [Range(0, 10)]
@@ -28,16 +28,16 @@ public class GameBoardController : MonoBehaviour {
         }
 
         // Get grid index by world position
-        Vector2Int? gridIndex = boardManager.GridBoard.GetGridIndexByWorld(origin, worldPosition);
+        Vector2Int? gridIndex = _boardManager.GridBoard.GetGridIndexByWorld(origin, worldPosition);
         if (!gridIndex.HasValue) {
             return null;
         }
 
         // ѕолучаем поле по индексам
-        Field field = boardManager.GridBoard.GetFieldAt(gridIndex.Value.x, gridIndex.Value.y);
+        Field field = _boardManager.GridBoard.GetFieldAt(gridIndex.Value.x, gridIndex.Value.y);
 
         // ≈сли поле не может быть выбрано Ц выводим предупреждение и выходим
-        if (field == null || !gameBoard.IsValidFieldSelected(field)) {
+        if (field == null || !IsValidFieldSelected(field)) {
             if (field != null) {
                 Debug.LogWarning($"Can't select field: {field.GetTextCoordinates()}");
             }
@@ -46,6 +46,33 @@ public class GameBoardController : MonoBehaviour {
 
         Debug.Log($"Selected: {field.GetTextCoordinates()}");
         return field;
+    }
+
+    public bool IsValidFieldSelected(Field field) {
+        if (!IsInitialized()) {
+            Debug.LogWarning("Gameboard not initialized! Can't select field");
+            return false;
+        }
+
+        if (!_boardManager.GridBoard.FieldExists(field)) {
+            return false;
+        }
+
+        if (_turnManager.ActiveOpponent != field.Owner) {
+            Debug.LogWarning("Field does not belong to the current player.");
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool IsInitialized() {
+        if (_boardManager.GridBoard == null || _boardManager.GridBoard.Config == null) {
+            Debug.LogWarning("GridManager is not properly initialized: Global grid is null or empty.");
+            return false;
+        }
+
+        return true;
     }
 }
 
