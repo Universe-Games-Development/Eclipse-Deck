@@ -2455,7 +2455,7 @@ MonoBehaviour:
   visualCellSize:
     width: 1
     height: 1
-  fieldPrefab: {fileID: -8598723017283129022, guid: b335380be08b2fe48a40fd6efc1a9e25, type: 3}
+  fieldPrefab: {fileID: 7132759440185772485, guid: b335380be08b2fe48a40fd6efc1a9e25, type: 3}
   origin: {fileID: 7082598241211156398}
   globalCenter: {fileID: 2817643293025039422}
 --- !u!4 &3649500050138348717

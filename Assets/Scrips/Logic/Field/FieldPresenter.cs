@@ -1,13 +1,13 @@
 using Cysharp.Threading.Tasks;
-using System;
 using UnityEngine;
-public class FieldController : MonoBehaviour {
+
+public class FieldPresenter : MonoBehaviour {
     public FieldType type;
     public string owner;
 
     public Field LinkedField;
 
-    [SerializeField] public Transform spawnPoint;
+    [SerializeField] public Transform creatureSpawnPoint;
 
     [SerializeField] public FieldUI fieldUI;
     [SerializeField] private FieldMaterializer fieldMaterializer;
@@ -60,14 +60,14 @@ public class FieldController : MonoBehaviour {
     private void OnMouseEnter() {
         if (isInteractable && LinkedField.Owner != null && LinkedField.Owner is Player) {
             levitator.ToggleLevitation(true);
-            fieldMaterializer.ToggleHighlight(true);
+            fieldMaterializer.ToggleHovered(true);
         }
     }
 
     private void OnMouseExit() {
         if (isInteractable && LinkedField.Owner != null && LinkedField.Owner is Player) {
             levitator.ToggleLevitation(false);
-            fieldMaterializer.ToggleHighlight(false);
+            fieldMaterializer.ToggleHovered(false);
         }
     }
 
@@ -80,6 +80,6 @@ public class FieldController : MonoBehaviour {
     }
 
     internal Transform GetCreaturePlace() {
-        return spawnPoint;
+        return creatureSpawnPoint;
     }
 }

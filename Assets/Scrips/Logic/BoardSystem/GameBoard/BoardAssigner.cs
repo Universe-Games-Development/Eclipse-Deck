@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zenject;
+using Zenject.SpaceFighter;
 
 public class BoardAssigner {
     private const Direction ENEMY_DIRECTION = Direction.North;
@@ -40,9 +41,9 @@ public class BoardAssigner {
         boardUpdateData?.removedFields?.ForEach(field => field.UnassignOwner());
     }
 
-    public List<Creature> GetOpponentCreatures(Opponent activeOpponent) {
+    public List<Creature> GetOpponentCreatures(Opponent endTurnOpponent) {
         List<Creature> creatures = new();
-        foreach (var grid in GetOpponentGrids(activeOpponent)) {
+        foreach (var grid in GetOpponentGrids(endTurnOpponent)) {
             foreach (var row in grid.Fields) {
                 foreach (var field in row) {
                     if (field != null && field.OccupiedCreature != null) {
@@ -51,6 +52,22 @@ public class BoardAssigner {
                 }
             }
         }
+
+        bool isPlayer = endTurnOpponent is Player;
+        creatures.Sort((creatureA, creatureB) => {
+            // Start comparing by row
+            int rowA = creatureA.CurrentField.GetRow();
+            int rowB = creatureB.CurrentField.GetRow();
+
+            int rowComparison = isPlayer ? rowA.CompareTo(rowB) : rowB.CompareTo(rowA);
+            if (rowComparison != 0) {
+                return rowComparison;
+            }
+            // If rows are same compare by column
+            int columnA = creatureA.CurrentField.GetColumn();
+            int columnB = creatureB.CurrentField.GetColumn();
+            return columnA.CompareTo(columnB);
+        });
         return creatures;
     }
 

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     public Field CurrentField { get; private set; }
-    public Func<UniTask> OnInterruptedMove { get; internal set; }
+    public Func<Field, UniTask> OnInterruptedMove { get; internal set; }
     public Func<Field, UniTask> OnMoved { get; internal set; }
     public Func<Field, UniTask> OnSpawned { get; internal set; }
     
@@ -33,7 +33,7 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     // TODO: return also attack action
     public Command GetEndTurnAction() {
         IMoveStrategy moveStrategy = craetureBehaviour.GetMovementStrategy(CurrentField);
-        CreatureMoveCommand moveCommand = new CreatureMoveCommand(this, moveStrategy, OnMoved, OnInterruptedMove);
+        CreatureMoveCommand moveCommand = new CreatureMoveCommand(this, moveStrategy);
         IAttackStrategy attackStrategy = craetureBehaviour.GetAttackStrategy(CurrentField);
         CreatureAttackCommand attackCommand = new CreatureAttackCommand(this, attackStrategy);
         EndTurnActions endTurnCreatureCommands = new EndTurnActions();

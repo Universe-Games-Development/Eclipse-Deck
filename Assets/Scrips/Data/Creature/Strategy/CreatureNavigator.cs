@@ -46,12 +46,13 @@ public class CreatureNavigator {
             return path;
         }
 
+
+        // Not used
         List<Field> correctFields = new() {
             CurrentField
         };
         for (int i = 0; i < fieldsToMove.Count; i++) {
             if (fieldsToMove[i].OccupiedCreature != null) {
-                Debug.LogWarning($"Path is blocked by a creature at {fieldsToMove[i].row}, {fieldsToMove[i].column}");
                 path.isInterrupted = true;
                 path.interruptedAt = i;
                 break;
@@ -62,7 +63,7 @@ public class CreatureNavigator {
         }
 
         // Результат
-        path.fields = correctFields;
+        path.fields = fieldsToMove;
         return path;
     }
 

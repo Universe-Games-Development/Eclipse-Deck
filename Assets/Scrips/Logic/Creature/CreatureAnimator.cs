@@ -41,6 +41,20 @@ public class CreatureAnimator : MonoBehaviour {
             transform.localPosition = targetPosition;
         }
     }
+
+    public async UniTask InterruptedMove(Transform invalidPoint) {
+        Vector3 initialPosition = transform.position;
+        Vector3 halfWayPoint = Vector3.Lerp(initialPosition, invalidPoint.position, 0.5f);
+
+        await transform.DOMove(halfWayPoint, 0.15f).SetEase(Ease.InQuad).AsyncWaitForCompletion();
+        // Collision imitation animations
+        await UniTask.WhenAll(
+             transform.DOShakeScale(0.4f, 3, 5, 90).SetRelative(true).AsyncWaitForCompletion().AsUniTask(),
+             transform.DOMove(initialPosition, 0.15f).SetEase(Ease.InQuad).AsyncWaitForCompletion().AsUniTask()
+        );
+    }
+
+
     public void ResetView() {
         CancelCurrentAnimation();
         transform.localPosition = Vector3.zero;

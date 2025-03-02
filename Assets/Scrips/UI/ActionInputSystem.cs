@@ -27,7 +27,7 @@ public class CreatureEntityProvider : IEntityProvider {
 public class FieldEntityProvider : IEntityProvider {
     public bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class {
         entity = null;
-        var controller = uiObject.GetComponent<FieldController>();
+        var controller = uiObject.GetComponent<FieldPresenter>();
         if (controller != null && controller.LinkedField is T field) {
             entity = field;
             return true;

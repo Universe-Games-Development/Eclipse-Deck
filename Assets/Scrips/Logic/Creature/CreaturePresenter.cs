@@ -1,5 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Zenject;
 
 [RequireComponent (typeof(CreatureAnimator))]
@@ -19,12 +22,11 @@ public class CreaturePresenter : MonoBehaviour {
         Model = new Creature(creatureCard, creatureBehaviour, eventBus);
         Model.OnSpawned += OnCreatureSpawned;
         Model.OnMoved += OnCreatureMoved;
-
+        Model.OnInterruptedMove += OnCreatureMoveInterrupted;
         // Creating view
         view = Instantiate(Model.creatureCard.creatureCardData.viewPrefab, viewParent);
         Model.Spawn(targetField);
     }
-
 
     private async UniTask OnCreatureSpawned(Field targetField) {
         Transform targetPoint = GetCreatureTransformPoint(targetField);
@@ -40,8 +42,15 @@ public class CreaturePresenter : MonoBehaviour {
         }
     }
 
+    private async UniTask OnCreatureMoveInterrupted(Field invalidField) {
+        Transform targetPoint = GetCreatureTransformPoint(invalidField);
+        if (targetPoint != null) {
+            await dotweenAnimator.InterruptedMove(targetPoint);
+        }
+    }
+
     private Transform GetCreatureTransformPoint(Field targetField) {
-        FieldController fc = gridVisual.GetController(targetField);
+        FieldPresenter fc = gridVisual.GetController(targetField);
         if (fc == null) {
             Debug.LogError($"FieldController not found for {targetField}");
             return null;
