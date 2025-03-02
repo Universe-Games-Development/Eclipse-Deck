@@ -4,18 +4,18 @@ using Zenject;
 public class GameInitializer : IInitializable {
     private readonly TurnManager _turnManager;
     private readonly BattleManager _battleManager;
-    private readonly PlayManagerRegistrator _playManagerRegistrator;
+    private readonly CardPlayService _cardPlayService;
     private readonly OpponentRegistrator _opponentRegistrator;
 
     public GameInitializer(
         BattleManager battleManager,
         TurnManager turnManager,
-        PlayManagerRegistrator playManagerRegistrator,
+        CardPlayService cardPlayService,
         OpponentRegistrator opponentRegistrator
     ) {
         _turnManager = turnManager;
         _battleManager = battleManager;
-        _playManagerRegistrator = playManagerRegistrator;
+        _cardPlayService = cardPlayService;
         _opponentRegistrator = opponentRegistrator;
     }
 
@@ -27,11 +27,10 @@ public class GameInitializer : IInitializable {
     private void HandleOpponentsRegistered(List<Opponent> opponents) {
         _battleManager.StartBattle(opponents);
         _turnManager.InitTurns(opponents);
-        _playManagerRegistrator.EnablePlayCardServices(opponents);
     }
 
     private void HandleOpponentsUnRegistered(Opponent loser) {
-        _playManagerRegistrator.StopPlaying(loser);
+        _cardPlayService.DisablePlaying(loser);
         _battleManager.EndBattle(loser);
         _turnManager.ResetTurnManager();
     }

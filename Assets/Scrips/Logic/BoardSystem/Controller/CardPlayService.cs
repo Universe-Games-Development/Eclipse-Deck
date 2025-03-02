@@ -1,82 +1,51 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading;
 using UnityEngine;
 using Zenject;
 
-public class PlayManagerRegistrator : IDisposable {
-    private readonly Dictionary<Opponent, CardPlayService> cardPlayServices = new();
-    private GameBoardController boardController; // Используется для розыгрыша карт
-    private TurnManager turnManager;
-
-    [Inject]
-    private void Construct(GameBoardController boardController, TurnManager turnManager) {
-        this.boardController = boardController ?? throw new ArgumentNullException(nameof(boardController));
-        this.turnManager = turnManager;
-    }
-
-    public void EnablePlayCardServices(List<Opponent> opponents) {
-        foreach (var opponent in opponents) {
-            if (!cardPlayServices.ContainsKey(opponent)) {
-                var service = new CardPlayService(opponent, boardController, turnManager);
-                cardPlayServices.Add(opponent, service);
-                Debug.Log($"CardPlayService created for opponent {opponent}");
-            } else {
-                Debug.LogWarning($"CardPlayService for opponent {opponent} already exists.");
-            }
-        }
-    }
-
-    public void StopPlaying(Opponent opponent) {
-        if (opponent == null) return;
-
-        if (cardPlayServices.TryGetValue(opponent, out var service)) {
-            service.Dispose();
-            cardPlayServices.Remove(opponent);
-            Debug.Log($"Stopped CardPlayService for opponent {opponent}");
-        } else {
-            Debug.LogWarning($"No CardPlayService found for opponent {opponent} to stop.");
-        }
-    }
-
-    public void Dispose() {
-        foreach (var service in cardPlayServices.Values) {
-            service.Dispose();
-        }
-        cardPlayServices.Clear();
-        GC.SuppressFinalize(this);
-    }
-}
-
 public class CardPlayService : IDisposable {
-    private readonly GameBoardController boardController;
-    private readonly Opponent opponent;
-    private readonly CardHand cardHand;
+    private readonly GameBoardController _boardController;
     private bool _isPlaying;
+    private bool _isEnabled;
 
     private Card bufferedCard;
     private TurnManager _turnManager;
     private CancellationTokenSource _playCTS;
 
-    public CardPlayService(Opponent opponent, GameBoardController boardController, TurnManager turnManager) {
-        this.boardController = boardController ?? throw new ArgumentNullException(nameof(boardController));
-        this.opponent = opponent ?? throw new ArgumentNullException(nameof(opponent));
-        cardHand = opponent.hand ?? throw new ArgumentNullException(nameof(opponent.hand));
+    public CardPlayService(GameBoardController boardController, TurnManager turnManager) {
+        _boardController = boardController;
 
-        cardHand.OnCardSelected += OnCardSelected;
         _turnManager = turnManager;
-        _turnManager.OnTurnEnd += CancelPlaying;
+        _turnManager.OnTurnStart += EnablePlaying;
+        _turnManager.OnTurnEnd += DisablePlaying;
     }
 
-    private void OnCardSelected(Card selectedCard) {
-        if (selectedCard == null || _isPlaying || _turnManager.ActiveOpponent != opponent || opponent.Health.isDead) return;
-
-        BeginPlayCard(selectedCard).Forget();
+    private void EnablePlaying(Opponent enableOppoennt) {
+        _isEnabled = true;
     }
 
-    private async UniTask BeginPlayCard(Card card) {
+    public void DisablePlaying(Opponent disableOpponent) {
+        _isEnabled = false;
+        CancelPlaying(disableOpponent);
+    }
+
+    private void CancelPlaying(Opponent opponentToStop) {
+        // if current player is not active stop card playing
+        if (_turnManager.ActiveOpponent != opponentToStop)
+        _playCTS?.Cancel();
+    }
+
+    public void PlayCard(Opponent cardPlayer, Card cardToPlay) {
+        BeginPlayCard(cardPlayer, cardToPlay).Forget();
+    }
+
+    private async UniTask BeginPlayCard(Opponent cardPlayer, Card card) {
+        if (card == null) throw new ArgumentException("Card to play is null");
+        if (!_isEnabled || _isPlaying || cardPlayer.Health.isDead) return;
+        CardHand cardHand = cardPlayer.hand;
+
         _isPlaying = true;
         _playCTS?.Dispose();
         _playCTS = new CancellationTokenSource();
@@ -88,13 +57,13 @@ public class CardPlayService : IDisposable {
             cardHand.RemoveCard(card);
 
             bool playResult = await card.PlayCard(
-                opponent,
-                boardController,
+                cardPlayer,
+                _boardController,
                 _playCTS.Token // Додаємо токен
             );
 
             if (playResult) {
-                opponent.CardResource.TrySpend(card.Cost.CurrentValue);
+                cardPlayer.CardResource.TrySpend(card.Cost.CurrentValue);
                 Debug.Log("Card playing successful");
             } else {
                 // Если розыгрыш не удался, возвращаем карту обратно в руку
@@ -109,14 +78,7 @@ public class CardPlayService : IDisposable {
         }
     }
 
-    private void CancelPlaying(Opponent opponent) {
-        if (this.opponent == opponent) {
-            _playCTS?.Cancel();
-        }
-    }
-
     public void Dispose() {
         _playCTS?.Dispose();
-        cardHand.OnCardSelected -= OnCardSelected;
     }
 }

@@ -2,20 +2,19 @@ using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
-using System.Threading;
 
 public class CreatureMoveCommand : Command {
     private Creature creature;
-    private Func<Field, UniTask> onMoved;
-    private Func<UniTask> onInterrupted;
+    private Func<Field, UniTask> OnMoved;
+    private Func<UniTask> OnInterrupted;
     private IMoveStrategy moveStrategy;
     private Stack<Field> previousFields = new Stack<Field>();
 
     public CreatureMoveCommand(Creature creature, IMoveStrategy moveStrategy, Func<Field, UniTask> onMoved, Func<UniTask> onInterrupted) {
         this.creature = creature;
         this.moveStrategy = moveStrategy;
-        this.onMoved = onMoved;
-        this.onInterrupted = onInterrupted;
+        this.OnMoved = onMoved;
+        this.OnInterrupted = onInterrupted;
     }
 
     public override async UniTask Execute() {
@@ -41,8 +40,8 @@ public class CreatureMoveCommand : Command {
             }
 
             if (path.isInterrupted) {
-                if (onInterrupted != null) {
-                    await onInterrupted.Invoke();
+                if (OnInterrupted != null) {
+                    await OnInterrupted.Invoke();
                 }
                 break;
             }
@@ -77,8 +76,8 @@ public class CreatureMoveCommand : Command {
 
         creature.AssignField(field);
 
-        if (onMoved != null) {
-            await onMoved.Invoke(field);
+        if (OnMoved != null) {
+            await OnMoved.Invoke(field);
         }
 
         Debug.Log($"Moved to {field.GetTextCoordinates()}");

@@ -6,7 +6,7 @@ using Zenject;
 public class Enemy : Opponent {
     [Inject]private TurnManager turnManager;
 
-    public Enemy(TurnManager turnManager, GameEventBus eventBus, AssetLoader assetLoader, IActionFiller abilityInputter, CommandManager commandManager) : base(eventBus, assetLoader, abilityInputter, commandManager) {
+    public Enemy(TurnManager turnManager, GameEventBus eventBus, AssetLoader assetLoader, IActionFiller abilityInputter) : base(eventBus, assetLoader, abilityInputter) {
         Name = "Enemy";
         this.turnManager = turnManager;
     }

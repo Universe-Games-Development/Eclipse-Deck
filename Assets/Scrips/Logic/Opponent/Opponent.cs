@@ -25,10 +25,11 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
 
     public Action<Opponent> OnDefeat { get; internal set; }
     private readonly GameEventBus eventBus;
-    private readonly CommandManager commandManager;
-    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, IActionFiller actionFiller, CommandManager commandManager) {
+    [Inject] private CommandManager _commandManager;
+    [Inject] private CardPlayService _cardPlayService;
+
+    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, IActionFiller actionFiller) {
         this.eventBus = eventBus;
-        this.commandManager = commandManager;
         this.actionFiller = actionFiller;
 
         Stat healthSat = new Stat(20, 20);
@@ -39,19 +40,23 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
 
         cardCollection = new CardCollection(assetLoader);
         hand = new CardHand(this, eventBus);
-        
+        hand.OnCardSelected += PlayCard;
 
         eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
         eventBus.SubscribeTo<OnTurnStart>(TurnStartActions);
     }
 
+    private void PlayCard(Card card) {
+        _cardPlayService.PlayCard(this, card);
+    }
+
     protected virtual void TurnStartActions(ref OnTurnStart eventData) {
         if (eventData.startTurnOpponent == this)
-        commandManager.EnqueueCommand(new DrawCardCommand(this, 1));
+        _commandManager.EnqueueCommand(new DrawCardCommand(this, 1));
     }
 
     private void StartBattleActions(ref BattleStartedEvent eventData) {
-        commandManager.EnqueueCommands(new List<Command> {
+        _commandManager.EnqueueCommands(new List<Command> {
             new InitDeckCommand(this, 40, cardCollection, eventBus),
             new DrawCardCommand(this, 10),
         });
