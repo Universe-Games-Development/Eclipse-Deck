@@ -1,31 +1,27 @@
 using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
 public class CreatureNavigator {
     // Zenject needed
-    public GameBoard GameBoard { get; private set; }
     public GridBoard GridBoard { get; private set; }
-
+    private GameboardBuilder _boardManager;
     [Inject]
-    public void Construct(GameBoard gameBoard) {
-        GameBoard = gameBoard;
-        if (gameBoard.boardManager.GridBoard == null) {
-            gameBoard.boardManager.OnGridInitialized += BoardUpdated;
+    public void Construct(GameboardBuilder boardManager) {
+        if (boardManager.GridBoard == null) {
+            boardManager.OnGridInitialized += BoardUpdated;
         } else {
-            GridBoard = gameBoard.boardManager.GridBoard;
+            GridBoard = boardManager.GridBoard;
         }
     }
 
     // Used this way because grid not initialized at start
     private async UniTask BoardUpdated(BoardUpdateData data) {
-        GameBoardManager boardManager = GameBoard.boardManager;
         if (GridBoard == null) {
-            GridBoard = boardManager.GridBoard;
+            GridBoard = _boardManager.GridBoard;
         }
-        boardManager.OnGridInitialized -= BoardUpdated;
+        _boardManager.OnGridInitialized -= BoardUpdated;
         await UniTask.CompletedTask;
     }
 
@@ -50,12 +46,13 @@ public class CreatureNavigator {
             return path;
         }
 
+
+        // Not used
         List<Field> correctFields = new() {
             CurrentField
         };
         for (int i = 0; i < fieldsToMove.Count; i++) {
             if (fieldsToMove[i].OccupiedCreature != null) {
-                Debug.LogWarning($"Path is blocked by a creature at {fieldsToMove[i].row}, {fieldsToMove[i].column}");
                 path.isInterrupted = true;
                 path.interruptedAt = i;
                 break;
@@ -66,7 +63,7 @@ public class CreatureNavigator {
         }
 
         // Результат
-        path.fields = correctFields;
+        path.fields = fieldsToMove;
         return path;
     }
 

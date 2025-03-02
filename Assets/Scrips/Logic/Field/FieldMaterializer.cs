@@ -1,21 +1,29 @@
+using System;
 using UnityEngine;
 
 public class FieldMaterializer : MonoBehaviour {
+    [Header("CreatureOccupy emission colors")]
+    [SerializeField] private Color occupyColor = Color.red;
+    [SerializeField] private Color freeColor = Color.green;
+    [SerializeField] private Color emptyColor = Color.gray;
+    [SerializeField] private Color hoverEmissionColor;
+
+    [Header ("Type colors")]
     [SerializeField] private Color attackColor = Color.red;
     [SerializeField] private Color supportColor = Color.green;
-    [SerializeField] private Color emptyColor = Color.gray;
-
+    
+    [Header("Opponents privacy colors")]
     [SerializeField] private Color enemyColor = Color.red;
     [SerializeField] private Color playerColor = Color.green;
+    
 
-    [SerializeField] private float highlightIntensity = 2f; // Інтенсивність підсвічування
+    [SerializeField] private string emissiveColorName = "_EmissionColor";
+    [SerializeField] private float defaultHighlightIntensity = 1f;
+    [SerializeField] private float hoverHighlightIntensity = 0;
 
     [SerializeField] private MeshRenderer meshRenderer;
 
-    private Color originalColor;
-    private float originalEmissionIntensity;
     private Field field;
-
     private MaterialPropertyBlock propBlock;
 
     private void Awake() {
@@ -26,10 +34,9 @@ public class FieldMaterializer : MonoBehaviour {
         }
 
         propBlock = new MaterialPropertyBlock();
-
         meshRenderer.GetPropertyBlock(propBlock);
-        originalColor = propBlock.GetColor("_Color");
-        originalEmissionIntensity = propBlock.GetFloat("_EmissionIntensity");
+        hoverEmissionColor = freeColor;
+        hoverHighlightIntensity = defaultHighlightIntensity;
     }
 
     public void Initialize(Field field) {
@@ -41,59 +48,70 @@ public class FieldMaterializer : MonoBehaviour {
     }
 
     public void UpdateColorBasedOnType(FieldType newType) {
-        if (meshRenderer != null) {
-            switch (newType) {
-                case FieldType.Attack:
-                    originalColor = attackColor;
-                    break;
-                case FieldType.Support:
-                    originalColor = supportColor;
-                    break;
-                case FieldType.Empty:
-                    originalColor = emptyColor;
-                    break;
-                default:
-                    originalColor = emptyColor;
-                    break;
-            }
-            propBlock.SetColor("_Color", originalColor);
-            meshRenderer.SetPropertyBlock(propBlock);
+        Color typeColor = Color.cyan;
+        switch (newType) {
+            case FieldType.Attack:
+                typeColor = attackColor;
+                break;
+            case FieldType.Support:
+                typeColor = supportColor;
+                break;
+            case FieldType.Empty:
+                typeColor = emptyColor;
+                break;
+            default:
+                typeColor = emptyColor;
+                break;
         }
+        propBlock.SetColor("_Color", typeColor);
+        meshRenderer.SetPropertyBlock(propBlock);
     }
 
 
     public void UpdateColorBasedOnOwner(Opponent opponent) {
-        if (meshRenderer != null) {
-            originalColor = opponent is Player ? playerColor : enemyColor;
-            propBlock.SetColor("_BaseColor", originalColor);
-            meshRenderer.SetPropertyBlock(propBlock);
-        }
+        Color ownerColor = opponent is Player ? playerColor : enemyColor;
+        propBlock.SetColor("_BaseColor", ownerColor);
+        meshRenderer.SetPropertyBlock(propBlock);
+
     }
 
-    public void ToggleHighlight(bool isOn) {
-        if (meshRenderer == null) {
-            return;
+    public void ToggleHovered(bool isOn) {
+        propBlock.SetFloat("_EmissionIntensity", isOn ? hoverHighlightIntensity : 0);
+        meshRenderer.SetPropertyBlock(propBlock);
+    }
+    
+
+    public void UpdateOccupyEmission(Creature creature = null) {
+        bool isOccupied = creature != null;
+
+        Color hoverEmissionColor = isOccupied ? occupyColor : freeColor;
+        propBlock.SetColor(emissiveColorName, hoverEmissionColor);
+        meshRenderer.SetPropertyBlock(propBlock);
+
+        if (creature != null) {
+            int attackValue = creature.GetAttack().CurrentValue;
+            hoverHighlightIntensity = defaultHighlightIntensity * attackValue;
+        } else {
+            hoverHighlightIntensity = defaultHighlightIntensity;
         }
 
-        if (isOn) {
-            propBlock.SetFloat("_EmissionIntensity", highlightIntensity);
-            meshRenderer.SetPropertyBlock(propBlock);
-            return;
+        // if we highlight now
+        float currentIntensity = propBlock.GetFloat("_EmissionIntensity");
+        if (currentIntensity != 0) {
+            propBlock.SetFloat("_EmissionIntensity", hoverHighlightIntensity);
         }
-        propBlock.SetFloat("_EmissionIntensity", originalEmissionIntensity);
         meshRenderer.SetPropertyBlock(propBlock);
     }
 
     public void Reset() {
         if (field != null) {
-            field.OnChangedType -= UpdateColorBasedOnType;
             field.OnChangedOwner -= UpdateColorBasedOnOwner;
+            field.OnChangedType -= UpdateColorBasedOnType;
             field = null;
         }
         
-        originalColor = default(Color);
-        propBlock.SetColor("_Color", originalColor);
-        propBlock.SetFloat("_EmissionIntensity", originalEmissionIntensity);
+        propBlock.SetColor("_Color", Color.grey);
+        propBlock.SetFloat("_EmissionIntensity", 0);
         if (meshRenderer != null) {
             meshRenderer.SetPropertyBlock(propBlock);
         }
@@ -102,8 +120,8 @@ public class FieldMaterializer : MonoBehaviour {
 
     private void OnDestroy() {
         if (field != null) {
-            field.OnChangedType -= UpdateColorBasedOnType;
             field.OnChangedOwner -= UpdateColorBasedOnOwner;
+            field.OnChangedType -= UpdateColorBasedOnType;
         }
     }
 }

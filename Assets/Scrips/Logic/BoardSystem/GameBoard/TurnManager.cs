@@ -23,8 +23,10 @@ public class BattleManager {
 }
 
 public class TurnManager : IDisposable {
-    public Action<Opponent> OnOpponentChanged;
-    
+    public Action<Opponent> OnOpponentChanged; 
+    public Action<Opponent> OnTurnEnd;
+    public Action<Opponent> OnTurnStart;
+
     private List<Opponent> currentOpponents = new(2);
     public Opponent ActiveOpponent { get; private set; }
     private GameEventBus eventBus;
@@ -38,9 +40,9 @@ public class TurnManager : IDisposable {
     }
 
     public void InitTurns(List<Opponent> registeredOpponents) {
-        isDisabled = false;
         currentOpponents = new List<Opponent>(registeredOpponents);
         SwitchToNextOpponent(currentOpponents.GetRandomElement());
+        isDisabled = false;
     }
 
 
@@ -56,6 +58,7 @@ public class TurnManager : IDisposable {
         }
 
         inTransition = true;
+        OnTurnEnd?.Invoke(ActiveOpponent);
         eventBus.Raise(new TurnEndStartedEvent(ActiveOpponent));
         return true;
     }
@@ -75,6 +78,7 @@ public class TurnManager : IDisposable {
 
         Debug.Log($"Turn started for {ActiveOpponent.Name}");
         OnOpponentChanged?.Invoke(ActiveOpponent);
+        OnTurnStart?.Invoke(ActiveOpponent);
         eventBus.Raise(new OnTurnStart(ActiveOpponent));
         eventBus.Raise(new TurnChangedEvent(previous, ActiveOpponent));
     }

@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.ComponentModel;
+using System.Threading;
 using UnityEngine;
 
 public abstract class Card : IAbilityOwner {
@@ -51,7 +52,7 @@ public abstract class Card : IAbilityOwner {
         }
     }
     
-    public abstract UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController);
+    public abstract UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, CancellationToken ct = default);
 
     internal void Deselect() {
         Debug.LogError("Deselect");
@@ -69,7 +70,7 @@ public class SpellCard : Card {
     }
 
     
-    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController) {
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, CancellationToken ct = default) {
         Debug.Log("Spell card played");
         await UniTask.CompletedTask;
         return false;
@@ -80,7 +81,7 @@ public class SupportCard : Card {
     public SupportCard(SupportCardSO cardSO, Opponent owner, GameEventBus eventBus)
         : base(cardSO, owner, eventBus) { }
 
-    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController) {
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, CancellationToken ct = default) {
         Debug.Log("Support card played");
         await UniTask.CompletedTask;
         return false;
@@ -106,8 +107,8 @@ public class CreatureCard : Card {
             .Build();
     }
 
-    public override async UniTask<bool> PlayCard(Opponent summoner, GameBoardController boardController) {
-        Field field = await summoner.actionFiller.ProcessRequirementAsync(summoner, friendlyFieldRequirement);
+    public override async UniTask<bool> PlayCard(Opponent summoner, GameBoardController boardController, CancellationToken ct = default) {
+        Field field = await summoner.actionFiller.ProcessRequirementAsync(summoner, friendlyFieldRequirement, ct);
         if (field == null) {
             Debug.Log("Field is null");
             return false;

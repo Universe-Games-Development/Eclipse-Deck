@@ -9,13 +9,11 @@ public class BatttleActionManager {
     // Zenject
     private GameEventBus eventBus;
 
-    private GameBoard _gameBoard;
     private BoardAssigner _boardAssigner;
     private TurnManager _turnManager;
 
     [Inject]
-    public void Construct(GameEventBus eventBus, GameBoard gameBoard, BoardAssigner boardAssigner, TurnManager turnManager) {
-        _gameBoard = gameBoard;
+    public void Construct(GameEventBus eventBus, BoardAssigner boardAssigner, TurnManager turnManager) {
         _boardAssigner = boardAssigner;
         _turnManager = turnManager;
 

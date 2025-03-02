@@ -51,6 +51,7 @@ public class CardHandUI : MonoBehaviour {
         card.cardUI = cardUI;
         cardPairs.Add(cardUI, card);
         cardUI.SetInteractable(isInteractable);
+        cardUI.SetCardLogic(card);
         return cardUI;
     }
 

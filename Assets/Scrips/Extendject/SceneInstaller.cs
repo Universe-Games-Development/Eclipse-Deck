@@ -11,19 +11,17 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
         // Player
         Container.Bind<Player>().AsSingle();
-        Container.Bind<IActionFiller>().To<AbilityInputSystem>().FromComponentInHierarchy().AsSingle().WhenInjectedInto<Player>();
+        Container.Bind<IActionFiller>().To<ActionInputSystem>().FromComponentInHierarchy().AsSingle().WhenInjectedInto<Player>();
 
         // Enemy
         Container.Bind<Enemy>().AsTransient();
         Container.Bind<IActionFiller>().To<EnemyInputSystem>().AsTransient().WhenInjectedInto<Enemy>();
-        Container.Bind<CardPlayService>().AsSingle();
-        Container.Bind<PlayManagerRegistrator>().AsSingle().NonLazy();
-        
 
+        Container.Bind<CardPlayService>().AsSingle();
+        
         // Gameboard
         Container.Bind<GameBoardController>().FromComponentInHierarchy().AsSingle();
-        Container.Bind<GameBoard>().AsTransient();
-        Container.Bind<GameBoardManager>().AsSingle();
+        Container.Bind<GameboardBuilder>().AsSingle();
         Container.Bind<BoardAssigner>().AsSingle();
 
         Container.Bind<GridVisual>().FromComponentInHierarchy().AsSingle();
@@ -35,5 +33,4 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
         Container.Bind<OpponentRegistrator>().AsSingle().NonLazy();
         Container.BindInterfacesAndSelfTo<GameInitializer>().AsSingle();
     }
-
 }

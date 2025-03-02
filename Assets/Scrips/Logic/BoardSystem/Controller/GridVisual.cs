@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
@@ -7,22 +8,23 @@ using Zenject;
 public class GridVisual : MonoBehaviour {
     private FieldPool pool;
 
-    GameBoardManager boardManager;
+    GameboardBuilder boardManager;
 
     [SerializeField] private CellSize visualCellSize = new(1.0f, 1.0f);
     [Header("Field Data")]
-    [SerializeField] private FieldController fieldPrefab;
+    [SerializeField] private FieldPresenter fieldPrefab;
     [Header("Board Adjuster")]
     [SerializeField] private Transform origin;
     [SerializeField] private Transform globalCenter;
 
-    private Dictionary<Field, FieldController> fieldControllers = new();
+    private Dictionary<Field, FieldPresenter> fieldControllers = new();
 
     [Inject]
-    public void Construct(GameBoardManager boardManager) {
+    public void Construct(GameboardBuilder boardManager) {
         this.boardManager = boardManager;
         boardManager.OnGridInitialized += UpdateVisualGrid;
         boardManager.OnBoardChanged += UpdateVisualGrid;
+        if (fieldPrefab == null) throw new ArgumentNullException("field prefab is null"); 
         pool = new FieldPool(fieldPrefab, origin);
     }
 
@@ -68,7 +70,7 @@ public class GridVisual : MonoBehaviour {
             field.GetRow() * visualCellSize.height
         ));
 
-        FieldController fieldController = pool.Get();
+        FieldPresenter fieldController = pool.Get();
 
         fieldController.transform.localPosition = spawnPosition;
         fieldController.gameObject.name = $"Field {field.GetTextCoordinates()} {field.FieldType}";
@@ -79,7 +81,7 @@ public class GridVisual : MonoBehaviour {
     }
 
     public void RemoveField(Field field) {
-        if (fieldControllers.TryGetValue(field, out FieldController fieldController)) {
+        if (fieldControllers.TryGetValue(field, out FieldPresenter fieldController)) {
             field.RemoveField();
             fieldControllers.Remove(field);
             fieldController.RemoveController().Forget();
@@ -96,8 +98,8 @@ public class GridVisual : MonoBehaviour {
         return origin;
     }
 
-    internal FieldController GetController(Field targetField) {
-        if (!fieldControllers.TryGetValue(targetField, out FieldController controller)) {
+    internal FieldPresenter GetController(Field targetField) {
+        if (!fieldControllers.TryGetValue(targetField, out FieldPresenter controller)) {
             Debug.LogWarning("No controller for field : " + targetField.GetCoordinates());
             return null;
         }
