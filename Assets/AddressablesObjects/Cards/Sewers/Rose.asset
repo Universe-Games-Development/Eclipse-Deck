@@ -26,7 +26,7 @@ MonoBehaviour:
   viewPrefab: {fileID: 4316387962452926198, guid: e13ac05a01d85734b99643d6ccc6c528, type: 3}
   MAX_CARD_ATTACK: 100
   MAX_CARD_HEALTH: 100
-  Attack: 30
+  Attack: 2
   Health: 3
   movementData: {fileID: 11400000, guid: 0b88b913593012642ae2e1e689333506, type: 2}
   attackData: {fileID: 11400000, guid: c9bd5eb30d8163747995a084d34d9e2c, type: 2}

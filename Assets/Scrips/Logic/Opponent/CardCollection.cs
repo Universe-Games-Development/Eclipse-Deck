@@ -33,16 +33,16 @@ public class CardCollection {
 
         if (cardEntries.TryGetValue(cardData, out int quantity)) {
             if (quantity > 1) {
-                cardEntries[cardData] = quantity - 1;  // ✅ Виправлено
+                cardEntries[cardData] = quantity - 1;
             } else {
-                cardEntries.Remove(cardData);  // ✅ Видаляємо карту якщо залишилась 1
+                cardEntries.Remove(cardData);  // ✅ Delete card key if it last
             }
         } else {
             Debug.LogWarning("Collection removing non-existent card!");
         }
     }
 
-    // Генерація тестової колекції
+    // Test collection generation
     public async UniTask GenerateTestCollection(int count) {
         List<CardData> cardDatas;
 

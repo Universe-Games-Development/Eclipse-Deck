@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class FieldMaterializer : MonoBehaviour {
@@ -23,7 +22,6 @@ public class FieldMaterializer : MonoBehaviour {
 
     [SerializeField] private MeshRenderer meshRenderer;
 
-    private Field field;
     private MaterialPropertyBlock propBlock;
 
     private void Awake() {
@@ -37,14 +35,6 @@ public class FieldMaterializer : MonoBehaviour {
         meshRenderer.GetPropertyBlock(propBlock);
         hoverEmissionColor = freeColor;
         hoverHighlightIntensity = defaultHighlightIntensity;
-    }
-
-    public void Initialize(Field field) {
-        this.field = field;
-        UpdateColorBasedOnType(field.FieldType);
-        UpdateColorBasedOnOwner(field.Owner);
-        field.OnChangedOwner += UpdateColorBasedOnOwner;
-        field.OnChangedType += UpdateColorBasedOnType;
     }
 
     public void UpdateColorBasedOnType(FieldType newType) {
@@ -70,7 +60,7 @@ public class FieldMaterializer : MonoBehaviour {
 
     public void UpdateColorBasedOnOwner(Opponent opponent) {
         Color ownerColor = opponent is Player ? playerColor : enemyColor;
-        propBlock.SetColor("_BaseColor", ownerColor);
+        propBlock.SetColor("_BaseColor", ownerColor); // color of middle ground
         meshRenderer.SetPropertyBlock(propBlock);
 
     }
@@ -86,7 +76,6 @@ public class FieldMaterializer : MonoBehaviour {
 
         Color hoverEmissionColor = isOccupied ? occupyColor : freeColor;
         propBlock.SetColor(emissiveColorName, hoverEmissionColor);
-        meshRenderer.SetPropertyBlock(propBlock);
 
         if (creature != null) {
             int attackValue = creature.GetAttack().CurrentValue;
@@ -95,7 +84,7 @@ public class FieldMaterializer : MonoBehaviour {
             hoverHighlightIntensity = defaultHighlightIntensity;
         }
 
-        // if we highlight now
+        // Check if we highlight now
         float currentIntensity = propBlock.GetFloat("_EmissionIntensity");
         if (currentIntensity != 0) {
             propBlock.SetFloat("_EmissionIntensity", hoverHighlightIntensity);
@@ -104,24 +93,10 @@ public class FieldMaterializer : MonoBehaviour {
     }
 
     public void Reset() {
-        if (field != null) {
-            field.OnChangedOwner -= UpdateColorBasedOnOwner;
-            field.OnChangedType -= UpdateColorBasedOnType;
-            field = null;
-        }
-        
         propBlock.SetColor("_Color", Color.grey);
         propBlock.SetFloat("_EmissionIntensity", 0);
         if (meshRenderer != null) {
             meshRenderer.SetPropertyBlock(propBlock);
-        }
-    }
-
-
-    private void OnDestroy() {
-        if (field != null) {
-            field.OnChangedOwner -= UpdateColorBasedOnOwner;
-            field.OnChangedType -= UpdateColorBasedOnType;
         }
     }
 }
