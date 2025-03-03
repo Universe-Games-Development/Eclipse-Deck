@@ -61,12 +61,6 @@ public class GameboardBuilder {
             : new BoardUpdateCommand(this, GridBoard, newConfig);
 
         CommandManager.EnqueueCommand(command);
-
-        try {
-            await CommandManager.ExecuteCommands(); // Очікуємо виконання команд
-        } catch (Exception ex) {
-            Debug.LogError($"Помилка під час виконання команди: {ex.Message}");
-        }
     }
 
     protected bool ValidateBoardSettings(BoardSettingsSO settings) {

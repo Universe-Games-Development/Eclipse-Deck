@@ -16,9 +16,9 @@ namespace GenericEventBus {
             var comparer = EqualityComparer<uint>.Default;
         }
 
-        private readonly List<uint> _raiseRecursionsConsumed = new List<uint>();
+        private readonly List<uint> _raiseRecursionsConsumed = new();
 
-        protected readonly Queue<QueuedEvent> QueuedEvents = new Queue<QueuedEvent>(32);
+        protected readonly Queue<QueuedEvent> QueuedEvents = new(32);
 
         private uint _currentRaiseRecursionDepth;
 
@@ -185,12 +185,12 @@ namespace GenericEventBus {
 
         private sealed class EventListeners<TEvent> : IEnumerable<EventHandler<TEvent>> where TEvent : TBaseEvent {
             private static readonly Dictionary<GenericEventBus<TBaseEvent>, EventListeners<TEvent>>
-                Listeners = new Dictionary<GenericEventBus<TBaseEvent>, EventListeners<TEvent>>();
+                Listeners = new();
 
-            private static readonly SimpleObjectPool<Enumerator> EnumeratorPool = new SimpleObjectPool<Enumerator>();
+            private static readonly SimpleObjectPool<Enumerator> EnumeratorPool = new();
 
             private static readonly SimpleObjectPool<DerivedQueuedEvent> QueuedEventPool =
-                new SimpleObjectPool<DerivedQueuedEvent>();
+                new();
 
             static EventListeners() {
                 // Initialize some things that would normally initialize with the first Raise, causing allocation.
@@ -213,8 +213,8 @@ namespace GenericEventBus {
             }
 
             private readonly GenericEventBus<TBaseEvent> _eventBus;
-            private readonly List<Listener> _sortedListeners = new List<Listener>();
-            private readonly List<Enumerator> _activeEnumerators = new List<Enumerator>(4);
+            private readonly List<Listener> _sortedListeners = new();
+            private readonly List<Enumerator> _activeEnumerators = new(4);
 
             private EventListeners(GenericEventBus<TBaseEvent> eventBus) {
                 _eventBus = eventBus;
