@@ -4,22 +4,18 @@ using System.Collections.Generic;
 using System;
 using System.Threading;
 using System.Linq;
-
-public enum ExecutionMode {
-    Manual, // Manual call by ExecuteCommands
-    Auto    // Automatic executing
-}
+using ModestTree;
 
 public class CommandManager {
-    public ExecutionMode Mode = ExecutionMode.Auto;
     private int _executionFlag = 0;
 
-    // Заміна ConcurrentQueue на PriorityQueue для підтримки пріоритетів
     private readonly PriorityQueue<int, Command> _commandQueue = new(Comparer<int>.Default);
-    private readonly object _queueLock = new();
-    private const int MaxUndoAmount = 10;
-    private readonly Stack<Command> _undoStack = new();
+    private readonly LinkedList<Command> _undoList = new();
 
+    private readonly object _queueLock = new();
+    private readonly object _undoLock = new();
+    private const int MaxUndoAmount = 10;
+    
     internal void EnqueueCommands(List<Command> commands) {
         foreach (var command in commands) {
             EnqueueCommand(command);
@@ -27,15 +23,16 @@ public class CommandManager {
     }
 
     public void EnqueueCommand(Command command) {
-        if (!ValidateCommand(command)) Debug.LogError("Command didn't pass validation");
+        if (!ValidateCommand(command)) {
+            Debug.LogError("Command didn't pass validation");
+            return;
+        }
+
         lock (_queueLock) {
             _commandQueue.Enqueue(command.Priority, command);
         }
 
-        // If it's Auto mode, try to execute commands.
-        if (Mode == ExecutionMode.Auto) {
-            TryExecuteCommands().Forget();
-        }
+        TryExecuteCommands().Forget();
     }
 
     public async UniTask TryExecuteCommands() {
@@ -47,10 +44,6 @@ public class CommandManager {
                 Command cmd;
                 lock (_queueLock) {
                     cmd = _commandQueue.Dequeue();
-                    if (cmd == null) {
-                        Debug.LogWarning("TryExecuteCommands : Failed dequeue command. Command is null ");
-                        continue;
-                    }
                 }
                 
                 await ExecuteCommandRecursively(cmd);
@@ -69,51 +62,79 @@ public class CommandManager {
             }
 
             await command.Execute(); // Оновіть інтерфейс Command
-            StoreUndoCommand(command);
+            
 
             foreach (var child in command.GetChildCommands()) {
                 await ExecuteCommandRecursively(child);
             }
+
+            StoreUndoCommand(command);
         } catch (Exception ex) {
             Debug.LogError($"Command failed: {command} - {ex}");
         }
     }
 
-    
+
     public async UniTask UndoLastCommand() {
-        if (_undoStack.Count > 0) {
-            var command = _undoStack.Pop();
+        Command command = null;
+        lock (_undoLock) {
+            if (_undoList.Count == 0) return;
+            command = _undoList.Last.Value;
+            _undoList.RemoveLast();
+        }
+        try {
             await command.Undo();
+        } catch (Exception ex) {
+            Debug.LogError($"Undo failed: {command} - {ex}");
         }
     }
 
     public async UniTask UndoAllCommands() {
-        while (_undoStack.Count > 0) {
-            var command = _undoStack.Pop();
-            await command.Undo();
+        while (!_undoList.IsEmpty()) {
+            await UndoLastCommand();
         }
     }
 
     private void StoreUndoCommand(Command cmd) {
-        _undoStack.Push(cmd);
+        lock (_undoLock) {
+            _undoList.AddLast(cmd);
+            CleanupUndoCommands();
+        }
     }
 
     private void CleanupUndoCommands() {
-        while (_undoStack.Count > MaxUndoAmount) {
-            _undoStack.Pop();
+        lock (_undoLock) {
+            while (_undoList.Count > MaxUndoAmount) {
+                _undoList.RemoveFirst();
+            }
         }
     }
 
     private bool ValidateCommand(Command cmd) {
         return cmd != null && !cmd.IsDisposed && cmd.CanExecute();
     }
+
+    public bool HasPendingCommands() {
+        lock (_queueLock) {
+            return !_commandQueue.IsEmpty();
+        }
+    }
+
 }
 
 public class PriorityQueue<TKey, TValue> {
     private readonly SortedDictionary<TKey, Queue<TValue>> _queue = new();
     private readonly IComparer<TKey> _keyComparer;
 
-    public int Count { get { return _queue.Count; } }
+    public int Count { 
+        get {
+            int count = 0;
+            foreach (var queue in _queue.Values) {
+                count += queue.Count;
+            }
+            return count;
+        }
+    }
 
     public PriorityQueue(IComparer<TKey> keyComparer = null) {
         _keyComparer = keyComparer ?? Comparer<TKey>.Default;
@@ -136,7 +157,7 @@ public class PriorityQueue<TKey, TValue> {
             throw new InvalidOperationException("The queue is empty.");
         }
 
-        var maxPriority = GetMinKey();
+        var maxPriority = GetMaxKey();
         var dequeuedValue = _queue[maxPriority].Dequeue();
 
         // Remove the key if the queue is empty for that priority
@@ -153,16 +174,18 @@ public class PriorityQueue<TKey, TValue> {
             throw new InvalidOperationException("The queue is empty.");
         }
 
-        var maxPriority = GetMinKey();
+        var maxPriority = GetMaxKey();
         return _queue[maxPriority].Peek();
     }
 
-    private TKey GetMinKey() {
-        return _queue.Keys.First();
+    private TKey GetMaxKey() => _queue.Keys.Max();
+
+
+    public void Clear() {
+        _queue.Clear();
     }
 
-}
-
-public class IntComparer : IComparer<int> {
-    public int Compare(int x, int y) => x < y ? -1 : (x > y ? 1 : 0);
+    public bool IsEmpty() {
+        return _queue.IsEmpty();
+    }
 }
