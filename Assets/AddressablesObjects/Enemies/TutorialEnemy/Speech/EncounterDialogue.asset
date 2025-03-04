@@ -16,4 +16,5 @@ MonoBehaviour:
   - Hello
   - Hello there 2
   - Hello there 3
-  triggerEvent: 10
+  SpeechSound: {fileID: 0}
+  TriggerEventType: 1
