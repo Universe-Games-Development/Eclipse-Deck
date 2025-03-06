@@ -58,7 +58,7 @@ public class AndRequirement<T> : CompositeRequirement<T> {
     }
 
     public override string GetInstruction() {
-        return string.Join(" AND ", Requirements.Select(r => r.GetInstruction()));
+        return string.Join(" and ", Requirements.Select(r => r.GetInstruction()));
     }
 }
 
@@ -80,7 +80,7 @@ public class OrRequirement<T> : CompositeRequirement<T> {
     }
 
     public override string GetInstruction() =>
-        string.Join(" OR ", Requirements.Select(r => r.GetInstruction()));
+        string.Join(" or ", Requirements.Select(r => r.GetInstruction()));
 
 }
 
@@ -193,3 +193,35 @@ public class CreatureAliveRequirement : IRequirement<Creature> {
         return creature != null && creature.GetHealth().IsAlive();
     }
 }
+
+#region Field requirements
+public class EmptyFieldRequirement : IRequirement<Field> {
+    public bool IsMet(Field field, out string errorMessage) {
+        var result = field?.OccupiedCreature == null;
+        errorMessage = result ?
+            string.Empty :
+            "This field not empty";
+        return result;
+    }
+
+    public string GetInstruction() => "field is empty";
+}
+
+public class OwnerFieldRequirement : IRequirement<Field> {
+    private Opponent requestingPlayer;
+
+    public OwnerFieldRequirement(Opponent requestingPlayer) {
+        this.requestingPlayer = requestingPlayer;
+    }
+
+    public bool IsMet(Field field, out string errorMessage) {
+        var result = field?.Owner == requestingPlayer;
+        errorMessage = result ?
+            string.Empty :
+            "This field does not belong to you";
+        return result;
+    }
+
+    public string GetInstruction() => "Field must belong to you";
+}
+#endregion

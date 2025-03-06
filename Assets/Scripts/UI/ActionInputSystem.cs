@@ -6,37 +6,6 @@ using TMPro;
 using UnityEngine.UI;
 using System;
 
-public interface IEntityProvider {
-    bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class;
-}
-
-
-// Ðואכ³חאצ³¿ ןנמגאיהונ³ג
-public class CreatureEntityProvider : IEntityProvider {
-    public bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class {
-        entity = null;
-        var presenter = uiObject.GetComponent<CreaturePresenter>();
-        if (presenter != null && presenter.Model.creatureCard is T card) {
-            entity = card;
-            return true;
-        }
-        return false;
-    }
-}
-
-public class FieldEntityProvider : IEntityProvider {
-    public bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class {
-        entity = null;
-        var controller = uiObject.GetComponent<FieldPresenter>();
-        if (controller != null && controller.Field is T field) {
-            entity = field;
-            return true;
-        }
-        return false;
-    }
-}
-
-
 public class ActionInputSystem : MonoBehaviour, IActionFiller {
     [SerializeField] private TMP_Text _instructionText;
     [SerializeField] private GameObject _inputPanel;
@@ -136,6 +105,37 @@ public class ActionInputSystem : MonoBehaviour, IActionFiller {
         _cts?.Dispose();
     }
 }
+
+public interface IEntityProvider {
+    bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class;
+}
+
+
+// Ðואכ³חאצ³¿ ןנמגאיהונ³ג
+public class CreatureEntityProvider : IEntityProvider {
+    public bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class {
+        entity = null;
+        var presenter = uiObject.GetComponent<CreaturePresenter>();
+        if (presenter != null && presenter.Model.creatureCard is T card) {
+            entity = card;
+            return true;
+        }
+        return false;
+    }
+}
+
+public class FieldEntityProvider : IEntityProvider {
+    public bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class {
+        entity = null;
+        var controller = uiObject.GetComponent<FieldPresenter>();
+        if (controller != null && controller.Field is T field) {
+            entity = field;
+            return true;
+        }
+        return false;
+    }
+}
+
 
 public interface IInputVisualizer {
     void HighlightTargets<T>(IRequirement<T> requirement);
