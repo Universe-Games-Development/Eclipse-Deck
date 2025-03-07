@@ -24,7 +24,7 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
     public IActionFiller actionFiller;
 
     public Action<Opponent> OnDefeat { get; internal set; }
-    private readonly GameEventBus eventBus;
+    protected readonly GameEventBus eventBus;
     [Inject] private CommandManager _commandManager;
     [Inject] private CardPlayService _cardPlayService;
     public Opponent(GameEventBus eventBus, AssetLoader assetLoader, IActionFiller actionFiller) {

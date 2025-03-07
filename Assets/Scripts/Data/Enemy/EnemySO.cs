@@ -6,5 +6,5 @@ public class EnemySO : ScriptableObject {
     public int Health;
     public GameObject Prefab;
     public CardCollectionSO collection;
-    public SpeechSO speech;
+    public SpeechData speech;
 }

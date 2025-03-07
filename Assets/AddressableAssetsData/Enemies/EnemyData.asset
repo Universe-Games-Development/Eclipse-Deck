@@ -9,12 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: acf3e3319026fc544868ac63760413c2, type: 3}
-  m_Name: EncounterDialogue
+  m_Script: {fileID: 11500000, guid: 9664db39934f9fd48a0caa15675a2db3, type: 3}
+  m_Name: EnemyData
   m_EditorClassIdentifier: 
-  pages:
-  - Hello
-  - Hello there 2
-  - Hello there 3
-  SpeechSound: {fileID: 0}
-  TriggerEventType: 5
+  speechData: {fileID: 11400000, guid: 0df000d742c9ca54392ad9f249cb5d0e, type: 2}

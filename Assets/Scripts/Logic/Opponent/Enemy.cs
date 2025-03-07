@@ -1,14 +1,14 @@
 using Cysharp.Threading.Tasks;
 using System;
 using Unity.VisualScripting;
+using UnityEngine;
 using Zenject;
 
 public class Enemy : Opponent {
-    [Inject]private TurnManager turnManager;
+    [Inject] private TurnManager turnManager;
 
-    public Enemy(TurnManager turnManager, GameEventBus eventBus, AssetLoader assetLoader, IActionFiller abilityInputter) : base(eventBus, assetLoader, abilityInputter) {
+    public Enemy(GameEventBus eventBus, AssetLoader assetLoader, IActionFiller abilityInputter) : base(eventBus, assetLoader, abilityInputter) {
         Name = "Enemy";
-        this.turnManager = turnManager;
     }
 
     protected override void TurnStartActions(ref OnTurnStart eventData) {

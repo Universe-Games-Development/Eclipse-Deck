@@ -8,7 +8,7 @@ public class TestingBoard : MonoBehaviour
     [SerializeField] private GameBoardController gameboardController;
 
     [SerializeField] private PlayerController player_c;
-    [SerializeField] private EnemyController enemy_c;
+    [SerializeField] private EnemyPresenter enemy_c;
 
     [Header("Test")]
     [SerializeField] private BoardSettingsSO boardConfig;
