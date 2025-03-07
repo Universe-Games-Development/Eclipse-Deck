@@ -71,13 +71,12 @@ public class GridVisual : MonoBehaviour {
         ));
 
         FieldPresenter fieldController = pool.Get();
+        fieldControllers.Add(field, fieldController);
 
         fieldController.transform.localPosition = spawnPosition;
         fieldController.gameObject.name = $"Field {field.GetTextCoordinates()} {field.FieldType}";
         fieldController.Initialize(field);
         fieldController.InitializeLevitator(spawnPosition);
-
-        fieldControllers.Add(field, fieldController);
     }
 
     public void RemoveField(Field field) {

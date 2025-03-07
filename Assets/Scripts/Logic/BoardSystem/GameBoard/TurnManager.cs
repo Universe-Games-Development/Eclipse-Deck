@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -23,7 +24,7 @@ public class BattleManager {
 }
 
 public class TurnManager : IDisposable {
-    public Action<Opponent> OnOpponentChanged; 
+    public Action<Opponent> OnOpponentChanged;
     public Action<Opponent> OnTurnEnd;
     public Action<Opponent> OnTurnStart;
 
@@ -32,6 +33,9 @@ public class TurnManager : IDisposable {
     private GameEventBus eventBus;
     private bool inTransition = false;
     private bool isDisabled = true;
+    private int RoundCounter;
+    private int TurnCounter;
+    private int completedTurnsInRound = 0; // Лічильник завершених ходів
 
     [Inject]
     public void Construct(GameEventBus eventBus) {
@@ -40,11 +44,13 @@ public class TurnManager : IDisposable {
     }
 
     public void InitTurns(List<Opponent> registeredOpponents) {
+        RoundCounter = 0;
+        TurnCounter = 0;
+        completedTurnsInRound = 0;
         currentOpponents = new List<Opponent>(registeredOpponents);
         SwitchToNextOpponent(currentOpponents.GetRandomElement());
         isDisabled = false;
     }
-
 
     public bool EndTurnRequest(Opponent endTurnOpponent) {
         if (inTransition || isDisabled) {
@@ -63,10 +69,26 @@ public class TurnManager : IDisposable {
         return true;
     }
 
-
     private void OnEndTurnActionsPerformed(ref EndActionsExecutedEvent eventData) {
+        bool isRoundFinalTurn = UpdateRoundCounter();
+        if (isRoundFinalTurn) {
+            eventBus.Raise(new OnRoundtart(RoundCounter));
+        }
         SwitchToNextOpponent();
         inTransition = false;
+    }
+
+    private bool UpdateRoundCounter() {
+        completedTurnsInRound++;
+        bool isRoundFinalTurn = completedTurnsInRound >= currentOpponents.Count;
+
+        if (isRoundFinalTurn) {
+            RoundCounter++;
+            Debug.Log($"Round {RoundCounter} started!");
+            completedTurnsInRound = 0;
+            return true;
+        }
+        return isRoundFinalTurn;
     }
 
     private void SwitchToNextOpponent(Opponent starterOpponent = null) {
@@ -75,14 +97,13 @@ public class TurnManager : IDisposable {
             ? starterOpponent
             : GetNextOpponent();
 
-
         Debug.Log($"Turn started for {ActiveOpponent.Name}");
         OnOpponentChanged?.Invoke(ActiveOpponent);
         OnTurnStart?.Invoke(ActiveOpponent);
-        eventBus.Raise(new OnTurnStart(ActiveOpponent));
+        TurnCounter++;
+        eventBus.Raise(new OnTurnStart(TurnCounter, ActiveOpponent));
         eventBus.Raise(new TurnChangedEvent(previous, ActiveOpponent));
     }
-
 
     private Opponent GetNextOpponent() {
         if (currentOpponents.Count == 0) return null;
@@ -93,6 +114,7 @@ public class TurnManager : IDisposable {
     public void ResetTurnManager() {
         currentOpponents.Clear();
         isDisabled = true;
+        completedTurnsInRound = 0;
     }
 
     public void Dispose() {
@@ -100,6 +122,7 @@ public class TurnManager : IDisposable {
         eventBus.UnsubscribeFrom<EndActionsExecutedEvent>(OnEndTurnActionsPerformed);
     }
 }
+
 
 
 public struct TurnEndStartedEvent : IEvent {
@@ -120,8 +143,16 @@ public struct TurnChangedEvent : IEvent {
 }
 public struct OnTurnStart : IEvent {
     public Opponent startTurnOpponent;
-
-    public OnTurnStart(Opponent startTurnOpponent) {
+    public int TurnCount { get; private set; }
+    public OnTurnStart(int turnCount, Opponent startTurnOpponent) {
         this.startTurnOpponent = startTurnOpponent;
+        TurnCount = turnCount;
+    }
+}
+
+public struct OnRoundtart : IEvent {
+    public int RoundCount { get; private set; }
+    public OnRoundtart(int roundCount) {
+        RoundCount = roundCount;
     }
 }

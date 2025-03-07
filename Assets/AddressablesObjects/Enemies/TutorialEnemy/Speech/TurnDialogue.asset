@@ -9,10 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: acf3e3319026fc544868ac63760413c2, type: 3}
-  m_Name: Death
+  m_Script: {fileID: 11500000, guid: ae0f3332a981df54dbce8797402f6e9d, type: 3}
+  m_Name: TurnDialogue
   m_EditorClassIdentifier: 
   pages:
-  - Nice
-  - Good Luck
-  triggerEvent: 12
+  - Hello
+  - I didn't expect you'll reach {turnCount} turn!
+  roundCount: 1

@@ -2,45 +2,45 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(DialogueData))]
-public class DialogueDataEditor : Editor {
-    public override void OnInspectorGUI() {
-        base.OnInspectorGUI();
+//[CustomEditor(typeof(DialogueData<IEvent>))]
+//public class DialogueDataEditor : Editor {
+//    public override void OnInspectorGUI() {
+//        base.OnInspectorGUI();
 
-        DialogueData dialogue = (DialogueData)target;
+//        DialogueData<IEvent> dialogue = (DialogueData<IEvent>)target;
 
-        if (dialogue.pages == null) {
-            dialogue.pages = new List<string>();
-        }
+//        if (dialogue.pages == null) {
+//            dialogue.pages = new List<string>();
+//        }
 
-        EditorGUILayout.BeginVertical();
-        EditorGUILayout.LabelField("Сторінки діалогу:");
+//        EditorGUILayout.BeginVertical();
+//        EditorGUILayout.LabelField("Сторінки діалогу:");
 
-        for (int i = 0; i < dialogue.pages.Count; i++) {
-            if (dialogue.pages[i] == null) {
-                EditorGUILayout.LabelField($"Сторінка {i + 1}: (Null)");
-                continue;
-            }
+//        for (int i = 0; i < dialogue.pages.Count; i++) {
+//            if (dialogue.pages[i] == null) {
+//                EditorGUILayout.LabelField($"Сторінка {i + 1}: (Null)");
+//                continue;
+//            }
 
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"Сторінка {i + 1}:", GUILayout.Width(80));
-            dialogue.pages[i] = EditorGUILayout.TextArea(dialogue.pages[i], GUILayout.Height(100));
+//            EditorGUILayout.BeginHorizontal();
+//            EditorGUILayout.LabelField($"Сторінка {i + 1}:", GUILayout.Width(80));
+//            dialogue.pages[i] = EditorGUILayout.TextArea(dialogue.pages[i], GUILayout.Height(100));
 
-            if (GUILayout.Button("X", GUILayout.Width(20))) {
-                dialogue.pages.RemoveAt(i);
-                i--;
-            }
-            EditorGUILayout.EndHorizontal();
-        }
+//            if (GUILayout.Button("X", GUILayout.Width(20))) {
+//                dialogue.pages.RemoveAt(i);
+//                i--;
+//            }
+//            EditorGUILayout.EndHorizontal();
+//        }
 
-        if (GUILayout.Button("Add Page")) {
-            dialogue.pages.Add("New Page");
-        }
+//        if (GUILayout.Button("Add Page")) {
+//            dialogue.pages.Add("New Page");
+//        }
 
-        EditorGUILayout.EndVertical();
+//        EditorGUILayout.EndVertical();
 
-        if (GUI.changed) {
-            EditorUtility.SetDirty(dialogue);
-        }
-    }
-}
+//        if (GUI.changed) {
+//            EditorUtility.SetDirty(dialogue);
+//        }
+//    }
+//}

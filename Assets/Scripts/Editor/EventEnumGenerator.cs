@@ -45,7 +45,7 @@ public enum EventEnum
         // Записываем enum в файл
         File.WriteAllText(filePath, enumContent);
 
-        Debug.Log($"Generated Event Enum with {enumEntries.Count} entries");
+        //Debug.Log($"Generated Event Enum with {enumEntries.Count} entries");
     }
 
     private static string SanitizeEnumName(string name) {

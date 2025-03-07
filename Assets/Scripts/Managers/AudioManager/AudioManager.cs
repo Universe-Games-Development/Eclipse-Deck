@@ -1,5 +1,6 @@
 using FMOD.Studio;
 using FMODUnity;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -51,6 +52,10 @@ public class AudioManager : MonoBehaviour {
 
     public void PlayOneShot(EventReference soundEvent, Vector3 position) {
         RuntimeManager.PlayOneShot(soundEvent, position);
+    }
+
+    public void PlaySound(AudioClip clip) {
+        Debug.Log("Sound of : " + clip.name);
     }
 
     public void InitializeAmbience(EventReference ambientReference) {

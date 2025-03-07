@@ -32,5 +32,7 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
 
         Container.Bind<OpponentRegistrator>().AsSingle().NonLazy();
         Container.BindInterfacesAndSelfTo<GameInitializer>().AsSingle();
+
+        Container.Bind<DialogueSystem>().FromComponentInHierarchy().AsSingle();
     }
 }
