@@ -12,7 +12,7 @@ public class ResourceManager {
     public List<MapInfoSO> mapInfoDataList = new List<MapInfoSO>();
 
     [Header("Room Data")]
-    public List<RoomSO> roomDataList = new List<RoomSO>();
+    public List<RoomData> roomDataList = new List<RoomData>();
 
     [SerializeField] private string cardResourcePath = "Cards"; // Шлях до ресурсів з картами
     [SerializeField] private string enemyResourcePath = "Enemies"; // Шлях до ресурсів з ворогами

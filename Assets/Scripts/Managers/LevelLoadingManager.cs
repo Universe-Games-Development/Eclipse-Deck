@@ -43,7 +43,7 @@ public class LevelLoadingManager : MonoBehaviour {
             return location;
         }
 
-        Debug.LogError("Unknown scene name: " + currentSceneName);
+        Debug.LogWarning("Unknown scene name: " + currentSceneName);
         return Location.MainMenu; // Значення за замовчуванням
     }
 

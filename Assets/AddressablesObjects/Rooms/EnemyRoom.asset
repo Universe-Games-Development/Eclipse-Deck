@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roomName: Enemy Room
   Prefab: {fileID: 0}
-  RoomType: 1
+  type: 1
+  baseChance: 65
+  repeatPenalty: 0
+  roomColor: {r: 0, g: 0, b: 0, a: 0}
   enemy: {fileID: 0}
   rewards: []

@@ -14,5 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roomName: Shop
   Prefab: {fileID: 0}
-  RoomType: 0
+  type: 4
+  baseChance: 15
+  repeatPenalty: 0
+  roomColor: {r: 0, g: 0, b: 0, a: 0}
   prefab: {fileID: 0}

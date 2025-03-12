@@ -12,7 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcd66609ec79fed418c0bf56ae9ca2c7, type: 3}
   m_Name: RestRoom
   m_EditorClassIdentifier: 
-  roomName: 
+  roomName: RestRoom
   Prefab: {fileID: 0}
-  RoomType: 2
+  type: 3
+  baseChance: 15
+  repeatPenalty: 0
+  roomColor: {r: 0, g: 0, b: 0, a: 0}
   rewards: []
