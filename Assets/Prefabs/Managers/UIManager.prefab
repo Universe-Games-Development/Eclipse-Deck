@@ -44,7 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc9a9b8aaf6c58a4e856770535ef6ad3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  panelDistributer: {fileID: 0}
-  cardDistributer: {fileID: 0}
   worldSpaceCanvasPrefab: {fileID: 4950960942053463047, guid: eee216200b2fcdb47b7ff80a2e05b134, type: 3}
-  cardHandUI: {fileID: 0}
+  textPrefab: {fileID: 3110226823274978554, guid: 45bea87dd926f32458f909ae797996e3, type: 3}

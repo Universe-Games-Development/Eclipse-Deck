@@ -2,6 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "RestRoom", menuName = "Map/RestRoom")]
-public class RestRoomSO : RoomSO {
+public class RestRoomSO : RoomData {
     public List<RewardSO> rewards;
 }

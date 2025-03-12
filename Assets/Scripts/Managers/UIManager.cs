@@ -1,15 +1,23 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 public class UIManager : MonoBehaviour {
 
     [SerializeField] private GameObject worldSpaceCanvasPrefab; // Префаб World Space Canvas
-    public Canvas WorldSpaceCanvas { get; private set; }
+    [SerializeField] private GameObject textPrefab; // Префаб тексту
 
+    public Canvas WorldSpaceCanvas { get; private set; }
     public Action<string> OnInfoRequested;
 
+    private List<GameObject> activeTexts = new(); // Список активних підказок
+    private Camera mainCamera;
+
+
     private void Awake() {
+        mainCamera= Camera.main;
         // Перевіряємо чи вже існує World Space Canvas
         Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
         WorldSpaceCanvas = canvases.FirstOrDefault(canvas => canvas.renderMode == RenderMode.WorldSpace);
@@ -21,29 +29,26 @@ public class UIManager : MonoBehaviour {
         }
     }
 
+    public void ShowTextAt(string message, Vector3 position) {
+        if (textPrefab == null) {
+            Debug.LogError("Text prefab is not assigned!");
+            return;
+        }
+
+        GameObject textObject = Instantiate(textPrefab, WorldSpaceCanvas.transform);
+        textObject.transform.position = position;
+        Quaternion quaternion = Quaternion.LookRotation(textObject.transform.position - mainCamera.transform.position);
+        textObject.transform.rotation = Quaternion.Euler(90, 90, 0);
+
+        TextMeshProUGUI textComponent = textObject.GetComponent<TextMeshProUGUI>();
+        if (textComponent != null) {
+            textComponent.text = message;
+        }
+
+        activeTexts.Add(textObject);
+    }
+
     public void ShowTip(string info) {
         OnInfoRequested?.Invoke(info);
     }
-
-    /*
-     public CreatureUI CreateCreatureUI(Card card) {
-        // Создаем панель
-        var panelObj = panelDistributer.CreateObject();
-
-        // Привязываем панель к данным
-        var creatureUI = panelObj.GetComponent<CreatureUI>();
-        creatureUI.Initialize(panelDistributer, card);
-        return creatureUI;
-    }
-
-    public CardUI CreateCardUI(Card card) {
-        // Создаем панель
-        var panelObj = cardDistributer.CreateObject();
-
-        // Привязываем панель к данным
-        var cardUI = panelObj.GetComponent<CardUI>();
-        cardUI.Initialize(cardDistributer, card);
-        return cardUI;
-    }
-     */
 }

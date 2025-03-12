@@ -14,5 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roomName: Treasure
   Prefab: {fileID: 0}
-  RoomType: 2
+  type: 2
+  baseChance: 10
+  repeatPenalty: 0
+  roomColor: {r: 0, g: 0, b: 0, a: 0}
   rewards: []
