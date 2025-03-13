@@ -20,12 +20,11 @@ public abstract class Card : IAbilityOwner {
 
     public CardUI cardUI;
     public AbilityManager<CardAbilityData, Card> _abilityManager;
-    public Card(CardData cardSO, Opponent owner, GameEventBus eventBus)  // Add owner to constructor
+    public Card(CardData cardSO, GameEventBus eventBus)  // Add owner to constructor
     {
         Data = cardSO;
         Id = Guid.NewGuid().ToString();
         this.eventBus = eventBus;
-        Owner = owner; // Assign the owner
         Cost = new Cost(cardSO.MAX_CARDS_COST, cardSO.cost);
 
         _abilityManager = new AbilityManager<CardAbilityData, Card>(this, eventBus);
@@ -61,12 +60,16 @@ public abstract class Card : IAbilityOwner {
     internal void Select() {
         Debug.LogError("Select");
     }
+
+    public void SetOwner(Opponent owner) {
+        Owner = owner;
+    }
 }
 
 public class SpellCard : Card {
 
-    public SpellCard(SpellCardSO cardSO, Opponent owner, GameEventBus eventBus)
-        : base(cardSO, owner, eventBus) {
+    public SpellCard(SpellCardSO cardSO, GameEventBus eventBus)
+        : base(cardSO, eventBus) {
     }
 
     
@@ -78,8 +81,8 @@ public class SpellCard : Card {
 }
 
 public class SupportCard : Card {
-    public SupportCard(SupportCardSO cardSO, Opponent owner, GameEventBus eventBus)
-        : base(cardSO, owner, eventBus) { }
+    public SupportCard(SupportCardSO cardSO, GameEventBus eventBus)
+        : base(cardSO, eventBus) { }
 
     public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, CancellationToken ct = default) {
         Debug.Log("Support card played");
@@ -94,15 +97,15 @@ public class CreatureCard : Card {
     public CreatureCardData creatureCardData;
     private IRequirement<Field> friendlyFieldRequirement;
 
-    public CreatureCard(CreatureCardData cardSO, Opponent owner, GameEventBus eventBus)
-        : base(cardSO, owner, eventBus) {
+    public CreatureCard(CreatureCardData cardSO, GameEventBus eventBus)
+        : base(cardSO, eventBus) {
         creatureCardData = cardSO;
         Health = new(cardSO.MAX_CARD_HEALTH, cardSO.Health);
         Attack = new(cardSO.MAX_CARD_ATTACK, cardSO.Attack);
 
         RequirementBuilder<Field> requirementBuilder = new RequirementBuilder<Field>();
         friendlyFieldRequirement = requirementBuilder
-            .Add(new OwnerFieldRequirement(owner))
+            .Add(new OwnerFieldRequirement(Owner))
             .Add(new EmptyFieldRequirement())
             .Build();
     }

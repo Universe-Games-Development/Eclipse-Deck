@@ -1,46 +1,48 @@
-using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Deck {
     private Stack<Card> cards = new();
     private GameEventBus eventBus;
-
     private Opponent owner;
+    private CardFactory cardFactory;
+    private int emptyDrawAttempts = 0;
+    private bool wasDeckEmpty = false;
 
     public Deck(Opponent owner, GameEventBus eventBus) {
         this.owner = owner;
         this.eventBus = eventBus;
+        cardFactory = new CardFactory(eventBus);
     }
 
-    public async UniTask Initialize(CardCollection collection) {
-        await collection.GenerateTestCollection(20);
-
-        foreach (var cardEntry in collection.cardEntries) {
-            for (int i = 0; i < cardEntry.Value; i++) {
-                CardData cardSO = cardEntry.Key;
-                Card newCard = CreateCard(cardSO);
-                if (newCard == null) continue;
-
-                AddCard(newCard);
-                newCard.ChangeState(CardState.InDeck);
-            }
+    public void Initialize(CardCollection collection) {
+        List<Card> collectionCards = cardFactory.CreateCardsFromCollection(collection);
+        foreach (var card in collectionCards) {
+            cards.Push(card);
+            card.SetOwner(owner);
+            card.ChangeState(CardState.InDeck);
         }
         ShuffleDeck();
+        // Скидаємо лічильник спроб та прапорець порожньої колоди при ініціалізації
+        emptyDrawAttempts = 0;
+        wasDeckEmpty = false;
     }
-
-    private Card CreateCard(CardData cardSO) {
-        return cardSO switch {
-            CreatureCardData creatureCard => new CreatureCard(creatureCard, owner, eventBus),
-            SpellCardSO spellCard => new SpellCard(spellCard, owner, eventBus),
-            SupportCardSO supportCard => new SupportCard(supportCard, owner, eventBus),
-            _ => null
-        };
-    }
-
 
     public Card DrawCard() {
-        return cards.Count > 0 ? cards.Pop() : null;
+        if (cards.Count > 0) {
+            Card drawnCard = cards.Pop();
+            eventBus.Raise(new OnCardDrawn(drawnCard, owner));
+            return drawnCard;
+        } else {
+            wasDeckEmpty = true;
+            emptyDrawAttempts++;
+            // Calculate damage (2^(n-1))
+            int damage = 1 << (emptyDrawAttempts - 1);
+
+            eventBus.Raise(new OnDeckEmptyDrawn(owner, emptyDrawAttempts, damage));
+
+            return null;
+        }
     }
 
     public void ShuffleDeck() {
@@ -50,6 +52,8 @@ public class Deck {
         foreach (var card in tempCards) {
             cards.Push(card);
         }
+
+        CheckDeckRefilled();
     }
 
     private void ShuffleList(List<Card> list) {
@@ -61,13 +65,95 @@ public class Deck {
 
     public void AddCard(Card card) {
         cards.Push(card);
+
+        CheckDeckRefilled();
+    }
+
+    private void CheckDeckRefilled() {
+        if (wasDeckEmpty && cards.Count > 0) {
+            // Deck was empty but refilled
+            ResetEmptyDrawAttempts();
+            eventBus.Raise(new OnDeckRefilled(owner));
+        }
+    }
+
+    public void ResetEmptyDrawAttempts() {
+        emptyDrawAttempts = 0;
+        wasDeckEmpty = false;
     }
 
     public void CleanDeck() {
         cards.Clear();
+        emptyDrawAttempts = 0;
+        wasDeckEmpty = false;
     }
 
     public int GetCount() {
         return cards.Count;
+    }
+
+    public int GetEmptyDrawAttempts() {
+        return emptyDrawAttempts;
+    }
+}
+
+public class CardFactory {
+    public GameEventBus eventBus;
+
+    public CardFactory(GameEventBus eventBus) {
+        this.eventBus = eventBus;
+    }
+
+    public List<Card> CreateCardsFromCollection(CardCollection collection) {
+        List<Card> cards = new();
+        foreach (var cardEntry in collection.cardEntries) {
+            for (int i = 0; i < cardEntry.Value; i++) {
+                CardData cardData = cardEntry.Key;
+                Card newCard = CreateCard(cardData);
+                if (newCard == null) continue;
+                cards.Add(newCard);
+            }
+        }
+        return cards;
+    }
+
+    public Card CreateCard(CardData cardData) {
+        return cardData switch {
+            CreatureCardData creatureCard => new CreatureCard(creatureCard, eventBus),
+            SpellCardSO spellCard => new SpellCard(spellCard, eventBus),
+            SupportCardSO supportCard => new SupportCard(supportCard, eventBus),
+            _ => null
+        };
+    }
+}
+
+public struct OnCardDrawn : IEvent {
+    public Card card;
+    public Opponent owner;
+
+    public OnCardDrawn(Card card, Opponent owner) {
+        this.card = card;
+        this.owner = owner;
+    }
+}
+
+public struct OnDeckEmptyDrawn : IEvent {
+    public Opponent owner;
+    public int attemptCount;
+    public int damage;
+
+    public OnDeckEmptyDrawn(Opponent owner, int attemptCount, int damage) {
+        this.owner = owner;
+        this.attemptCount = attemptCount;
+        this.damage = damage;
+    }
+}
+
+// Новий івент для повідомлення про те, що колода знову заповнена
+public struct OnDeckRefilled : IEvent {
+    public Opponent owner;
+
+    public OnDeckRefilled(Opponent owner) {
+        this.owner = owner;
     }
 }

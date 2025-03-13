@@ -43,7 +43,7 @@ public class CardCollection {
     }
 
     // Test collection generation
-    public async UniTask GenerateTestCollection(int count) {
+    public async UniTask GenerateTestCollection(int count = 20) {
         List<CardData> cardDatas;
 
         if (assetLoader.HasActualData(Location.Sewers)) {
