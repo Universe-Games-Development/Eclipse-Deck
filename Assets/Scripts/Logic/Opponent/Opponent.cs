@@ -94,7 +94,8 @@ public class InitDeckCommand : Command {
 
     public async override UniTask Execute() {
         Deck mainDeck = new(opponent, eventBus);
-        await mainDeck.Initialize(cardCollection);
+        await cardCollection.GenerateTestCollection(20);
+        mainDeck.Initialize(cardCollection);
 
         opponent.deck = mainDeck;
         opponent.discardDeck = new Deck(opponent, eventBus);
