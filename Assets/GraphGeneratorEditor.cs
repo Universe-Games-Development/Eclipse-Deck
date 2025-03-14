@@ -16,15 +16,18 @@ public class GraphGeneratorEditor : Editor {
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
 
-        // Add a button to regenerate the graph
-        if (GUILayout.Button("Generate New Graph")) {
-            // Видаляємо всі попередні вузли
-            foreach (Transform child in generator.transform) {
-                DestroyImmediate(child.gameObject);
+        // Перевіряємо, чи редактор знаходиться в Play Mode
+        if (EditorApplication.isPlaying) {
+            // Add a button to regenerate the graph
+            if (GUILayout.Button("Generate New Graph")) {
+                generator.SendMessage("GenerateDungeon");
             }
-
-            // Викликаємо метод для генерації нового графа
-            generator.SendMessage("GenerateDungeonGraph");
+            if (GUILayout.Button("ClearDungeon")) {
+                generator.SendMessage("ClearDungeon");
+            }
+        } else {
+            // Інформація для користувача, якщо не Play Mode
+            EditorGUILayout.HelpBox("These actions are available only in Play Mode.", MessageType.Info);
         }
     }
 }
