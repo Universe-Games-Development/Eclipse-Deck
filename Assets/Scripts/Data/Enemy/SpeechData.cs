@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewSpeech", menuName = "Dialogue/Speech")]
+[CreateAssetMenu(fileName = "NewSpeech", menuName = "Dialogues/Speech")]
 public class SpeechData : ScriptableObject {
     [Header("Character Metadata")]
     public AudioClip speechSound;

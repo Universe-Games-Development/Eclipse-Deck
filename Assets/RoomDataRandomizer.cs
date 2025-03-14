@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class RoomGenerator {
-    private List<RoomData> roomConfigs;
+public class RoomDataRandomizer {
+    private List<RoomData> roomsFillers;
     private Dictionary<RoomData, float> weightPoints = new Dictionary<RoomData, float>();
     private System.Random rand;
 
-    public RoomGenerator(List<RoomData> roomConfigs, System.Random rand) {
-        if (roomConfigs.IsEmpty()) {
+    public RoomDataRandomizer(List<RoomData> roomsFillers, System.Random rand) {
+        if (roomsFillers.IsEmpty()) {
             Debug.LogError("Empty room list to generate rooms");
             return;
         }
-        this.roomConfigs = roomConfigs;
+        this.roomsFillers = roomsFillers;
         this.rand = rand;
         ValidateRoomList();
         GenerateWeightPoints();
@@ -24,7 +24,7 @@ public class RoomGenerator {
     /// </summary>
     private void ValidateRoomList() {
         HashSet<RoomData> roomSet = new HashSet<RoomData>();
-        foreach (var room in roomConfigs) {
+        foreach (var room in roomsFillers) {
             if (!roomSet.Add(room)) {
                 Debug.LogWarning($"Found duplicate for: {room.roomName}");
             }
@@ -35,7 +35,7 @@ public class RoomGenerator {
     /// Generates cumulative weights for rooms chances
     /// </summary>
     private void GenerateWeightPoints() {
-        float totalWeight = roomConfigs.Sum(room => room.baseChance);
+        float totalWeight = roomsFillers.Sum(room => room.baseChance);
         if (totalWeight <= 0) {
             Debug.LogError("Total weight must be greater than zero!");
             return;
@@ -43,7 +43,7 @@ public class RoomGenerator {
 
         weightPoints.Clear();
         float cumulative = 0f;
-        foreach (var room in roomConfigs) {
+        foreach (var room in roomsFillers) {
             float normalizedWeight = room.baseChance / totalWeight;
             cumulative += normalizedWeight;
             weightPoints.Add(room, cumulative);
@@ -56,11 +56,11 @@ public class RoomGenerator {
     /// </summary>
     /// <param name="value">value from 0 to 1</param>
     /// <returns>Random Room</returns>
-    public RoomData GetRandomRoom() {
+    public RoomData GetRandomRoomData() {
         if (weightPoints.IsEmpty()) {
             return null;
         }
-        float randomWeight = (float) rand.NextDouble();
+        float randomWeight = (float)rand.NextDouble();
         List<KeyValuePair<RoomData, float>> roomList = weightPoints.ToList();
         int left = 0;
         int right = roomList.Count - 1;
@@ -80,3 +80,4 @@ public class RoomGenerator {
         return roomList.Last().Key;
     }
 }
+

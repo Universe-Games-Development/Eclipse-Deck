@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class UIManager : MonoBehaviour {
@@ -12,7 +13,6 @@ public class UIManager : MonoBehaviour {
     public Canvas WorldSpaceCanvas { get; private set; }
     public Action<string> OnInfoRequested;
 
-    private List<GameObject> activeTexts = new(); // Список активних підказок
     private Camera mainCamera;
 
 
@@ -29,10 +29,10 @@ public class UIManager : MonoBehaviour {
         }
     }
 
-    public void ShowTextAt(string message, Vector3 position) {
+    public TextMeshProUGUI CreateTextAt(string message, Vector3 position) {
         if (textPrefab == null) {
             Debug.LogError("Text prefab is not assigned!");
-            return;
+            return null;
         }
 
         GameObject textObject = Instantiate(textPrefab, WorldSpaceCanvas.transform);
@@ -44,11 +44,14 @@ public class UIManager : MonoBehaviour {
         if (textComponent != null) {
             textComponent.text = message;
         }
-
-        activeTexts.Add(textObject);
+        return textComponent;
     }
 
     public void ShowTip(string info) {
         OnInfoRequested?.Invoke(info);
+    }
+
+    internal void RemoveText(TextMeshProUGUI text) {
+        Destroy(text);
     }
 }

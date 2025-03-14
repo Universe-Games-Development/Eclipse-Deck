@@ -33,12 +33,6 @@ public class RoomNode : MonoBehaviour {
                 new Color(0.7f, 0.7f, 0.7f, 0.7f);
         }
     }
-
-    internal void SetRoomType(UIManager uiManager, RoomType type) {
-        RoomType = type;
-        Vector3 textPosition = transform.position + Vector3.back * 1f;
-        uiManager.ShowTextAt(type.ToString(), textPosition);
-    }
 }
 
 
