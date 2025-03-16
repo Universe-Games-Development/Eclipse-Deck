@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f890e10ab64f3449addc3abed4554a6, type: 3}
   m_Name: RoomsLevelData
   m_EditorClassIdentifier: 
-  rooms: []
-  enterance: {fileID: 0}
-  bossLevelRoom: {fileID: 0}
+  rooms:
+  - {fileID: 11400000, guid: ab85cb3330452804fbb76b31455b0ce8, type: 2}
+  - {fileID: 11400000, guid: 8fe47b80415aced469edd20b381988f4, type: 2}
+  - {fileID: 11400000, guid: 2bd33d5397bd41149aae29039bdb52bc, type: 2}
+  - {fileID: 11400000, guid: 3e6a2195795d4dd48b166ef1536ab1f2, type: 2}
+  enterance: {fileID: 11400000, guid: ab85cb3330452804fbb76b31455b0ce8, type: 2}
+  bossLevelRoom: {fileID: 11400000, guid: 8fe47b80415aced469edd20b381988f4, type: 2}

@@ -208,6 +208,7 @@ GameObject:
   m_Component:
   - component: {fileID: 158639452}
   - component: {fileID: 158639453}
+  - component: {fileID: 158639454}
   m_Layer: 0
   m_Name: Level
   m_TagString: Untagged
@@ -227,7 +228,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 388916946}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &158639453
@@ -242,20 +244,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9612edf557d9a9e4699dbcee67afe0f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settings:
-    seed: Ukraine
-    levelCount: 4
-    initialNodesPerLevel: 4
-    minNodesPerLevel: 3
-    maxNodesPerLevel: 5
-    randomConnectionChance: 0.3
-    destroyConnectionChance: 0.5
-  roomList:
-  - {fileID: 11400000, guid: ab85cb3330452804fbb76b31455b0ce8, type: 2}
-  - {fileID: 11400000, guid: 3e6a2195795d4dd48b166ef1536ab1f2, type: 2}
-  - {fileID: 11400000, guid: be453a0789a3d894082941cf508b5e22, type: 2}
-  - {fileID: 11400000, guid: 2bd33d5397bd41149aae29039bdb52bc, type: 2}
-  - {fileID: 11400000, guid: 8fe47b80415aced469edd20b381988f4, type: 2}
+  mapGenerationData: {fileID: 11400000, guid: 32ca6968142ac72479752a572e6a9dce, type: 2}
+  roomsData: {fileID: 11400000, guid: 9ffb7335ea33b4a4aad25154916643f7, type: 2}
+  visualizer: {fileID: 158639454}
+--- !u!114 &158639454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 158639451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f542c387b68dd2a4c8e3b2e141f7c1d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dungeonMapParent: {fileID: 388916946}
+  roomPrefab: {fileID: 3711079332748787984, guid: 091b5fbdf94473d42848bc3e7673a453, type: 3}
+  spacing: 3
+--- !u!1 &388916945
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 388916946}
+  m_Layer: 0
+  m_Name: Map
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &388916946
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 388916945}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 158639452}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &887699410
 GameObject:
   m_ObjectHideFlags: 0
