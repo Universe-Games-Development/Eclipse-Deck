@@ -1,8 +1,9 @@
 ﻿using ModestTree;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-// Клас для генерації графу
+
 public class GraphGenerator {
     private DungeonGraph graph;
     private MapGenerationData settings;
@@ -17,11 +18,14 @@ public class GraphGenerator {
         graph = new DungeonGraph();
         CreateInitialGraph();
         ModifyNodeCount();  // Add or remove random nodes
-        CreateMainPaths();
 
         AddFirstNode();
         AddEndNode();
+        
         graph.UpdateNodeData();
+        CreateMainPaths();
+
+        
 
         return graph;
     }
@@ -48,71 +52,74 @@ public class GraphGenerator {
     private void CreateMainPaths() {
         List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
 
-        // Прохід від останнього рівня до першого
-        for (int level = 0; level < levelNodes.Count - 1; level++) {
+        for (int level = 0; level < levelNodes.Count; level++) {
             List<DungeonNode> currentLevel = levelNodes[level];
-            List<DungeonNode> nextLevel = levelNodes[level + 1];
+            List<DungeonNode> nextLevel = new();
+            if (level < levelNodes.Count - 1) {
+                nextLevel = levelNodes[level + 1];
+            }
 
             foreach (var currentNode in currentLevel) {
-                List<DungeonNode> potentialConnections = GetNeardyNodes(currentNode, currentLevel, nextLevel);
-                EnsureConnections(currentNode, potentialConnections);
-            }
-        }
+                List<DungeonNode> potentialNextConnections = GetNeardyNodes(currentNode, currentLevel, nextLevel);
+                EnsureConnections(currentNode, potentialNextConnections);
 
-        // Після основної логіки, перевіряємо чи є ноди без з'єднань
-        FixDisconnectedNodes(levelNodes);
-    }
-
-    private void EnsureConnections(DungeonNode currentNode, List<DungeonNode> potentialConnections) {
-        // Перевіряємо, чи є з'єднання хоча б з одним вузлом
-        bool hasAtLeastOneConnection = false;
-
-        // Проходимо по всіх потенційних з'єднаннях
-        foreach (var targetNode in potentialConnections) {
-            // Перевіряємо чи потрібно створити з'єднання на основі randomConnectionChance
-            bool shouldConnect = random.NextDouble() <= settings.randomConnectionChance;
-
-            if (shouldConnect) {
-                currentNode.ConnectToNext(targetNode);
-                hasAtLeastOneConnection = true;
-            }
-        }
-
-        // Якщо нода не має жодного з'єднання, ми повинні створити хоча б одне
-        if (!hasAtLeastOneConnection && potentialConnections.Count > 0) {
-            // Обираємо випадкову ноду з потенційних з'єднань
-            int randomIndex = random.Next(potentialConnections.Count);
-            DungeonNode targetNode = potentialConnections[randomIndex];
-
-            // Створюємо обов'язкове з'єднання
-            currentNode.ConnectToNext(targetNode);
-        }
-    }
-
-    private void FixDisconnectedNodes(List<List<DungeonNode>> levelNodes) {
-        for (int level = 1; level < levelNodes.Count - 1; level++) {
-            List<DungeonNode> currentLevel = levelNodes[level];
-            List<DungeonNode> prevLevel = levelNodes[level - 1];
-
-            foreach (var currentNode in currentLevel) {
-                // Перевіряємо, чи нода має хоча б одне з'єднання з наступним рівнем
-                if (!currentNode.HasConnectionsToPrevLevel()) {
-                    // Якщо немає з'єднань, знаходимо потенційні з'єднання з попереднього рівня
-                    List<DungeonNode> potentialConnections = GetNeardyNodes(currentNode, currentLevel, prevLevel);
-
-                    // Якщо є потенційні з'єднання, створюємо обов'язкове з'єднання
-                    if (potentialConnections.Count > 0) {
-                        int randomIndex = random.Next(potentialConnections.Count);
-                        DungeonNode targetNode = potentialConnections[randomIndex];
-                        currentNode.ConnectToNext(targetNode);
+                if (level >= 1) {
+                    if (!currentNode.HasConnectionsToPrevLevel()) {
+                        List<DungeonNode> prevLevel = levelNodes[level - 1];
+                        List<DungeonNode> prevPottentialConnections = GetNeardyNodes(currentNode, currentLevel, prevLevel);
+                        MinimalConnection(currentNode, prevPottentialConnections);
                     }
+
                 }
             }
         }
     }
 
+    private void MinimalConnection(DungeonNode currentNode, List<DungeonNode> prevPottentialConnections) {
+        DungeonNode connectedNode = ConnectOneRandomNode(currentNode, prevPottentialConnections);
+        foreach (var nextNode in connectedNode.nextLevelConnections) {
+            if (nextNode.prevLevelConnections.Count > 1) {
+                DungeonNode unnecessaryConnection = nextNode;
+                connectedNode.UnConnect(unnecessaryConnection);
+                break;
+            }
+        }
+        
+    }
+
+    private void EnsureConnections(DungeonNode currentNode, List<DungeonNode> potentialConnections) {
+        // Перевіряємо, чи є з'єднання хоча б з одним вузлом
+        bool hasConnected = false;
+
+        // Проходимо по всіх потенційних з'єднаннях
+        foreach (var targetNode in potentialConnections) {
+            bool shouldConnect = random.NextDouble() <= settings.randomConnectionChance;
+
+            if (shouldConnect) {
+                currentNode.ConnectTo(targetNode);
+                hasConnected = true;
+            }
+        }
+
+        // Якщо нода не має жодного з'єднання, ми повинні створити хоча б одне
+        if (!hasConnected && potentialConnections.Count > 0) {
+            ConnectOneRandomNode(currentNode, potentialConnections);
+        }
+    }
+
+    private DungeonNode ConnectOneRandomNode(DungeonNode currentNode, List<DungeonNode> connections) {
+        int randomIndex = random.Next(connections.Count);
+        DungeonNode targetNode = connections[randomIndex];
+        currentNode.ConnectTo(targetNode);
+        return targetNode;
+    }
+
 
     private List<DungeonNode> GetNeardyNodes(DungeonNode currentNode, List<DungeonNode> currentLevel, List<DungeonNode> nextLevel) {
+        List<DungeonNode> connectTo = new List<DungeonNode>();
+        if (nextLevel.IsEmpty()) {
+            return connectTo;
+        }
         // Знаходимо індекс поточної ноди в поточному рівні
         int currentIndex = currentLevel.IndexOf(currentNode);
 
@@ -122,7 +129,7 @@ public class GraphGenerator {
         // Знаходимо відповідний індекс на наступному рівні
         int targetIndex = Mathf.FloorToInt(relativePosition * (nextLevel.Count - 1));
 
-        List<DungeonNode> connectTo = new List<DungeonNode>();
+        
 
         // Додаємо основну ноду
         connectTo.Add(nextLevel[targetIndex]);
@@ -141,17 +148,15 @@ public class GraphGenerator {
 
     private void AddFirstNode() {
         List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
-        List<DungeonNode> firstLevel = levelNodes[0];
 
         List<DungeonNode> enteranceLevel = new List<DungeonNode>();
-        DungeonNode endNode = new DungeonNode(graph.GetNextNodeId(), new Vector2(levelNodes.Count, 0));
-        enteranceLevel.Insert(0, endNode);
+        DungeonNode enteranceNode = new DungeonNode(graph.GetNextNodeId(), new Vector2(levelNodes.Count, 0));
+        enteranceLevel.Add(enteranceNode);
 
-        // Додаємо новий рівень до графа
+        List<DungeonNode> firstLevel = levelNodes[0];
         graph.AddLevel(0, enteranceLevel);
-
         foreach (DungeonNode node in firstLevel) {
-            node.ConnectToPrev(endNode);
+            enteranceNode.ConnectToNext(node);
         }
     }
 
@@ -170,7 +175,7 @@ public class GraphGenerator {
 
         // З'єднуємо всі ноди останнього рівня з кінцевою нодою
         foreach (DungeonNode node in lastLevel) {
-            node.ConnectToNext(endNode);
+            endNode.ConnectToPrev(node);
         }
     }
 

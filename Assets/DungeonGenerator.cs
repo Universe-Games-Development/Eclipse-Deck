@@ -1,8 +1,69 @@
 using ModestTree;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Zenject;
+
+public class DungeonGenerator : MonoBehaviour {
+    [SerializeField] private MapGenerationData mapGenerationData;
+    [SerializeField] private RoomLevelData roomsData;
+    [Header ("Modules")]
+    [SerializeField] private DungeonVisualizer visualizer;
+
+    private DungeonGraph graph;
+    private GraphGenerator graphGenerator;
+    private RoomPopulator roomPopulator;
+    private GraphCenterer centerer;
+    private System.Random random;
+
+    private void Start() {
+        random = new System.Random(mapGenerationData.seed.GetHashCode());
+        graphGenerator = new GraphGenerator(mapGenerationData, random);
+
+        roomPopulator = new RoomPopulator(roomsData, random);
+        centerer = new GraphCenterer();
+        GenerateDungeon();
+    }
+
+    public void GenerateDungeon() {
+        if (roomsData.rooms.Count == 0) {
+            Debug.LogError("Empty room list to generate rooms");
+            return;
+        }
+        var startTime = Time.realtimeSinceStartup;
+
+        graph = graphGenerator.GenerateGraph();
+        CheckGraphValidation(graph);
+        centerer.CenterGraph(graph);
+
+        roomPopulator.PopulateGraphWithRooms(graph);
+
+        visualizer.VisualizeGraph(graph);
+
+        var endTime = Time.realtimeSinceStartup;
+        Debug.Log($"Dungeon map generation took {endTime - startTime} seconds");
+    }
+
+
+    private void CheckGraphValidation(DungeonGraph graph) {
+        List<List<DungeonNode>> list = graph.GetLevelNodes();
+        for (int levelCounter = 1; levelCounter < list.Count; levelCounter++) {
+            List<DungeonNode> levelNodes = list[levelCounter];
+            for (int j = 0; j < levelNodes.Count; j++) {
+                DungeonNode node = levelNodes[j];
+                if (!node.HasConnectionsToPrevLevel() && (levelCounter != 0)) {
+                    Debug.LogWarning($"Absent Prev Connection at Level : {node.level}, id : {node.id}");
+                } else if (!node.HasConnectionsToNextLevel() && (levelCounter < list.Count - 1)) {
+                    Debug.LogWarning($"Absent Next Connection at Level : {node.level}, id : {node.id}");
+                }
+            }
+        }
+    }
+
+    public void ClearDungeon() {
+        visualizer.ClearVisualization();
+    }
+}
 
 public class DungeonNode {
     public int id;
@@ -19,6 +80,15 @@ public class DungeonNode {
         position = pos;
     }
 
+    public void ConnectTo(DungeonNode other) {
+        if (other.level > level) {
+            ConnectToNext(other);
+        } else if (other.level < level) {
+            ConnectToPrev(other);
+        } else {
+            Debug.LogWarning($"Wrong connection Try to same level: {id} and {other.id}");
+        }
+    }
     // Метод для з'єднання з вузлом наступного рівня
     public void ConnectToNext(DungeonNode other) {
         if (!nextLevelConnections.Contains(other)) {
@@ -33,7 +103,7 @@ public class DungeonNode {
     // Метод для з'єднання з вузлом попереднього рівня
     public void ConnectToPrev(DungeonNode other) {
         if (!prevLevelConnections.Contains(other)) {
-            prevLevelConnections.Add(this);
+            prevLevelConnections.Add(other);
         }
 
         if (!other.nextLevelConnections.Contains(this)) {
@@ -41,7 +111,16 @@ public class DungeonNode {
         }
     }
 
-    // Метод для від'єднання від вузла наступного рівня
+    internal void UnConnect(DungeonNode unconnectNode) {
+        if (unconnectNode.level > level) {
+            UnConnectFromNext(unconnectNode);
+        } else if (unconnectNode.level < level) {
+            UnConnectFromPrev(unconnectNode);
+        } else {
+            Debug.LogWarning($"Wrong connection Try to same level: {id} and {unconnectNode.id}");
+        }
+    }
+
     public void UnConnectFromNext(DungeonNode connection) {
         if (nextLevelConnections.Contains(connection)) {
             nextLevelConnections.Remove(connection);
@@ -88,6 +167,18 @@ public class DungeonNode {
 
     internal bool HasConnectionsToPrevLevel() {
         return !prevLevelConnections.IsEmpty();
+    }
+
+    internal bool HasConnectionsToNextLevel() {
+        return !nextLevelConnections.IsEmpty();
+    }
+
+    internal bool IsConnectedTo(DungeonNode targetNode) {
+        return nextLevelConnections.Contains(targetNode) || prevLevelConnections.Contains(targetNode);
+    }
+
+    internal bool IsLinked() {
+        return HasConnectionsToPrevLevel() && HasConnectionsToNextLevel();
     }
 }
 
@@ -225,55 +316,5 @@ public class GraphCenterer {
         }
 
         return maxNodesLevel;
-    }
-}
-
-// Головний клас-контролер
-public class DungeonGenerator : MonoBehaviour {
-    [SerializeField] private MapGenerationData mapGenerationData;
-    [SerializeField] private RoomLevelData roomsData;
-
-    private DungeonGraph graph;
-    private GraphGenerator graphGenerator;
-    private RoomPopulator roomPopulator;
-    private DungeonVisualizer visualizer;
-    private System.Random random;
-    [Inject] UIManager uIManager;
-
-    private void Start() {
-        random = new System.Random(mapGenerationData.seed.GetHashCode());
-        graphGenerator = new GraphGenerator(mapGenerationData, random);
-
-        roomPopulator = new RoomPopulator(roomsData, random);
-        visualizer = new DungeonVisualizer(uIManager);
-        GenerateDungeon();
-    }
-
-    public void GenerateDungeon() {
-        if (roomsData.rooms.Count == 0) {
-            Debug.LogError("Empty room list to generate rooms");
-            return;
-        }
-
-        Debug.Log("1. Створення структури графу");
-        graph = graphGenerator.GenerateGraph();
-
-        // Додайте центрування графа після його створення
-        GraphCenterer centerer = new GraphCenterer();
-        centerer.CenterGraph(graph);
-
-        
-
-        visualizer.LogGraphStructure(graph);
-        visualizer.LogGraphConnections(graph);
-
-        Debug.Log("2. Заповнення графу кімнатами");
-        roomPopulator.PopulateGraphWithRooms(graph);
-        visualizer.LogRoomAssignments(graph);
-        visualizer.VisualizeGraph(graph);
-    }
-
-    public void ClearDungeon() {
-        visualizer.ClearVisualization();
     }
 }

@@ -1,15 +1,143 @@
 ﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-public class DungeonVisualizer {
-    private UIManager uIManager;
+using Zenject;
+
+public class DungeonVisualizer : MonoBehaviour {
     private List<GameObject> createdObjects = new List<GameObject>(); // Список для збереження створених об'єктів
     private List<TextMeshProUGUI> createdTexts = new List<TextMeshProUGUI>(); // Список для збереження текстових елементів
+    [Inject] UIManager uIManager;
+    [SerializeField] Transform dungeonMapParent;
+    [SerializeField] RoomPresenter roomPrefab;
+    [SerializeField] float spacing = 2.0f;
 
-    public DungeonVisualizer(UIManager uIManager) {
-        this.uIManager = uIManager;
+    public void VisualizeGraph(DungeonGraph graph) {
+        // Очищуємо попередню візуалізацію
+        ClearVisualization();
+
+        int totalLevels = graph.GetLevelNodes().Count;
+
+        foreach (var level in graph.GetLevelNodes()) {
+            foreach (var node in level) {
+                RoomPresenter roomObject = Instantiate(roomPrefab);
+                roomObject.SetSelfNode(node, spacing);
+                //if (dungeonMapParent != null)
+                //    roomObject.transform.SetParent(dungeonMapParent);
+                roomObject.transform.position = new Vector3(node.position.x * spacing, 0, node.position.y * spacing); ;
+                roomObject.transform.localScale = Vector3.one * 0.5f;
+                createdObjects.Add(roomObject.gameObject);
+
+                // Відображення тексту та збереження посилання на нього
+                TextMeshProUGUI textMesh = uIManager.CreateTextAt($"id:{node.id} {node.room.data.roomName.ToString()} \n x [{node.position.x}] y [{node.position.y}]", roomObject.transform.position + Vector3.up);
+                if (textMesh != null) {
+                    createdTexts.Add(textMesh);
+                }
+
+                Color color = Color.white;
+
+                bool hasSelfReference = CheckSelfReference(node);
+                if (hasSelfReference) {
+                    color = Color.cyan;
+                }
+
+                // Відображення зв'язків
+                foreach (var connectedNode in node.nextLevelConnections) {
+                    if (node.nextLevelConnections.Count == 1) {
+                        color = Color.white;
+                    } else {
+                        bool isMinimal = true;
+                        if (connectedNode.prevLevelConnections.Count > 1) {
+                            isMinimal = false;
+                        }
+                        color = isMinimal ? Color.white : Color.red;
+                    }
+
+                    
+                    // Створюємо лінію як об'єкт для можливості видалення
+                    roomObject.AddConnection(connectedNode, color, 0.05f);
+                }
+
+                bool hasProperLevelLinks = CheckProperLevelLinks(node, totalLevels);
+                if (!hasProperLevelLinks) {
+                    roomObject.MarkWrong();
+                }
+            }
+        }
     }
 
+    private bool HasMinimalNecessaryConnections(DungeonNode node) {
+        int prevConnections = node.prevLevelConnections.Count;
+        int nextConnections = node.nextLevelConnections.Count;
+
+        if (prevConnections <= 1 && nextConnections <= 1) {
+            return true;
+        }
+
+        if (nextConnections > 1) {
+            foreach (var nextNode in node.nextLevelConnections) {
+                if (nextNode.prevLevelConnections.Count > 1) {
+                    return false; 
+                }
+            }
+        }
+
+        //if (prevConnections > 1) {
+        //    foreach (var prevNode in node.prevLevelConnections) {
+        //        if (prevNode.nextLevelConnections.Count == 1) {
+        //            return true; 
+        //        }
+        //    }
+        //}
+        
+        return true; 
+    }
+
+
+    private bool CheckProperLevelLinks(DungeonNode node, int totalLevels) {
+        if (node.level == 0) {
+            return node.HasConnectionsToNextLevel();
+        }
+
+        if (node.level == totalLevels - 1) {
+            return node.HasConnectionsToPrevLevel();
+        }
+
+        return node.IsLinked();
+    }
+
+    private bool CheckSelfReference(DungeonNode node) {
+        foreach (var nextNode in node.nextLevelConnections) {
+            if (nextNode.id == node.id) {
+                return true;
+            }
+        }
+
+        foreach (var prevNode in node.prevLevelConnections) {
+            if (prevNode.id == node.id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void ClearVisualization() {
+        // Видаляємо всі створені об'єкти
+        foreach (GameObject obj in createdObjects) {
+            if (obj != null) {
+                GameObject.Destroy(obj);
+            }
+        }
+        createdObjects.Clear();
+
+        // Видаляємо всі текстові елементи через UIManager
+        foreach (TextMeshProUGUI text in createdTexts) {
+            if (text != null) {
+                uIManager.RemoveText(text);
+            }
+        }
+        createdTexts.Clear();
+    }
     public void LogGraphStructure(DungeonGraph graph) {
         Debug.Log("Після створення графу");
         List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
@@ -44,80 +172,5 @@ public class DungeonVisualizer {
                 Debug.Log($"Вузол {node.id} (рівень {node.position.x}, індекс {node.position.y}) -> Кімната: {node.room.data.type}");
             }
         }
-    }
-
-    public void VisualizeGraph(DungeonGraph graph) {
-        // Очищуємо попередню візуалізацію
-        ClearVisualization();
-
-        float spacing = 2.0f; // Відстань між вузлами для кращої читабельності
-        foreach (var level in graph.GetLevelNodes()) {
-            foreach (var node in level) {
-                Vector3 nodePosition = new Vector3(node.position.x * spacing, 0, node.position.y * spacing);
-
-                // Відображення вузла
-                GameObject nodeObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                nodeObject.transform.position = nodePosition;
-                nodeObject.transform.localScale = Vector3.one * 0.5f; // Зменшуємо розмір сфери
-
-                // Додаємо створений об'єкт до списку
-                createdObjects.Add(nodeObject);
-
-                // Відображення тексту та збереження посилання на нього
-                TextMeshProUGUI textMesh = uIManager.CreateTextAt($"id:{node.id} {node.room.data.roomName.ToString()} \n x [{node.position.x}] y [{node.position.y}]", nodeObject.transform.position + Vector3.up);
-                if (textMesh != null) {
-                    createdTexts.Add(textMesh);
-                }
-
-                // Відображення зв'язків
-                foreach (var connectedNode in node.nextLevelConnections) {
-                    Vector3 connectedPosition = new Vector3(connectedNode.position.x * spacing, 0, connectedNode.position.y * spacing);
-
-                    // Створюємо лінію як об'єкт для можливості видалення
-                    GameObject lineObject = CreateLine(nodePosition, connectedPosition, Color.white, 0.05f);
-                    if (lineObject != null) {
-                        createdObjects.Add(lineObject);
-                    }
-                }
-            }
-        }
-    }
-
-    // Допоміжний метод для створення лінії між вузлами як об'єкта
-    private GameObject CreateLine(Vector3 start, Vector3 end, Color color, float width) {
-        GameObject lineObject = new GameObject("ConnectionLine");
-        LineRenderer lineRenderer = lineObject.AddComponent<LineRenderer>();
-
-        lineRenderer.startColor = color;
-        lineRenderer.endColor = color;
-        lineRenderer.startWidth = width;
-        lineRenderer.endWidth = width;
-        lineRenderer.positionCount = 2;
-        lineRenderer.SetPosition(0, start);
-        lineRenderer.SetPosition(1, end);
-
-        // Встановлюємо матеріал для лінії
-        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        lineRenderer.material.color = color;
-
-        return lineObject;
-    }
-
-    public void ClearVisualization() {
-        // Видаляємо всі створені об'єкти
-        foreach (GameObject obj in createdObjects) {
-            if (obj != null) {
-                GameObject.Destroy(obj);
-            }
-        }
-        createdObjects.Clear();
-
-        // Видаляємо всі текстові елементи через UIManager
-        foreach (TextMeshProUGUI text in createdTexts) {
-            if (text != null) {
-                uIManager.RemoveText(text);
-            }
-        }
-        createdTexts.Clear();
     }
 }
