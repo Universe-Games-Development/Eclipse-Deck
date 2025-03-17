@@ -9,11 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 47e4781b40a354f4a82e0a0742e078f2, type: 3}
-  m_Name: 2 - MapInfo
+  m_Script: {fileID: 11500000, guid: 6c6ceb7c79af46b4abc2cd0ecfebcfa2, type: 3}
+  m_Name: MapGenerationData
   m_EditorClassIdentifier: 
-  totalRooms: 7
-  numberOfShops: 1
-  numberOfAltars: 1
-  numberOfEnemies: 5
-  numberOfTresures: 0
+  seed: simple_seed
+  levelCount: 12
+  initialNodesPerLevel: 12
+  minNodesPerLevel: 1
+  maxNodesPerLevel: 12
+  randomConnectionChance: 0
+  destroyConnectionChance: 0.5

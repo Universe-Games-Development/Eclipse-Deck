@@ -27,7 +27,7 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
     protected readonly GameEventBus eventBus;
     [Inject] private CommandManager _commandManager;
     [Inject] private CardPlayService _cardPlayService;
-    public Opponent(GameEventBus eventBus, AssetLoader assetLoader, IActionFiller actionFiller) {
+    public Opponent(GameEventBus eventBus, CardManager cardManager, IActionFiller actionFiller) {
         this.eventBus = eventBus;
         this.actionFiller = actionFiller;
 
@@ -37,7 +37,7 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
         Mana = new Mana(this, manaStat, eventBus);
         CardResource = new CardResource(Mana, Health);
 
-        cardCollection = new CardCollection(assetLoader);
+        cardCollection = new CardCollection(cardManager);
         hand = new CardHand(this, eventBus);
         hand.OnCardSelected += PlayCard;
 
@@ -94,7 +94,7 @@ public class InitDeckCommand : Command {
 
     public async override UniTask Execute() {
         Deck mainDeck = new(opponent, eventBus);
-        await cardCollection.GenerateTestCollection(20);
+        cardCollection.GenerateTestCollection(20);
         mainDeck.Initialize(cardCollection);
 
         opponent.deck = mainDeck;

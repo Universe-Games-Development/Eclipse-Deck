@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class CardCollection {
     public Dictionary<CardData, int> cardEntries;
-    private AssetLoader assetLoader;
+    private CardManager cardManager;
 
-    public CardCollection(AssetLoader assetLoader) {
-        this.assetLoader = assetLoader;
+    public CardCollection(CardManager cardManager) {
+        this.cardManager = cardManager;
         cardEntries = new();
     }
 
@@ -43,15 +43,10 @@ public class CardCollection {
     }
 
     // Test collection generation
-    public async UniTask GenerateTestCollection(int count = 20) {
+    public void GenerateTestCollection(int count = 20) {
         List<CardData> cardDatas;
 
-        if (assetLoader.HasActualData(Location.Sewers)) {
-            cardDatas = assetLoader.CardManager.GetAllCards();
-        } else {
-            await assetLoader.LoadLocationAssets(Location.Sewers);
-            cardDatas = assetLoader.CardManager.GetAllCards();
-        }
+        cardDatas = cardManager.GetAllCards();
 
         if (cardDatas == null || cardDatas.Count == 0) {
             Debug.LogWarning("Generating null collection");

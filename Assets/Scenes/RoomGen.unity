@@ -262,6 +262,11 @@ MonoBehaviour:
   dungeonMapParent: {fileID: 388916946}
   roomPrefab: {fileID: 3711079332748787984, guid: 091b5fbdf94473d42848bc3e7673a453, type: 3}
   spacing: 3
+  showNodeDetails: 1
+  normalConnectionColor: {r: 1, g: 1, b: 1, a: 1}
+  redundantConnectionColor: {r: 1, g: 0, b: 0, a: 1}
+  selfReferenceColor: {r: 0, g: 1, b: 1, a: 1}
+  invalidNodeColor: {r: 1, g: 0, b: 1, a: 1}
 --- !u!1 &388916945
 GameObject:
   m_ObjectHideFlags: 0

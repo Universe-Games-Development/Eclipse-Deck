@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 using Zenject;
 
 public class MapManager : MonoBehaviour {
-    [SerializeField] private MapSO firstLevelMap; // Построенная карта для первого уровня
 
     // Впровадження ResourceManager
     [Inject] private AddressablesResourceManager resourceManager;
@@ -23,11 +22,11 @@ public class MapManager : MonoBehaviour {
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
-        InitializeMap(scene.name == "Level1");
+        InitializeMap();
     }
 
-    public void InitializeMap(bool isTutorial = false) {
-        
+    public void InitializeMap() {
+
     }
 }
 

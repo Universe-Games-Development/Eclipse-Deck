@@ -1,54 +1,53 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using Zenject;
 
-public class AssetLoader : MonoBehaviour {
-    public Action OnAssetsLoaded;
-    [Inject] public CardManager CardManager;
+public class LocationAssetLoader : IAssetLoader {
+    public event Action OnAssetsLoaded;
 
-    // Location scenes addressable labels
-    public AssetLabelReference mainMenuLabel;
-    public AssetLabelReference sewersLabel;
-    public AssetLabelReference caveLabel;
-    public AssetLabelReference floodedCaveLabel;
-    public AssetLabelReference labLabel;
-    public AssetLabelReference hellLabel;
+    private CardManager _cardManager;
+    private LocationManager locationManager;
 
-    private Dictionary<Location, AssetLabelReference> locationToScene;
-    private void Awake() {
-        locationToScene = new Dictionary<Location, AssetLabelReference> {
-            { Location.MainMenu, mainMenuLabel},
-        { Location.Sewers, sewersLabel},
-        { Location.Cave, caveLabel },
-        { Location.FloodedCave, floodedCaveLabel},
-        { Location.Lab, labLabel },
-        { Location.Hell, hellLabel},
-        };
+    [Inject]
+    public void Construct(CardManager cardManager, LocationManager locationManager) {
+        _cardManager = cardManager;
+        this.locationManager = locationManager;
+        locationManager.OnLocationPreLoad += LoadLocationAssets;
     }
 
-    public async UniTask LoadLocationAssets(Location enumLabel) {
-        if (!locationToScene.TryGetValue(enumLabel, out AssetLabelReference assetLabel)) {
-            Debug.LogWarning($"Wrong label for scene asset loading: {enumLabel}");
+    public async UniTask LoadLocationAssets(LocationData locationData) {
+        if (locationData == null || locationData.assetLabel == null) {
+            Debug.LogWarning($"Invalid location data or asset label for asset loading");
             return;
         }
 
         try {
-            await CardManager.LoadCardsForLocation(assetLabel, enumLabel);
-            if (CardManager.HasLocationCardData(enumLabel)) {
-                Debug.Log("Cards loaded for " + enumLabel);
+            await _cardManager.LoadCardsForLocation(locationData.assetLabel, locationData.locationType);
+
+            if (_cardManager.HasLocationCardData(locationData.locationType)) {
+                Debug.Log($"Cards loaded for {locationData.locationType}");
             }
+
             OnAssetsLoaded?.Invoke();
         } catch (Exception e) {
-            Debug.LogError($"Failed to load assets for {enumLabel}: {e.Message}");
+            Debug.LogError($"Failed to load assets for {locationData.locationType}: {e.Message}");
         }
     }
 
+    public bool HasAssetsLoaded(LocationType locationType) {
+        // Спеціальні випадки, які не потребують завантаження карт
+        if (locationType == LocationType.MainMenu ||
+            locationType == LocationType.Loading ||
+            locationType == LocationType.GameLoading) {
+            return true;
+        }
 
-    public bool HasActualData(Location enumLabel) {
-        if (enumLabel == Location.MainMenu || enumLabel == Location.Loading || enumLabel == Location.GameLoading) return true;
-        return CardManager.HasLocationCardData(enumLabel);
+        return _cardManager.HasLocationCardData(locationType);
     }
+}
+
+public interface IAssetLoader {
+    UniTask LoadLocationAssets(LocationData locationData);
+    bool HasAssetsLoaded(LocationType locationType);
 }

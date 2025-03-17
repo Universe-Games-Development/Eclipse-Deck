@@ -1,13 +1,11 @@
 using Cysharp.Threading.Tasks;
-using System;
-using Unity.VisualScripting;
 using UnityEngine;
 using Zenject;
 
 public class Enemy : Opponent {
     [Inject] private TurnManager turnManager;
 
-    public Enemy(GameEventBus eventBus, AssetLoader assetLoader, IActionFiller abilityInputter) : base(eventBus, assetLoader, abilityInputter) {
+    public Enemy(GameEventBus eventBus, CardManager cardManager, IActionFiller abilityInputter) : base(eventBus, cardManager, abilityInputter) {
         Name = "Enemy";
     }
 
