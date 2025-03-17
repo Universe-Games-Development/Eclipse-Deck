@@ -8,7 +8,8 @@ public class RoomPresenter : MonoBehaviour {
 
     private DungeonNode self;
     private float spacing;
-    public void SetSelfNode(DungeonNode self, float spacing) {
+
+    public void Initialize(DungeonNode self, float spacing) {
         this.self = self;
         this.spacing = spacing;
     }
@@ -46,4 +47,10 @@ public class RoomPresenter : MonoBehaviour {
         }
     }
 
+    public void MarkWithColor(Color selfReferenceColor) {
+        MaterialPropertyBlock block = new MaterialPropertyBlock();
+        renderer.GetPropertyBlock(block);
+        block.SetColor("_BaseColor", selfReferenceColor);
+        renderer.SetPropertyBlock(block);
+    }
 }

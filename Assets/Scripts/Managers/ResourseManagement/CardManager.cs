@@ -7,8 +7,8 @@ using UnityEngine.AddressableAssets;
 
 public class CardManager {
 
-    private Dictionary<Location, List<CardData>> loadedCards = new Dictionary<Location, List<CardData>>();
-    public async UniTask LoadCardsForLocation(AssetLabelReference locationLabel, Location location) {
+    private Dictionary<LocationType, List<CardData>> loadedCards = new Dictionary<LocationType, List<CardData>>();
+    public async UniTask LoadCardsForLocation(AssetLabelReference locationLabel, LocationType location) {
         if (!loadedCards.ContainsKey(location)) {
             loadedCards[location] = new List<CardData>();
             string key = location.ToString();
@@ -18,13 +18,13 @@ public class CardManager {
         }
     }
 
-    public List<CardData> GetCardsForLocation(Location location) {
+    public List<CardData> GetCardsForLocation(LocationType location) {
         if (!HasLocationCardData(location)) return new List<CardData>(); ;
 
         return loadedCards.TryGetValue(location, out var cards) ? cards : new List<CardData>();
     }
 
-    public void UnloadCards(Location location) {
+    public void UnloadCards(LocationType location) {
         if (loadedCards.TryGetValue(location, out var cards)) {
             foreach (var card in cards) {
                 Addressables.Release(card);
@@ -40,7 +40,7 @@ public class CardManager {
         loadedCards.Clear();
     }
 
-    public bool HasLocationCardData(Location location) {
+    public bool HasLocationCardData(LocationType location) {
         return loadedCards.ContainsKey(location);
     }
 
@@ -56,4 +56,7 @@ public class CardManager {
         return allCards;
     }
 
+    internal bool HasCardsLoaded(LocationType sewers) {
+        throw new NotImplementedException();
+    }
 }

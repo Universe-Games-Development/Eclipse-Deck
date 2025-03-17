@@ -61,7 +61,7 @@ public abstract class Card : IAbilityOwner {
         Debug.LogError("Select");
     }
 
-    public void SetOwner(Opponent owner) {
+    public virtual void SetOwner(Opponent owner) {
         Owner = owner;
     }
 }
@@ -102,12 +102,6 @@ public class CreatureCard : Card {
         creatureCardData = cardSO;
         Health = new(cardSO.MAX_CARD_HEALTH, cardSO.Health);
         Attack = new(cardSO.MAX_CARD_ATTACK, cardSO.Attack);
-
-        RequirementBuilder<Field> requirementBuilder = new RequirementBuilder<Field>();
-        friendlyFieldRequirement = requirementBuilder
-            .Add(new OwnerFieldRequirement(Owner))
-            .Add(new EmptyFieldRequirement())
-            .Build();
     }
 
     public override async UniTask<bool> PlayCard(Opponent summoner, GameBoardController boardController, CancellationToken ct = default) {
@@ -118,5 +112,14 @@ public class CreatureCard : Card {
         }
 
         return await boardController.CreatureSpawner.SpawnCreature(this, field, summoner);
+    }
+
+    public override void SetOwner(Opponent newOwner) {
+        base.SetOwner(newOwner);
+        RequirementBuilder<Field> requirementBuilder = new();
+        friendlyFieldRequirement = requirementBuilder
+            .Add(new OwnerFieldRequirement(Owner))
+            .Add(new EmptyFieldRequirement())
+            .Build();
     }
 }

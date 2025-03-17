@@ -1,10 +1,10 @@
-﻿public enum Location {
+﻿public enum LocationType {
     MainMenu,
-    Loading,
     Sewers,
     Cave,
     FloodedCave,
     Lab,
     Hell,
-    GameLoading
+    GameLoading,
+    Loading
 }

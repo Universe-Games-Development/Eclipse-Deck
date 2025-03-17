@@ -7,6 +7,10 @@ public class GlobalInstaller : MonoInstaller {
 
     public override void InstallBindings() {
         foreach (var prefab in managerPrefabs) {
+            if (prefab == null) {
+                Debug.LogWarning("Manager prefab is null.");
+                continue;
+            }
             var component = prefab.GetComponent<MonoBehaviour>();
             if (component != null) {
                 Container.Bind(component.GetType()).FromComponentInNewPrefab(prefab).AsSingle().NonLazy();
@@ -16,6 +20,8 @@ public class GlobalInstaller : MonoInstaller {
         }
 
         // Resourses
+        Container.Bind<LocationAssetLoader>().AsSingle().NonLazy();
+
         Container.Bind<GameEventBus>().AsSingle().NonLazy();
         Container.Bind<CommandManager>().AsSingle().NonLazy();
         Container.Bind<CardManager>().AsSingle().NonLazy();

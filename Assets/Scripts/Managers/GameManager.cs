@@ -1,14 +1,14 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Zenject;
 
 public class GameManager : MonoBehaviour
 {
-    [Inject] SceneLoader sceneLoader;
-    [Inject] SceneLoader levelManager;
+    [Inject] LocationManager locationManager;
 
     public void StartNewGame() {
-        sceneLoader.ChangeLocation(Location.Sewers);
+        locationManager.LoadLocation(LocationType.Sewers).Forget();
     }
 
     public void SetPause(bool pause) {
