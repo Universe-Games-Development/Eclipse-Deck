@@ -18,6 +18,6 @@ MonoBehaviour:
     m_LabelString: Sewers
   displayName: Sewers
   description: 
-  previewImage: {fileID: 21300000, guid: fec5dd7359041ff43b6c4465087d1e7f, type: 3}
+  previewImage: {fileID: 21300000, guid: 03cee5e09cbed9b4c89287447a6f77a5, type: 3}
   isPlayableLevel: 1
   orderInSequence: 0

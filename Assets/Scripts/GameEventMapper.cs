@@ -4,55 +4,6 @@ using System;
 using System.Linq;
 using UnityEditor;
 
-[ExecuteInEditMode]
-public static class GameEventMapper {
-    // Словарь для маппинга типов событий к enum
-    private static readonly Dictionary<Type, EventEnum> TypeToEnumMap =
-        new Dictionary<Type, EventEnum>();
-
-    // Словарь для обратного маппинга
-    private static readonly Dictionary<EventEnum, Type> EnumToTypeMap =
-        new Dictionary<EventEnum, Type>();
-
-    // Метод регистрации типов событий
-    public static void RegisterEventType<TEvent>(EventEnum eventTypeEnum)
-        where TEvent : IEvent {
-        var eventType = typeof(TEvent);
-
-        if (TypeToEnumMap.ContainsKey(eventType)) {
-            Debug.LogWarning($"Event type {eventType.Name} is already registered.");
-            return;
-        }
-
-        TypeToEnumMap[eventType] = eventTypeEnum;
-        EnumToTypeMap[eventTypeEnum] = eventType;
-    }
-
-    // Получить enum по типу события
-    public static EventEnum GetEventTypeEnum<TEvent>()
-        where TEvent : IEvent {
-        var eventType = typeof(TEvent);
-        return TypeToEnumMap.TryGetValue(eventType, out var enumType)
-            ? enumType
-            : EventEnum.OnManaSpent;
-    }
-
-    // Получить тип события по enum
-    public static Type GetEventType(EventEnum eventType) {
-        return EnumToTypeMap.TryGetValue(eventType, out var type)
-            ? type
-            : null;
-    }
-
-    private static  void DEbug() {
-
-    }
-    static GameEventMapper() {
-        // Здесь регистрируем все известные типы событий
-        RegisterEventType<BattleStartedEvent>(EventEnum.BattleStarted);
-    }
-}
-
 [CustomPropertyDrawer(typeof(EventEnum))]
 public class GameEventTypeDrawer : PropertyDrawer {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
@@ -103,6 +54,50 @@ public class GameEventTypeDrawer : PropertyDrawer {
     }
 }
 
-public struct OnUnknownEvent : IEvent {
+[ExecuteInEditMode]
+public static class GameEventMapper {
+    // Словарь для маппинга типов событий к enum
+    private static readonly Dictionary<Type, EventEnum> TypeToEnumMap =
+        new Dictionary<Type, EventEnum>();
 
+    // Словарь для обратного маппинга
+    private static readonly Dictionary<EventEnum, Type> EnumToTypeMap =
+        new Dictionary<EventEnum, Type>();
+
+    public static void RegisterEventType<TEvent>(EventEnum eventTypeEnum)
+        where TEvent : IEvent {
+        var eventType = typeof(TEvent);
+
+        if (TypeToEnumMap.ContainsKey(eventType)) {
+            Debug.LogWarning($"Event type {eventType.Name} is already registered.");
+            return;
+        }
+
+        TypeToEnumMap[eventType] = eventTypeEnum;
+        EnumToTypeMap[eventTypeEnum] = eventType;
+    }
+
+    public static EventEnum GetEventTypeEnum<TEvent>()
+        where TEvent : IEvent {
+        var eventType = typeof(TEvent);
+        return TypeToEnumMap.TryGetValue(eventType, out var enumType)
+            ? enumType
+            : EventEnum.OnManaSpent;
+    }
+
+    // Получить тип события по enum
+    public static Type GetEventType(EventEnum eventType) {
+        return EnumToTypeMap.TryGetValue(eventType, out var type)
+            ? type
+            : null;
+    }
+
+    private static  void DEbug() {
+
+    }
+    static GameEventMapper() {
+        // Здесь регистрируем все известные типы событий
+        RegisterEventType<BattleStartedEvent>(EventEnum.BattleStarted);
+    }
 }
+
