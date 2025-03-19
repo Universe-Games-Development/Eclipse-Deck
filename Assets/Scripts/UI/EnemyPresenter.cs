@@ -20,11 +20,12 @@ public class EnemyPresenter : MonoBehaviour {
     [Inject] DialogueSystem dialogueSystem;
     [Inject] GameEventBus eventBus;
     [SerializeField] EnemyData data;
+    [Inject] TurnManager turnManager;
 
-    private Speech speech;
+    private Speaker speech;
     private void Awake() {
         if (data != null && data.speechData != null) {
-            speech = new Speech(dialogueSystem, data.speechData, eventBus);
+            speech = new Speaker(data.speechData, dialogueSystem, turnManager, eventBus);
         }
     }
 

@@ -3,68 +3,137 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class BaseDialogueData : ScriptableObject {
-    public abstract IDialogue CreateDialog(Speech speech, DialogueSystem dialogueSystem, GameEventBus eventBus);
+    public abstract IDialogue CreateDialogue(Speaker speaker, DialogueSystem dialogueSystem, GameEventBus eventBus);
 }
 
-public abstract class DialogueData<TEvent> : BaseDialogueData where TEvent : IEvent {
+public class DialogueData<TEvent> : BaseDialogueData where TEvent : IEvent {
     [Header("Dialogue Pages")]
     [TextArea(3, 5)]
     public List<string> pages = new List<string>();
 
-    public abstract Dictionary<string, string> GetReplacements(TEvent eventData);
+    [Header("Activation Settings")]
+    public bool isGlobal = false;       
+    public int activationTurn = -1;           
+    [Header("Activation Settings")]
+    public int maxActivations = 1;           
+    [Range (0, 1f)] public float probability = 1.0f;
 
-    public override IDialogue CreateDialog(Speech speech, DialogueSystem dialogueSystem, GameEventBus eventBus) {
-        return new Dialogue<TEvent>(speech, this, dialogueSystem, eventBus);
+    private void OnValidate() {
+        isGlobal = activationTurn < 0;
     }
 
-    public List<string> BuildMessages(TEvent eventData) {
-        Dictionary<string, string> replacements = GetReplacements(eventData);
-        List<string> formattedMessages = new List<string>();
-
-        foreach (string page in pages) {
-            string formattedPage = page;
-            foreach (var replacement in replacements) {
-                formattedPage = formattedPage.Replace($"{{{replacement.Key}}}", replacement.Value);
-            }
-            formattedMessages.Add(formattedPage);
-        }
-
-        return formattedMessages;
+    public virtual bool IsMet(TEvent eventData) {
+        return true;
     }
 
-    public abstract bool IsMet(TEvent eventData);
+    public virtual Dictionary<string, string> GetReplacements(TEvent eventData) {
+        return new Dictionary<string, string>();
+    }
+
+    public override IDialogue CreateDialogue(Speaker speaker, DialogueSystem dialogueSystem, GameEventBus eventBus) {
+        return new Dialogue<TEvent>(this, dialogueSystem, eventBus, speaker);
+    }
 }
 
 public interface IDialogue : IDisposable {
-    void Subscribe();
-    void Unsubscribe();
+    void Activate();
+    void Deactivate();
+    bool IsActive { get; }
+    bool IsGlobal { get; }
+    bool IsEligibleForTurn(int turnCount);
+    BaseDialogueData DialogueData { get; }
 }
 
-public class Dialogue<TEvent> : EventListener<TEvent>, IDialogue where TEvent : IEvent {
-    private DialogueData<TEvent> dialogueData;
-    private DialogueSystem dialogueSystem;
-    private Speech speech;
+public class Dialogue<TEvent> : IDialogue where TEvent : IEvent {
+    private readonly DialogueData<TEvent> dialogueData;
+    private readonly DialogueSystem dialogueSystem;
+    private readonly GameEventBus eventBus;
+    private readonly Speaker speaker;
+    private int activationCount = 0;
+    private bool isSubscribed = false;
 
-    public Dialogue(Speech speech, DialogueData<TEvent> dialogueData, DialogueSystem dialogueSystem, GameEventBus eventBus)
-        : base(eventBus) {
+    public BaseDialogueData DialogueData => dialogueData;
+    public bool IsActive { get; private set; } = false;
+    public bool IsGlobal { get { return dialogueData.isGlobal; } }
+
+    public Dialogue(DialogueData<TEvent> dialogueData, DialogueSystem dialogueSystem, GameEventBus eventBus, Speaker speaker) {
         this.dialogueData = dialogueData;
         this.dialogueSystem = dialogueSystem;
-        this.speech = speech;
-        
-        Subscribe();
+        this.eventBus = eventBus;
+        this.speaker = speaker;
     }
 
-    protected override void OnEventBegin(ref TEvent eventData) {
-        if (!dialogueData.IsMet(eventData)) {
-            Debug.Log("Event not met");
+    public void Activate() {
+        if (IsActive) return;
+
+        IsActive = true;
+
+        if (dialogueData.isGlobal) {
+            Subscribe();
+        }
+    }
+
+    public void Deactivate() {
+        if (!IsActive) return;
+
+        IsActive = false;
+        Unsubscribe();
+    }
+
+    public bool IsEligibleForTurn(int turnCount) {
+        if (dialogueData.isGlobal) return true;
+
+        if (dialogueData.activationTurn == -1) return true;
+
+        return dialogueData.activationTurn == turnCount;
+    }
+
+    private void Subscribe() {
+        if (isSubscribed) return;
+        eventBus.SubscribeTo<TEvent>(OnEventTriggered);
+        isSubscribed = true;
+    }
+
+    private void Unsubscribe() {
+        if (!isSubscribed) return;
+        eventBus.UnsubscribeFrom<TEvent>(OnEventTriggered);
+        isSubscribed = false;
+    }
+
+    private void OnEventTriggered(ref TEvent eventData) {
+        if (!IsActive) return;
+
+        if (!dialogueData.IsMet(eventData)) return;
+
+        if (dialogueData.maxActivations > 0 && activationCount >= dialogueData.maxActivations) {
+            Deactivate();
             return;
         }
-        Debug.Log("Event met");
-        List<string> messages = dialogueData.BuildMessages(eventData);
-        Queue<string> dialogMessages = new Queue<string>(messages);
-        dialogueSystem.SetMessages(speech, dialogMessages);
-        Unsubscribe();
 
+        if (dialogueData.probability < 1.0f && UnityEngine.Random.value > dialogueData.probability) {
+            Debug.Log($"Діалог не спрацював через ймовірність: {dialogueData.name}");
+            return;
+        }
+
+        // Building message with replacements
+        List<string> processedMessages = new List<string>();
+        var replacements = dialogueData.GetReplacements(eventData);
+
+        foreach (string page in dialogueData.pages) {
+            string processedPage = page;
+            foreach (var replacement in replacements) {
+                processedPage = processedPage.Replace($"{{{replacement.Key}}}", replacement.Value);
+            }
+            processedMessages.Add(processedPage);
+        }
+
+        dialogueSystem.ShowDialogue(speaker, new Queue<string>(processedMessages));
+
+        activationCount++;
+    }
+
+    public void Dispose() {
+        Deactivate();
     }
 }
 

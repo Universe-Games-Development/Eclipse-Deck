@@ -44,7 +44,7 @@ public class GameBoardController : MonoBehaviour {
             return null;
         }
 
-        Debug.Log($"Selected: {field.GetTextCoordinates()}");
+        //Debug.Log($"Selected: {field.GetTextCoordinates()}");
         return field;
     }
 

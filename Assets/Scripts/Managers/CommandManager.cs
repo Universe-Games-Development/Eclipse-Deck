@@ -15,7 +15,24 @@ public class CommandManager {
     private readonly object _queueLock = new();
     private readonly object _undoLock = new();
     private const int MaxUndoAmount = 10;
-    
+
+    private bool _isPaused = false;
+    private readonly ManualResetEventSlim _pauseEvent = new ManualResetEventSlim(true);
+
+    public void Pause() {
+        if (!_isPaused) {
+            _isPaused = true;
+            _pauseEvent.Reset(); // Установить в несигнальное состояние
+        }
+    }
+
+    public void Resume() {
+        if (_isPaused) {
+            _isPaused = false;
+            _pauseEvent.Set(); // Установить в сигнальное состояние
+        }
+    }
+
     internal void EnqueueCommands(List<Command> commands) {
         foreach (var command in commands) {
             EnqueueCommand(command);
@@ -41,11 +58,16 @@ public class CommandManager {
 
         try {
             while (_commandQueue.Count > 0) {
+                // Проверяем состояние паузы
+                if (_isPaused) {
+                    await UniTask.WaitUntil(() => !_isPaused);
+                }
+
                 Command cmd;
                 lock (_queueLock) {
                     cmd = _commandQueue.Dequeue();
                 }
-                
+
                 await ExecuteCommandRecursively(cmd);
                 CleanupUndoCommands();
             }
