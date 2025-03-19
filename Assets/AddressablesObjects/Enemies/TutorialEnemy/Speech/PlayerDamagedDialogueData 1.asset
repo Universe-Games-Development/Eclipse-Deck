@@ -9,14 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae0f3332a981df54dbce8797402f6e9d, type: 3}
-  m_Name: TurnDialogue
+  m_Script: {fileID: 11500000, guid: 0037d911614b1574d93e2bcb76b369fc, type: 3}
+  m_Name: PlayerDamagedDialogueData 1
   m_EditorClassIdentifier: 
   pages:
-  - Hello
-  - I didn't expect you'll reach {turnCount} turn!
-  isGlobal: 0
-  activationTurn: 2
-  maxActivations: 1
-  probability: 1
-  roundCount: 1
+  - You`ll pay for that!
+  minReactionDamage: 1

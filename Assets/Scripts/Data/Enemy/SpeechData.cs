@@ -11,40 +11,65 @@ public class SpeechData : ScriptableObject {
 
     [Header("Dialogue Data")]
     public List<BaseDialogueData> dialogueDatas;
+    internal float typingSpeed = 1.0f;
 }
 
-public class Speech : IDisposable {
-    private DialogueSystem dialogueSystem;
-    public SpeechData speechData;
-    private GameEventBus eventBus;
-    List<IDialogue> dialogues = new();
+public class Speaker : IDisposable {
+    private readonly DialogueSystem dialogueSystem;
+    private readonly GameEventBus eventBus;
+    private readonly TurnManager turnManager;
+    private readonly List<IDialogue> allDialogues = new List<IDialogue>();
 
-    public Speech(DialogueSystem dialogueSystem, SpeechData speechData, GameEventBus eventBus) {
+    public SpeechData SpeechData { get; }
+
+    public Speaker(SpeechData speechData, DialogueSystem dialogueSystem, TurnManager turnManager, GameEventBus eventBus) {
+        SpeechData = speechData;
         this.dialogueSystem = dialogueSystem;
-        this.speechData = speechData;
+        this.turnManager = turnManager;
         this.eventBus = eventBus;
-        SetupDialogues();
+
+        Initialize();
     }
 
-    private void SetupDialogues() {
-        foreach (var dialogData in speechData.dialogueDatas) {
-            var dialog = dialogData.CreateDialog(this, dialogueSystem, eventBus);
-            dialog.Subscribe();
-            dialogues.Add(dialog);
+    private void Initialize() {
+        foreach (var dialogueData in SpeechData.dialogueDatas) {
+            var dialogue = dialogueData.CreateDialogue(this, dialogueSystem, eventBus);
+            if (dialogue.IsGlobal) {
+                dialogue.Activate();
+            }
+            allDialogues.Add(dialogue);
         }
+
+        eventBus.SubscribeTo<OnTurnStart>(OnTurnChanged);
+
+        UpdateDialoguesForTurn(turnManager.TurnCounter);
     }
 
-    public void Dispose() {
-        foreach (var dialog in dialogues) {
-            dialog.Dispose();
+    private void OnTurnChanged(ref OnTurnStart eventData) {
+        UpdateDialoguesForTurn(eventData.TurnCount);
+    }
+
+    private void UpdateDialoguesForTurn(int turnCount) {
+        foreach (var dialogue in allDialogues) {
+            if (dialogue.IsEligibleForTurn(turnCount)) {
+                dialogue.Activate();
+            } else {
+                dialogue.Deactivate();
+            }
         }
     }
 
     public bool TryGetSpeechSound(out AudioClip clip) {
-        clip = speechData.speechSound;
+        clip = SpeechData.speechSound;
         return clip != null;
     }
 
-}
+    public void Dispose() {
+        foreach (var dialogue in allDialogues) {
+            dialogue.Dispose();
+        }
 
+        eventBus.UnsubscribeFrom<OnTurnStart>(OnTurnChanged);
+    }
+}
 

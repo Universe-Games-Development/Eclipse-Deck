@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae0f3332a981df54dbce8797402f6e9d, type: 3}
-  m_Name: TurnDialogue
+  m_Name: TurnDialogue 1
   m_EditorClassIdentifier: 
   pages:
-  - Hello
+  - Nice!
   - I didn't expect you'll reach {turnCount} turn!
   isGlobal: 0
-  activationTurn: 2
+  activationTurn: 3
   maxActivations: 1
   probability: 1
-  roundCount: 1
+  roundCount: 2
