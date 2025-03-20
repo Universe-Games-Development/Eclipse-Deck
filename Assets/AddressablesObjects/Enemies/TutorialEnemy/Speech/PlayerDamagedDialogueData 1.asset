@@ -14,12 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speeches:
   - messages:
-    - Lol
-  - messages:
-    - Hah
-    - Yey
+    - Hey
+    - You deal to me  {damageAmount}
   - messages:
     - Wow
-    - Ah
-  probability: 0.23
+    - You deal to me  {damageAmount}
+  probability: 1
   minReactionDamage: 1

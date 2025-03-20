@@ -7,7 +7,7 @@ public class PlayerDamagedDialogueData : RandomEventDialogueData<OnDamageTaken> 
 
     public override Dictionary<string, string> GetReplacements(OnDamageTaken eventData) {
         return new Dictionary<string, string> {
-            { "damageAmount", eventData.Amount.ToString() }
+            { "damageAmount", $"{eventData.Amount} damage"}
         };
     }
 
