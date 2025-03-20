@@ -22,7 +22,7 @@ public class Mana : IMana {
     }
 
     private void RestoreMana(ref OnTurnStart eventData) {
-        Opponent startTurnOpponent = eventData.startTurnOpponent;
+        Opponent startTurnOpponent = eventData.StartingOpponent;
         if (startTurnOpponent != Owner) {
             return;
         }

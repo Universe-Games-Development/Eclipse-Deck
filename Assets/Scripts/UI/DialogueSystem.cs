@@ -14,8 +14,7 @@ public class DialogueSystem : MonoBehaviour {
 
     [Header("Body")]
     [SerializeField] private TextMeshProUGUI dialogueText;
-    [SerializeField] private GameObject dialoguePanel; // Panel containing the whole dialogue UI
-    
+    [SerializeField] private GameObject dialoguePanel;
 
     [SerializeField] private GameObject choicePanel;
     [SerializeField] private Button choiceButtonPrefab;
@@ -24,86 +23,109 @@ public class DialogueSystem : MonoBehaviour {
 
     [Header("Settings")]
     [SerializeField] private float letterDelay = 0.05f;
-    [SerializeField] private float delayBetweenMessages = 0.5f; // Delay after message is fully displayed
-    private string currentMessage;
 
-    private Speaker currentSpeech;
-    private Queue<string> remainingMessages = new Queue<string>();
+    private string currentMessage;
+    private Speaker currentSpeaker;
+
     private bool isTyping = false;
     private bool isWaitingForInput = false;
-    private CancellationTokenSource cts;
+
+    // Токен для скасування всього діалогу
+    private CancellationTokenSource dialogueCts;
+
+    // Токен для скасування тільки поточного виведення тексту
+    private CancellationTokenSource typingCts;
+
+    // Токен для очікування введення користувача
+    private CancellationTokenSource inputCts;
 
     [Inject] CommandManager commandManager;
     [Inject] private AudioManager audioManager;
 
     private void Start() {
-        // Hide dialogue panel at start
         if (dialoguePanel != null) {
             dialoguePanel.SetActive(false);
         }
+
+        if (skipButton != null) {
+            skipButton.onClick.AddListener(SkipDialogue);
+        }
     }
 
-    public void ShowDialogue(Speaker speech, Queue<string> dialogMessages) {
-        cts?.Cancel();
-        cts = new CancellationTokenSource();
+    public void ShowDialogue(Speaker speaker, Queue<string> dialogMessages) {
+        // Скасовуємо попередній діалог, якщо він був
+        dialogueCts?.Cancel();
+        dialogueCts = new CancellationTokenSource();
 
-        currentSpeech = speech;
-        remainingMessages = new Queue<string>(dialogMessages);
+        // Запам'ятовуємо поточного мовця
+        currentSpeaker = speaker;
 
-        UpdateCharacterInfo(speech.SpeechData);
+        // Створюємо і додаємо команду діалогу
+        DialogueCommand command = new DialogueCommand(speaker, dialogMessages, dialogueCts, this);
+        commandManager.EnqueueCommand(command);
+    }
 
-        commandManager.Pause();
+    public async UniTask StartDialogue(Queue<string> messages, CancellationToken dialogueToken) {
+        Queue<string> remainingMessages = new Queue<string>(messages);
 
         OpenDialoguePanel();
 
-        DisplayNextMessage().Forget();
-    }
+        try {
+            while (remainingMessages.Count > 0 && !dialogueToken.IsCancellationRequested) {
+                string message = remainingMessages.Dequeue();
 
-    public async UniTask DisplayChoices(List<string> choices, CancellationToken ct) {
-        choicePanel.SetActive(true);
+                // Створюємо новий токен для виведення тексту
+                typingCts = new CancellationTokenSource();
 
-        // Создать кнопки для каждого варианта
-        foreach (string choice in choices) {
-            Button button = Instantiate(choiceButtonPrefab, choicePanel.transform);
-            button.GetComponentInChildren<TextMeshProUGUI>().text = choice;
-            // Button choices settings
+                // Об'єднуємо токени, щоб скасування діалогу також скасувало виведення тексту
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(dialogueToken, typingCts.Token)) {
+                    await TypeText(message, linkedCts.Token);
+                }
+
+                if (dialogueToken.IsCancellationRequested) break;
+
+                inputCts = new CancellationTokenSource();
+
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(dialogueToken, inputCts.Token)) {
+                    isWaitingForInput = true;
+                    if (continueIndicator != null) {
+                        continueIndicator.SetActive(true);
+                    }
+
+                    await WaitForPlayerInput(linkedCts.Token);
+                }
+
+                // Приховуємо індикатор продовження
+                if (continueIndicator != null) {
+                    continueIndicator.SetActive(false);
+                }
+            }
+        } finally {
+            CloseDialoguePanel();
         }
-
-        // Await for player input
     }
 
-    // Event Trigger use
     public void HandleInput() {
         if (isTyping) {
-            // If typing, complete the current text immediately
-            cts?.Cancel();
-            cts = new CancellationTokenSource();
-            CompleteCurrentText().Forget();
+            typingCts?.Cancel();
         } else if (isWaitingForInput) {
-            // If waiting for input, proceed to next message
+            inputCts?.Cancel();
             isWaitingForInput = false;
-            DisplayNextMessage().Forget();
         }
     }
 
-    private void UpdateCharacterInfo(SpeechData data) {
-        characterName.text = data.characterName;
-        characterSprite.sprite = data.characterPortrait;
+    public void SkipDialogue() {
+        dialogueCts?.Cancel();
     }
 
-    private async UniTask DisplayNextMessage() {
-        if (remainingMessages.Count > 0) {
-            string message = remainingMessages.Dequeue();
-            await TypeText(message, cts.Token);
-
-            // After typing is complete, wait for player input
-            isWaitingForInput = true;
-            if (continueIndicator != null) {
-                continueIndicator.SetActive(false);
-            }
-        } else {
-            // No more messages, close the dialogue
-            CloseDialoguePanel();
+    private async UniTask WaitForPlayerInput(CancellationToken ct) {
+        try {
+            // Чекаємо, поки токен не буде скасовано
+            await UniTask.WaitUntilCanceled(ct);
+        } catch (OperationCanceledException) {
+            // Обробка скасування
+        } finally {
+            isWaitingForInput = false;
         }
     }
 
@@ -112,35 +134,36 @@ public class DialogueSystem : MonoBehaviour {
         isTyping = true;
         currentMessage = text;
 
-        foreach (char letter in text) {
-            if (ct.IsCancellationRequested)
-                break;
+        try {
+            foreach (char letter in text) {
+                // Перевіряємо скасування
+                if (ct.IsCancellationRequested) break;
 
-            dialogueText.text += letter;
-            if (audioManager != null && currentSpeech != null && currentSpeech.TryGetSpeechSound(out AudioClip clip)) {
-                audioManager.PlaySound(clip);
+                dialogueText.text += letter;
+
+                // Відтворюємо звук, якщо є
+                if (audioManager != null && currentSpeaker != null && currentSpeaker.TryGetSpeechSound(out AudioClip clip)) {
+                    audioManager.PlaySound(clip);
+                }
+
+                // Затримка між буквами
+                await UniTask.Delay(
+                    TimeSpan.FromSeconds(letterDelay / currentSpeaker.SpeechData.typingSpeed),
+                    cancellationToken: ct
+                );
             }
-
-            await UniTask.Delay(TimeSpan.FromSeconds(letterDelay / currentSpeech.SpeechData.typingSpeed), cancellationToken: ct);
+        } catch (OperationCanceledException) {
+            // Якщо виведення тексту скасовано, показуємо весь текст одразу
+            dialogueText.text = text;
+        } finally {
+            isTyping = false;
+            currentMessage = null;
         }
-        if (continueIndicator != null) {
-            continueIndicator.SetActive(true);
-        }
-
-        currentMessage = null;
-        isTyping = false;
     }
 
-    private async UniTask CompleteCurrentText() {
-        if (isTyping) {
-            // Display it fully
-            dialogueText.text = currentMessage;
-            isTyping = false;
-
-            // Wait briefly before allowing next input
-            await UniTask.Delay(TimeSpan.FromSeconds(0.1f), cancellationToken: cts.Token);
-            isWaitingForInput = true;
-        }
+    public void UpdateCharacterInfo(SpeechData data) {
+        characterName.text = data.characterName;
+        characterSprite.sprite = data.characterPortrait;
     }
 
     public void OpenDialoguePanel() {
@@ -149,29 +172,23 @@ public class DialogueSystem : MonoBehaviour {
         }
     }
 
-    private void SetupSkipButton() {
-        skipButton.onClick.AddListener(() => {
-            // Пропустить весь диалог
-            remainingMessages.Clear();
-            CloseDialoguePanel();
-        });
-    }
-
     public void CloseDialoguePanel() {
         if (dialoguePanel != null) {
             dialoguePanel.SetActive(false);
         }
 
-        // Clear current state
-        cts?.Cancel();
-        cts = null;
-        currentSpeech = null;
-        remainingMessages.Clear();
+        // Очищаємо всі токени
+        dialogueCts?.Cancel();
+        typingCts?.Cancel();
+        inputCts?.Cancel();
+
+        // Очищаємо стан
+        dialogueCts = null;
+        typingCts = null;
+        inputCts = null;
+        currentSpeaker = null;
         isTyping = false;
         isWaitingForInput = false;
-
-        // Возобновляем выполнение команд
-        commandManager.Resume();
     }
 
     public bool IsDialogueActive() {
@@ -180,5 +197,39 @@ public class DialogueSystem : MonoBehaviour {
 
     public void ForceCloseDialogue() {
         CloseDialoguePanel();
+    }
+}
+
+public class DialogueCommand : Command {
+    private readonly Speaker speech;
+    private readonly Queue<string> dialogMessages;
+    private readonly CancellationTokenSource dialogueCts;
+    private readonly DialogueSystem dialogueSystem;
+
+    public DialogueCommand(Speaker speech, Queue<string> dialogMessages, CancellationTokenSource dialogueCts, DialogueSystem dialogueSystem) {
+        this.speech = speech;
+        this.dialogMessages = dialogMessages;
+        this.dialogueCts = dialogueCts;
+        this.dialogueSystem = dialogueSystem;
+
+        // Встановлюємо високий пріоритет для діалогів
+        Priority = CommandPriority.High;
+    }
+
+    public override async UniTask Execute() {
+        // Встановлюємо дані про персонажа
+        dialogueSystem.UpdateCharacterInfo(speech.SpeechData);
+
+        // Починаємо показ повідомлень
+        await dialogueSystem.StartDialogue(dialogMessages, dialogueCts.Token);
+
+        // Повертаємо завершене завдання
+        return;
+    }
+
+    public override UniTask Undo() {
+        // Скасовуємо діалог
+        dialogueSystem.ForceCloseDialogue();
+        return UniTask.CompletedTask;
     }
 }

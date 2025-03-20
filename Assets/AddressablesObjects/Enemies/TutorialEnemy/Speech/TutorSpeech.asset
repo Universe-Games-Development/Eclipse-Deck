@@ -15,7 +15,8 @@ MonoBehaviour:
   speechSound: {fileID: 8300000, guid: aa66f043685a31e4bb90d0b6128bc3e1, type: 3}
   characterName: Tutorial Drone
   characterPortrait: {fileID: 21300000, guid: 1acaaa61e37518946a7c4e2274fd23cc, type: 3}
-  dialogueDatas:
-  - {fileID: 11400000, guid: f34e5b236b32ec34d99a28c9fac016a5, type: 2}
+  storyDialogues:
   - {fileID: 11400000, guid: 9aeaf8e1535d59a44aa06495365c740a, type: 2}
+  - {fileID: 11400000, guid: f34e5b236b32ec34d99a28c9fac016a5, type: 2}
+  eventDialogues:
   - {fileID: 11400000, guid: 5da27c62eb5c54c4680758cb0c4a0b75, type: 2}

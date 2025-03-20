@@ -25,7 +25,7 @@ public class EnemyPresenter : MonoBehaviour {
     private Speaker speech;
     private void Awake() {
         if (data != null && data.speechData != null) {
-            speech = new Speaker(data.speechData, dialogueSystem, turnManager, eventBus);
+            speech = new Speaker(data.speechData, dialogueSystem, eventBus);
         }
     }
 

@@ -5,7 +5,7 @@ public enum EventEnum
     TurnEndStarted = 1,
     TurnChanged = 2,
     OnTurnStart = 3,
-    OnRoundtart = 4,
+    OnRoundStart = 4,
     BattleStarted = 5,
     BattleEndData = 6,
     CardPull = 7,

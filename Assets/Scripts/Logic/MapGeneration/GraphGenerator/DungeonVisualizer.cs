@@ -94,7 +94,7 @@ public class DungeonVisualizer : MonoBehaviour {
 
     private void DisplayNodeDetails(DungeonNode node, RoomPresenter roomObject) {
         string nodeInfo = $"id:{node.id} {node.room.data.roomName} \n x [{node.position.x}] y [{node.position.y}]";
-        TextMeshProUGUI textMesh = uIManager.CreateTextAt(nodeInfo, roomObject.transform.position + Vector3.up);
+        TextMeshProUGUI textMesh = uIManager.TextSpawner.CreateTextAt(nodeInfo, roomObject.transform.position + Vector3.up);
         if (textMesh != null) {
             createdTexts.Add(textMesh);
         }
@@ -138,7 +138,7 @@ public class DungeonVisualizer : MonoBehaviour {
 
         foreach (TextMeshProUGUI text in createdTexts) {
             if (text != null) {
-                uIManager.RemoveText(text);
+                uIManager.TextSpawner.RemoveText(text);
             }
         }
         createdTexts.Clear();

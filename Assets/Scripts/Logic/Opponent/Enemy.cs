@@ -4,13 +4,13 @@ using Zenject;
 
 public class Enemy : Opponent {
     [Inject] private TurnManager turnManager;
-
+    private Speaker speech;
     public Enemy(GameEventBus eventBus, CardManager cardManager, IActionFiller abilityInputter) : base(eventBus, cardManager, abilityInputter) {
         Name = "Enemy";
     }
 
     protected override void TurnStartActions(ref OnTurnStart eventData) {
-        if (eventData.startTurnOpponent != this) {
+        if (eventData.StartingOpponent != this) {
             return;
         }
         base.TurnStartActions(ref eventData);

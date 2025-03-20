@@ -17,11 +17,12 @@ internal class DrawCardCommand : Command {
             if (card == null) {
                 Debug.Log("Player doesn`t have more cards he need to take damage (TO DO Soon)");
                 await UniTask.CompletedTask;
+                return;
             }
 
             bool result = opponent.hand.AddCard(card);
             if (!result) {
-                Debug.Log("Player doesn`t have more space for card it will discarded");
+                Debug.Log("Failed to add card to hand");
                 opponent.discardDeck.AddCard(card);
             }
 

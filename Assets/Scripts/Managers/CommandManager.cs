@@ -211,3 +211,9 @@ public class PriorityQueue<TKey, TValue> {
         return _queue.IsEmpty();
     }
 }
+
+public static class CommandPriority {
+    public const int High = 100;
+    public const int Medium = 50;
+    public const int Low = 10;
+}
