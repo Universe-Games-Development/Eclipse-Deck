@@ -10,51 +10,57 @@ public class SpeechData : ScriptableObject {
     public Sprite characterPortrait;
 
     [Header("Dialogue Data")]
-    public List<BaseDialogueData> dialogueDatas;
+    public List<StoryDialogueData> storyDialogues;
+    public List<BaseDialogueData> eventDialogues;
     internal float typingSpeed = 1.0f;
 }
 
 public class Speaker : IDisposable {
     private readonly DialogueSystem dialogueSystem;
     private readonly GameEventBus eventBus;
-    private readonly TurnManager turnManager;
-    private readonly List<IDialogue> allDialogues = new List<IDialogue>();
+    private readonly List<IDialogue> eventDialogues = new List<IDialogue>();
+
+    private readonly Dictionary<int, List<IDialogue>> storyDialogues = new();
 
     public SpeechData SpeechData { get; }
 
-    public Speaker(SpeechData speechData, DialogueSystem dialogueSystem, TurnManager turnManager, GameEventBus eventBus) {
+    public Speaker(SpeechData speechData, DialogueSystem dialogueSystem, GameEventBus eventBus) {
         SpeechData = speechData;
         this.dialogueSystem = dialogueSystem;
-        this.turnManager = turnManager;
         this.eventBus = eventBus;
 
+        eventBus.SubscribeTo<OnRoundStart>(UpdateStoryDialogs);
         Initialize();
     }
 
     private void Initialize() {
-        foreach (var dialogueData in SpeechData.dialogueDatas) {
+        SetupStoryDialogues();
+
+        foreach (var dialogueData in SpeechData.eventDialogues) {
             var dialogue = dialogueData.CreateDialogue(this, dialogueSystem, eventBus);
-            if (dialogue.IsGlobal) {
-                dialogue.Activate();
-            }
-            allDialogues.Add(dialogue);
+            dialogue.Subscribe();
+            eventDialogues.Add(dialogue);
         }
-
-        eventBus.SubscribeTo<OnTurnStart>(OnTurnChanged);
-
-        UpdateDialoguesForTurn(turnManager.TurnCounter);
     }
 
-    private void OnTurnChanged(ref OnTurnStart eventData) {
-        UpdateDialoguesForTurn(eventData.TurnCount);
+    private void SetupStoryDialogues() {
+        foreach (var storyDialog in SpeechData.storyDialogues) {
+            var dialog = storyDialog.CreateDialogue(this, dialogueSystem, eventBus);
+            int activationTurn = storyDialog.triggerOnRound;
+
+            // Використовуємо ?? для перевірки та ініціалізації списку
+            if (!storyDialogues.TryGetValue(activationTurn, out var turnDialogues)) {
+                storyDialogues[activationTurn] = turnDialogues = new List<IDialogue>();
+            }
+
+            turnDialogues.Add(dialog);
+        }
     }
 
-    private void UpdateDialoguesForTurn(int turnCount) {
-        foreach (var dialogue in allDialogues) {
-            if (dialogue.IsEligibleForTurn(turnCount)) {
-                dialogue.Activate();
-            } else {
-                dialogue.Deactivate();
+    private void UpdateStoryDialogs(ref OnRoundStart eventData) {
+        if (storyDialogues.TryGetValue(eventData.RoundNumber, out List<IDialogue> dialogues)) {
+            foreach (var dialog in dialogues) {
+                dialog.Subscribe();
             }
         }
     }
@@ -65,11 +71,14 @@ public class Speaker : IDisposable {
     }
 
     public void Dispose() {
-        foreach (var dialogue in allDialogues) {
+        foreach (var dialogue in eventDialogues) {
             dialogue.Dispose();
         }
-
-        eventBus.UnsubscribeFrom<OnTurnStart>(OnTurnChanged);
+        foreach (var dialogSet in storyDialogues) {
+            foreach (var dialogue in dialogSet.Value) {
+                dialogue.Dispose();
+            }
+        }
     }
 }
 

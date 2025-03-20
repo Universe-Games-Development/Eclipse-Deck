@@ -12,6 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0037d911614b1574d93e2bcb76b369fc, type: 3}
   m_Name: PlayerDamagedDialogueData 1
   m_EditorClassIdentifier: 
-  pages:
-  - You`ll pay for that!
+  speeches:
+  - messages:
+    - Lol
+  - messages:
+    - Hah
+    - Yey
+  - messages:
+    - Wow
+    - Ah
+  probability: 0.23
   minReactionDamage: 1

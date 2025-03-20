@@ -50,7 +50,7 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
     }
 
     protected virtual void TurnStartActions(ref OnTurnStart eventData) {
-        if (eventData.startTurnOpponent == this)
+        if (eventData.StartingOpponent == this)
         _commandManager.EnqueueCommand(new DrawCardCommand(this, 1));
     }
 

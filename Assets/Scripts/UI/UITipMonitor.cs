@@ -21,11 +21,11 @@ public class UITimMonitor : MonoBehaviour {
     }
 
     private void OnEnable() {
-        uiManager.OnInfoRequested += ShowInfo;
+        //uiManager.OnInfoRequested += ShowInfo;
     }
 
     private void OnDisable() {
-        uiManager.OnInfoRequested -= ShowInfo;
+        //uiManager.OnInfoRequested -= ShowInfo;
     }
 
     public void ShowInfo(string info) {

@@ -3,7 +3,7 @@ using UnityEngine;
 using static UnityEngine.UI.GridLayoutGroup;
 
 public class RoomPresenter : MonoBehaviour {
-    [SerializeField] private MeshRenderer renderer;
+    [SerializeField] private MeshRenderer meshRenderer;
     [SerializeField] private Material wrongMaterial;
 
     private DungeonNode self;
@@ -15,7 +15,7 @@ public class RoomPresenter : MonoBehaviour {
     }
 
     public void MarkWrong() {
-        renderer.material = wrongMaterial;
+        meshRenderer.material = wrongMaterial;
     }
 
     internal void AddConnection(DungeonNode connectedNode, Color color, float width) {
@@ -49,8 +49,8 @@ public class RoomPresenter : MonoBehaviour {
 
     public void MarkWithColor(Color selfReferenceColor) {
         MaterialPropertyBlock block = new MaterialPropertyBlock();
-        renderer.GetPropertyBlock(block);
+        meshRenderer.GetPropertyBlock(block);
         block.SetColor("_BaseColor", selfReferenceColor);
-        renderer.SetPropertyBlock(block);
+        meshRenderer.SetPropertyBlock(block);
     }
 }

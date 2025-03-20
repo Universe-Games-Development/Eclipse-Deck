@@ -73,7 +73,7 @@ public class TurnManager : IDisposable {
     private void OnEndTurnActionsPerformed(ref EndActionsExecutedEvent eventData) {
         bool isRoundFinalTurn = UpdateRoundCounter();
         if (isRoundFinalTurn) {
-            eventBus.Raise(new OnRoundtart(RoundCounter));
+            eventBus.Raise(new OnRoundStart(RoundCounter, ActiveOpponent));
         }
         SwitchToNextOpponent();
         inTransition = false;
@@ -143,17 +143,19 @@ public struct TurnChangedEvent : IEvent {
     }
 }
 public struct OnTurnStart : IEvent {
-    public Opponent startTurnOpponent;
-    public int TurnCount { get; private set; }
+    public Opponent StartingOpponent { get; private set; }
+    public int TurnNumber { get; private set; }
     public OnTurnStart(int turnCount, Opponent startTurnOpponent) {
-        this.startTurnOpponent = startTurnOpponent;
-        TurnCount = turnCount;
+        StartingOpponent = startTurnOpponent;
+        TurnNumber = turnCount;
     }
 }
 
-public struct OnRoundtart : IEvent {
-    public int RoundCount { get; private set; }
-    public OnRoundtart(int roundCount) {
-        RoundCount = roundCount;
+public struct OnRoundStart : IEvent {
+    public Opponent StartingOpponent { get; private set; }
+    public int RoundNumber { get; private set; }
+    public OnRoundStart(int roundCount, Opponent startingOpponent) {
+        RoundNumber = roundCount;
+        StartingOpponent = startingOpponent;
     }
 }
