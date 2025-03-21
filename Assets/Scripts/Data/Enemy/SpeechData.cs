@@ -12,7 +12,7 @@ public class SpeechData : ScriptableObject {
     [Header("Dialogue Data")]
     public List<StoryDialogueData> storyDialogues;
     public List<BaseDialogueData> eventDialogues;
-    internal float typingSpeed = 1.0f;
+    public float typingSpeed = 1.0f;
 }
 
 public class Speaker : IDisposable {
