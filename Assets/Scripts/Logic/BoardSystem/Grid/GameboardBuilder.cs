@@ -6,9 +6,8 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using Zenject;
 
 public class GameboardBuilder {
-    private BoardSettingsSO initialBoardConfig;
+    private BoardSettingsData initialBoardConfig;
     [Inject] CommandManager CommandManager;
-    private GameEventBus eventBus;
 
     public Func<BoardUpdateData, UniTask> OnBoardChanged;
     public Func<BoardUpdateData, UniTask> OnGridInitialized;
@@ -16,14 +15,8 @@ public class GameboardBuilder {
     public GridBoard GridBoard { get; private set; }
     string address = "DefaulBoardSetting";
 
-    [Inject]
-    public void Construct(GameEventBus eventBus) {
-        this.eventBus = eventBus;
 
-        eventBus.SubscribeTo<BattleStartedEvent>(InitializeBoard);
-    }
-
-    private void InitializeBoard(ref BattleStartedEvent eventData) {
+    public void BuildNewBoard() {
         CommandManager.EnqueueCommand(new GridInitCommand(this, InitBoard));
     }
 
@@ -32,7 +25,7 @@ public class GameboardBuilder {
             await UniTask.CompletedTask;
         }
 
-        var handle = Addressables.LoadAssetAsync<BoardSettingsSO>(address);
+        var handle = Addressables.LoadAssetAsync<BoardSettingsData>(address);
         await handle.Task;
 
         if (handle.Status == AsyncOperationStatus.Succeeded) {
@@ -53,7 +46,7 @@ public class GameboardBuilder {
         return GridBoard;
     }
 
-    public async UniTask UpdateGrid(BoardSettingsSO newConfig) {
+    public async UniTask UpdateGrid(BoardSettingsData newConfig) {
         if (!ValidateBoardSettings(newConfig)) return; // Перевірка перед реєстрацією команди
 
         Command command = GridBoard == null
@@ -64,7 +57,7 @@ public class GameboardBuilder {
         await UniTask.CompletedTask;
     }
 
-    protected bool ValidateBoardSettings(BoardSettingsSO settings) {
+    protected bool ValidateBoardSettings(BoardSettingsData settings) {
         if (settings == null) {
             Debug.LogWarning("Accepted config null!");
             return false;
@@ -115,13 +108,13 @@ public class GridInitCommand : Command {
 }
 
 public class BoardUpdateCommand : Command {
-    private readonly BoardSettingsSO oldSettings;
-    private readonly BoardSettingsSO newSettings;
+    private readonly BoardSettingsData oldSettings;
+    private readonly BoardSettingsData newSettings;
 
     private GameboardBuilder boardManager;
     private GridBoard board;
 
-    public BoardUpdateCommand(GameboardBuilder boardManager, GridBoard board, BoardSettingsSO newSettings) {
+    public BoardUpdateCommand(GameboardBuilder boardManager, GridBoard board, BoardSettingsData newSettings) {
         this.board = board;
         this.newSettings = newSettings;
         this.boardManager = boardManager;
@@ -136,7 +129,7 @@ public class BoardUpdateCommand : Command {
         await UpdateBoard(oldSettings);
     }
 
-    protected async UniTask UpdateBoard(BoardSettingsSO config) {
+    protected async UniTask UpdateBoard(BoardSettingsData config) {
         BoardUpdateData updateData = board.UpdateGlobalGrid(config);
 
         if (boardManager.OnBoardChanged != null) {

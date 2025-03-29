@@ -1,10 +1,14 @@
 using UnityEngine;
 using Zenject;
 using System.Collections.Generic;
+using System;
+using UnityEngine.SceneManagement;
 
 public class GlobalInstaller : MonoInstaller {
     [SerializeField] private List<GameObject> managerPrefabs;
 
+    [SerializeField] private List<LocationData> locationDatas;
+    [SerializeField] private RandomConfig _randomConfig;
     public override void InstallBindings() {
         foreach (var prefab in managerPrefabs) {
             if (prefab == null) {
@@ -19,12 +23,52 @@ public class GlobalInstaller : MonoInstaller {
             }
         }
 
+        
         // Resourses
-        Container.Bind<LocationAssetLoader>().AsSingle().NonLazy();
+        Container.Bind<LocationTransitionManager>().AsSingle().WithArguments(locationDatas).NonLazy();
+        Container.Bind<VisitedLocationsService>().AsSingle();
 
         Container.Bind<GameEventBus>().AsSingle().NonLazy();
         Container.Bind<CommandManager>().AsSingle().NonLazy();
-        Container.Bind<CardManager>().AsSingle().NonLazy();
-        Container.Bind<AddressablesResourceManager>().AsSingle().NonLazy();
+
+        Container.Bind<IEnemyFactory>().To<EnemyFactory>().AsSingle();
+        Container.Bind<EnemyProvider>().AsSingle();
+        Container.Bind<CardProvider>().AsSingle();
+        Container.Bind<EnemyResourceLoader>().AsSingle();
+        Container.Bind<CardResourceLoader>().AsSingle();
+
+        Container.BindInstance(_randomConfig).AsSingle();
+        Container.Bind<IInitializable>().To<RandomSeedInitializer>().AsSingle().NonLazy();
+    }
+}
+
+[Serializable]
+public class RandomConfig {
+    public string seed = "I like onions!";
+    public bool useRandomSeed = false;
+}
+
+public class RandomSeedInitializer : IInitializable {
+    private readonly RandomConfig _randomConfig;
+
+    public RandomSeedInitializer(RandomConfig randomConfig) {
+        _randomConfig = randomConfig;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
+        Initialize();
+    }
+
+    public void Initialize() {
+        int seed = default;
+        if (_randomConfig.useRandomSeed) {
+            seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+        } else {
+            seed = _randomConfig.seed.GetHashCode();
+        }
+
+        UnityEngine.Random.InitState(seed);
+        Debug.Log($"UnityEngine.Random initialized with seed: {seed}");
     }
 }

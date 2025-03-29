@@ -5,7 +5,6 @@ using Zenject;
 
 public class TurnButtonController : MonoBehaviour {
     [Inject] private TurnManager turnManager;
-    [Inject] private Player player;
 
     [SerializeField] private TurnButtonView turnButtonView;
 
@@ -14,21 +13,22 @@ public class TurnButtonController : MonoBehaviour {
             Debug.LogError("TurnButtonView is not assigned!");
             return;
         }
+        if (turnManager == null) return;
         turnManager.OnOpponentChanged += HandleInteraction;
         turnButtonView.OnTurnButtonClicked += HandleTurnButtonClicked;
     }
 
     private void HandleInteraction(Opponent opponent) {
-        turnButtonView.SetInteractive(opponent == player);
+        turnButtonView.SetInteractive(opponent is Player);
     }
 
     private void HandleTurnButtonClicked() {
-        if (turnManager == null || player == null) {
+        if (turnManager == null) {
             Debug.LogError("Dependencies not initialized!");
             return;
         }
 
-        if (turnManager.EndTurnRequest(player)) {
+        if (turnManager.EndTurnRequest(true)) {
             turnButtonView.SetInteractive(false);
         }
     }

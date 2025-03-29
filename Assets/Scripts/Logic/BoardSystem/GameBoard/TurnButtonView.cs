@@ -31,8 +31,4 @@ public class TurnButtonView : MonoBehaviour {
         if (isEnabled)
             OnTurnButtonClicked?.Invoke();
     }
-
-    private void OnMouseEnter() {
-        Debug.Log("Turn Button hovered");
-    }
 }

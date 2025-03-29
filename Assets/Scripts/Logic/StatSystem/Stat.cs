@@ -7,11 +7,12 @@ public class Stat : IStat {
     public int InitialValue { get; private set; }
     public event Action<int, int> OnValueChanged;
 
-    public Stat(int initialValue, int maxValue, int minValue = 0) {
+    public Stat(int initialValue, int maxValue = 0, int minValue = 0) {
         MinValue = minValue;
-        MaxValue = Math.Max(minValue, maxValue);
         InitialValue = initialValue;
-        CurrentValue = Math.Clamp(initialValue, minValue, maxValue);
+
+        MaxValue = Math.Max(initialValue, maxValue);
+        CurrentValue = Math.Clamp(initialValue, minValue, MaxValue);
     }
 
     public void Modify(int amount) {

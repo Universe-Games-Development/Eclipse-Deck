@@ -5,13 +5,13 @@ using Zenject;
 
 public class TestingBoard : MonoBehaviour
 {
-    [SerializeField] private GameBoardController gameboardController;
+    [SerializeField] private GameBoardPresenter gameboardController;
 
-    [SerializeField] private PlayerController player_c;
-    [SerializeField] private EnemyPresenter enemy_c;
+    [SerializeField] private PlayerPresenter playerPresenter;
+    [SerializeField] private EnemyPresenter enemyPresenter;
 
     [Header("Test")]
-    [SerializeField] private BoardSettingsSO boardConfig;
+    [SerializeField] private BoardSettingsData boardConfig;
     [SerializeField] private int taskDelay = 250;
     [SerializeField] private int randomTaskAmount;
     [Range(0, 10)]
@@ -22,7 +22,6 @@ public class TestingBoard : MonoBehaviour
     [Inject] private GameboardBuilder boardManager;
 
     // GAme context
-    [Inject] AddressablesResourceManager resManager;
     [Inject] CommandManager commandManager;
 
     private Enemy enemy;
@@ -38,11 +37,6 @@ public class TestingBoard : MonoBehaviour
     }
 
     private void Start() {
-        // DEBUG
-        enemy = enemy_c.enemy;
-        player = player_c.player;
-        _registrator.RegisterOpponent(player);
-        _registrator.RegisterOpponent(enemy);
 
         if (!TesOn) return;
         DebugLogic().Forget();

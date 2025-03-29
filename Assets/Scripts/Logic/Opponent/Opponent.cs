@@ -8,41 +8,42 @@ public interface IMannable {
 }
 
 public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
-
     public string Name = "Opponent";
-
     public Mana Mana { get; private set; }
     public Health Health { get; private set; }
-
-    public CardResource CardResource { get; private set; }
-
+    public CardSpendable CardSpendable { get; private set; }
     public CardHand hand;
     public Deck deck;
     public Deck discardDeck;
-
     public CardCollection cardCollection;
-    public IActionFiller actionFiller;
-
     public Action<Opponent> OnDefeat { get; internal set; }
-    protected readonly GameEventBus eventBus;
-    [Inject] private CommandManager _commandManager;
-    [Inject] private CardPlayService _cardPlayService;
-    public Opponent(GameEventBus eventBus, CardManager cardManager, IActionFiller actionFiller) {
-        this.eventBus = eventBus;
-        this.actionFiller = actionFiller;
+    protected GameEventBus _eventBus;
+    private CommandManager _commandManager;
+    [Inject(Optional = true)] private CardPlayService _cardPlayService;
+    private CardProvider _cardProvider;
+    public IActionFiller actionFiller;
+    public OpponentData Data { get; private set; }
 
-        Stat healthSat = new(20, 20);
-        Stat manaStat = new(0, 10);
-        Health = new Health(this, healthSat, eventBus);
-        Mana = new Mana(this, manaStat, eventBus);
-        CardResource = new CardResource(Mana, Health);
-
-        cardCollection = new CardCollection(cardManager);
-        hand = new CardHand(this, eventBus);
-        hand.OnCardSelected += PlayCard;
+    [Inject]
+    public Opponent(OpponentData opponentData, GameEventBus eventBus, CommandManager commandManager, CardProvider cardProvider) {
+        Data = opponentData;
+        _eventBus = eventBus;
+        _commandManager = commandManager;
+        _cardProvider = cardProvider;
 
         eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
-        eventBus.SubscribeTo<OnTurnStart>(TurnStartActions);
+        eventBus.SubscribeTo<BattleEndEventData>(EndBattleActions);
+        deck = new Deck(this, _eventBus);
+        discardDeck = new Deck(this, _eventBus);
+        hand = new CardHand(this, _eventBus);
+        hand.OnCardSelected += PlayCard;
+        cardCollection = new CardCollection(_cardProvider);
+
+        Stat healthStat = new(Data.Health);
+        Stat manaStat = new(Data.Mana);
+        Health = new Health(this, healthStat, _eventBus);
+        Mana = new Mana(this, manaStat, _eventBus);
+        CardSpendable = new CardSpendable(Mana, Health);
     }
 
     private void PlayCard(Card card) {
@@ -54,17 +55,25 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
         _commandManager.EnqueueCommand(new DrawCardCommand(this, 1));
     }
 
+    private void EndBattleActions(ref BattleEndEventData eventData) {
+        _eventBus.UnsubscribeFrom<OnTurnStart>(TurnStartActions);
+        deck.ClearDeck();
+        hand.ClearHand();
+    }
+
     private void StartBattleActions(ref BattleStartedEvent eventData) {
+        _eventBus.SubscribeTo<OnTurnStart>(TurnStartActions);
+
         _commandManager.EnqueueCommands(new List<Command> {
-            new InitDeckCommand(this, 40, cardCollection, eventBus).SetPriority(11),
+            new InitDeckCommand(this, 40, cardCollection, _eventBus).SetPriority(11),
             new DrawCardCommand(this, 10),
         });
     }
 
     public virtual void Dispose() {
-        if (eventBus != null) {
-            eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
-            eventBus.UnsubscribeFrom<OnTurnStart>(TurnStartActions);
+        if (_eventBus != null) {
+            _eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
+            _eventBus.UnsubscribeFrom<OnTurnStart>(TurnStartActions);
         }
 
         GC.SuppressFinalize(this);

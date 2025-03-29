@@ -1,12 +1,10 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
-using Zenject;
 
 public class CardPlayService : IDisposable {
-    private readonly GameBoardController _boardController;
+    private readonly GameBoardPresenter _boardController;
     private bool _isPlaying;
     private bool _isEnabled;
 
@@ -14,7 +12,7 @@ public class CardPlayService : IDisposable {
     private TurnManager _turnManager;
     private CancellationTokenSource _playCTS;
 
-    public CardPlayService(GameBoardController boardController, TurnManager turnManager) {
+    public CardPlayService(GameBoardPresenter boardController, TurnManager turnManager) {
         _boardController = boardController;
 
         _turnManager = turnManager;
@@ -63,7 +61,7 @@ public class CardPlayService : IDisposable {
             );
 
             if (playResult) {
-                cardPlayer.CardResource.TrySpend(card.Cost.CurrentValue);
+                cardPlayer.CardSpendable.TrySpend(card.Cost.CurrentValue);
                 Debug.Log("Card playing successful");
             } else {
                 // Если розыгрыш не удался, возвращаем карту обратно в руку

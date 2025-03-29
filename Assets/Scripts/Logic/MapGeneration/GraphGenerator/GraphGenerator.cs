@@ -7,11 +7,9 @@ using UnityEngine;
 public class GraphGenerator {
     private DungeonGraph graph;
     private MapGenerationData settings;
-    private System.Random random;
 
-    public GraphGenerator(MapGenerationData settings, System.Random random) {
+    public GraphGenerator(MapGenerationData settings) {
         this.settings = settings;
-        this.random = random;
     }
 
     public DungeonGraph GenerateGraph() {
@@ -22,7 +20,7 @@ public class GraphGenerator {
         AddFirstNode();
         AddEndNode();
         
-        graph.UpdateNodeData();
+        graph.UpdateNodesData();
         CreateMainPaths();
 
         
@@ -93,7 +91,7 @@ public class GraphGenerator {
 
         // Проходимо по всіх потенційних з'єднаннях
         foreach (var targetNode in potentialConnections) {
-            bool shouldConnect = random.NextDouble() <= settings.randomConnectionChance;
+            bool shouldConnect = UnityEngine.Random.value <= settings.randomConnectionChance;
 
             if (shouldConnect) {
                 currentNode.ConnectTo(targetNode);
@@ -108,8 +106,8 @@ public class GraphGenerator {
     }
 
     private DungeonNode ConnectOneRandomNode(DungeonNode currentNode, List<DungeonNode> connections) {
-        int randomIndex = random.Next(connections.Count);
-        DungeonNode targetNode = connections[randomIndex];
+        
+        DungeonNode targetNode = connections.GetRandomElement();
         currentNode.ConnectTo(targetNode);
         return targetNode;
     }
@@ -184,15 +182,15 @@ public class GraphGenerator {
         List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
         for (int level = 0; level < levelNodes.Count; level++) {
             List<DungeonNode> currentLevel = levelNodes[level];
-            int nodesRemoveAmount = currentLevel.Count - settings.minNodesPerLevel;
-            if (nodesRemoveAmount <= 0) continue;
+            int amountToRemove = currentLevel.Count - settings.minNodesPerLevel;
+            if (amountToRemove <= 0) continue;
 
-            int nodesToRemove = random.Next(0, nodesRemoveAmount); 
+            int nodesToRemove = UnityEngine.Random.Range(0, amountToRemove);
 
 
             if (nodesToRemove > 0) {
                 List<int> indices = Enumerable.Range(0, currentLevel.Count - 1).ToList();
-                Shuffle(indices);
+                indices.Shuffle();
 
                 for (int i = 0; i < nodesToRemove; i++) {
                     int randomIndex = indices[i];
@@ -214,7 +212,7 @@ public class GraphGenerator {
             if (amountToAdd < 0) {
                 Debug.Log("LOLs");
             }
-            int nodesToAdd = random.Next(0, amountToAdd);
+            int nodesToAdd = UnityEngine.Random.Range(0, amountToAdd);
 
             if (nodesToAdd > 0) {
                 for (int i = 0; i < nodesToAdd; i++) {
@@ -223,16 +221,6 @@ public class GraphGenerator {
                     currentLevel.Add(newNode);
                 }
             }
-        }
-    }
-
-    private void Shuffle<T>(List<T> list) {
-        int n = list.Count;
-        for (int i = n - 1; i > 0; i--) {
-            int j = random.Next(0, i + 1);
-            T temp = list[i];
-            list[i] = list[j];
-            list[j] = temp;
         }
     }
 }

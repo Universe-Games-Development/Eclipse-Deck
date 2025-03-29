@@ -15,7 +15,7 @@ public class HealthCellView : MonoBehaviour {
     private CancellationTokenSource animationCTS;
     private const string LevelProperty = "_Level";
 
-    private void Awake() {
+    internal void Initialize() {
         ValidateComponents();
         InitializePropertyBlock();
     }

@@ -6,8 +6,6 @@ using UnityEngine;
 public class SpeechData : ScriptableObject {
     [Header("Character Metadata")]
     public AudioClip speechSound;
-    public string characterName; 
-    public Sprite characterPortrait;
 
     [Header("Dialogue Data")]
     public List<StoryDialogueData> storyDialogues;
@@ -16,6 +14,8 @@ public class SpeechData : ScriptableObject {
 }
 
 public class Speaker : IDisposable {
+    public Opponent Opponent { get; private set; }
+
     private readonly DialogueSystem dialogueSystem;
     private readonly GameEventBus eventBus;
     private readonly List<IDialogue> eventDialogues = new List<IDialogue>();
@@ -24,8 +24,9 @@ public class Speaker : IDisposable {
 
     public SpeechData SpeechData { get; }
 
-    public Speaker(SpeechData speechData, DialogueSystem dialogueSystem, GameEventBus eventBus) {
+    public Speaker(SpeechData speechData, Opponent opponent, DialogueSystem dialogueSystem, GameEventBus eventBus) {
         SpeechData = speechData;
+        Opponent = opponent;
         this.dialogueSystem = dialogueSystem;
         this.eventBus = eventBus;
 

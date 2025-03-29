@@ -1,47 +1,46 @@
 using ModestTree;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
+using Zenject;
 
-public class DungeonGenerator : MonoBehaviour {
-    [SerializeField] private MapGenerationData mapGenerationData;
-    [SerializeField] private RoomLevelData roomsData;
-    [Header ("Modules")]
-    [SerializeField] private DungeonVisualizer visualizer;
+public class DungeonGenerator : IDungeonGenerator {
 
-    private DungeonGraph graph;
-    private GraphGenerator graphGenerator;
-    private RoomPopulator roomPopulator;
+    [InjectOptional] private DungeonVisualizer visualizer; // MonoBehaviour
+
     private GraphCenterer centerer;
-    private System.Random random;
 
-    private void Start() {
-        random = new System.Random(mapGenerationData.seed.GetHashCode());
-        graphGenerator = new GraphGenerator(mapGenerationData, random);
-
-        roomPopulator = new RoomPopulator(roomsData, random);
+    public DungeonGenerator() {
         centerer = new GraphCenterer();
-        GenerateDungeon();
     }
 
-    public void GenerateDungeon() {
-        if (roomsData.rooms.Count == 0) {
-            Debug.LogError("Empty room list to generate rooms");
-            return;
+    public bool GenerateDungeon(LocationRoomsData currentLevelData, out DungeonGraph dungeonGraph) {
+        dungeonGraph = null;
+        if (currentLevelData == null || currentLevelData.commonRooms.Count == 0) {
+            Debug.LogError("Empty common room list to generate rooms");
+            return false;
         }
+
         var startTime = Time.realtimeSinceStartup;
+        MapGenerationData mapGenerationData = currentLevelData.mapGenerationData;
+        GraphGenerator graphGenerator = new GraphGenerator(mapGenerationData);
+        RandomRoomFactory randomRoomFactory = new(currentLevelData);
+        RoomPopulator roomPopulator = new RoomPopulator(randomRoomFactory);
 
-        graph = graphGenerator.GenerateGraph();
-        CheckGraphValidation(graph);
-        centerer.CenterGraph(graph);
+        dungeonGraph = graphGenerator.GenerateGraph();
+        CheckGraphValidation(dungeonGraph);
 
-        roomPopulator.PopulateGraphWithRooms(graph);
+        roomPopulator.PopulateGraphWithRooms(dungeonGraph);
 
-        visualizer.VisualizeGraph(graph);
+        centerer.CenterGraph(dungeonGraph);
+        if (visualizer != null)
+            visualizer.VisualizeGraph(dungeonGraph);
 
         var endTime = Time.realtimeSinceStartup;
         Debug.Log($"Dungeon map generation took {endTime - startTime} seconds");
+        return true;
     }
 
 
@@ -73,7 +72,7 @@ public class DungeonNode {
     public HashSet<DungeonNode> nextLevelConnections = new HashSet<DungeonNode>();
     public GameObject roomInstance;
     public int level;
-    internal Room room;
+    public Room room;
 
     public DungeonNode(int nodeId, Vector2 pos) {
         id = nodeId;
@@ -212,7 +211,7 @@ public class DungeonGraph {
         levelNodes.Insert(levelIndex, level);
     }
 
-    public void UpdateNodeData() {
+    public void UpdateNodesData() {
         int roomId = 0;
         for (int level = 0; level < levelNodes.Count; level++) {
             List<DungeonNode> levelNodes = this.levelNodes[level];
@@ -250,29 +249,13 @@ public class DungeonGraph {
         levelNodes.Clear();
         nextNodeId = 0;
     }
-}
 
-// Клас для заповнення графу кімнатами
-public class RoomPopulator {
-    private RoomLevelData roomsData;
-    private System.Random random;
-
-    public RoomPopulator(RoomLevelData roomsData, System.Random random) {
-        this.roomsData = roomsData;
-        this.random = random;
+    public DungeonNode GetEntranceNode() {
+        return levelNodes[0][0];
     }
 
-    public void PopulateGraphWithRooms(DungeonGraph graph) {
-        RoomFactory roomFactory = new RoomFactory(roomsData.rooms, random);
-        foreach (var level in graph.GetLevelNodes()) {
-            foreach (var node in level) {
-                Room generatedRoom = roomFactory.CreateRoom();
-
-                node.room = generatedRoom;
-                // Логіка створення екземпляра кімнати
-                // node.roomInstance = Instantiate(template.roomPrefab, position, rotation);
-            }
-        }
+    public DungeonNode GetEndRoom() {
+        return levelNodes[levelNodes.Count - 1][0];
     }
 }
 
@@ -316,5 +299,57 @@ public class GraphCenterer {
         }
 
         return maxNodesLevel;
+    }
+}
+
+public class RoomPopulator {
+    private IRoomFactory roomFactory;
+
+    public RoomPopulator(IRoomFactory roomFactory) {
+        this.roomFactory = roomFactory;
+    }
+
+    public void PopulateGraphWithRooms(DungeonGraph graph) {
+        for (int level = 0; level < graph.GetLevelCount() - 1; level++) {
+            foreach (DungeonNode node in graph.GetLevelNodes()[level]) {
+                Room generatedRoom = roomFactory.GetRoom(graph, node);
+                node.room = generatedRoom;
+            }
+        }
+    }
+}
+
+public interface IRoomFactory {
+    Room GetRoom(DungeonGraph graph, DungeonNode node);
+}
+
+public class RandomRoomFactory : IRoomFactory {
+    private RoomDataRandomizer dataGenerator;
+    private LocationRoomsData roomsData;
+    public RandomRoomFactory(LocationRoomsData roomsData) {
+        dataGenerator = new RoomDataRandomizer(roomsData.commonRooms);
+        this.roomsData = roomsData;
+    }
+
+    public Room GetRoom(DungeonGraph graph, DungeonNode node) {
+
+        RoomData roomData = null;
+        int level = node.level;
+
+        if (level == 0) {
+            roomData = roomsData.entranceRoom;
+        } else if (level == graph.GetLevelNodes().Count - 2) { // preEndLevel
+            roomData = roomsData.bossRoom;
+        } else if (level == graph.GetLevelNodes().Count - 1) { // endLevel
+            roomData = roomsData.exitRoom;
+        } else {
+            roomData = dataGenerator.GetRandomRoomData();
+        }
+
+
+        if (roomData == null) throw new InvalidDataException("Room data is null");
+        Room room = new(node, roomData);
+
+        return room;
     }
 }

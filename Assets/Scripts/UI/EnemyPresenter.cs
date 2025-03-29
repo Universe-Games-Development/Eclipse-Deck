@@ -1,35 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using Zenject;
 
-public class EnemyView : MonoBehaviour {
-    [SerializeField] private Animator animator;
-    private EnemyData enemyData;
-    public void Initialize(EnemyData enemyData) {
-        this.enemyData = enemyData;
-        // Soon we will use this data to display the enemy's name and other information
-    }
-}
-
 public class EnemyPresenter : MonoBehaviour {
     [SerializeField] EnemyView view;
-    [Inject] public Enemy enemy; // model
+    [Inject] OpponentRegistrator opponentRegistrator;
 
-    [Inject] DialogueSystem dialogueSystem;
-    [Inject] GameEventBus eventBus;
-    [SerializeField] EnemyData data;
-    [Inject] TurnManager turnManager;
+    public Enemy Enemy { get; private set; }
 
-    private Speaker speech;
-    private void Awake() {
-        if (data != null && data.speechData != null) {
-            speech = new Speaker(data.speechData, dialogueSystem, eventBus);
-        }
+    
+    public void InitializeEnemy(Enemy enemy, Transform spawnPoint) {
+
+        enemy.OnDefeat += OnDefeatActions;
+        opponentRegistrator.RegisterOpponent(enemy);
+        view.Initialize(enemy.Data);
     }
 
-    private void OnDestroy() {
-        speech?.Dispose();
+    private void OnDefeatActions(Opponent opponent) {
+        throw new NotImplementedException();
     }
 }

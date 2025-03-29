@@ -5,10 +5,10 @@ using Zenject;
 
 public class GameManager : MonoBehaviour
 {
-    [Inject] LocationManager locationManager;
+    [Inject] LocationTransitionManager locationManager;
 
     public void StartNewGame() {
-        locationManager.LoadLocation(LocationType.Sewers).Forget();
+        locationManager.TransitionToLocation(LocationType.Sewers).Forget();
     }
 
     public void SetPause(bool pause) {

@@ -6,15 +6,13 @@ using UnityEngine;
 public class RoomDataRandomizer {
     private List<RoomData> roomsFillers;
     private Dictionary<RoomData, float> weightPoints = new Dictionary<RoomData, float>();
-    private System.Random rand;
 
-    public RoomDataRandomizer(List<RoomData> roomsFillers, System.Random rand) {
+    public RoomDataRandomizer(List<RoomData> roomsFillers) {
         if (roomsFillers.IsEmpty()) {
             Debug.LogError("Empty room list to generate rooms");
             return;
         }
         this.roomsFillers = roomsFillers;
-        this.rand = rand;
         ValidateRoomList();
         GenerateWeightPoints();
     }
@@ -35,7 +33,7 @@ public class RoomDataRandomizer {
     /// Generates cumulative weights for rooms chances
     /// </summary>
     private void GenerateWeightPoints() {
-        float totalWeight = roomsFillers.Sum(room => room.baseChance);
+        float totalWeight = roomsFillers.Sum(room => room.spawnChance);
         if (totalWeight <= 0) {
             Debug.LogError("Total weight must be greater than zero!");
             return;
@@ -44,7 +42,7 @@ public class RoomDataRandomizer {
         weightPoints.Clear();
         float cumulative = 0f;
         foreach (var room in roomsFillers) {
-            float normalizedWeight = room.baseChance / totalWeight;
+            float normalizedWeight = room.spawnChance / totalWeight;
             cumulative += normalizedWeight;
             weightPoints.Add(room, cumulative);
         }
@@ -60,7 +58,7 @@ public class RoomDataRandomizer {
         if (weightPoints.IsEmpty()) {
             return null;
         }
-        float randomWeight = (float)rand.NextDouble();
+        float randomWeight = UnityEngine.Random.value;
         List<KeyValuePair<RoomData, float>> roomList = weightPoints.ToList();
         int left = 0;
         int right = roomList.Count - 1;

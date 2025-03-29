@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(BoardSettingsSO))]
+[CustomEditor(typeof(BoardSettingsData))]
 public class BoardSettingsEditor : Editor {
-    private BoardSettingsSO settings;
+    private BoardSettingsData settings;
 
     private void OnEnable() {
-        settings = (BoardSettingsSO)target;
+        settings = (BoardSettingsData)target;
     }
 
     public override void OnInspectorGUI() {
