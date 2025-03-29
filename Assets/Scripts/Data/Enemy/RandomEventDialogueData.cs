@@ -69,11 +69,9 @@ public abstract class BaseDialogue : IDialogue {
 public class RandomEventDialogue<TEvent> : BaseDialogue where TEvent : IEvent {
     private readonly RandomEventDialogueData<TEvent> typedDialogueData;
     protected int activationCount = 0;
-    protected System.Random random;
     public RandomEventDialogue(RandomEventDialogueData<TEvent> dialogueData, DialogueSystem dialogueSystem, GameEventBus eventBus, Speaker speaker)
         : base(dialogueData, dialogueSystem, eventBus, speaker)
         {
-        random = new();
         typedDialogueData = dialogueData;
     }
 

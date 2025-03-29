@@ -1,5 +1,20 @@
 List of new features, bug fixes and improvements
 
+# Version 1.4.11
+* Hotfix for gpt options page
+* Fix for applying transformers for newer versions of Visual Studio
+* Arm64 architecture support
+
+# Version 1.4.10
+* Animations added to context aware instructions
+* Hotfix for context aware integrations (for GitHub Copilot)
+
+# Version 1.4.9
+* Hotfix for gpt options page
+
+# Version 1.4.8
+* Version bump for sister Visual Studio extensions
+
 # Version 1.4.7
 * New gpt feature: Integration into GitHub Copilot. Can now feed GitHub Copilot with project/scene/game-object details.
 * Auto updater for itch.io builds

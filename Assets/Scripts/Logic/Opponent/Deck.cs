@@ -12,14 +12,13 @@ public class Deck {
     public Deck(Opponent owner, GameEventBus eventBus) {
         this.owner = owner;
         this.eventBus = eventBus;
-        cardFactory = new CardFactory(eventBus);
+        cardFactory = new CardFactory(owner, eventBus);
     }
 
     public void Initialize(CardCollection collection) {
         List<Card> collectionCards = cardFactory.CreateCardsFromCollection(collection);
         foreach (var card in collectionCards) {
             cards.Push(card);
-            card.SetOwner(owner);
             card.ChangeState(CardState.InDeck);
         }
         ShuffleDeck();
@@ -82,7 +81,7 @@ public class Deck {
         wasDeckEmpty = false;
     }
 
-    public void CleanDeck() {
+    public void ClearDeck() {
         cards.Clear();
         emptyDrawAttempts = 0;
         wasDeckEmpty = false;
@@ -99,9 +98,10 @@ public class Deck {
 
 public class CardFactory {
     public GameEventBus eventBus;
-
-    public CardFactory(GameEventBus eventBus) {
+    private Opponent owner;
+    public CardFactory(Opponent owner, GameEventBus eventBus) {
         this.eventBus = eventBus;
+        this.owner = owner;
     }
 
     public List<Card> CreateCardsFromCollection(CardCollection collection) {
@@ -119,9 +119,9 @@ public class CardFactory {
 
     public Card CreateCard(CardData cardData) {
         return cardData switch {
-            CreatureCardData creatureCard => new CreatureCard(creatureCard, eventBus),
-            SpellCardSO spellCard => new SpellCard(spellCard, eventBus),
-            SupportCardSO supportCard => new SupportCard(supportCard, eventBus),
+            CreatureCardData creatureData => new CreatureCard(creatureData, owner),
+            SpellCardData spellData => new SpellCard(spellData, owner),
+            SupportCardData supportData => new SupportCard(supportData, owner),
             _ => null
         };
     }

@@ -4,11 +4,14 @@ using UnityEngine.AddressableAssets;
 [CreateAssetMenu(fileName = "LocationData", menuName = "Map/Location")]
 public class LocationData : ScriptableObject {
     public LocationType locationType;
-    public string sceneName;
-    public AssetLabelReference assetLabel;
     public string displayName;
-    [TextArea] public string description;
+    public string sceneName;
     public Sprite previewImage;
+    [TextArea] public string description;
+    public LocationRoomsData locationRoomsData;
+
+    public AssetLabelReference assetLabel;
+    
     public bool isPlayableLevel = true;
     public int orderInSequence;
 

@@ -77,6 +77,11 @@ MonoBehaviour:
   managerPrefabs:
   - {fileID: 3050898388442481311, guid: 1a85425bb1af8ea4fb63db79a3895e28, type: 3}
   - {fileID: 2880237507716942917, guid: d6b4b08073e91d24aa84d09f23ced86d, type: 3}
-  - {fileID: 3277313483467610089, guid: f99ee504d8d098f4e938777308f74b81, type: 3}
   - {fileID: 6696143888716681345, guid: c9ab3a2b46b90414091af4aa395641a3, type: 3}
-  - {fileID: 6696143888716681345, guid: 0ec13bc0f55ba104292f724ca429c49c, type: 3}
+  - {fileID: 6533181061983927262, guid: 9901de9727d60254f9d271e7c61313df, type: 3}
+  locationDatas:
+  - {fileID: 11400000, guid: 3e4b5402e7aae5f419eb3e53d11e3951, type: 2}
+  - {fileID: 11400000, guid: d43e9b7ebd65fa349949b1621a69cf30, type: 2}
+  _randomConfig:
+    seed: I like onions!
+    useRandomSeed: 0

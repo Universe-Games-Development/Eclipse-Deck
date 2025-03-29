@@ -53,14 +53,14 @@ public class TurnManager : IDisposable {
         isDisabled = false;
     }
 
-    public bool EndTurnRequest(Opponent endTurnOpponent) {
+    public bool EndTurnRequest(bool isPlayer = false) {
         if (inTransition || isDisabled) {
             Debug.LogWarning($"Turn cannot be ended right now. Transition: {inTransition}, Disabled: {isDisabled}");
             return false;
         }
 
-        if (endTurnOpponent != ActiveOpponent) {
-            Debug.LogWarning($"{endTurnOpponent?.Name} is not the active opponent and cannot end the turn.");
+        if (!(isPlayer && ActiveOpponent is Player)) {
+            Debug.LogWarning($"Player is not the active opponent and cannot end the turn.");
             return false;
         }
 

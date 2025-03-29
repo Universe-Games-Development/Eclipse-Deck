@@ -96,4 +96,10 @@ public class CardHand {
     internal void SetInteraction(bool value) {
         OnInteractionChanged?.Invoke(value);
     }
+
+    internal void ClearHand() {
+        foreach (Card card in cardsInHand) {
+            card.Exile();
+        }
+    }
 }

@@ -18,6 +18,7 @@ public abstract class CardData : ScriptableObject {
     public string resourseId;
     public Rarity rarity;
     public int cost;
+    public float spawnChance;
 
     public List<CardAbilityData> abilities;
 
@@ -30,7 +31,14 @@ public abstract class CardData : ScriptableObject {
         { Rarity.Legendary, new Color(1f, 0.5f, 0f) }
     };
 
-    
+
+    private static readonly Dictionary<Rarity, float> raritySpawnChances = new Dictionary<Rarity, float> {
+    { Rarity.Common, 0.5f },
+    { Rarity.Uncommon, 0.3f },
+    { Rarity.Rare, 0.15f },
+    { Rarity.Epic, 0.04f },
+    { Rarity.Legendary, 0.01f }
+    };
 
     private void OnValidate() {
         if (string.IsNullOrEmpty(resourseId)) {
@@ -38,6 +46,17 @@ public abstract class CardData : ScriptableObject {
 #if UNITY_EDITOR
             EditorUtility.SetDirty(this);
 #endif
+        }
+
+        // Update spawn chance based on rarity
+        UpdateSpawnChance();
+    }
+
+    private void UpdateSpawnChance() {
+        if (raritySpawnChances.TryGetValue(rarity, out var chance)) {
+            spawnChance = chance;
+        } else {
+            spawnChance = 0f; // Default if rarity doesn't match
         }
     }
 

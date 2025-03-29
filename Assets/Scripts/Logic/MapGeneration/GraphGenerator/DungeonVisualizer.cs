@@ -6,7 +6,7 @@ using Zenject;
 public class DungeonVisualizer : MonoBehaviour {
     [Inject] private UIManager uIManager;
     [SerializeField] private Transform dungeonMapParent;
-    [SerializeField] private RoomPresenter roomPrefab;
+    [SerializeField] private RoomNodePresenter roomPrefab;
     [SerializeField] private float spacing = 2.0f;
     
     [Header ("Diagnostic")]
@@ -16,7 +16,7 @@ public class DungeonVisualizer : MonoBehaviour {
     [SerializeField] private Color selfReferenceColor = Color.cyan;
     [SerializeField] private Color invalidNodeColor = Color.magenta;
 
-    private Dictionary<int, RoomPresenter> nodeToRoomMap = new Dictionary<int, RoomPresenter>();
+    private Dictionary<int, RoomNodePresenter> nodeToRoomMap = new Dictionary<int, RoomNodePresenter>();
     private List<GameObject> createdObjects = new List<GameObject>();
     private List<TextMeshProUGUI> createdTexts = new List<TextMeshProUGUI>();
 
@@ -38,7 +38,7 @@ public class DungeonVisualizer : MonoBehaviour {
     private void CreateRooms(DungeonGraph graph, int totalLevels) {
         foreach (var level in graph.GetLevelNodes()) {
             foreach (var node in level) {
-                RoomPresenter roomObject = Instantiate(roomPrefab, dungeonMapParent);
+                RoomNodePresenter roomObject = Instantiate(roomPrefab, dungeonMapParent);
                 roomObject.Initialize(node, spacing);
                 roomObject.transform.position = new Vector3(node.position.x * spacing, 0, node.position.y * spacing);
                 roomObject.transform.localScale = Vector3.one * 0.5f;
@@ -61,7 +61,7 @@ public class DungeonVisualizer : MonoBehaviour {
     private void CreateConnections(DungeonGraph graph, int totalLevels) {
         foreach (var level in graph.GetLevelNodes()) {
             foreach (var node in level) {
-                if (!nodeToRoomMap.TryGetValue(node.id, out RoomPresenter roomObject)) {
+                if (!nodeToRoomMap.TryGetValue(node.id, out RoomNodePresenter roomObject)) {
                     continue;
                 }
 
@@ -92,8 +92,8 @@ public class DungeonVisualizer : MonoBehaviour {
         return isRedundant ? redundantConnectionColor : normalConnectionColor;
     }
 
-    private void DisplayNodeDetails(DungeonNode node, RoomPresenter roomObject) {
-        string nodeInfo = $"id:{node.id} {node.room.data.roomName} \n x [{node.position.x}] y [{node.position.y}]";
+    private void DisplayNodeDetails(DungeonNode node, RoomNodePresenter roomObject) {
+        string nodeInfo = $"id:{node.id} {node.room.Data.roomName} \n x [{node.position.x}] y [{node.position.y}]";
         TextMeshProUGUI textMesh = uIManager.TextSpawner.CreateTextAt(nodeInfo, roomObject.transform.position + Vector3.up);
         if (textMesh != null) {
             createdTexts.Add(textMesh);
@@ -191,7 +191,7 @@ public class DungeonVisualizer : MonoBehaviour {
         List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
         for (int level = 0; level < levelNodes.Count; level++) {
             foreach (DungeonNode node in levelNodes[level]) {
-                Debug.Log($"Вузол {node.id} (рівень {node.position.x}, індекс {node.position.y}) -> Кімната: {node.room.data.type}");
+                Debug.Log($"Вузол {node.id} (рівень {node.position.x}, індекс {node.position.y}) -> Кімната: {node.room.Data.type}");
             }
         }
     }

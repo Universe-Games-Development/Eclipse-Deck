@@ -5,16 +5,16 @@ using UnityEngine;
 
 public class GridBoard {
     private CompasGrid[,] grids = new CompasGrid[2, 2];
-    public BoardSettingsSO Config {
+    public BoardSettingsData Config {
         get => _config;
         set {
             _config = value;
         }
     }
 
-    private BoardSettingsSO _config;
+    private BoardSettingsData _config;
 
-    public GridBoard(BoardSettingsSO config) {
+    public GridBoard(BoardSettingsData config) {
         if (config == null) Debug.LogError("Init config is null");
         _config = config;
         for (int meridian = 0; meridian < grids.GetLength(0); meridian++) {
@@ -25,7 +25,7 @@ public class GridBoard {
     }
 
     #region Update methods
-    public BoardUpdateData UpdateGlobalGrid(BoardSettingsSO newConfig = null) {
+    public BoardUpdateData UpdateGlobalGrid(BoardSettingsData newConfig = null) {
         // Використовуємо передану конфігурацію або поточну, якщо newConfig == null
         Config = newConfig ?? Config;
 

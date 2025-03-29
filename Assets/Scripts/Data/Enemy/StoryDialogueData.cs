@@ -6,7 +6,7 @@ using UnityEngine;
 public class StoryDialogueData : BaseDialogueData {
     [Header("Round Activation Settings")]
     public int triggerOnRound = 1;
-    public bool triggerOnPlayerTurn = true;
+    public bool triggerOnOwnTurn = true;
     [Header("Dialogue Content")]
     [TextArea(3, 10)]
     public List<string> pages = new List<string>();
@@ -71,8 +71,8 @@ public class StoryDialogue : BaseDialogue {
     }
 
     private void OnTurnStart(ref OnTurnStart eventData) {
-        bool isPlayerTurn = eventData.StartingOpponent is Player;
-        if (isPlayerTurn != storyDialogueData.triggerOnPlayerTurn) return;
+        bool isOwnTurn = eventData.StartingOpponent != speaker.Opponent;
+        if (isOwnTurn == storyDialogueData.triggerOnOwnTurn) return;
 
         Queue<string> messages = storyDialogueData.GetContextPages(eventData, storyDialogueData.triggerOnRound);
         dialogueSystem.ShowDialogue(speaker, messages);

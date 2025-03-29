@@ -2,12 +2,11 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UIElements;
 using Zenject;
 
 [RequireComponent (typeof(CreatureAnimator))]
 public class CreaturePresenter : MonoBehaviour {
-    [Inject] private GridVisual gridVisual;
+    [Inject] private GameBoardPresenter gameBoardPresenter;
     [Inject] private CreatureBehaviour creatureBehaviour;
     [Inject] private GameEventBus eventBus;
 
@@ -50,7 +49,7 @@ public class CreaturePresenter : MonoBehaviour {
     }
 
     private Transform GetCreatureTransformPoint(Field targetField) {
-        FieldPresenter fc = gridVisual.GetController(targetField);
+        FieldPresenter fc = gameBoardPresenter.GetFieldController(targetField);
         if (fc == null) {
             Debug.LogError($"FieldController not found for {targetField}");
             return null;

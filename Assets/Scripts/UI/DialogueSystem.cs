@@ -161,9 +161,9 @@ public class DialogueSystem : MonoBehaviour {
         }
     }
 
-    public void UpdateCharacterInfo(SpeechData data) {
-        characterName.text = data.characterName;
-        characterSprite.sprite = data.characterPortrait;
+    public void UpdateCharacterInfo(OpponentData opponentData) {
+        characterName.text = opponentData.Name;
+        characterSprite.sprite = opponentData.Sprite;
     }
 
     public void OpenDialoguePanel() {
@@ -201,13 +201,13 @@ public class DialogueSystem : MonoBehaviour {
 }
 
 public class DialogueCommand : Command {
-    private readonly Speaker speech;
+    private readonly Speaker speaker;
     private readonly Queue<string> dialogMessages;
     private readonly CancellationTokenSource dialogueCts;
     private readonly DialogueSystem dialogueSystem;
 
-    public DialogueCommand(Speaker speech, Queue<string> dialogMessages, CancellationTokenSource dialogueCts, DialogueSystem dialogueSystem) {
-        this.speech = speech;
+    public DialogueCommand(Speaker speaker, Queue<string> dialogMessages, CancellationTokenSource dialogueCts, DialogueSystem dialogueSystem) {
+        this.speaker = speaker;
         this.dialogMessages = dialogMessages;
         this.dialogueCts = dialogueCts;
         this.dialogueSystem = dialogueSystem;
@@ -218,7 +218,7 @@ public class DialogueCommand : Command {
 
     public override async UniTask Execute() {
         // Встановлюємо дані про персонажа
-        dialogueSystem.UpdateCharacterInfo(speech.SpeechData);
+        dialogueSystem.UpdateCharacterInfo(speaker.Opponent.Data);
 
         // Починаємо показ повідомлень
         await dialogueSystem.StartDialogue(dialogMessages, dialogueCts.Token);

@@ -5,9 +5,9 @@ public struct BattleStartedEvent : IEvent {
     public BattleStartedEvent(List<Opponent> opponents) => Opponents = opponents;
 }
 public struct BattleEndEventData : IEvent {
-    private Opponent testLooser;
+    public Opponent Looser;
 
     public BattleEndEventData(Opponent testLooser) {
-        this.testLooser = testLooser;
+        this.Looser = testLooser;
     }
 }

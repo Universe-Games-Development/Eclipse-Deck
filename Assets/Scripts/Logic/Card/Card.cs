@@ -1,8 +1,9 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.ComponentModel;
 using System.Threading;
 using UnityEngine;
+using Zenject;
+using static UnityEngine.UI.GridLayoutGroup;
 
 public abstract class Card : IAbilityOwner {
     public event Action<Card> OnCardDrawn;
@@ -20,16 +21,21 @@ public abstract class Card : IAbilityOwner {
 
     public CardUI cardUI;
     public AbilityManager<CardAbilityData, Card> _abilityManager;
-    public Card(CardData cardSO, GameEventBus eventBus)  // Add owner to constructor
-    {
-        Data = cardSO;
-        Id = Guid.NewGuid().ToString();
-        this.eventBus = eventBus;
-        Cost = new Cost(cardSO.MAX_CARDS_COST, cardSO.cost);
 
+    [Inject]
+    public void Construct(GameEventBus eventBus) {
+        this.eventBus = eventBus;
         _abilityManager = new AbilityManager<CardAbilityData, Card>(this, eventBus);
-        _abilityManager.AddAbilities(cardSO.abilities);
-        ChangeState(CardState.InDeck);
+        _abilityManager.AddAbilities(Data.abilities);
+    }
+
+    public Card(CardData cardData, Opponent owner)  // Add owner to constructor
+    {
+        Owner = owner;
+        Data = cardData;
+        Id = Guid.NewGuid().ToString();
+        
+        Cost = new Cost(cardData.MAX_CARDS_COST, cardData.cost);
     }
 
     public virtual void ChangeState(CardState newState) {
@@ -51,7 +57,7 @@ public abstract class Card : IAbilityOwner {
         }
     }
     
-    public abstract UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, CancellationToken ct = default);
+    public abstract UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardPresenter boardController, CancellationToken ct = default);
 
     internal void Deselect() {
         Debug.LogError("Deselect");
@@ -61,19 +67,38 @@ public abstract class Card : IAbilityOwner {
         Debug.LogError("Select");
     }
 
-    public virtual void SetOwner(Opponent owner) {
-        Owner = owner;
+    // States will be changed by subscribers (discrad deck / Deck / Exile Deck)
+    public void Exile() {
+        eventBus.Raise(new ExileCardEvent(this));
+    }
+
+    public void Discard() {
+        eventBus.Raise(new DiscardCardEvent(this));
+    }
+}
+
+public struct DiscardCardEvent : IEvent {
+    public Card card;
+    public DiscardCardEvent(Card card) {
+        this.card = card;
+    }
+}
+
+public struct ExileCardEvent : IEvent {
+    public Card card;
+    public ExileCardEvent(Card card) {
+        this.card = card;
     }
 }
 
 public class SpellCard : Card {
 
-    public SpellCard(SpellCardSO cardSO, GameEventBus eventBus)
-        : base(cardSO, eventBus) {
+    public SpellCard(SpellCardData cardData, Opponent owner)
+        : base(cardData, owner) {
     }
 
     
-    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, CancellationToken ct = default) {
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardPresenter boardController, CancellationToken ct = default) {
         Debug.Log("Spell card played");
         await UniTask.CompletedTask;
         return false;
@@ -81,10 +106,10 @@ public class SpellCard : Card {
 }
 
 public class SupportCard : Card {
-    public SupportCard(SupportCardSO cardSO, GameEventBus eventBus)
-        : base(cardSO, eventBus) { }
+    public SupportCard(SupportCardData cardData, Opponent owner)
+        : base(cardData, owner) { }
 
-    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardController boardController, CancellationToken ct = default) {
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardPresenter boardController, CancellationToken ct = default) {
         Debug.Log("Support card played");
         await UniTask.CompletedTask;
         return false;
@@ -97,29 +122,26 @@ public class CreatureCard : Card {
     public CreatureCardData creatureCardData;
     private IRequirement<Field> friendlyFieldRequirement;
 
-    public CreatureCard(CreatureCardData cardSO, GameEventBus eventBus)
-        : base(cardSO, eventBus) {
-        creatureCardData = cardSO;
-        Health = new(cardSO.MAX_CARD_HEALTH, cardSO.Health);
-        Attack = new(cardSO.MAX_CARD_ATTACK, cardSO.Attack);
+    public CreatureCard(CreatureCardData cardData, Opponent owner)
+        : base(cardData, owner) {
+        creatureCardData = cardData;
+        Health = new(cardData.Health);
+        Attack = new(cardData.Attack);
+
+        RequirementBuilder<Field> requirementBuilder = new();
+        friendlyFieldRequirement = requirementBuilder
+            .Add(new OwnerFieldRequirement(Owner))
+            .Add(new EmptyFieldRequirement())
+            .Build();
     }
 
-    public override async UniTask<bool> PlayCard(Opponent summoner, GameBoardController boardController, CancellationToken ct = default) {
+    public override async UniTask<bool> PlayCard(Opponent summoner, GameBoardPresenter boardPresenter, CancellationToken ct = default) {
         Field field = await summoner.actionFiller.ProcessRequirementAsync(summoner, friendlyFieldRequirement, ct);
         if (field == null) {
             Debug.Log("Field is null");
             return false;
         }
 
-        return await boardController.CreatureSpawner.SpawnCreature(this, field, summoner);
-    }
-
-    public override void SetOwner(Opponent newOwner) {
-        base.SetOwner(newOwner);
-        RequirementBuilder<Field> requirementBuilder = new();
-        friendlyFieldRequirement = requirementBuilder
-            .Add(new OwnerFieldRequirement(Owner))
-            .Add(new EmptyFieldRequirement())
-            .Build();
+        return await boardPresenter.SpawnCreature(this, field, summoner);
     }
 }
