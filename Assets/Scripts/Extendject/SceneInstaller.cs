@@ -5,8 +5,8 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
         Container.Bind<TurnManager>().AsSingle();
         Container.Bind<BattleManager>().AsSingle();
         Container.Bind<BatttleActionManager>().AsSingle().NonLazy();
-        
-        Container.Bind<DungeonMapUIController>().FromComponentInHierarchy().AsSingle();
+
+        Container.Bind<IDungeonUIService>().To<DungeonMapUIController>().FromComponentInHierarchy().AsSingle();
         Container.Bind<RoomPresenter>().FromComponentInHierarchy().AsSingle();
         Container.Bind<EnemyPresenter>().FromComponentInHierarchy().AsSingle();
         
@@ -24,10 +24,6 @@ public class GameInstaller : MonoInstaller<GameInstaller> {
         Container.Bind<DungeonVisualizer>().FromComponentInHierarchy().AsCached().Lazy();
 
         
-
-        // Gameboard
-        //Container.Bind<GameBoardPresenter>().FromComponentInHierarchy().AsSingle();
-        //Container.Bind<CardPlayService>().AsSingle();
         Container.Bind<GameboardBuilder>().AsSingle();
         Container.Bind<BoardAssigner>().AsSingle();
 

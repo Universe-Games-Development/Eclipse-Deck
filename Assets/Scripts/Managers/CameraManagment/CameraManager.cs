@@ -41,6 +41,7 @@ public class CameraManager : MonoBehaviour {
 
     private async UniTask HandleRoomExited(Room room) {
         SwitchCamera(floorCamera);
+        await UniTask.Delay(500);
     }
 
 

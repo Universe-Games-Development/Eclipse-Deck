@@ -23,7 +23,9 @@ public class DungeonVisualizer : MonoBehaviour {
     private DungeonGraph currentGraph;
 
     public void VisualizeGraph(DungeonGraph graph) {
+        if (graph == null) return;
         ClearVisualization();
+        
         currentGraph = graph;
 
         int totalLevels = graph.GetLevelNodes().Count;
