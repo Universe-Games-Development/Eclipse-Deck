@@ -1,64 +1,65 @@
-using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using System;
+using System.Threading;
 using Unity.Cinemachine;
 using UnityEngine;
+using Zenject;
 
 public class CameraManager : MonoBehaviour {
-    public CinemachineCamera topCamera;
-    public CinemachineCamera middleCamera;
-    public CinemachineCamera bottomCamera;
-    public CinemachineCamera startCamera;
+    public CinemachineCamera mainCamera;
 
     public CinemachineCamera activeCamera;
-    private Dictionary<CameraState, CinemachineCamera> cameras = new Dictionary<CameraState, CinemachineCamera>();
+    public CinemachineCamera floorCamera;
+    [SerializeField] private BoardViews boardViewSwitcher;
+    [SerializeField] private CameraSplineMover cameraSplineMover;
+    [SerializeField] PlayerPresenter _playerPresenter;
 
-    private CameraSwitcher switcher;
-    private CameraSplineMover cameraSplineMover;
-
-    [SerializeField]
-    public CameraState currentState;
-
-    private void Awake() {
-        switcher = GetComponent<CameraSwitcher>();
-        cameraSplineMover = GetComponent<CameraSplineMover>();
-
-        if (topCamera == null || middleCamera == null || bottomCamera == null || startCamera == null) {
-            Debug.LogError("Не всі камери призначені в інспекторі. Перевірте налаштування.");
-            enabled = false;
-            return;
-        }
-
-        cameras.Add(CameraState.Top, topCamera);
-        cameras.Add(CameraState.Middle, middleCamera);
-        cameras.Add(CameraState.Bottom, bottomCamera);
-        cameras.Add(CameraState.Start, startCamera);
-
-        if (cameraSplineMover != null) {
-            cameraSplineMover.OnMovementStart += DeactivateCameraSwitcher;
-            cameraSplineMover.OnMovementComplete += ActivateCameraSwitcher;
-            cameraSplineMover.OnMovementComplete += () => SwitchCamera(CameraState.Middle);
-        }
-
-    }
-
-    private void OnDestroy() {
-        if (cameraSplineMover != null) {
-            cameraSplineMover.OnMovementStart -= DeactivateCameraSwitcher;
-            cameraSplineMover.OnMovementComplete -= ActivateCameraSwitcher;
-        }
+    private GameEventBus _eventBus;
+    [Inject]
+    public void Construct(GameEventBus eventBus) {
+        _eventBus = eventBus;
     }
 
     void Start() {
-        // Встановлюємо початкову камеру
-        SwitchCamera(CameraState.Start);
+        SwitchCamera(floorCamera);
+        if (_eventBus != null) {
+            _eventBus.SubscribeTo<BattleStartedEvent>(OnBattleStart);
+            _eventBus.SubscribeTo<BattleEndEventData>(OnBattleEnd);
+        }
+
+        if (_playerPresenter != null && _playerPresenter.Player != null) {
+            _playerPresenter.Player.OnRoomEntered += HandleRoomEntered;
+            _playerPresenter.Player.OnRoomExited += HandleRoomExited;
+        }
     }
 
-    public void SwitchCamera(CameraState newState) {
-        if (!cameras.ContainsKey(newState)) {
-            Debug.LogError($"CameraState {newState} not found in dictionary.");
+    private async UniTask HandleRoomEntered(Room room) {
+        // Даємо час поки кімната ініціалізується
+        await UniTask.Delay(500);
+        SwitchCamera(mainCamera);
+    }
+
+    private async UniTask HandleRoomExited(Room room) {
+        SwitchCamera(floorCamera);
+    }
+
+
+    private void OnBattleEnd(ref BattleEndEventData eventData) {
+        boardViewSwitcher.enabled = false;
+        SwitchCamera(mainCamera);
+    }
+
+    private void OnBattleStart(ref BattleStartedEvent eventData) {
+        boardViewSwitcher.enabled = true;
+    }
+
+    public void SwitchCamera(CinemachineCamera newCamera) {
+        if (newCamera == null) {
+            Debug.LogError($"CameraState {newCamera} is null");
             return;
         }
 
-        if (currentState == newState) {
+        if (activeCamera == newCamera) {
             return;
         }
 
@@ -66,26 +67,14 @@ public class CameraManager : MonoBehaviour {
             activeCamera.Priority = 0;
         }
 
-        activeCamera = cameras[newState];
+        activeCamera = newCamera;
         activeCamera.Priority = 1;
-        currentState = newState;
     }
 
-    public void StartGame() {
-        cameraSplineMover.StartCameraMovement();
-    }
-
-    private void ActivateCameraSwitcher() {
-        if (switcher != null) {
-            switcher.enabled = true;
-        }
-    }
-
-    private void DeactivateCameraSwitcher() {
-        if (switcher != null) {
-            switcher.enabled = false;
+    private void OnDestroy() {
+        if (_eventBus != null) {
+            _eventBus.UnsubscribeFrom<BattleStartedEvent>(OnBattleStart);
+            _eventBus.UnsubscribeFrom<BattleEndEventData>(OnBattleEnd);
         }
     }
 }
-
-public enum CameraState { Top, Middle, Bottom, Start };

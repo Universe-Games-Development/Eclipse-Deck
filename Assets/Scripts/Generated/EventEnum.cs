@@ -20,4 +20,7 @@ public enum EventEnum
     OnManaEmpty = 16,
     OnManaSpent = 17,
     OnManaRestored = 18,
+    LocationChanged = 19,
+    RoomExiting = 20,
+    RoomEntering = 21,
 }

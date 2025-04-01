@@ -1,51 +1,65 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
 public class PlayerPresenter : MonoBehaviour {
-    public Player Player;
-    private TaskCompletionSource<Player> _playerInitializationSource = new TaskCompletionSource<Player>();
+    public Player Player { get; private set; }
     [SerializeField] private CardHandUI handUI;
-    [SerializeField] private RaycastService rayService;
 
-    [Inject] DiContainer container;
-    private PlayerManager playerManager;
-    [Inject] OpponentRegistrator opponentRegistrator;
+    private CardInputHandler _cardInputHandler;
+    private GameEventBus _eventBus;
 
     [Inject]
-    public void Construct(PlayerManager playerManager) {
-        this.playerManager = playerManager;
-        if (!playerManager.GetPlayer(out Player)) {
-            Debug.LogWarning("Failed to generate player");
+    public void Construct(PlayerManager playerManager, CardInputHandler cardInputHandler, GameEventBus eventBus) {
+        if (!playerManager.GetPlayer(out Player player)) {
+            Debug.LogWarning("Failed to get player");
             return;
         }
-        
+        Player = player;
+
+        _cardInputHandler = cardInputHandler;
+        _eventBus = eventBus;
+    }
+
+    private void Awake() {
+        _cardInputHandler.OnLeftClickPerformed += HandleClick;
     }
 
 
-    private void Update() {
-        if (Input.GetMouseButtonDown(0)) {
-            Vector3? mouseWorldPosition = rayService.GetRayMousePosition();
-            //if (gameboard_c.TryGetField(out Field field, mouseWorldPosition)) {
-            //    Debug.Log("Clicked Field at: " + field.GetTextCoordinates());
-            //}
-        }
+    private void HandleClick() {
+        Debug.Log("Clicked Left Mouse Btn");
     }
 
     public async UniTask EnterRoom(Room chosenRoom) {
+        // Повідомляємо інтерфейс про початок переходу
+        Debug.Log($"Starting to enter room: {chosenRoom.Data.name}");
+
+        // Запускаємо процес входу в кімнату
         await Player.EnterRoom(chosenRoom);
     }
 
     public async UniTask ExitRoom() {
+        Room currentRoom = Player.GetCurrentRoom();
+        if (currentRoom != null) {
+            Debug.Log($"Starting to exit room: {currentRoom.Data.name}");
+        }
+
+        // Починаємо процес виходу з кімнати
         await Player.ExitRoom();
+    }
+
+    private void OnDestroy() {
+        if (_cardInputHandler != null) {
+            _cardInputHandler.OnLeftClickPerformed -= HandleClick;
+        }
     }
 }
 
 public class Player : Opponent {
     private Room currentRoom;
     public Func<Room, UniTask> OnRoomEntered;
+    public Func<Room, UniTask> OnRoomExited;
 
     public Player(OpponentData opponentData, GameEventBus eventBus, CommandManager commandManager, CardProvider cardProvider)
         : base(opponentData, eventBus, commandManager, cardProvider) {
@@ -53,9 +67,12 @@ public class Player : Opponent {
     }
 
     public async UniTask EnterRoom(Room room) {
+        Room previousRoom = currentRoom;
         currentRoom = room;
+
         Debug.Log($"Room entered: {currentRoom.Data.name}");
 
+        // Notify about room entry
         if (OnRoomEntered != null) {
             await OnRoomEntered.Invoke(room);
         }
@@ -64,12 +81,21 @@ public class Player : Opponent {
         await UniTask.CompletedTask;
     }
 
-    internal async Task ExitRoom() {
+    public async UniTask ExitRoom() {
         if (currentRoom != null) {
+            Room exitingRoom = currentRoom;
             Debug.Log($"Exited room: {currentRoom.Data.name}");
+
+            // Notify about room exit
+            OnRoomExited?.Invoke(exitingRoom);
+
             currentRoom = null;
         }
 
         await UniTask.CompletedTask;
+    }
+
+    public Room GetCurrentRoom() {
+        return currentRoom;
     }
 }

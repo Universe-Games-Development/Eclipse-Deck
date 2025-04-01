@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class GlobalInstaller : MonoInstaller {
     [SerializeField] private List<GameObject> managerPrefabs;
 
-    [SerializeField] private List<LocationData> locationDatas;
+    [SerializeField] private List<LocationData> _locationDatas;
     [SerializeField] private RandomConfig _randomConfig;
     public override void InstallBindings() {
         foreach (var prefab in managerPrefabs) {
@@ -22,10 +22,10 @@ public class GlobalInstaller : MonoInstaller {
                 Debug.LogWarning($"Prefab {prefab.name} does not have a component.");
             }
         }
+        Container.Bind<InputMapManager>().AsSingle();
 
-        
         // Resourses
-        Container.Bind<LocationTransitionManager>().AsSingle().WithArguments(locationDatas).NonLazy();
+        Container.Bind<LocationTransitionManager>().AsSingle().WithArguments(_locationDatas).NonLazy();
         Container.Bind<VisitedLocationsService>().AsSingle();
 
         Container.Bind<GameEventBus>().AsSingle().NonLazy();

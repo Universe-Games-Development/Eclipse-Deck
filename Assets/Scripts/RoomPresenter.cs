@@ -31,7 +31,7 @@ public class RoomPresenter : MonoBehaviour {
         
         CurrentRoom.SetActivity(activity);
     }
-    private void HandleClearingRoom() {
+    private void HandleClearingRoom(Room currentRoom) {
         _mapUI.ToggleNextLevelButton(true);
     }
 
@@ -41,7 +41,7 @@ public class RoomPresenter : MonoBehaviour {
 }
 
 public class Room {
-    public Action OnCleared;
+    public Action<Room> OnCleared;
     public Action OnEntered;
     public readonly RoomData Data;
     public bool isCleared { get; private set; }
@@ -79,6 +79,6 @@ public class Room {
     public void SetCleared(bool value = true) {
         if (isCleared == value) return;
         isCleared = value;
-        OnCleared?.Invoke();
+        OnCleared?.Invoke(this);
     }
 }
