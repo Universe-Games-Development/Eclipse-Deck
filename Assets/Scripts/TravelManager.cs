@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using Zenject;
 
@@ -9,6 +10,7 @@ public class TravelManager {
 
     private DungeonGraph _currentDungeon;
     public Room CurrentRoom;
+    private LocationData _currentLocationData;
 
     [Inject] private PlayerPresenter _playerPresenter;
     [Inject] private LocationTransitionManager _locationManager;
@@ -16,6 +18,7 @@ public class TravelManager {
     [Inject] private IDungeonGenerator _dungeonGenerator;
     [Inject] private VisitedLocationsService visitedLocationService;
 
+    [Inject] GameEventBus _eventBus;
     [Inject]
     public void Construct(LocationTransitionManager locationManager) {
         _locationManager = locationManager;
@@ -46,6 +49,9 @@ public class TravelManager {
         visitedLocationService.AddVisitedLocation(locationData.locationType);
         // Entering start room
         var entranceRoom = _currentDungeon.GetEntranceNode().room;
+
+        _eventBus.Raise(new LocationChangedEvent(locationData, _currentLocationData));
+        _currentLocationData = locationData;
         await GoToRoom(entranceRoom);
     }
 
@@ -55,6 +61,7 @@ public class TravelManager {
 
         // Exiting from current room
         if (CurrentRoom != null) {
+        _eventBus.Raise(new RoomExitingEvent(CurrentRoom));
             await _playerPresenter.ExitRoom();
         }
 
@@ -63,7 +70,8 @@ public class TravelManager {
 
         // Moving player to next room
         _roomPresenter.InitializeRoom(chosenRoom);
-        
+
+        _eventBus.Raise(new RoomEnteringEvent(chosenRoom));
         await _playerPresenter.EnterRoom(chosenRoom);
 
         OnRoomChanged?.Invoke(chosenRoom);
@@ -88,3 +96,28 @@ public class VisitedLocationsService {
     }
 }
 
+public struct LocationChangedEvent : IEvent {
+    private LocationData locationData;
+    private LocationData currentLocationData;
+
+    public LocationChangedEvent(LocationData locationData, LocationData currentLocationData) : this() {
+        this.locationData = locationData;
+        this.currentLocationData = currentLocationData;
+    }
+}
+
+public struct RoomExitingEvent : IEvent {
+    public Room exitedRoom;
+
+    public RoomExitingEvent(Room chosenRoom) {
+        exitedRoom = chosenRoom;
+    }
+}
+
+public struct RoomEnteringEvent : IEvent {
+    private Room chosenRoom;
+
+    public RoomEnteringEvent(Room chosenRoom) {
+        this.chosenRoom = chosenRoom;
+    }
+}

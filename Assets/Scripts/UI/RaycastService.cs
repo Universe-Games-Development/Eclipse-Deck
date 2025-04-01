@@ -1,34 +1,9 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class RaycastService : MonoBehaviour {
-    public Camera raycastCamera;
-
-    [Header("Table View")]
     [SerializeField] private float rayDistance = 20f;
 
-    private void Awake() {
-        raycastCamera = Camera.main;
-        SceneManager.sceneLoaded += OnSceneLoad;
-    }
-
-    private void OnDestroy() {
-        SceneManager.sceneLoaded -= OnSceneLoad;
-    }
-
-    private void OnSceneLoad(Scene scene, LoadSceneMode mode) {
-        raycastCamera = Camera.main;
-    }
-
-    public Vector3? GetRayHitPosition() {
-        return GetRaycastHit()?.point;
-    }
-
-    public GameObject GetRayObject() {
-        return GetRaycastHit()?.collider.gameObject;
-    }
-
-    private RaycastHit? GetRaycastHit() {
+    public RaycastHit? GetRaycastHit(Camera raycastCamera) {
         Ray ray = raycastCamera.ScreenPointToRay(Input.mousePosition);
         Debug.DrawRay(ray.origin, ray.direction * rayDistance, Color.red, 1f); // Debug ray for visualization
 
@@ -40,7 +15,7 @@ public class RaycastService : MonoBehaviour {
     }
 
     public Vector3? GetRayMousePosition() {
-        var hit = GetRaycastHit();
+        var hit = GetRaycastHit(Camera.main);
         return hit?.point ?? null;
     }
 }

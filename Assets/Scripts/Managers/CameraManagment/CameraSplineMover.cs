@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class CameraSplineMover : MonoBehaviour {
     public float duration = 5f;
-    public bool StartOnAwake = false;
 
     [SerializeField] private CinemachineSplineDolly dolly;
     [SerializeField] private float delayToMove;
@@ -13,12 +12,6 @@ public class CameraSplineMover : MonoBehaviour {
 
     public Action OnMovementStart;
     public Action OnMovementComplete;
-
-    private void Awake() {
-        if (StartOnAwake) {
-            StartCameraMovement();
-        }
-    }
 
     public void StartCameraMovement() {
         if (dolly == null) {

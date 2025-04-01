@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5926793847367029630}
   - component: {fileID: 9135850187714465879}
+  - component: {fileID: 2173230800418238075}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -42,6 +43,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bc9a9b8aaf6c58a4e856770535ef6ad3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TextSpawner: {fileID: 2173230800418238075}
+--- !u!114 &2173230800418238075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6696143888716681345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 678576b16da272a41986a054fb694a77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   worldSpaceCanvasPrefab: {fileID: 4950960942053463047, guid: eee216200b2fcdb47b7ff80a2e05b134, type: 3}

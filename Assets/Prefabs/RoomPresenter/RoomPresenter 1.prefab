@@ -117,7 +117,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2290843278006943960}
-  - component: {fileID: 3711079332748787984}
+  - component: {fileID: 6692134741417521114}
   m_Layer: 0
   m_Name: RoomPresenter 1
   m_TagString: Untagged
@@ -141,7 +141,7 @@ Transform:
   - {fileID: 7218075792031525165}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3711079332748787984
+--- !u!114 &6692134741417521114
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -150,8 +150,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 7180724795644923245}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 65028089818c2aa4d9f4cb2fdb5bd625, type: 3}
+  m_Script: {fileID: 11500000, guid: 1f0cec90363e6d54986a9ffda8e0da9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  renderer: {fileID: 3100827583616329167}
+  meshRenderer: {fileID: 3100827583616329167}
   wrongMaterial: {fileID: 2100000, guid: 828935692c1a35346a2a5240667c71b4, type: 2}

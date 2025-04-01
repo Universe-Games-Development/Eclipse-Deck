@@ -207,8 +207,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 158639452}
-  - component: {fileID: 158639453}
   - component: {fileID: 158639454}
+  - component: {fileID: 158639455}
   m_Layer: 0
   m_Name: Level
   m_TagString: Untagged
@@ -232,21 +232,6 @@ Transform:
   - {fileID: 388916946}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &158639453
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 158639451}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9612edf557d9a9e4699dbcee67afe0f3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mapGenerationData: {fileID: 11400000, guid: 32ca6968142ac72479752a572e6a9dce, type: 2}
-  roomsData: {fileID: 11400000, guid: 9ffb7335ea33b4a4aad25154916643f7, type: 2}
-  visualizer: {fileID: 158639454}
 --- !u!114 &158639454
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -260,13 +245,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonMapParent: {fileID: 388916946}
-  roomPrefab: {fileID: 3711079332748787984, guid: 091b5fbdf94473d42848bc3e7673a453, type: 3}
+  roomPrefab: {fileID: 6692134741417521114, guid: 091b5fbdf94473d42848bc3e7673a453, type: 3}
   spacing: 3
   showNodeDetails: 1
   normalConnectionColor: {r: 1, g: 1, b: 1, a: 1}
   redundantConnectionColor: {r: 1, g: 0, b: 0, a: 1}
   selfReferenceColor: {r: 0, g: 1, b: 1, a: 1}
   invalidNodeColor: {r: 1, g: 0, b: 1, a: 1}
+--- !u!114 &158639455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 158639451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72e1c48f23940ff4088381537a9f3d2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  roomsData: {fileID: 11400000, guid: 3a9ddd061f628ef4ca89315540903c91, type: 2}
+  visualizer: {fileID: 158639454}
 --- !u!1 &388916945
 GameObject:
   m_ObjectHideFlags: 0
@@ -494,6 +493,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1359006325}
   - component: {fileID: 1359006324}
+  - component: {fileID: 1359006326}
+  - component: {fileID: 1359006327}
   m_Layer: 0
   m_Name: SceneContext
   m_TagString: Untagged
@@ -514,7 +515,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _scriptableObjectInstallers: []
-  _monoInstallers: []
+  _monoInstallers:
+  - {fileID: 1359006326}
+  - {fileID: 1359006327}
   _installerPrefabs: []
   _autoRun: 1
   OnPreInstall:
@@ -547,6 +550,30 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1359006326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1359006323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 624a39c9751fad84781a38aefdf7a9be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1359006327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1359006323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb5bdf0e715be0a479ffa8a4ab60f568, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1576279517
 GameObject:
   m_ObjectHideFlags: 0

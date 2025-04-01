@@ -7,7 +7,7 @@ public class RoomDataRandomizer {
     private List<RoomData> roomsFillers;
     private Dictionary<RoomData, float> weightPoints = new Dictionary<RoomData, float>();
 
-    public RoomDataRandomizer(List<RoomData> roomsFillers) {
+    public void UpdateRoomFillers(List<RoomData> roomsFillers) {
         if (roomsFillers.IsEmpty()) {
             Debug.LogError("Empty room list to generate rooms");
             return;

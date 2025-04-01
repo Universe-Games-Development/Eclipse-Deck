@@ -5,6 +5,7 @@ using System.Threading;
 using TMPro;
 using UnityEngine.UI;
 using System;
+using Zenject;
 
 public class ActionInputSystem : MonoBehaviour, IActionFiller {
     [SerializeField] private TMP_Text _instructionText;
@@ -13,17 +14,17 @@ public class ActionInputSystem : MonoBehaviour, IActionFiller {
     [SerializeField] private Button _cancelButton;
 
     private CancellationTokenSource _cts;
-    TimeoutController timeoutController = new TimeoutController();
-
-    [SerializeField] private RaycastService RayService;
+    private TimeoutController timeoutController = new TimeoutController();
 
     private readonly List<IEntityProvider> _providers = new();
+    private CardInputHandler _cardInputHandler;
+
+    [Inject]
+    public void Construct(CardInputHandler cardInputHandler) {
+        _cardInputHandler = cardInputHandler;
+    }
 
     private void Awake() {
-        if (RayService == null) {
-            Debug.LogError("RayService is not assigned in AbilityInputSystem!");
-        }
-
         InitializeButtons();
         _inputPanel.SetActive(false);
 
@@ -47,10 +48,10 @@ public class ActionInputSystem : MonoBehaviour, IActionFiller {
         var token = linkedCts.Token;
 
         try {
-            _instructionText.text = (requirement.GetInstruction());
+            _instructionText.text = requirement.GetInstruction();
             _inputPanel.SetActive(true);
 
-            return await HandleMouseInput(requestingPlayer, requirement, token);
+            return await HandleMouseInput<T>(requestingPlayer, requirement, token);
         } finally {
             _instructionText.text = string.Empty;
             _inputPanel.SetActive(false);
@@ -60,26 +61,44 @@ public class ActionInputSystem : MonoBehaviour, IActionFiller {
 
     private async UniTask<T> HandleMouseInput<T>(Opponent requestingPlayer, IRequirement<T> requirement, CancellationToken token) where T : class {
         try {
-            while (!token.IsCancellationRequested) {
-                if (Input.GetMouseButtonDown(0)) {
-                    GameObject hitObject = RayService.GetRayObject();
+            while (true) {
+                // Очікуємо натискання лівої кнопки миші
+                await WaitForLeftClick(token);
 
-                    if (hitObject != null && TryGetEntity<T>(hitObject, out T entity)) {
-                        if (requirement.IsMet(entity, out string message)) {
-                            return entity;
-                        } else {
-                            _instructionText.text = message;
-                        }
+                // Отримуємо об'єкт під курсором
+                GameObject hitObject = _cardInputHandler.hoveredObject;
+
+                if (hitObject != null && TryGetEntity<T>(hitObject, out T entity)) {
+                    if (requirement.IsMet(entity, out string message)) {
+                        return entity;
+                    } else {
+                        _instructionText.text = message;
                     }
                 }
-                await UniTask.DelayFrame(1, cancellationToken: token);
             }
         } catch (OperationCanceledException) {
             Debug.Log("Mouse Input operation canceled");
+            return default;
         }
-        return default;
     }
 
+    private async UniTask WaitForLeftClick(CancellationToken token) {
+        var tcs = new UniTaskCompletionSource<bool>();
+        Action onClick = null;
+
+        onClick = () => {
+            _cardInputHandler.OnLeftClickPerformed -= onClick;
+            tcs.TrySetResult(true);
+        };
+
+        _cardInputHandler.OnLeftClickPerformed += onClick;
+        using var registration = token.Register(() => {
+            _cardInputHandler.OnLeftClickPerformed -= onClick;
+            tcs.TrySetCanceled();
+        });
+
+        await tcs.Task;
+    }
 
     private bool TryGetEntity<T>(GameObject uiObject, out T entity) where T : class {
         foreach (var provider in _providers) {

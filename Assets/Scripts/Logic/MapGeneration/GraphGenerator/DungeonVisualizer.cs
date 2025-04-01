@@ -23,7 +23,9 @@ public class DungeonVisualizer : MonoBehaviour {
     private DungeonGraph currentGraph;
 
     public void VisualizeGraph(DungeonGraph graph) {
+        if (graph == null) return;
         ClearVisualization();
+        
         currentGraph = graph;
 
         int totalLevels = graph.GetLevelNodes().Count;
@@ -93,7 +95,13 @@ public class DungeonVisualizer : MonoBehaviour {
     }
 
     private void DisplayNodeDetails(DungeonNode node, RoomNodePresenter roomObject) {
-        string nodeInfo = $"id:{node.id} {node.room.Data.roomName} \n x [{node.position.x}] y [{node.position.y}]";
+        if (node.room == null) {
+            return;
+        }
+        string roomName = node.room.Data.roomName;
+        float XPosition = node.position.x;
+        float YPosition = node.position.y;
+        string nodeInfo = $"id:{node.id} {roomName} \n x [{XPosition}] y [{YPosition}]";
         TextMeshProUGUI textMesh = uIManager.TextSpawner.CreateTextAt(nodeInfo, roomObject.transform.position + Vector3.up);
         if (textMesh != null) {
             createdTexts.Add(textMesh);
