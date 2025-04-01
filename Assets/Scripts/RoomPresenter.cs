@@ -6,16 +6,12 @@ public class RoomPresenter : MonoBehaviour {
     [Inject] private IDungeonUIService _dungeonUI; // Використовуємо інтерфейс замість конкретного класу
 
     [SerializeField] private RoomView roomView;
-    [SerializeField] private ActivitySpawner activitySpawner;
 
     public Room CurrentRoom { get; private set; }
 
     private void Awake() {
         if (roomView == null)
             Debug.LogError("RoomView reference missing in RoomPresenter");
-
-        if (activitySpawner == null)
-            Debug.LogError("ActivitySpawner reference missing in RoomPresenter");
     }
 
     public void InitializeRoom(Room room) {
@@ -47,12 +43,6 @@ public class RoomPresenter : MonoBehaviour {
     public void HandleEnteringRoom() {
         if (_dungeonUI != null)
             _dungeonUI.ToggleNextLevelButton(false);
-
-        if (activitySpawner == null || CurrentRoom == null)
-            return;
-
-        RoomActivity activity = activitySpawner.GetActivity(CurrentRoom);
-        CurrentRoom.SetActivity(activity);
     }
 
     private void HandleClearingRoom(Room currentRoom) {
@@ -100,7 +90,7 @@ public class Room : IDisposable {
             SetCleared();
         } else {
             _currentActivity.OnActivityCompleted += SetCleared;
-            _currentActivity.Initialize();
+            _currentActivity.Initialize(this);
         }
     }
 

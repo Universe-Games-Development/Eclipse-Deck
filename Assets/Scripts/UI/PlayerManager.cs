@@ -12,7 +12,11 @@ public class PlayerManager : MonoBehaviour {
         currentPlayer = CreatePlayer(playerData);
     }
 
-    private Player CreatePlayer(OpponentData data) => _container.Instantiate<Player>(new object[] { data });
+    private Player CreatePlayer(OpponentData data) {
+        Player player = _container.Instantiate<Player>();
+        player.SetData(data);
+        return player;
+    }
 
     public bool GetPlayer(out Player player) {
         if (currentPlayer == null) {

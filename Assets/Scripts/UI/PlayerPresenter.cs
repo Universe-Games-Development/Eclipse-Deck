@@ -61,8 +61,8 @@ public class Player : Opponent {
     public Func<Room, UniTask> OnRoomEntered;
     public Func<Room, UniTask> OnRoomExited;
 
-    public Player(OpponentData opponentData, GameEventBus eventBus, CommandManager commandManager, CardProvider cardProvider)
-        : base(opponentData, eventBus, commandManager, cardProvider) {
+    public Player(GameEventBus eventBus, CommandManager commandManager, CardProvider cardProvider)
+        : base(eventBus, commandManager, cardProvider) {
         Name = "Player";
     }
 

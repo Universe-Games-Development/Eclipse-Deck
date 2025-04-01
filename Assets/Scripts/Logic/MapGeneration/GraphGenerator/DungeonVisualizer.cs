@@ -96,6 +96,7 @@ public class DungeonVisualizer : MonoBehaviour {
 
     private void DisplayNodeDetails(DungeonNode node, RoomNodePresenter roomObject) {
         if (node.room == null) {
+            Debug.LogError("node doesn`t have a room");
             return;
         }
         string roomName = node.room.Data.roomName;

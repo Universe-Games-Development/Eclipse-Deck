@@ -124,7 +124,7 @@ public class CardInputHandler : MonoBehaviour, InputSystem_Actions.ICardBattleIn
 
     public void OnLeftClick(InputAction.CallbackContext context) {
         isLeftClicking = context.ReadValueAsButton(); 
-        Debug.Log($"Phase: {context.phase} | Started : {context.started} | Performed: {context.performed} | Canceled: {context.canceled}");
+        //Debug.Log($"Phase: {context.phase} | Started : {context.started} | Performed: {context.performed} | Canceled: {context.canceled}");
         if (context.performed) {
             OnLeftClickPerformed?.Invoke();
             potentialDrag = true;

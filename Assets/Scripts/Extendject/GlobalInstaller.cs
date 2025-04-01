@@ -31,7 +31,6 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<GameEventBus>().AsSingle().NonLazy();
         Container.Bind<CommandManager>().AsSingle().NonLazy();
 
-        Container.Bind<IEnemyFactory>().To<EnemyFactory>().AsSingle();
         Container.Bind<EnemyProvider>().AsSingle();
         Container.Bind<CardProvider>().AsSingle();
         Container.Bind<EnemyResourceLoader>().AsSingle();
