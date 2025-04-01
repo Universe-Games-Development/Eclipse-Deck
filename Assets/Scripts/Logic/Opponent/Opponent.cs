@@ -24,9 +24,8 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
     public IActionFiller actionFiller;
     public OpponentData Data { get; private set; }
 
-    [Inject]
-    public Opponent(OpponentData opponentData, GameEventBus eventBus, CommandManager commandManager, CardProvider cardProvider) {
-        Data = opponentData;
+    public Opponent(GameEventBus eventBus, CommandManager commandManager, CardProvider cardProvider) {
+        
         _eventBus = eventBus;
         _commandManager = commandManager;
         _cardProvider = cardProvider;
@@ -38,7 +37,11 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
         hand = new CardHand(this, _eventBus);
         hand.OnCardSelected += PlayCard;
         cardCollection = new CardCollection(_cardProvider);
+    }
 
+    public void SetData(OpponentData data) {
+        Data = data;
+        Name = Data.Name;
         Stat healthStat = new(Data.Health);
         Stat manaStat = new(Data.Mana);
         Health = new Health(this, healthStat, _eventBus);
