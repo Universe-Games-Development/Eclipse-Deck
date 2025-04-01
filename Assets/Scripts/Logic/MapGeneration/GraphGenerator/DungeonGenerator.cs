@@ -8,12 +8,17 @@ using Zenject;
 
 public class DungeonGenerator : IDungeonGenerator {
 
-    [InjectOptional] private DungeonVisualizer visualizer; // MonoBehaviour
-
     private GraphCenterer centerer;
+    private DungeonGraph createdGraph;
+    private GraphGenerator graphGenerator;
+    RandomRoomFactory roomFactory;
+    RoomPopulator roomPopulator;
 
     public DungeonGenerator() {
         centerer = new GraphCenterer();
+        graphGenerator = new GraphGenerator();
+        roomFactory = new();
+        roomPopulator = new(roomFactory);
     }
 
     public bool GenerateDungeon(LocationRoomsData currentLevelData, out DungeonGraph dungeonGraph) {
@@ -24,22 +29,20 @@ public class DungeonGenerator : IDungeonGenerator {
         }
 
         var startTime = Time.realtimeSinceStartup;
-        MapGenerationData mapGenerationData = currentLevelData.mapGenerationData;
-        GraphGenerator graphGenerator = new GraphGenerator(mapGenerationData);
-        RandomRoomFactory randomRoomFactory = new(currentLevelData);
-        RoomPopulator roomPopulator = new RoomPopulator(randomRoomFactory);
 
-        dungeonGraph = graphGenerator.GenerateGraph();
+        MapGenerationData mapGenerationData = currentLevelData.mapGenerationData;
+        roomFactory.UpdateRoomData(currentLevelData);
+
+        dungeonGraph = graphGenerator.GenerateGraph(mapGenerationData);
         CheckGraphValidation(dungeonGraph);
 
         roomPopulator.PopulateGraphWithRooms(dungeonGraph);
 
         centerer.CenterGraph(dungeonGraph);
-        if (visualizer != null)
-            visualizer.VisualizeGraph(dungeonGraph);
 
         var endTime = Time.realtimeSinceStartup;
         Debug.Log($"Dungeon map generation took {endTime - startTime} seconds");
+        createdGraph = dungeonGraph;
         return true;
     }
 
@@ -60,7 +63,7 @@ public class DungeonGenerator : IDungeonGenerator {
     }
 
     public void ClearDungeon() {
-        visualizer.ClearVisualization();
+        createdGraph.Clear();
     }
 }
 
@@ -310,7 +313,7 @@ public class RoomPopulator {
     }
 
     public void PopulateGraphWithRooms(DungeonGraph graph) {
-        for (int level = 0; level < graph.GetLevelCount() - 1; level++) {
+        for (int level = 0; level < graph.GetLevelCount(); level++) {
             foreach (DungeonNode node in graph.GetLevelNodes()[level]) {
                 Room generatedRoom = roomFactory.GetRoom(graph, node);
                 node.room = generatedRoom;
@@ -326,13 +329,21 @@ public interface IRoomFactory {
 public class RandomRoomFactory : IRoomFactory {
     private RoomDataRandomizer dataGenerator;
     private LocationRoomsData roomsData;
-    public RandomRoomFactory(LocationRoomsData roomsData) {
-        dataGenerator = new RoomDataRandomizer(roomsData.commonRooms);
-        this.roomsData = roomsData;
+
+    public RandomRoomFactory() {
+        dataGenerator = new();
+    }
+
+    public void UpdateRoomData(LocationRoomsData currentLevelData) {
+        roomsData = currentLevelData;
+        dataGenerator.UpdateRoomFillers(roomsData.commonRooms);
     }
 
     public Room GetRoom(DungeonGraph graph, DungeonNode node) {
-
+        if (roomsData == null) {
+            Debug.LogWarning("roomData not initialized");
+            return null;
+        }
         RoomData roomData = null;
         int level = node.level;
 

@@ -5,7 +5,7 @@ using Zenject;
 public class RoomsGenerator : MonoBehaviour
 {
     [Header("Debugging")]
-    [Inject] DungeonGenerator dungeonGenerator;
+    [Inject] IDungeonGenerator dungeonGenerator;
     [SerializeField] LocationRoomsData roomsData;
     [SerializeField] DungeonVisualizer visualizer;
     

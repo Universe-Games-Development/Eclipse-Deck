@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: MapGenerationData
   m_EditorClassIdentifier: 
   seed: simple_seed
-  levelCount: 12
-  initialNodesPerLevel: 12
-  minNodesPerLevel: 1
-  maxNodesPerLevel: 12
-  randomConnectionChance: 0
+  levelCount: 5
+  initialNodesPerLevel: 2
+  minNodesPerLevel: 2
+  maxNodesPerLevel: 5
+  randomConnectionChance: 0.503
   destroyConnectionChance: 0.5

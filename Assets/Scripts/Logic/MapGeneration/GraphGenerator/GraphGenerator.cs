@@ -7,19 +7,15 @@ using UnityEngine;
 public class GraphGenerator {
     private DungeonGraph graph;
     private MapGenerationData settings;
-
-    public GraphGenerator(MapGenerationData settings) {
+    public DungeonGraph GenerateGraph(MapGenerationData settings) {
         this.settings = settings;
-    }
-
-    public DungeonGraph GenerateGraph() {
         graph = new DungeonGraph();
         CreateInitialGraph();
         ModifyNodeCount();  // Add or remove random nodes
 
         AddFirstNode();
         AddEndNode();
-        
+        AddEndNode();
         graph.UpdateNodesData();
         CreateMainPaths();
 
@@ -111,7 +107,6 @@ public class GraphGenerator {
         currentNode.ConnectTo(targetNode);
         return targetNode;
     }
-
 
     private List<DungeonNode> GetNeardyNodes(DungeonNode currentNode, List<DungeonNode> currentLevel, List<DungeonNode> nextLevel) {
         List<DungeonNode> connectTo = new List<DungeonNode>();
