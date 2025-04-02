@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Zenject;
 
 public class RoomNode : MonoBehaviour {
-    
-    public RoomType RoomType { get; private set; }
     public List<RoomNode> connectedRooms;
 
     public LineRenderer lineRenderer;

@@ -9,11 +9,14 @@ public class LocationData : ScriptableObject {
     public Sprite previewImage;
     [TextArea] public string description;
     public LocationRoomsData locationRoomsData;
+    public ActivitiesData activitiesData;
+    public MapGenerationData mapGenerationData;
 
     public AssetLabelReference assetLabel;
     
     public bool isPlayableLevel = true;
     public int orderInSequence;
+    
 
     private void OnValidate() {
         if (string.IsNullOrEmpty(sceneName)) {

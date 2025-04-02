@@ -16,7 +16,7 @@ public class DungeonVisualizer : MonoBehaviour {
     [SerializeField] private Color selfReferenceColor = Color.cyan;
     [SerializeField] private Color invalidNodeColor = Color.magenta;
 
-    private Dictionary<int, RoomNodePresenter> nodeToRoomMap = new Dictionary<int, RoomNodePresenter>();
+    private Dictionary<int, RoomNodePresenter> nodeToRoomMap = new();
     private List<GameObject> createdObjects = new List<GameObject>();
     private List<TextMeshProUGUI> createdTexts = new List<TextMeshProUGUI>();
 
@@ -95,11 +95,11 @@ public class DungeonVisualizer : MonoBehaviour {
     }
 
     private void DisplayNodeDetails(DungeonNode node, RoomNodePresenter roomObject) {
-        if (node.room == null) {
+        if (node.Room == null) {
             Debug.LogError("node doesn`t have a room");
             return;
         }
-        string roomName = node.room.Data.roomName;
+        string roomName = node.Room.Data.Name;
         float XPosition = node.position.x;
         float YPosition = node.position.y;
         string nodeInfo = $"id:{node.id} {roomName} \n x [{XPosition}] y [{YPosition}]";
@@ -200,7 +200,7 @@ public class DungeonVisualizer : MonoBehaviour {
         List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
         for (int level = 0; level < levelNodes.Count; level++) {
             foreach (DungeonNode node in levelNodes[level]) {
-                Debug.Log($"Вузол {node.id} (рівень {node.position.x}, індекс {node.position.y}) -> Кімната: {node.room.Data.type}");
+                Debug.Log($"Вузол {node.id} (рівень {node.position.x}, індекс {node.position.y}) -> Кімната: {node.Room.GetName()}");
             }
         }
     }

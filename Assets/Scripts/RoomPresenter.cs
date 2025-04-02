@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Zenject;
 
@@ -85,7 +86,8 @@ public class Room : IDisposable {
         CleanupCurrentActivity();
 
         _currentActivity = activity;
-
+    }
+    public void BeginActivity() {
         if (_currentActivity == null || !_currentActivity.BlocksRoomClear) {
             SetCleared();
         } else {
@@ -102,19 +104,30 @@ public class Room : IDisposable {
         }
     }
 
-    public void SetCleared(bool value = true) {
-        if (_disposed || IsCleared == value) return;
+    public void SetCleared() {
+        if (_disposed || IsCleared == true) return;
 
-        IsCleared = value;
+        IsCleared = true;
         OnCleared?.Invoke(this);
+    }
+    public string GetName() {
+        if (_currentActivity != null && !string.IsNullOrEmpty(_currentActivity.Name)) {
+            return _currentActivity.Name;
+        } else if (!string.IsNullOrEmpty(Data.Name)) {
+            return Data.Name;
+        } else {
+            return "Boring room";
+        }
     }
 
     public void Dispose() {
         if (_disposed) return;
-
         _disposed = true;
+
         CleanupCurrentActivity();
 
+        Node.ClearRoom();
+        Node = null;
         // Очищаємо делегати
         OnCleared = null;
         OnEntered = null;

@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "MapGenerationData", menuName = "MapGeneration/MapGenerationData")]
+[CreateAssetMenu(fileName = "MapGenerationData", menuName = "Dungeon/MapGenerationData")]
 public class MapGenerationData : ScriptableObject {
     public string seed = "simple_seed";
 

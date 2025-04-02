@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using Zenject;
 
-public class BattleHUD : MonoBehaviour {
+public class CardBattleInfo : MonoBehaviour {
     [Header("References")]
     [SerializeField] private GameObject hudRoot;
     [SerializeField] private TMP_Text turnCounterText;
@@ -126,11 +126,11 @@ public class BattleHUD : MonoBehaviour {
 
 // Клас для ін'єкції BattleHUD через Zenject
 public class BattleHUDInstaller : MonoInstaller {
-    [SerializeField] private BattleHUD battleHUDPrefab;
+    [SerializeField] private CardBattleInfo battleHUDPrefab;
 
     public override void InstallBindings() {
         if (battleHUDPrefab != null) {
-            Container.Bind<BattleHUD>().FromComponentInNewPrefab(battleHUDPrefab).AsSingle().NonLazy();
+            Container.Bind<CardBattleInfo>().FromComponentInNewPrefab(battleHUDPrefab).AsSingle().NonLazy();
         }
     }
 }

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3991696125009ff46b9c28fcbeb324f9, type: 3}
+  m_Name: SewersActivitiesData
+  m_EditorClassIdentifier: 
+  exitLocationActivity: {fileID: 11400000, guid: 2db6ea31b7dba01478a56c5c833a7ef0, type: 2}
+  locationEnteracnceActivity: {fileID: 11400000, guid: 44726329cd711884bb8deb548978c6f8, type: 2}
+  bossActivity: {fileID: 11400000, guid: 1f715efcf772e42408bc58cfa5dce575, type: 2}
+  commonActivities:
+  - {fileID: 11400000, guid: 21c8938e6f1457043b1e0ec90f1d34b0, type: 2}
+  - {fileID: 11400000, guid: 44726329cd711884bb8deb548978c6f8, type: 2}
+  - {fileID: 11400000, guid: 2db6ea31b7dba01478a56c5c833a7ef0, type: 2}

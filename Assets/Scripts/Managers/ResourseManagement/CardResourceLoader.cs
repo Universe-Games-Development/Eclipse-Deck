@@ -2,9 +2,11 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using static UnityEditor.FilePathAttribute;
 
 // Loads resources for a location
 public interface IResourceLoader {
@@ -14,15 +16,22 @@ public interface IResourceLoader {
 
     int LoadPriority { get; }
 }
+
+
 public abstract class GenericResourceLoader<T> : IResourceLoader where T : class {
     protected Dictionary<LocationType, List<T>> _loadedResources = new();
     protected Dictionary<LocationType, AsyncOperationHandle<IList<T>>> _handles = new();
-    protected LocationTransitionManager _transitionManager;
+
+    // Додаємо словник для відстеження процесів завантаження
+    protected Dictionary<LocationType, UniTask> _loadingTasks = new();
+
+    protected ResourceLoadingManager _resourceLoadingManager;
+
     public abstract int LoadPriority { get; }
 
-    protected GenericResourceLoader(LocationTransitionManager transitionManager) {
-        _transitionManager = transitionManager;
-        transitionManager.RegisterResourceLoader(this);
+    protected GenericResourceLoader(ResourceLoadingManager resourceLoadingManager) {
+        _resourceLoadingManager = resourceLoadingManager;
+        _resourceLoadingManager.RegisterResourceLoader(this);
     }
 
     public async UniTask LoadResources(LocationData locationData, IProgress<float> progress = null) {
@@ -30,6 +39,7 @@ public abstract class GenericResourceLoader<T> : IResourceLoader where T : class
             Debug.LogWarning("Trying to load empty data");
             return;
         }
+
         LocationType location = locationData.locationType;
 
         if (_handles.ContainsKey(location)) {
@@ -37,14 +47,27 @@ public abstract class GenericResourceLoader<T> : IResourceLoader where T : class
             return;
         }
 
-        AsyncOperationHandle<IList<T>> handle = default;
+        // Створюємо UniTask для відстеження процесу завантаження
+        var loadingTask = LoadResourcesInternal(locationData, location, progress);
+
+        // Зберігаємо завдання у словнику для відстеження
+        _loadingTasks[location] = loadingTask;
 
         try {
-            handle = await LoadAssetsForLocation(locationData, progress);
+            // Очікуємо завершення завантаження
+            await loadingTask;
+        } finally {
+            // Видаляємо завдання зі словника після завершення
+            _loadingTasks.Remove(location);
+        }
+    }
 
+    private async UniTask LoadResourcesInternal(LocationData locationData, LocationType location, IProgress<float> progress) {
+        AsyncOperationHandle<IList<T>> handle = default;
+        try {
+            handle = await LoadAssetsForLocation(locationData, progress);
             _loadedResources[location] = handle.Result.ToList();
             _handles[location] = handle;
-
         } catch (Exception e) {
             Debug.LogError($"Failed to load resources: {e}");
             if (handle.IsValid()) {
@@ -65,6 +88,43 @@ public abstract class GenericResourceLoader<T> : IResourceLoader where T : class
         return _loadedResources.ContainsKey(locationData.locationType);
     }
 
+    public bool IsLoadingLocation(LocationType location) {
+        return _loadingTasks.ContainsKey(location);
+    }
+
+    /// <summary>
+    /// Асинхронно отримує ресурси для вказаної локації. Якщо завантаження ще не завершено, 
+    /// чекає на його завершення перед поверненням результату.
+    /// </summary>
+    public async UniTask<List<T>> GetResourcesForLocationAsync(LocationType location, CancellationToken cancellationToken = default) {
+        // Перевіряємо, чи є ресурси в кеші
+        if (_loadedResources.TryGetValue(location, out var resources)) {
+            return resources;
+        }
+
+        // Перевіряємо, чи йде завантаження цієї локації
+        if (_loadingTasks.TryGetValue(location, out var loadingTask)) {
+            // Чекаємо, доки завантаження завершиться
+            try {
+                await loadingTask.AttachExternalCancellation(cancellationToken);
+
+                // Знову пробуємо отримати ресурси після завантаження
+                return _loadedResources.TryGetValue(location, out resources)
+                    ? resources
+                    : new List<T>();
+            } catch (OperationCanceledException) {
+                Debug.LogWarning($"GetResourcesForLocationAsync was cancelled for location: {location}");
+                throw;
+            }
+        }
+
+        // Якщо немає ні ресурсів, ні активного завантаження
+        return new List<T>();
+    }
+
+    /// <summary>
+    /// Синхронна версія для отримання ресурсів. Не чекає на завантаження.
+    /// </summary>
     public List<T> GetResourcesForLocation(LocationType location) {
         return _loadedResources.TryGetValue(location, out var resources)
             ? resources
@@ -93,8 +153,9 @@ public abstract class GenericResourceLoader<T> : IResourceLoader where T : class
             .ToList();
     }
 }
+
 public class CardResourceLoader : GenericResourceLoader<CardData> {
-    public CardResourceLoader(LocationTransitionManager transitionManager) : base(transitionManager) {
+    public CardResourceLoader(ResourceLoadingManager resourceLoadingManager) : base(resourceLoadingManager) {
     }
 
     public override int LoadPriority => 1;
@@ -102,7 +163,8 @@ public class CardResourceLoader : GenericResourceLoader<CardData> {
 public class EnemyResourceLoader : GenericResourceLoader<OpponentData> {
     private Dictionary<LocationType, List<OpponentData>> _bossesByLocation = new();
     private Dictionary<LocationType, List<OpponentData>> _regularEnemiesByLocation = new();
-    public EnemyResourceLoader(LocationTransitionManager transitionManager) : base(transitionManager) {
+    private Dictionary<LocationType, List<OpponentData>> _tutorialEnemies = new();
+    public EnemyResourceLoader(ResourceLoadingManager resourceLoadingManager) : base(resourceLoadingManager) {
     }
 
     public override int LoadPriority => 2;
@@ -116,7 +178,8 @@ public class EnemyResourceLoader : GenericResourceLoader<OpponentData> {
         if (handle.Status == AsyncOperationStatus.Succeeded) {
             var enemies = handle.Result;
             _bossesByLocation[locationData.locationType] = enemies.Where(e => e.isBoss).ToList();
-            _regularEnemiesByLocation[locationData.locationType] = enemies.Where(e => !e.isBoss).ToList();
+            _regularEnemiesByLocation[locationData.locationType] = enemies.Where(e => !e.isBoss && !e.isTutorial).ToList();
+            _tutorialEnemies[locationData.locationType] = enemies.Where(e => e.isTutorial).ToList();
         }
 
         return handle;
@@ -130,6 +193,12 @@ public class EnemyResourceLoader : GenericResourceLoader<OpponentData> {
 
     public List<OpponentData> GetRegularEnemiesForLocation(LocationType location) {
         return _regularEnemiesByLocation.TryGetValue(location, out var enemies)
+            ? enemies
+            : new List<OpponentData>();
+    }
+
+    public List<OpponentData> GetTutorialsForLocation(LocationType location) {
+        return _tutorialEnemies.TryGetValue(location, out var enemies)
             ? enemies
             : new List<OpponentData>();
     }
@@ -207,7 +276,7 @@ public class EnemyProvider : GenericResourceProvider<OpponentData> {
 
     public OpponentData GetEnemyData() {
         var currentLocation = _transitionManager.CurrentLocationData.locationType;
-        var enemies = _loader.GetResourcesForLocation(currentLocation);
+        var enemies = _enemyResourceLoader.GetRegularEnemiesForLocation(currentLocation);
         return enemies.Count > 0 ? enemies.GetRandomElement() : null;
     }
 
@@ -215,5 +284,11 @@ public class EnemyProvider : GenericResourceProvider<OpponentData> {
         var currentLocation = _transitionManager.CurrentLocationData.locationType;
         var bosses = _enemyResourceLoader.GetBossesForLocation(currentLocation);
         return bosses.Count > 0 ? bosses.GetRandomElement() : null;
+    }
+
+    public OpponentData GetTutorialEnemy() {
+        var currentLocation = _transitionManager.CurrentLocationData.locationType;
+        var tutorials = _enemyResourceLoader.GetTutorialsForLocation(currentLocation);
+        return tutorials.Count > 0 ? tutorials.GetRandomElement() : null;
     }
 }

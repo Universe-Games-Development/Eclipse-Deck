@@ -71,7 +71,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
         var hasNextRooms = currentRoom.Node.nextLevelConnections != null &&
                            currentRoom.Node.nextLevelConnections
-                               .Any(n => n != null && n.room != null);
+                               .Any(n => n != null && n.Room != null);
 
         if (_nextRoomsButton != null)
             _nextRoomsButton.interactable = hasNextRooms;
@@ -88,7 +88,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
         var nextRooms = currentRoom.Node.nextLevelConnections?
             .Where(n => n != null)
-            .Select(n => n.room)
+            .Select(n => n.Room)
             .Where(r => r != null)
             .ToList();
 
@@ -103,7 +103,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
             if (room.Data != null) {
                 button.Initialize(
-                    room.Data,
+                    room,
                     () => OnRoomSelected(room)
                 );
             }

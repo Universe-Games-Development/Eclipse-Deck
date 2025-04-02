@@ -218,4 +218,8 @@ public class GraphGenerator {
             }
         }
     }
+
+    internal DungeonGraph GenerateGraph(object mapGenerationData) {
+        throw new NotImplementedException();
+    }
 }

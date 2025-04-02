@@ -13,9 +13,7 @@ public class RoomActivityManager : IDisposable {
 
     public void OnRoomEntered(Room room) {
         if (room == null) return;
-
-        RoomActivity activity = _activityFactory.CreateActivity(room);
-        room.SetActivity(activity);
+        room.BeginActivity();
     }
 
     public void Dispose() {
@@ -23,24 +21,4 @@ public class RoomActivityManager : IDisposable {
     }
 }
 
-public interface IRoomActivityFactory {
-    RoomActivity CreateActivity(Room room);
-}
 
-public class RoomActivityFactory : IRoomActivityFactory {
-    private readonly DiContainer _container;
-
-    public RoomActivityFactory(DiContainer container) {
-        _container = container;
-    }
-
-    public RoomActivity CreateActivity(Room room) {
-        switch (room.Data.type) {
-            case RoomType.Enemy:
-            case RoomType.Boss:
-                return _container.Instantiate<EnemyRoomActivity>();
-            default:
-                return null;
-        }
-    }
-}

@@ -26,6 +26,7 @@ public class GlobalInstaller : MonoInstaller {
 
         // Resourses
         Container.Bind<LocationTransitionManager>().AsSingle().WithArguments(_locationDatas).NonLazy();
+        Container.Bind<ResourceLoadingManager>().AsSingle();
         Container.Bind<VisitedLocationsService>().AsSingle();
 
         Container.Bind<GameEventBus>().AsSingle().NonLazy();

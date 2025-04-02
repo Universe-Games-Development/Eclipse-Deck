@@ -1271,8 +1271,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 811016833}
-  - {fileID: 296843686}
   - {fileID: 831803119}
+  - {fileID: 296843686}
   - {fileID: 274836897}
   m_Father: {fileID: 1924367499}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1422,7 +1422,7 @@ GameObject:
   - component: {fileID: 831803119}
   - component: {fileID: 831803120}
   m_Layer: 0
-  m_Name: BattleHUD
+  m_Name: CardBAttleInfo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2601,7 +2601,7 @@ GameObject:
   - component: {fileID: 2098283829}
   - component: {fileID: 2098283830}
   m_Layer: 0
-  m_Name: DungeonRunner
+  m_Name: Travel Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
