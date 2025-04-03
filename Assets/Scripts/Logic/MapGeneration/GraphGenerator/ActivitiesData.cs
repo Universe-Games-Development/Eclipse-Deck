@@ -5,9 +5,9 @@ using System.Collections.Generic;
 public class ActivitiesData : ScriptableObject {
     [Header("Base Activities")]
 
-    public ActivityData exitLocationActivity;
+    public ExitActivityData exitLocationActivity;
     public ActivityData locationEnteracnceActivity;
-    public ActivityData bossActivity;
+    public BossActivityData bossActivity;
 
     [Header("Random Activities")]
     public List<ActivityData> commonActivities;

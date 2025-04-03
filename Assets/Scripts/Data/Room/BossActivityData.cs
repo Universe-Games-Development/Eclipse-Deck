@@ -5,13 +5,12 @@ using Zenject;
 public class BossActivityData : ActivityData {
 
     public override RoomActivity CreateActivity(DiContainer diContainer) {
-        return new BossRoomActivity();
+        return diContainer.Instantiate<BossRoomActivity>();
     }
 }
 
-public class BossRoomActivity : RoomActivity {
-    public override void Initialize(Room room) {
-        Debug.Log("Exit effects");
-        CompleteActivity();
+public class BossRoomActivity : EnemyRoomActivity {
+    protected override bool TrySpawnEnemy(out Enemy enemy) {
+        return _enemyManager.TrySpawnBoss(out enemy);
     }
 }

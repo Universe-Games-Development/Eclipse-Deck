@@ -5,7 +5,7 @@ using Zenject;
 public class EntranseActivityData : ActivityData {
 
     public override RoomActivity CreateActivity(DiContainer diContainer) {
-        return new EntranceRoomActivity();
+        return diContainer.Instantiate<EntranceRoomActivity>();
     }
 }
 

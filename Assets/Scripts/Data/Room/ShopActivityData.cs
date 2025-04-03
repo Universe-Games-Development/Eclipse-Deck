@@ -5,7 +5,7 @@ using Zenject;
 public class ShopActivityData : ActivityData {
 
     public override RoomActivity CreateActivity(DiContainer diContainer) {
-        return new ShopRoomActivity();
+        return diContainer.Instantiate<ShopRoomActivity>();
     }
 }
 

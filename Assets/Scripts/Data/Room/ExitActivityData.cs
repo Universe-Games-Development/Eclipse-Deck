@@ -5,7 +5,7 @@ using Zenject;
 public class ExitActivityData : ActivityData {
 
     public override RoomActivity CreateActivity(DiContainer diContainer) {
-        return new ExitRoomActivity();
+        return diContainer.Instantiate<ExitRoomActivity>();
     }
 }
 public class ExitRoomActivity : RoomActivity {

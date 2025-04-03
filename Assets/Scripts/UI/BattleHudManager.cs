@@ -24,7 +24,9 @@ public class CardBattleInfo : MonoBehaviour {
         this.eventBus = eventBus;
         this.turnManager = turnManager;
         this.battleManager = battleManager;
+    }
 
+    private void Awake() {
         // Приховуємо HUD до початку бою
         SetHUDVisible(false);
 

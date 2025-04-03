@@ -28,7 +28,7 @@ public class PlayerPresenter : MonoBehaviour {
 
 
     private void HandleClick() {
-        Debug.Log("Clicked Left Mouse Btn");
+        //Debug.Log("Clicked Left Mouse Btn");
     }
 
     public async UniTask EnterRoom(Room chosenRoom) {
@@ -67,10 +67,13 @@ public class Player : Opponent {
     }
 
     public async UniTask EnterRoom(Room room) {
-        Room previousRoom = currentRoom;
+        if (currentRoom != null) {
+            currentRoom.Exit();
+        }
+        
         currentRoom = room;
 
-        Debug.Log($"Room entered: {currentRoom.Data.name}");
+        Debug.Log($"Room entered: {currentRoom.GetName()}");
 
         // Notify about room entry
         if (OnRoomEntered != null) {

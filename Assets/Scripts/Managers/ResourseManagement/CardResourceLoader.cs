@@ -164,24 +164,22 @@ public class EnemyResourceLoader : GenericResourceLoader<OpponentData> {
     private Dictionary<LocationType, List<OpponentData>> _bossesByLocation = new();
     private Dictionary<LocationType, List<OpponentData>> _regularEnemiesByLocation = new();
     private Dictionary<LocationType, List<OpponentData>> _tutorialEnemies = new();
-    public EnemyResourceLoader(ResourceLoadingManager resourceLoadingManager) : base(resourceLoadingManager) {
-    }
+
+    public EnemyResourceLoader(ResourceLoadingManager resourceLoadingManager) : base(resourceLoadingManager) { }
 
     public override int LoadPriority => 2;
 
     protected override async UniTask<AsyncOperationHandle<IList<OpponentData>>> LoadAssetsForLocation(
-    LocationData locationData,
-    IProgress<float> progress
-) {
+        LocationData locationData,
+        IProgress<float> progress
+    ) {
         var handle = await base.LoadAssetsForLocation(locationData, progress);
-
         if (handle.Status == AsyncOperationStatus.Succeeded) {
             var enemies = handle.Result;
             _bossesByLocation[locationData.locationType] = enemies.Where(e => e.isBoss).ToList();
             _regularEnemiesByLocation[locationData.locationType] = enemies.Where(e => !e.isBoss && !e.isTutorial).ToList();
             _tutorialEnemies[locationData.locationType] = enemies.Where(e => e.isTutorial).ToList();
         }
-
         return handle;
     }
 
@@ -203,10 +201,13 @@ public class EnemyResourceLoader : GenericResourceLoader<OpponentData> {
             : new List<OpponentData>();
     }
 
+
+
     public override void UnloadByLocation(LocationType location) {
         base.UnloadByLocation(location);
         _bossesByLocation.Remove(location);
         _regularEnemiesByLocation.Remove(location);
+        _tutorialEnemies.Remove(location); // ƒобавил удаление туториальных врагов
     }
 }
 
@@ -259,36 +260,5 @@ public class CardProvider : GenericResourceProvider<CardData> {
         List<CardData> cardDatas = GetUnlockedCards();
         if (count == 0) return cardDatas;
         return cardDatas.OrderBy(_ => UnityEngine.Random.value).Take(count).ToList();
-    }
-}
-
-public class EnemyProvider : GenericResourceProvider<OpponentData> {
-    private readonly LocationTransitionManager _transitionManager;
-    private readonly EnemyResourceLoader _enemyResourceLoader;
-
-    public EnemyProvider(
-        EnemyResourceLoader loader,
-        LocationTransitionManager transitionManager
-    ) : base(loader) {
-        _transitionManager = transitionManager;
-        _enemyResourceLoader = loader;
-    }
-
-    public OpponentData GetEnemyData() {
-        var currentLocation = _transitionManager.CurrentLocationData.locationType;
-        var enemies = _enemyResourceLoader.GetRegularEnemiesForLocation(currentLocation);
-        return enemies.Count > 0 ? enemies.GetRandomElement() : null;
-    }
-
-    public OpponentData GetBossData() {
-        var currentLocation = _transitionManager.CurrentLocationData.locationType;
-        var bosses = _enemyResourceLoader.GetBossesForLocation(currentLocation);
-        return bosses.Count > 0 ? bosses.GetRandomElement() : null;
-    }
-
-    public OpponentData GetTutorialEnemy() {
-        var currentLocation = _transitionManager.CurrentLocationData.locationType;
-        var tutorials = _enemyResourceLoader.GetTutorialsForLocation(currentLocation);
-        return tutorials.Count > 0 ? tutorials.GetRandomElement() : null;
     }
 }

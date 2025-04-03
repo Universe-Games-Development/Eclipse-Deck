@@ -5,7 +5,7 @@ using Zenject;
 public class NoneActivityData : ActivityData {
 
     public override RoomActivity CreateActivity(DiContainer diContainer) {
-        return new NoneRoomActivity();
+        return diContainer.Instantiate<NoneRoomActivity>();
     }
 }
 

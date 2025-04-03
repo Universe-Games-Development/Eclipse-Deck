@@ -2,13 +2,11 @@
 using Zenject;
 
 public class RoomActivityManager : IDisposable {
-    private readonly IRoomActivityFactory _activityFactory;
     private TravelManager _travelManager;
 
-    public RoomActivityManager(TravelManager travelManager, IRoomActivityFactory activityFactory) {
+    public RoomActivityManager(TravelManager travelManager) {
         _travelManager = travelManager;
-        _travelManager.OnRoomChanged += OnRoomEntered;
-        _activityFactory = activityFactory;
+        //_travelManager.OnRoomChanged += OnRoomEntered;
     }
 
     public void OnRoomEntered(Room room) {
@@ -17,7 +15,7 @@ public class RoomActivityManager : IDisposable {
     }
 
     public void Dispose() {
-        _travelManager.OnRoomChanged -= OnRoomEntered;
+        //_travelManager.OnRoomChanged -= OnRoomEntered;
     }
 }
 

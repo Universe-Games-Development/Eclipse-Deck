@@ -21,39 +21,13 @@ public class RoomPresenter : MonoBehaviour {
             return;
         }
 
-        if (CurrentRoom != null) {
-            UnsubscribeRoom();
-        }
 
         CurrentRoom = room;
 
         if (roomView != null && CurrentRoom.Data != null)
             roomView.InitializeView(CurrentRoom.Data);
-
-        CurrentRoom.OnEntered += HandleEnteringRoom;
-        CurrentRoom.OnCleared += HandleClearingRoom;
     }
 
-    private void UnsubscribeRoom() {
-        if (CurrentRoom != null) {
-            CurrentRoom.OnEntered -= HandleEnteringRoom;
-            CurrentRoom.OnCleared -= HandleClearingRoom;
-        }
-    }
-
-    public void HandleEnteringRoom() {
-        if (_dungeonUI != null)
-            _dungeonUI.ToggleNextLevelButton(false);
-    }
-
-    private void HandleClearingRoom(Room currentRoom) {
-        if (_dungeonUI != null)
-            _dungeonUI.ToggleNextLevelButton(true);
-    }
-
-    private void OnDestroy() {
-        UnsubscribeRoom();
-    }
 }
 
 public class Room : IDisposable {
@@ -76,6 +50,7 @@ public class Room : IDisposable {
 
     public void Enter() {
         if (_disposed) return;
+        BeginActivity();
         OnEntered?.Invoke();
     }
 
@@ -87,13 +62,20 @@ public class Room : IDisposable {
 
         _currentActivity = activity;
     }
+
     public void BeginActivity() {
-        if (_currentActivity == null || !_currentActivity.BlocksRoomClear) {
+        if (_currentActivity == null) {
+            SetCleared();
+            return;
+        }
+
+        if (!_currentActivity.BlocksRoomClear) {
             SetCleared();
         } else {
             _currentActivity.OnActivityCompleted += SetCleared;
-            _currentActivity.Initialize(this);
         }
+
+        _currentActivity.Initialize(this);
     }
 
     private void CleanupCurrentActivity() {
@@ -110,6 +92,7 @@ public class Room : IDisposable {
         IsCleared = true;
         OnCleared?.Invoke(this);
     }
+
     public string GetName() {
         if (_currentActivity != null && !string.IsNullOrEmpty(_currentActivity.Name)) {
             return _currentActivity.Name;
@@ -118,6 +101,10 @@ public class Room : IDisposable {
         } else {
             return "Boring room";
         }
+    }
+
+    public void Exit() {
+        CleanupCurrentActivity();
     }
 
     public void Dispose() {
