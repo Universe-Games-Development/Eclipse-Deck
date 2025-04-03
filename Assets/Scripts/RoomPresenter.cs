@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Zenject;
 
@@ -20,39 +21,13 @@ public class RoomPresenter : MonoBehaviour {
             return;
         }
 
-        if (CurrentRoom != null) {
-            UnsubscribeRoom();
-        }
 
         CurrentRoom = room;
 
         if (roomView != null && CurrentRoom.Data != null)
             roomView.InitializeView(CurrentRoom.Data);
-
-        CurrentRoom.OnEntered += HandleEnteringRoom;
-        CurrentRoom.OnCleared += HandleClearingRoom;
     }
 
-    private void UnsubscribeRoom() {
-        if (CurrentRoom != null) {
-            CurrentRoom.OnEntered -= HandleEnteringRoom;
-            CurrentRoom.OnCleared -= HandleClearingRoom;
-        }
-    }
-
-    public void HandleEnteringRoom() {
-        if (_dungeonUI != null)
-            _dungeonUI.ToggleNextLevelButton(false);
-    }
-
-    private void HandleClearingRoom(Room currentRoom) {
-        if (_dungeonUI != null)
-            _dungeonUI.ToggleNextLevelButton(true);
-    }
-
-    private void OnDestroy() {
-        UnsubscribeRoom();
-    }
 }
 
 public class Room : IDisposable {
@@ -75,6 +50,7 @@ public class Room : IDisposable {
 
     public void Enter() {
         if (_disposed) return;
+        BeginActivity();
         OnEntered?.Invoke();
     }
 
@@ -85,13 +61,21 @@ public class Room : IDisposable {
         CleanupCurrentActivity();
 
         _currentActivity = activity;
+    }
 
-        if (_currentActivity == null || !_currentActivity.BlocksRoomClear) {
+    public void BeginActivity() {
+        if (_currentActivity == null) {
+            SetCleared();
+            return;
+        }
+
+        if (!_currentActivity.BlocksRoomClear) {
             SetCleared();
         } else {
             _currentActivity.OnActivityCompleted += SetCleared;
-            _currentActivity.Initialize(this);
         }
+
+        _currentActivity.Initialize(this);
     }
 
     private void CleanupCurrentActivity() {
@@ -102,19 +86,35 @@ public class Room : IDisposable {
         }
     }
 
-    public void SetCleared(bool value = true) {
-        if (_disposed || IsCleared == value) return;
+    public void SetCleared() {
+        if (_disposed || IsCleared == true) return;
 
-        IsCleared = value;
+        IsCleared = true;
         OnCleared?.Invoke(this);
+    }
+
+    public string GetName() {
+        if (_currentActivity != null && !string.IsNullOrEmpty(_currentActivity.Name)) {
+            return _currentActivity.Name;
+        } else if (!string.IsNullOrEmpty(Data.Name)) {
+            return Data.Name;
+        } else {
+            return "Boring room";
+        }
+    }
+
+    public void Exit() {
+        CleanupCurrentActivity();
     }
 
     public void Dispose() {
         if (_disposed) return;
-
         _disposed = true;
+
         CleanupCurrentActivity();
 
+        Node.ClearRoom();
+        Node = null;
         // Очищаємо делегати
         OnCleared = null;
         OnEntered = null;

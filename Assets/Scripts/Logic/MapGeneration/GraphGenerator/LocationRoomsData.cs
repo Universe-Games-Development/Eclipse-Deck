@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Stores visuals of each room for locations
-[CreateAssetMenu(fileName = "DungeonLevelData", menuName = "Dungeon/DungeonLevelData")]
+[CreateAssetMenu(fileName = "LocationRoomsData", menuName = "Dungeon/LocationRoomsData")]
 public class LocationRoomsData : ScriptableObject {
     public MapGenerationData mapGenerationData;
     [Header("Base Rooms")]
@@ -23,7 +23,6 @@ public class LocationRoomsData : ScriptableObject {
 
     [Header("Enemies")]
     public List<OpponentData> enemyPool = new();
-
 }
 
 [Serializable]

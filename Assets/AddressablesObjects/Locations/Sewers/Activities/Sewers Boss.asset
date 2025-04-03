@@ -9,12 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f809b87060bdaad42b1f41c0634bbf33, type: 3}
-  m_Name: Shop
+  m_Script: {fileID: 11500000, guid: 5748f22e990e6e64b9c67f3588038647, type: 3}
+  m_Name: Sewers Boss
   m_EditorClassIdentifier: 
-  roomName: 
-  ViewPrefab: {fileID: 8532655792451742338, guid: 397523ca01469b94c8c7bda6cb256833, type: 3}
-  type: 4
-  location: 1
-  spawnChance: 10
-  roomColor: {r: 0, g: 0, b: 0, a: 0}
+  Name: Boss
+  spawnChance: 15

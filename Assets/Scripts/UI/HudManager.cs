@@ -2,6 +2,6 @@ using UnityEngine;
 
 public class HudManager : MonoBehaviour
 {
-    public BattleHUD BattleHUD;
+    public CardBattleInfo BattleHUD;
     public DialogueSystem dialogueSystem;
 }

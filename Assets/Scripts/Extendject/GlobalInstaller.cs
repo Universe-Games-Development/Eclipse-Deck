@@ -26,12 +26,13 @@ public class GlobalInstaller : MonoInstaller {
 
         // Resourses
         Container.Bind<LocationTransitionManager>().AsSingle().WithArguments(_locationDatas).NonLazy();
+        Container.Bind<ResourceLoadingManager>().AsSingle();
         Container.Bind<VisitedLocationsService>().AsSingle();
 
         Container.Bind<GameEventBus>().AsSingle().NonLazy();
         Container.Bind<CommandManager>().AsSingle().NonLazy();
 
-        Container.Bind<EnemyProvider>().AsSingle();
+        Container.Bind<EnemyManager>().AsSingle();
         Container.Bind<CardProvider>().AsSingle();
         Container.Bind<EnemyResourceLoader>().AsSingle();
         Container.Bind<CardResourceLoader>().AsSingle();

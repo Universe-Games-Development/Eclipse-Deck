@@ -5,81 +5,65 @@ using UnityEngine.UI;
 using Zenject;
 
 public interface IDungeonUIService {
-    void ToggleNextLevelButton(bool value);
     void UpdateNavigationButtonState(Room currentRoom = null);
     void CloseMenu();
+    void UpdateLocationInfo(string locationName, int currentRoomIndex, int totalRoomCount);
 }
 
-public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
-    [Header("References")]
-    [SerializeField] private Button _nextRoomsButton; // Головна кнопка "Далі"
-    [SerializeField] private GameObject _roomsMenu;   // Панель з вибором кімнат
-    [SerializeField] private RoomButton _roomButtonPrefab;
-    [SerializeField] private Transform _buttonsContainer; // Контейнер для кнопок кімнат
+// Класс для представления информации о местоположении
+[System.Serializable]
+public class LocationInfoPanel {
+    [SerializeField] private GameObject _panel;
+    [SerializeField] private TMPro.TextMeshProUGUI _locationNameText;
+    [SerializeField] private TMPro.TextMeshProUGUI _roomProgressText;
 
-    [Inject] private TravelManager _travelManager;
+    public void UpdateInfo(string locationName, int currentRoomLevel, int totalRoomCount) {
+        if (_locationNameText != null)
+            _locationNameText.text = locationName;
 
-    private void Awake() {
-        if (_travelManager == null) {
-            Debug.LogError("TravelManager not injected into DungeonMapUIController");
-            return;
-        }
-
-        _travelManager.OnRoomChanged += HandleRoomChanged;
-
-        if (_nextRoomsButton != null)
-            _nextRoomsButton.onClick.AddListener(ToggleRoomsMenu);
-        else
-            Debug.LogError("NextRoomsButton reference missing in DungeonMapUIController");
-
-        UpdateNavigationButtonState();
+        if (_roomProgressText != null)
+            _roomProgressText.text = $"{currentRoomLevel}/{totalRoomCount}";
     }
 
-    private void HandleRoomChanged(Room currentRoom) {
-        if (currentRoom == null) {
-            Debug.LogWarning("Received null room in HandleRoomChanged");
-            return;
-        }
+    public void Show(bool isVisible) {
+        if (_panel != null)
+            _panel.SetActive(isVisible);
+    }
+}
 
-        UpdateNavigationButtonState(currentRoom);
+// Класс для управления меню выбора комнат
+public class RoomSelectionMenu {
+    private GameObject _roomsMenu;
+    private RoomButton _roomButtonPrefab;
+    private Transform _buttonsContainer;
+    private TravelManager _travelManager;
+
+    public RoomSelectionMenu(GameObject roomsMenu, RoomButton roomButtonPrefab, Transform buttonsContainer, TravelManager travelManager) {
+        _roomsMenu = roomsMenu;
+        _roomButtonPrefab = roomButtonPrefab;
+        _buttonsContainer = buttonsContainer;
+        _travelManager = travelManager;
     }
 
-    public void UpdateNavigationButtonState(Room currentRoom = null) {
-        // Перевірка наявності кнопки
-        if (_nextRoomsButton == null)
+    public void Show(bool isVisible) {
+        if (_roomsMenu == null)
             return;
 
-        // If there is no room
-        if (currentRoom == null) {
-            _nextRoomsButton.interactable = false;
-            return;
-        }
+        _roomsMenu.SetActive(isVisible);
 
-        if (currentRoom.IsCleared) // Публічна властивість замість поля
-        {
-            OnRoomCleared(currentRoom);
-        } else {
-            // Відписуємось від попередніх подій для запобігання дублюванню
-            currentRoom.OnCleared -= OnRoomCleared;
-            currentRoom.OnCleared += OnRoomCleared;
+        if (isVisible && _travelManager != null && _travelManager.CurrentRoom != null) {
+            PrepareRoomButtons(_travelManager.CurrentRoom);
         }
     }
 
-    private void OnRoomCleared(Room currentRoom) {
-        if (currentRoom == null || currentRoom.Node == null)
-            return;
-
-        var hasNextRooms = currentRoom.Node.nextLevelConnections != null &&
-                           currentRoom.Node.nextLevelConnections
-                               .Any(n => n != null && n.room != null);
-
-        if (_nextRoomsButton != null)
-            _nextRoomsButton.interactable = hasNextRooms;
-
-        currentRoom.OnCleared -= OnRoomCleared;
+    public void Toggle() {
+        Show(!IsVisible());
     }
 
-    // Готуємо кнопки для наступних кімнат
+    public bool IsVisible() {
+        return _roomsMenu != null && _roomsMenu.activeSelf;
+    }
+
     public void PrepareRoomButtons(Room currentRoom) {
         if (currentRoom == null || currentRoom.Node == null)
             return;
@@ -88,7 +72,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
         var nextRooms = currentRoom.Node.nextLevelConnections?
             .Where(n => n != null)
-            .Select(n => n.room)
+            .Select(n => n.Room)
             .Where(r => r != null)
             .ToList();
 
@@ -99,11 +83,11 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
             if (_roomButtonPrefab == null || _buttonsContainer == null)
                 continue;
 
-            var button = Instantiate(_roomButtonPrefab, _buttonsContainer);
+            var button = UnityEngine.Object.Instantiate(_roomButtonPrefab, _buttonsContainer);
 
             if (room.Data != null) {
                 button.Initialize(
-                    room.Data,
+                    room,
                     () => OnRoomSelected(room)
                 );
             }
@@ -115,23 +99,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
             return;
 
         _travelManager.GoToRoom(selectedRoom).Forget();
-        CloseMenu();
-    }
-
-    private void ToggleRoomsMenu() {
-        if (_roomsMenu == null)
-            return;
-
-        _roomsMenu.SetActive(!_roomsMenu.activeSelf);
-
-        if (_roomsMenu.activeSelf && _travelManager != null && _travelManager.CurrentRoom != null) {
-            PrepareRoomButtons(_travelManager.CurrentRoom);
-        }
-    }
-
-    public void CloseMenu() {
-        if (_roomsMenu != null)
-            _roomsMenu.SetActive(false);
+        Show(false);
     }
 
     private void ClearRoomButtons() {
@@ -140,7 +108,152 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
         foreach (Transform child in _buttonsContainer) {
             if (child != null)
-                Destroy(child.gameObject);
+                UnityEngine.Object.Destroy(child.gameObject);
+        }
+    }
+}
+
+// Обновленный основной класс с добавленной функциональностью отображения информации о локации
+public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
+    [Header("Navigation")]
+    [SerializeField] private Button _nextRoomsButton;
+    [SerializeField] private GameObject _roomsMenu;
+    [SerializeField] private RoomButton _roomButtonPrefab;
+    [SerializeField] private Transform _buttonsContainer;
+
+    [Header("Location Info")]
+    [SerializeField] private LocationInfoPanel _locationInfoPanel;
+
+    [Inject] private TravelManager _travelManager;
+    [Inject] private LocationTransitionManager _locationManager;
+
+    private RoomSelectionMenu _roomSelectionMenu;
+
+    private void Awake() {
+        ValidateReferences();
+        SetupEventListeners();
+        InitializeComponents();
+    }
+
+    private void ValidateReferences() {
+        if (_travelManager == null)
+            Debug.LogError("TravelManager not injected into DungeonMapUIController");
+
+        if (_locationManager == null)
+            Debug.LogError("LocationTransitionManager not injected into DungeonMapUIController");
+
+        if (_nextRoomsButton == null)
+            Debug.LogError("NextRoomsButton reference missing in DungeonMapUIController");
+    }
+
+    private void SetupEventListeners() {
+        if (_travelManager != null) {
+            _travelManager.OnRoomChanged += HandleRoomChanged;
+        }
+
+        if (_nextRoomsButton != null) {
+            _nextRoomsButton.onClick.AddListener(OnNextRoomsButtonClicked);
+        }
+    }
+
+    private void InitializeComponents() {
+        _roomSelectionMenu = new RoomSelectionMenu(_roomsMenu, _roomButtonPrefab, _buttonsContainer, _travelManager);
+        UpdateNavigationButtonState();
+        UpdateLocationInfo();
+    }
+
+    private void HandleRoomChanged(Room currentRoom) {
+        if (currentRoom == null) {
+            Debug.LogWarning("Received null room in HandleRoomChanged");
+            return;
+        }
+
+        UpdateNavigationButtonState(currentRoom);
+        UpdateLocationInfo();
+    }
+
+    public void UpdateNavigationButtonState(Room currentRoom = null) {
+        if (_nextRoomsButton == null)
+            return;
+
+        if (currentRoom == null) {
+            ToggleNextLevelButton(false);
+            _nextRoomsButton.interactable = false;
+            return;
+        }
+
+        if (currentRoom.IsCleared) {
+            OnRoomCleared(currentRoom);
+        } else {
+            currentRoom.OnCleared += OnRoomCleared;
+        }
+    }
+
+    private void OnRoomCleared(Room currentRoom) {
+        if (currentRoom == null || currentRoom.Node == null)
+            return;
+
+        var hasNextRooms = currentRoom.Node.nextLevelConnections != null &&
+                           currentRoom.Node.nextLevelConnections
+                               .Any(n => n != null && n.Room != null);
+
+        if (_nextRoomsButton != null) {
+            ToggleNextLevelButton(hasNextRooms);
+            _nextRoomsButton.interactable = hasNextRooms;
+        }
+            
+
+        currentRoom.OnCleared -= OnRoomCleared;
+    }
+
+    private void OnNextRoomsButtonClicked() {
+        _roomSelectionMenu.Toggle();
+    }
+
+    public void CloseMenu() {
+        _roomSelectionMenu.Show(false);
+    }
+
+    private void ToggleNextLevelButton(bool value) {
+        if (_nextRoomsButton != null)
+            _nextRoomsButton.gameObject.SetActive(value);
+    }
+
+    // Новый метод для обновления информации о локации
+    public void UpdateLocationInfo(string locationName = null, int currentRoomLevel = -1, int totalRoomCount = -1) {
+        if (_locationInfoPanel == null)
+            return;
+
+        // Если параметры не указаны явно, получаем их из менеджеров
+        if (locationName == null && _locationManager != null && _locationManager.CurrentLocationData != null) {
+            locationName = _locationManager.CurrentLocationData.displayName;
+        }
+
+        // Получаем текущий индекс комнаты и общее количество комнат
+        if (currentRoomLevel < 0 || totalRoomCount < 0) {
+            CalculateRoomProgress(out currentRoomLevel, out totalRoomCount);
+        }
+
+        _locationInfoPanel.UpdateInfo(locationName, currentRoomLevel, totalRoomCount);
+        _locationInfoPanel.Show(true);
+    }
+
+    private void CalculateRoomProgress(out int currentRoomLevel, out int totalRoomCount) {
+        currentRoomLevel = 0;
+        totalRoomCount = 0;
+
+        if (_travelManager == null || _locationManager == null || _travelManager.CurrentDungeon == null) {
+            return;
+        }
+
+        // Получаем все комнаты текущей локации
+        DungeonGraph dungeonGraph = _travelManager.CurrentDungeon;
+        totalRoomCount = dungeonGraph.GetLevelCount();
+
+        DungeonNode node = _travelManager.CurrentRoom.Node;
+        // Находим индекс текущей комнаты
+        if (_travelManager.CurrentRoom != null) {
+            currentRoomLevel = node.level;
         }
     }
 
@@ -149,12 +262,8 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
             _travelManager.OnRoomChanged -= HandleRoomChanged;
         }
 
-        if (_nextRoomsButton != null)
+        if (_nextRoomsButton != null) {
             _nextRoomsButton.onClick.RemoveAllListeners();
-    }
-
-    public void ToggleNextLevelButton(bool value) {
-        if (_nextRoomsButton != null)
-            _nextRoomsButton.gameObject.SetActive(value);
+        }
     }
 }

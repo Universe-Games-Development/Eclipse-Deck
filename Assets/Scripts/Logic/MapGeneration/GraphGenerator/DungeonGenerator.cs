@@ -1,42 +1,42 @@
 using ModestTree;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEngine;
 using Zenject;
+
+public interface IDungeonGenerator {
+    void ClearDungeon();
+    bool GenerateDungeon(LocationData locationData, out DungeonGraph dungeonGraph);
+}
 
 public class DungeonGenerator : IDungeonGenerator {
 
     private GraphCenterer centerer;
     private DungeonGraph createdGraph;
     private GraphGenerator graphGenerator;
-    RandomRoomFactory roomFactory;
-    RoomPopulator roomPopulator;
+    [Inject] RoomPopulator roomPopulator;
 
     public DungeonGenerator() {
         centerer = new GraphCenterer();
         graphGenerator = new GraphGenerator();
-        roomFactory = new();
-        roomPopulator = new(roomFactory);
     }
 
-    public bool GenerateDungeon(LocationRoomsData currentLevelData, out DungeonGraph dungeonGraph) {
+    public bool GenerateDungeon(LocationData locationData, out DungeonGraph dungeonGraph) {
         dungeonGraph = null;
-        if (currentLevelData == null || currentLevelData.commonRooms.Count == 0) {
+        if (locationData == null) {
             Debug.LogError("Empty common room list to generate rooms");
             return false;
         }
 
         var startTime = Time.realtimeSinceStartup;
 
-        MapGenerationData mapGenerationData = currentLevelData.mapGenerationData;
-        roomFactory.UpdateRoomData(currentLevelData);
+        roomPopulator.UpdateData(locationData);
 
-        dungeonGraph = graphGenerator.GenerateGraph(mapGenerationData);
+        dungeonGraph = graphGenerator.GenerateGraph(locationData.mapGenerationData);
         CheckGraphValidation(dungeonGraph);
 
-        roomPopulator.PopulateGraphWithRooms(dungeonGraph);
+        roomPopulator.PopulateGraph(dungeonGraph);
 
         centerer.CenterGraph(dungeonGraph);
 
@@ -75,7 +75,7 @@ public class DungeonNode {
     public HashSet<DungeonNode> nextLevelConnections = new HashSet<DungeonNode>();
     public GameObject roomInstance;
     public int level;
-    public Room room;
+    public Room Room { get; private set; }
 
     public DungeonNode(int nodeId, Vector2 pos) {
         id = nodeId;
@@ -113,7 +113,7 @@ public class DungeonNode {
         }
     }
 
-    internal void UnConnect(DungeonNode unconnectNode) {
+    public void UnConnect(DungeonNode unconnectNode) {
         if (unconnectNode.level > level) {
             UnConnectFromNext(unconnectNode);
         } else if (unconnectNode.level < level) {
@@ -152,7 +152,7 @@ public class DungeonNode {
         return allConnections;
     }
 
-    internal void ClearConnections() {
+    public void ClearConnections() {
         List<DungeonNode> prevConnections = new List<DungeonNode>(prevLevelConnections);
         foreach (DungeonNode prevNode in prevConnections) {
             prevNode.nextLevelConnections.Remove(this);
@@ -167,20 +167,28 @@ public class DungeonNode {
         }
     }
 
-    internal bool HasConnectionsToPrevLevel() {
+    public bool HasConnectionsToPrevLevel() {
         return !prevLevelConnections.IsEmpty();
     }
 
-    internal bool HasConnectionsToNextLevel() {
+    public bool HasConnectionsToNextLevel() {
         return !nextLevelConnections.IsEmpty();
     }
 
-    internal bool IsConnectedTo(DungeonNode targetNode) {
+    public bool IsConnectedTo(DungeonNode targetNode) {
         return nextLevelConnections.Contains(targetNode) || prevLevelConnections.Contains(targetNode);
     }
 
-    internal bool IsLinked() {
+    public bool IsLinked() {
         return HasConnectionsToPrevLevel() && HasConnectionsToNextLevel();
+    }
+
+    public void BindRoom(Room room) {
+        Room = room;
+    }
+
+    public void ClearRoom() {
+        Room = null;
     }
 }
 
@@ -306,61 +314,29 @@ public class GraphCenterer {
 }
 
 public class RoomPopulator {
-    private IRoomFactory roomFactory;
+    private IRoomFactory _roomFactory;
+    private IRoomActivityFactory _roomActivityFactory;
 
-    public RoomPopulator(IRoomFactory roomFactory) {
-        this.roomFactory = roomFactory;
+    public RoomPopulator(IRoomFactory roomFactory, IRoomActivityFactory roomActivityFactory) {
+        this._roomFactory = roomFactory;
+        this._roomActivityFactory = roomActivityFactory;
     }
 
-    public void PopulateGraphWithRooms(DungeonGraph graph) {
+    public void UpdateData(LocationData currentLocationData) {
+        _roomFactory.UpdateRoomData(currentLocationData.locationRoomsData);
+        _roomActivityFactory.UpdateActivityData(currentLocationData.activitiesData);
+    }
+
+    public void PopulateGraph(DungeonGraph graph) {
         for (int level = 0; level < graph.GetLevelCount(); level++) {
             foreach (DungeonNode node in graph.GetLevelNodes()[level]) {
-                Room generatedRoom = roomFactory.GetRoom(graph, node);
-                node.room = generatedRoom;
+                var room = _roomFactory.GetRoom(graph, node);
+                var activity = _roomActivityFactory.CreateActivity(graph, node, room);
+
+                room.SetActivity(activity);
+                node.BindRoom(room);
             }
         }
     }
-}
 
-public interface IRoomFactory {
-    Room GetRoom(DungeonGraph graph, DungeonNode node);
-}
-
-public class RandomRoomFactory : IRoomFactory {
-    private RoomDataRandomizer dataGenerator;
-    private LocationRoomsData roomsData;
-
-    public RandomRoomFactory() {
-        dataGenerator = new();
-    }
-
-    public void UpdateRoomData(LocationRoomsData currentLevelData) {
-        roomsData = currentLevelData;
-        dataGenerator.UpdateRoomFillers(roomsData.commonRooms);
-    }
-
-    public Room GetRoom(DungeonGraph graph, DungeonNode node) {
-        if (roomsData == null) {
-            Debug.LogWarning("roomData not initialized");
-            return null;
-        }
-        RoomData roomData = null;
-        int level = node.level;
-
-        if (level == 0) {
-            roomData = roomsData.entranceRoom;
-        } else if (level == graph.GetLevelNodes().Count - 2) { // preEndLevel
-            roomData = roomsData.bossRoom;
-        } else if (level == graph.GetLevelNodes().Count - 1) { // endLevel
-            roomData = roomsData.exitRoom;
-        } else {
-            roomData = dataGenerator.GetRandomRoomData();
-        }
-
-
-        if (roomData == null) throw new InvalidDataException("Room data is null");
-        Room room = new(node, roomData);
-
-        return room;
-    }
 }

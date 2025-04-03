@@ -7,7 +7,7 @@ using Zenject;
 public class TravelManager {
     public Action<Room> OnRoomChanged;
 
-    private DungeonGraph _currentDungeon;
+    public DungeonGraph CurrentDungeon { get; private set; }
     public Room CurrentRoom;
     private LocationData _currentLocationData;
 
@@ -21,11 +21,10 @@ public class TravelManager {
     [Inject]
     public void Construct(LocationTransitionManager locationManager) {
         _locationManager = locationManager;
-        _locationManager.RegisterListener(HandleLocationTransition);
     }
 
     public void BeginRun() {
-        HandleLocationTransition(_locationManager.CurrentLocationData);
+        _locationManager.RegisterListener(HandleLocationTransition);
     }
 
     private void HandleLocationTransition(LocationData data, LoadingPhase phase = LoadingPhase.Complete) {
@@ -41,13 +40,14 @@ public class TravelManager {
 
     private async UniTask EnterLocation(LocationData locationData) {
         // Genereting next location
-        if (!_dungeonGenerator.GenerateDungeon(locationData.locationRoomsData, out _currentDungeon)) {
+        if (!_dungeonGenerator.GenerateDungeon(locationData, out DungeonGraph dungeon)) {
             Debug.LogError("Failed to generate dungeon");
             return;
         }
+        CurrentDungeon = dungeon;
         visitedLocationService.AddVisitedLocation(locationData.locationType);
         // Entering start room
-        var entranceRoom = _currentDungeon.GetEntranceNode().room;
+        var entranceRoom = CurrentDungeon.GetEntranceNode().Room;
 
         _eventBus.Raise(new LocationChangedEvent(locationData, _currentLocationData));
         _currentLocationData = locationData;

@@ -18,6 +18,8 @@ MonoBehaviour:
   previewImage: {fileID: 21300000, guid: 03cee5e09cbed9b4c89287447a6f77a5, type: 3}
   description: 
   locationRoomsData: {fileID: 11400000, guid: 3a9ddd061f628ef4ca89315540903c91, type: 2}
+  activitiesData: {fileID: 11400000, guid: 3d73264a5a15e8e4f949bbd89393eaa7, type: 2}
+  mapGenerationData: {fileID: 11400000, guid: 32ca6968142ac72479752a572e6a9dce, type: 2}
   assetLabel:
     m_LabelString: Sewers
   isPlayableLevel: 1

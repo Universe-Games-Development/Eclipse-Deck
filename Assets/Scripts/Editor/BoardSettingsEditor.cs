@@ -7,6 +7,7 @@ public class BoardSettingsEditor : Editor {
     private BoardSettingsData settings;
 
     private void OnEnable() {
+        if (target != null)
         settings = (BoardSettingsData)target;
     }
 

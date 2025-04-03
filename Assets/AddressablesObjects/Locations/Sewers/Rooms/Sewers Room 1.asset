@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f809b87060bdaad42b1f41c0634bbf33, type: 3}
-  m_Name: Enemy
+  m_Name: Sewers Room 1
   m_EditorClassIdentifier: 
   roomName: Enemy
   ViewPrefab: {fileID: 8532655792451742338, guid: 397523ca01469b94c8c7bda6cb256833, type: 3}

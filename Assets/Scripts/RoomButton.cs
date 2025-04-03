@@ -6,12 +6,12 @@ using UnityEngine.UI;
 public class RoomButton : MonoBehaviour {
     [SerializeField] Button button;
     [SerializeField] TextMeshProUGUI text;
-    internal void Initialize(RoomData data, Action value) {
-        if (data == null) {
-            Debug.Log("LOL");
+    internal void Initialize(Room room, Action value) {
+        if (room == null) {
+            Debug.Log("LOL room button not initialized text");
             return;
         }
-        text.text = data.roomName;
+        text.text = room.GetName();
         button.onClick.AddListener(() => value());
     }
 }

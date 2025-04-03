@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "GridBoardSettings", menuName = "GridSettings/BoardSettings")]
+[CreateAssetMenu(fileName = "GridBoardSettings", menuName = "PrefabSettings/BoardSettings")]
 public class BoardSettingsData : ScriptableObject {
     private const int MIN_ROWS = 1;
     private const int MIN_COLUMNS = 1;
