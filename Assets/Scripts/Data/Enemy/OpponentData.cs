@@ -11,8 +11,8 @@ public class OpponentData : ScriptableObject {
     public CardCollectionSO collection;
 
     public bool isFlying;
-    public bool isBoss;
-    public bool isTutorial; 
+    public EnemyType enemyType;
 
     public SpeechData speechData;
+   
 }

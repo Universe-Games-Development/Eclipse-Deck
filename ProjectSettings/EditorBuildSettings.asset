@@ -11,10 +11,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Loading.unity
     guid: 7b6e253a1a3182b43bba2b1ddb0a1b9b
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MainMenu.unity
     guid: 02a8be19512dc254dade2b26f4c4d015
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Sewers.unity
     guid: 5eab90405b532744f9263f23e431b11c
   m_configObjects:

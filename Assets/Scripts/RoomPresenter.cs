@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Zenject;
@@ -75,7 +76,7 @@ public class Room : IDisposable {
             _currentActivity.OnActivityCompleted += SetCleared;
         }
 
-        _currentActivity.Initialize(this);
+        _currentActivity.Initialize(this).Forget();
     }
 
     private void CleanupCurrentActivity() {

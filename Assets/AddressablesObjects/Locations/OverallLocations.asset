@@ -9,7 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9664db39934f9fd48a0caa15675a2db3, type: 3}
-  m_Name: EnemyData
+  m_Script: {fileID: 11500000, guid: cdb3f6ca8448bff4cbaf0dec05e100ea, type: 3}
+  m_Name: OverallLocations
   m_EditorClassIdentifier: 
-  speechData: {fileID: 11400000, guid: 0df000d742c9ca54392ad9f249cb5d0e, type: 2}
+  locationDatas:
+  - {fileID: 11400000, guid: d43e9b7ebd65fa349949b1621a69cf30, type: 2}
+  - {fileID: 11400000, guid: 3e4b5402e7aae5f419eb3e53d11e3951, type: 2}

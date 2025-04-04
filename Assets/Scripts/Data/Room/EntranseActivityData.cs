@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 [CreateAssetMenu(fileName = "EntranceActivityData", menuName = "Map/Activities/EntranceActivityData")]
@@ -10,8 +11,9 @@ public class EntranseActivityData : ActivityData {
 }
 
 public class EntranceRoomActivity : RoomActivity {
-    public override void Initialize(Room room) {
+    public override async UniTask Initialize(Room room) {
         Debug.Log("Enterance effects");
         CompleteActivity();
+        await UniTask.CompletedTask;
     }
 }

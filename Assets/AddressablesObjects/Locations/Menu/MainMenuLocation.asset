@@ -12,12 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20a5ee94e13f08f4283a854c6b7ee833, type: 3}
   m_Name: MainMenuLocation
   m_EditorClassIdentifier: 
-  locationType: 0
-  sceneName: MainMenu
   assetLabel:
     m_LabelString: MainMenu
-  displayName: Menu
-  description: 
+  sceneReference:
+    m_AssetGUID: 02a8be19512dc254dade2b26f4c4d015
+    m_SubObjectName: 
+    m_SubObjectGUID: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+    sceneName: MainMenu
   previewImage: {fileID: 21300000, guid: fec5dd7359041ff43b6c4465087d1e7f, type: 3}
+  description: 
   isPlayableLevel: 1
   orderInSequence: 0
+  mapGenerationData: {fileID: 0}
+  locationRoomsData: {fileID: 0}
+  activitiesData: {fileID: 0}

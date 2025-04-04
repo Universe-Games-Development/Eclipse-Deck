@@ -20,7 +20,7 @@ public class CameraManager : MonoBehaviour {
         _eventBus = eventBus;
     }
 
-    void Start() {
+    public void Initialize() {
         SwitchCamera(floorCamera);
         if (_eventBus != null) {
             _eventBus.SubscribeTo<BattleStartedEvent>(OnBattleStart);

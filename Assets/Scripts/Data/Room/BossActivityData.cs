@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 [CreateAssetMenu(fileName = "BossActivityData", menuName = "Map/Activities/BossActivityData")]
@@ -10,7 +11,8 @@ public class BossActivityData : ActivityData {
 }
 
 public class BossRoomActivity : EnemyRoomActivity {
-    protected override bool TrySpawnEnemy(out Enemy enemy) {
-        return _enemyManager.TrySpawnBoss(out enemy);
+
+    protected override async UniTask<bool> SpawnEnemy() {
+        return await _enemySpawner.SpawnEnemy(EnemyType.Regular);
     }
 }

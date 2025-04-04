@@ -1,30 +1,23 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.AddressableAssets;
 
 [CreateAssetMenu(fileName = "LocationData", menuName = "Map/Location")]
 public class LocationData : ScriptableObject {
-    public LocationType locationType;
-    public string displayName;
-    public string sceneName;
+    public AssetLabelReference assetLabel;
+    public SceneReference sceneReference;
     public Sprite previewImage;
     [TextArea] public string description;
-    public LocationRoomsData locationRoomsData;
-    public ActivitiesData activitiesData;
-    public MapGenerationData mapGenerationData;
-
-    public AssetLabelReference assetLabel;
-    
     public bool isPlayableLevel = true;
     public int orderInSequence;
-    
 
-    private void OnValidate() {
-        if (string.IsNullOrEmpty(sceneName)) {
-            sceneName = locationType.ToString();
-        }
-        if (string.IsNullOrEmpty(displayName)) {
-            displayName = locationType.ToString();
-        }
+    public MapGenerationData mapGenerationData;
+
+    public LocationRoomsData locationRoomsData; // Contains all rooms views for this location
+    public ActivitiesData activitiesData;
+    internal LocationType locationType;
+
+    public string GetName() {
+        return sceneReference.SceneName;
     }
 }
-

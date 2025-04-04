@@ -225,8 +225,9 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
             return;
 
         // Если параметры не указаны явно, получаем их из менеджеров
-        if (locationName == null && _locationManager != null && _locationManager.CurrentLocationData != null) {
-            locationName = _locationManager.CurrentLocationData.displayName;
+        LocationData currentLocation = _locationManager.GetSceneLocation();
+        if (locationName == null && _locationManager != null && currentLocation  != null) {
+            locationName = currentLocation.GetName();
         }
 
         // Получаем текущий индекс комнаты и общее количество комнат

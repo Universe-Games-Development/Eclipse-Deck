@@ -6,14 +6,12 @@ using UnityEngine;
 using Zenject;
 
 public interface IDungeonGenerator {
-    void ClearDungeon();
     bool GenerateDungeon(LocationData locationData, out DungeonGraph dungeonGraph);
 }
 
 public class DungeonGenerator : IDungeonGenerator {
 
     private GraphCenterer centerer;
-    private DungeonGraph createdGraph;
     private GraphGenerator graphGenerator;
     [Inject] RoomPopulator roomPopulator;
 
@@ -31,18 +29,16 @@ public class DungeonGenerator : IDungeonGenerator {
 
         var startTime = Time.realtimeSinceStartup;
 
-        roomPopulator.UpdateData(locationData);
-
         dungeonGraph = graphGenerator.GenerateGraph(locationData.mapGenerationData);
         CheckGraphValidation(dungeonGraph);
 
+        roomPopulator.UpdateData(locationData);
         roomPopulator.PopulateGraph(dungeonGraph);
 
         centerer.CenterGraph(dungeonGraph);
 
         var endTime = Time.realtimeSinceStartup;
         Debug.Log($"Dungeon map generation took {endTime - startTime} seconds");
-        createdGraph = dungeonGraph;
         return true;
     }
 
@@ -60,10 +56,6 @@ public class DungeonGenerator : IDungeonGenerator {
                 }
             }
         }
-    }
-
-    public void ClearDungeon() {
-        createdGraph.Clear();
     }
 }
 
@@ -318,8 +310,8 @@ public class RoomPopulator {
     private IRoomActivityFactory _roomActivityFactory;
 
     public RoomPopulator(IRoomFactory roomFactory, IRoomActivityFactory roomActivityFactory) {
-        this._roomFactory = roomFactory;
-        this._roomActivityFactory = roomActivityFactory;
+        _roomFactory = roomFactory;
+        _roomActivityFactory = roomActivityFactory;
     }
 
     public void UpdateData(LocationData currentLocationData) {

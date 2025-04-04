@@ -8,6 +8,9 @@ public class GraphGenerator {
     private DungeonGraph graph;
     private MapGenerationData settings;
     public DungeonGraph GenerateGraph(MapGenerationData settings) {
+        if (settings == null) {
+            Debug.LogError("null map generation settings");
+        }
         this.settings = settings;
         graph = new DungeonGraph();
         CreateInitialGraph();

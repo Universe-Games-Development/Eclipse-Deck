@@ -6,9 +6,12 @@ using Zenject;
 public class PlayerPresenter : MonoBehaviour {
     public Player Player { get; private set; }
     [SerializeField] private CardHandUI handUI;
+    [SerializeField] CameraManager cameraManager;
 
     private CardInputHandler _cardInputHandler;
     private GameEventBus _eventBus;
+    
+    [Inject] TravelManager travelManager;
 
     [Inject]
     public void Construct(PlayerManager playerManager, CardInputHandler cardInputHandler, GameEventBus eventBus) {
@@ -24,6 +27,10 @@ public class PlayerPresenter : MonoBehaviour {
 
     private void Awake() {
         _cardInputHandler.OnLeftClickPerformed += HandleClick;
+
+        cameraManager.Initialize();
+        
+        travelManager.BeginRun();
     }
 
 
