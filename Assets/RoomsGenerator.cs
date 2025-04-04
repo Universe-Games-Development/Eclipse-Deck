@@ -6,15 +6,15 @@ public class RoomsGenerator : MonoBehaviour
 {
     [Header("Debugging")]
     [Inject] IDungeonGenerator dungeonGenerator;
-    [SerializeField] LocationData roomsData;
+    [SerializeField] LocationData locationData;
     [SerializeField] DungeonVisualizer visualizer;
     
     public void GenerateTestDungeon() {
-        if (roomsData == null) {
+        if (locationData == null) {
             Debug.LogError("No rooms data provided");
             return;
         }
-        if (dungeonGenerator.GenerateDungeon(roomsData, out DungeonGraph dungeonGraph)) {
+        if (dungeonGenerator.GenerateDungeon(locationData, out DungeonGraph dungeonGraph)) {
             visualizer.VisualizeGraph(dungeonGraph);
         }
     }

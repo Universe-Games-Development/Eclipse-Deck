@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class GlobalInstaller : MonoInstaller {
     [SerializeField] private List<GameObject> managerPrefabs;
 
-    [SerializeField] private List<LocationData> _locationDatas;
+    [SerializeField] private LocationsData locationsData;
     [SerializeField] private RandomConfig _randomConfig;
     public override void InstallBindings() {
         foreach (var prefab in managerPrefabs) {
@@ -25,15 +25,16 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<InputMapManager>().AsSingle();
 
         // Resourses
-        Container.Bind<LocationTransitionManager>().AsSingle().WithArguments(_locationDatas).NonLazy();
+        Container.Bind<LocationTransitionManager>().AsSingle().WithArguments(locationsData).NonLazy();
         Container.Bind<ResourceLoadingManager>().AsSingle();
         Container.Bind<VisitedLocationsService>().AsSingle();
 
         Container.Bind<GameEventBus>().AsSingle().NonLazy();
         Container.Bind<CommandManager>().AsSingle().NonLazy();
 
-        Container.Bind<EnemyManager>().AsSingle();
         Container.Bind<CardProvider>().AsSingle();
+        Container.Bind<EnemyResourceProvider>().AsSingle();
+        
         Container.Bind<EnemyResourceLoader>().AsSingle();
         Container.Bind<CardResourceLoader>().AsSingle();
 

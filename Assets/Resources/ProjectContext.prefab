@@ -80,8 +80,7 @@ MonoBehaviour:
   - {fileID: 6696143888716681345, guid: c9ab3a2b46b90414091af4aa395641a3, type: 3}
   - {fileID: 6533181061983927262, guid: 9901de9727d60254f9d271e7c61313df, type: 3}
   - {fileID: 7851716948553483407, guid: e193a628e56554e459c50ac1e2a96f34, type: 3}
-  _locationDatas:
-  - {fileID: 11400000, guid: 3e4b5402e7aae5f419eb3e53d11e3951, type: 2}
+  locationsData: {fileID: 11400000, guid: c39486a04a5e8b54f8d7fbcbaa61ac5d, type: 2}
   _randomConfig:
     seed: I like onions!
     useRandomSeed: 0

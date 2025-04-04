@@ -22,5 +22,12 @@ MonoBehaviour:
   mapGenerationData: {fileID: 11400000, guid: 32ca6968142ac72479752a572e6a9dce, type: 2}
   assetLabel:
     m_LabelString: Sewers
+  sceneReference:
+    m_AssetGUID: 5eab90405b532744f9263f23e431b11c
+    m_SubObjectName: 
+    m_SubObjectGUID: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+    sceneName: Sewers
   isPlayableLevel: 1
   orderInSequence: 0

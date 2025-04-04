@@ -84,7 +84,7 @@ public class CardInputHandler : MonoBehaviour, InputSystem_Actions.ICardBattleIn
 
     private void UpdateWorldPosition() {
         // Перетворення позиції миші з екранних координат у світові
-        Ray ray = mainCamera.ScreenPointToRay(mousePosition);
+        Ray ray = Camera.main.ScreenPointToRay(mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, raycastLayers)) {
             worldPosition = hit.point;
         }
@@ -92,7 +92,7 @@ public class CardInputHandler : MonoBehaviour, InputSystem_Actions.ICardBattleIn
 
     private void UpdateHoveredObject() {
         // Визначення об'єкта під курсором
-        Ray ray = mainCamera.ScreenPointToRay(mousePosition);
+        Ray ray = Camera.main.ScreenPointToRay(mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, raycastLayers)) {
             hoveredObject = hit.collider.gameObject;
         } else {

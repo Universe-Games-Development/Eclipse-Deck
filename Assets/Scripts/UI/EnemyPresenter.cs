@@ -12,12 +12,8 @@ public class EnemyPresenter : MonoBehaviour {
     public Enemy Enemy { get; private set; }
     private Speaker speech;
 
-    public void InitializeEnemy(Enemy enemy, Transform spawnPoint) {
+    public void InitializeEnemy(Enemy enemy) {
         Enemy = enemy;
-
-        // Устанавливаем позицию врага в точке спавна
-        transform.position = spawnPoint.position;
-        transform.rotation = spawnPoint.rotation;
 
         // Инициализируем диалоговую систему, если есть данные для речи
         if (enemy.Data != null && enemy.Data.speechData != null) {

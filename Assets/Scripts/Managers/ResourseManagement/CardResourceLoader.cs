@@ -6,24 +6,12 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static UnityEditor.FilePathAttribute;
-
-// Loads resources for a location
-public interface IResourceLoader {
-    // Returns loading progress
-    UniTask LoadResources(LocationData locationData, IProgress<float> progress = null);
-    bool HasLocationData(LocationData locationData);
-
-    int LoadPriority { get; }
-}
 
 
 public abstract class GenericResourceLoader<T> : IResourceLoader where T : class {
-    protected Dictionary<LocationType, List<T>> _loadedResources = new();
-    protected Dictionary<LocationType, AsyncOperationHandle<IList<T>>> _handles = new();
-
-    // Додаємо словник для відстеження процесів завантаження
-    protected Dictionary<LocationType, UniTask> _loadingTasks = new();
+    protected Dictionary<AssetLabelReference, List<T>> _loadedResources = new();
+    protected Dictionary<AssetLabelReference, AsyncOperationHandle<IList<T>>> _handles = new();
+    protected Dictionary<AssetLabelReference, UniTaskCompletionSource<List<T>>> _loadingTasks = new();
 
     protected ResourceLoadingManager _resourceLoadingManager;
 
@@ -34,42 +22,122 @@ public abstract class GenericResourceLoader<T> : IResourceLoader where T : class
         _resourceLoadingManager.RegisterResourceLoader(this);
     }
 
-    public async UniTask LoadResources(LocationData locationData, IProgress<float> progress = null) {
-        if (locationData == null) {
-            Debug.LogWarning("Trying to load empty data");
+    /// <summary>
+    /// Завантажує ресурси за вказаним асетлейблом.
+    /// </summary>
+    public async UniTask LoadResources(AssetLabelReference assetLabel, IProgress<float> progress = null) {
+        if (assetLabel == null) {
+            Debug.LogWarning("Trying to load empty asset label");
             return;
         }
 
-        LocationType location = locationData.locationType;
-
-        if (_handles.ContainsKey(location)) {
-            Debug.LogWarning($"Resources already loaded for: {location}");
+        // Якщо ресурси вже завантажені, просто виходимо
+        if (_loadedResources.ContainsKey(assetLabel)) {
+            progress?.Report(1f);
             return;
         }
 
-        // Створюємо UniTask для відстеження процесу завантаження
-        var loadingTask = LoadResourcesInternal(locationData, location, progress);
-
-        // Зберігаємо завдання у словнику для відстеження
-        _loadingTasks[location] = loadingTask;
-
+        // Отримуємо ресурси через основний метод
         try {
-            // Очікуємо завершення завантаження
-            await loadingTask;
-        } finally {
-            // Видаляємо завдання зі словника після завершення
-            _loadingTasks.Remove(location);
+            await GetResourcesForLocationAsync(assetLabel, default, progress);
+        } catch (Exception e) {
+            Debug.LogError($"Failed to load resources for {assetLabel}: {e}");
+            throw;
         }
     }
 
-    private async UniTask LoadResourcesInternal(LocationData locationData, LocationType location, IProgress<float> progress) {
+    /// <summary>
+    /// Отримує ресурси для вказаного асетлейблу. Якщо ресурси ще не завантажені,
+    /// завантажує їх асинхронно і повертає результат.
+    /// </summary>
+    public async UniTask<List<T>> GetResourcesForLocationAsync(
+        AssetLabelReference assetLabel,
+        CancellationToken cancellationToken = default,
+        IProgress<float> progress = null
+    ) {
+        // Перевіряємо вхідні дані
+        if (assetLabel == null) {
+            Debug.LogWarning("Asset label is null");
+            return new List<T>();
+        }
+
+        // Перевіряємо, чи є ресурси вже завантажені
+        if (_loadedResources.TryGetValue(assetLabel, out var cachedResources)) {
+            progress?.Report(1f);
+            return cachedResources;
+        }
+
+        // Перевіряємо, чи вже є активне завантаження
+        UniTaskCompletionSource<List<T>> loadingTask;
+        bool isNew = false;
+
+        lock (_loadingTasks) {
+            if (_loadingTasks.TryGetValue(assetLabel, out loadingTask)) {
+                // Якщо завантаження вже в процесі, чекаємо його завершення
+            } else {
+                // Створюємо нове завдання завантаження
+                loadingTask = new UniTaskCompletionSource<List<T>>();
+                _loadingTasks[assetLabel] = loadingTask;
+                isNew = true;
+            }
+        }
+
+        // Якщо потрібно почати нове завантаження
+        if (isNew) {
+            try {
+                // Запускаємо завантаження в окремому завданні
+                var resources = await LoadAssetsAsync(assetLabel, progress);
+
+                // Зберігаємо результат у кеш
+                _loadedResources[assetLabel] = resources;
+
+                // Сигналізуємо про завершення завантаження
+                loadingTask.TrySetResult(resources);
+
+                return resources;
+            } catch (Exception e) {
+                // У разі помилки повідомляємо про неї
+                loadingTask.TrySetException(e);
+                throw;
+            } finally {
+                // Видаляємо завдання зі словника
+                lock (_loadingTasks) {
+                    _loadingTasks.Remove(assetLabel);
+                }
+            }
+        } else {
+            // Чекаємо на результат завантаження з підтримкою скасування
+            try {
+                return await loadingTask.Task.AttachExternalCancellation(cancellationToken);
+            } catch (OperationCanceledException) {
+                Debug.LogWarning($"Operation canceled for asset: {assetLabel}");
+                throw;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Завантажує активи за допомогою Addressables
+    /// </summary>
+    private async UniTask<List<T>> LoadAssetsAsync(AssetLabelReference assetLabel, IProgress<float> progress) {
         AsyncOperationHandle<IList<T>> handle = default;
         try {
-            handle = await LoadAssetsForLocation(locationData, progress);
-            _loadedResources[location] = handle.Result.ToList();
-            _handles[location] = handle;
+            // Запускаємо завантаження
+            handle = Addressables.LoadAssetsAsync<T>(assetLabel, null);
+
+            // Чекаємо на завершення
+            await handle.Task;
+
+            // Повідомляємо про прогрес
+            progress?.Report(1f);
+
+            // Зберігаємо хендл
+            _handles[assetLabel] = handle;
+
+            // Повертаємо результат
+            return handle.Result.ToList();
         } catch (Exception e) {
-            Debug.LogError($"Failed to load resources: {e}");
+            Debug.LogError($"Error loading assets for {assetLabel}: {e}");
             if (handle.IsValid()) {
                 Addressables.Release(handle);
             }
@@ -77,75 +145,55 @@ public abstract class GenericResourceLoader<T> : IResourceLoader where T : class
         }
     }
 
-    protected virtual async UniTask<AsyncOperationHandle<IList<T>>> LoadAssetsForLocation(LocationData locationData, IProgress<float> progress) {
-        AsyncOperationHandle<IList<T>> handle = Addressables.LoadAssetsAsync<T>(locationData.assetLabel, null);
-        await handle.Task;
-        progress?.Report(1f);
-        return handle;
-    }
-
-    public bool HasLocationData(LocationData locationData) {
-        return _loadedResources.ContainsKey(locationData.locationType);
-    }
-
-    public bool IsLoadingLocation(LocationType location) {
-        return _loadingTasks.ContainsKey(location);
-    }
-
-    /// <summary>
-    /// Асинхронно отримує ресурси для вказаної локації. Якщо завантаження ще не завершено, 
-    /// чекає на його завершення перед поверненням результату.
-    /// </summary>
-    public async UniTask<List<T>> GetResourcesForLocationAsync(LocationType location, CancellationToken cancellationToken = default) {
-        // Перевіряємо, чи є ресурси в кеші
-        if (_loadedResources.TryGetValue(location, out var resources)) {
-            return resources;
-        }
-
-        // Перевіряємо, чи йде завантаження цієї локації
-        if (_loadingTasks.TryGetValue(location, out var loadingTask)) {
-            // Чекаємо, доки завантаження завершиться
-            try {
-                await loadingTask.AttachExternalCancellation(cancellationToken);
-
-                // Знову пробуємо отримати ресурси після завантаження
-                return _loadedResources.TryGetValue(location, out resources)
-                    ? resources
-                    : new List<T>();
-            } catch (OperationCanceledException) {
-                Debug.LogWarning($"GetResourcesForLocationAsync was cancelled for location: {location}");
-                throw;
-            }
-        }
-
-        // Якщо немає ні ресурсів, ні активного завантаження
-        return new List<T>();
-    }
-
     /// <summary>
     /// Синхронна версія для отримання ресурсів. Не чекає на завантаження.
+    /// Повертає ресурси тільки якщо вони вже завантажені.
     /// </summary>
-    public List<T> GetResourcesForLocation(LocationType location) {
-        return _loadedResources.TryGetValue(location, out var resources)
+    public List<T> GetResourcesForLocation(AssetLabelReference assetLabel) {
+        return _loadedResources.TryGetValue(assetLabel, out var resources)
             ? resources
             : new List<T>();
     }
 
-    public virtual void UnloadByLocation(LocationType location) {
-        if (_handles.TryGetValue(location, out var handle)) {
+    /// <summary>
+    /// Перевіряє, чи завантажені ресурси для даної локації
+    /// </summary>
+    public bool HasResources(AssetLabelReference assetLabel) {
+        return _loadedResources.ContainsKey(assetLabel);
+    }
+
+    /// <summary>
+    /// Перевіряє, чи в процесі завантаження ресурси для даної локації
+    /// </summary>
+    public bool IsLoadingLocation(AssetLabelReference assetLabel) {
+        return _loadingTasks.ContainsKey(assetLabel);
+    }
+
+    /// <summary>
+    /// Вивантажує ресурси для вказаної локації
+    /// </summary>
+    public virtual void UnloadByLocation(AssetLabelReference assetLabel) {
+        if (_handles.TryGetValue(assetLabel, out var handle)) {
             Addressables.Release(handle);
-            _handles.Remove(location);
-            _loadedResources.Remove(location);
+            _handles.Remove(assetLabel);
+            _loadedResources.Remove(assetLabel);
         }
     }
 
+    /// <summary>
+    /// Вивантажує всі завантажені ресурси
+    /// </summary>
     public void UnloadAll() {
-        foreach (var location in _loadedResources.Keys.ToList()) {
-            UnloadByLocation(location);
+        foreach (var assetLabel in _loadedResources.Keys.ToList()) {
+            UnloadByLocation(assetLabel);
         }
         _loadedResources.Clear();
+        _handles.Clear();
     }
 
+    /// <summary>
+    /// Повертає всі завантажені ресурси
+    /// </summary>
     public List<T> GetAllResources() {
         return _loadedResources.Values
             .Where(list => list != null && list.Count > 0)
@@ -160,61 +208,17 @@ public class CardResourceLoader : GenericResourceLoader<CardData> {
 
     public override int LoadPriority => 1;
 }
-public class EnemyResourceLoader : GenericResourceLoader<OpponentData> {
-    private Dictionary<LocationType, List<OpponentData>> _bossesByLocation = new();
-    private Dictionary<LocationType, List<OpponentData>> _regularEnemiesByLocation = new();
-    private Dictionary<LocationType, List<OpponentData>> _tutorialEnemies = new();
 
+public class EnemyResourceLoader : GenericResourceLoader<OpponentData> {
     public EnemyResourceLoader(ResourceLoadingManager resourceLoadingManager) : base(resourceLoadingManager) { }
 
     public override int LoadPriority => 2;
-
-    protected override async UniTask<AsyncOperationHandle<IList<OpponentData>>> LoadAssetsForLocation(
-        LocationData locationData,
-        IProgress<float> progress
-    ) {
-        var handle = await base.LoadAssetsForLocation(locationData, progress);
-        if (handle.Status == AsyncOperationStatus.Succeeded) {
-            var enemies = handle.Result;
-            _bossesByLocation[locationData.locationType] = enemies.Where(e => e.isBoss).ToList();
-            _regularEnemiesByLocation[locationData.locationType] = enemies.Where(e => !e.isBoss && !e.isTutorial).ToList();
-            _tutorialEnemies[locationData.locationType] = enemies.Where(e => e.isTutorial).ToList();
-        }
-        return handle;
-    }
-
-    public List<OpponentData> GetBossesForLocation(LocationType location) {
-        return _bossesByLocation.TryGetValue(location, out var bosses)
-            ? bosses
-            : new List<OpponentData>();
-    }
-
-    public List<OpponentData> GetRegularEnemiesForLocation(LocationType location) {
-        return _regularEnemiesByLocation.TryGetValue(location, out var enemies)
-            ? enemies
-            : new List<OpponentData>();
-    }
-
-    public List<OpponentData> GetTutorialsForLocation(LocationType location) {
-        return _tutorialEnemies.TryGetValue(location, out var enemies)
-            ? enemies
-            : new List<OpponentData>();
-    }
-
-
-
-    public override void UnloadByLocation(LocationType location) {
-        base.UnloadByLocation(location);
-        _bossesByLocation.Remove(location);
-        _regularEnemiesByLocation.Remove(location);
-        _tutorialEnemies.Remove(location); // Добавил удаление туториальных врагов
-    }
 }
 
 // Gives interface to get location recources
 public interface IResourceProvider<T> where T : class {
-    List<T> GetResources(LocationType location);
-    T GetRandomResource(LocationType location);
+    List<T> GetResources(AssetLabelReference assetLabel);
+    T GetRandomResource(AssetLabelReference assetLabel);
 }
 
 public abstract class GenericResourceProvider<T> : IResourceProvider<T> where T : class {
@@ -225,17 +229,19 @@ public abstract class GenericResourceProvider<T> : IResourceProvider<T> where T 
         _loader = loader;
     }
 
-    public List<T> GetResources(LocationType location) =>
-        _loader.GetResourcesForLocation(location);
+    public List<T> GetResources(AssetLabelReference assetLabel) =>
+        _loader.GetResourcesForLocation(assetLabel);
 
-    public T GetRandomResource(LocationType location) {
-        var resources = GetResources(location);
+    public T GetRandomResource(AssetLabelReference assetLabel) {
+        var resources = GetResources(assetLabel);
         return resources.Count > 0 ? resources[UnityEngine.Random.Range(0, resources.Count)] : null;
     }
 }
 
 public class CardProvider : GenericResourceProvider<CardData> {
-    private readonly List<CardData> _unclokedCards = new();
+    private readonly Dictionary<AssetLabelReference, List<CardData>> _cardCache = new();
+    private readonly Dictionary<System.Type, List<CardData>> _cardsByType = new();
+    private readonly List<CardData> _unlockedCards = new();
     private readonly VisitedLocationsService _visitedLocationsService;
 
     public CardProvider(
@@ -246,19 +252,183 @@ public class CardProvider : GenericResourceProvider<CardData> {
     }
 
     public void UpdateAvailableCards(List<CardData> rewardSets) {
-        _unclokedCards.Clear();
-        _unclokedCards.AddRange(rewardSets);
+        _unlockedCards.Clear();
+        _unlockedCards.AddRange(rewardSets);
+        // Оновлюємо кеш за типами
+        RefreshCardTypeCache(_unlockedCards);
     }
 
-    public List<CardData> GetUnlockedCards() {
-        return _visitedLocationsService.GetVisitedLocations()
-            .SelectMany(location => _loader.GetResourcesForLocation(location))
-            .ToList();
+    private void RefreshCardTypeCache(List<CardData> cards) {
+        _cardsByType.Clear();
+        foreach (var card in cards) {
+            var cardType = card.GetType();
+            if (!_cardsByType.TryGetValue(cardType, out var typeList)) {
+                typeList = new List<CardData>();
+                _cardsByType[cardType] = typeList;
+            }
+            typeList.Add(card);
+        }
     }
 
-    public List<CardData> GetRandomUnlockedCards(int count = 0) {
-        List<CardData> cardDatas = GetUnlockedCards();
-        if (count == 0) return cardDatas;
+    // Завантаження карт із локації з кешуванням
+    private async UniTask<List<CardData>> LoadCardsFromLocation(LocationData locationData) {
+        if (_cardCache.TryGetValue(locationData.assetLabel, out var cachedCards)) {
+            return cachedCards;
+        }
+
+        var locationCards = await _loader.GetResourcesForLocationAsync(locationData.assetLabel);
+        if (locationCards != null && locationCards.Count > 0) {
+            _cardCache[locationData.assetLabel] = locationCards;
+            return locationCards;
+        }
+
+        return new List<CardData>();
+    }
+
+    public async UniTask<List<CardData>> GetUnlockedCards() {
+        List<LocationData> visitedLocationDatas = _visitedLocationsService.GetVisitedLocations();
+        List<CardData> unlockedCards = new();
+
+        // Використовуємо WhenAll для паралельного завантаження
+        var loadTasks = visitedLocationDatas.Select(LoadCardsFromLocation).ToArray();
+        var allLocationCards = await UniTask.WhenAll(loadTasks);
+
+        foreach (var locationCards in allLocationCards) {
+            unlockedCards.AddRange(locationCards);
+        }
+
+        // Додаємо карти з винагород, якщо вони не є дублікатами
+        foreach (var card in _unlockedCards) {
+            if (!unlockedCards.Any(c => c.resourseId == card.resourseId)) {
+                unlockedCards.Add(card);
+            }
+        }
+
+        return unlockedCards;
+    }
+
+    public async UniTask<List<CardData>> GetRandomUnlockedCards(int count) {
+        if (count <= 0) return new List<CardData>();
+
+        List<CardData> cardDatas = await GetUnlockedCards();
         return cardDatas.OrderBy(_ => UnityEngine.Random.value).Take(count).ToList();
+    }
+
+    // Отримання карт за типом
+    public async UniTask<List<T>> GetCardsByType<T>() where T : CardData {
+        var allCards = await GetUnlockedCards();
+
+        // Оновлюємо кеш за типами, якщо потрібно
+        if (_cardsByType.Count == 0) {
+            RefreshCardTypeCache(allCards);
+        }
+
+        var requestedType = typeof(T);
+        if (_cardsByType.TryGetValue(requestedType, out var typedCards)) {
+            return typedCards.Cast<T>().ToList();
+        }
+
+        // Якщо в кеші немає, фільтруємо вручну
+        return allCards.OfType<T>().ToList();
+    }
+
+    // Отримання випадкових карт певного типу
+    public async UniTask<List<T>> GetRandomCardsByType<T>(int count) where T : CardData {
+        if (count <= 0) return new List<T>();
+
+        var typedCards = await GetCardsByType<T>();
+        return typedCards.OrderBy(_ => UnityEngine.Random.value).Take(count).ToList();
+    }
+
+    // Очищення кешу локацій
+    public void ClearLocationCache() {
+        _cardCache.Clear();
+    }
+
+    // Очищення кешу для конкретної локації
+    public void ClearLocationCache(AssetLabelReference locationLabel) {
+        _cardCache.Remove(locationLabel);
+    }
+}
+
+public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
+    private EnemiesLocationCache enemiesLocationCache = new();
+
+    private LocationTransitionManager _transitionManager;
+    
+    public EnemyResourceProvider(EnemyResourceLoader loader, LocationTransitionManager transitionManager
+    ) : base(loader) {
+        _transitionManager = transitionManager;
+    }
+
+    public async UniTask<List<OpponentData>> GetEnemies(EnemyType requestEnemyType) {
+        if (_transitionManager.GetSceneLocation() == null) {
+            Debug.LogWarning("Current location data is null");
+            return new List<OpponentData>();
+        }
+        AssetLabelReference assetLabel = _transitionManager.GetSceneLocation().assetLabel;
+        if (enemiesLocationCache.TryGetFromCache(requestEnemyType, assetLabel, out var cachedEnemies)) {
+            return cachedEnemies;
+        }
+
+        List<OpponentData> allEnemies = await _loader.GetResourcesForLocationAsync(assetLabel);
+        enemiesLocationCache.Store(assetLabel, allEnemies);
+
+        return enemiesLocationCache.TryGetFromCache(requestEnemyType, assetLabel, out var newlyCachedEnemies)
+            ? newlyCachedEnemies
+            : new List<OpponentData>();
+    }
+
+    public List<OpponentData> GetEnemies(AssetLabelReference assetLabel) {
+        if (enemiesLocationCache.TryGetFromCache(assetLabel, out var enemies)) {
+            return enemies;
+        }
+        return new List<OpponentData>();
+    }
+
+
+    public void ClearCache() {
+        enemiesLocationCache = new EnemiesLocationCache();
+    }
+
+    public class EnemiesLocationCache {
+        private readonly Dictionary<AssetLabelReference, Dictionary<EnemyType, List<OpponentData>>> _cacheByLabel = new();
+
+        public bool TryGetFromCache(EnemyType type, AssetLabelReference label, out List<OpponentData> enemies) {
+            enemies = null;
+            if (_cacheByLabel.TryGetValue(label, out var byType)) {
+                return byType.TryGetValue(type, out enemies);
+            }
+            return false;
+        }
+
+        public void Store(AssetLabelReference label, List<OpponentData> allEnemiesForLocation) {
+            if (!_cacheByLabel.ContainsKey(label)) {
+                _cacheByLabel[label] = new Dictionary<EnemyType, List<OpponentData>>();
+            }
+
+            var typeDict = _cacheByLabel[label];
+
+            var groupedByType = allEnemiesForLocation.GroupBy(e => e.enemyType);
+            foreach (var group in groupedByType) {
+                typeDict[group.Key] = group.ToList();
+            }
+        }
+
+        public bool TryGetFromCache(AssetLabelReference label, out List<OpponentData> enemies) {
+            enemies = null;
+            if (_cacheByLabel.TryGetValue(label, out var byType)) {
+                enemies = byType.Values.SelectMany(list => list).ToList();
+                return true;
+            }
+            return false;
+        }
+        public void Clear() {
+            _cacheByLabel.Clear();
+        }
+
+        public void ClearLocation(AssetLabelReference label) {
+            _cacheByLabel.Remove(label);
+        }
     }
 }

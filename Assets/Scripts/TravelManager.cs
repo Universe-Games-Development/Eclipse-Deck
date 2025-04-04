@@ -12,40 +12,38 @@ public class TravelManager {
     private LocationData _currentLocationData;
 
     [Inject] private PlayerPresenter _playerPresenter;
-    [Inject] private LocationTransitionManager _locationManager;
+    
     [Inject] private RoomPresenter _roomPresenter;
     [Inject] private IDungeonGenerator _dungeonGenerator;
     [Inject] private VisitedLocationsService visitedLocationService;
-
     [Inject] GameEventBus _eventBus;
+
+    private LocationTransitionManager _locationManager;
     [Inject]
     public void Construct(LocationTransitionManager locationManager) {
         _locationManager = locationManager;
     }
 
     public void BeginRun() {
-        _locationManager.RegisterListener(HandleLocationTransition);
+        _locationManager.RegisterListener(LoadingPhase.PreLoad, ClearDungeon);
+        _locationManager.RegisterListener(LoadingPhase.Complete, EnterLocationAsync);
     }
 
-    private void HandleLocationTransition(LocationData data, LoadingPhase phase = LoadingPhase.Complete) {
-        switch (phase) {
-            case LoadingPhase.PreLoad:
-                _dungeonGenerator.ClearDungeon();
-                break;
-            case LoadingPhase.Complete:
-                EnterLocation(data).Forget();
-                break;
+    private async UniTask ClearDungeon(LocationData data) {
+        if (CurrentDungeon != null) {
+            CurrentDungeon.Clear();
         }
+        await UniTask.CompletedTask;
     }
 
-    private async UniTask EnterLocation(LocationData locationData) {
+    private async UniTask EnterLocationAsync(LocationData locationData) {
         // Genereting next location
         if (!_dungeonGenerator.GenerateDungeon(locationData, out DungeonGraph dungeon)) {
             Debug.LogError("Failed to generate dungeon");
             return;
         }
         CurrentDungeon = dungeon;
-        visitedLocationService.AddVisitedLocation(locationData.locationType);
+        visitedLocationService.AddVisitedLocation(locationData);
         // Entering start room
         var entranceRoom = CurrentDungeon.GetEntranceNode().Room;
 
@@ -78,16 +76,16 @@ public class TravelManager {
 }
 
 public class VisitedLocationsService {
-    private List<LocationType> _visitedLocations = new();
+    private List<LocationData> _visitedLocations = new();
 
-    public void AddVisitedLocation(LocationType location) {
+    public void AddVisitedLocation(LocationData location) {
         if (!_visitedLocations.Contains(location)) {
             _visitedLocations.Add(location);
         }
     }
 
-    public List<LocationType> GetVisitedLocations() {
-        return new List<LocationType>(_visitedLocations);
+    public List<LocationData> GetVisitedLocations() {
+        return new List<LocationData>(_visitedLocations);
     }
 
     public void ClearVisitedLocations() {

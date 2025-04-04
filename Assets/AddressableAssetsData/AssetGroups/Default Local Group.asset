@@ -15,14 +15,24 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: ce0d7db0ee5951a4d8e656bf1105679f
   m_SerializeEntries:
-  - m_GUID: 35960913e00b57c4c9a098f5328fe312
-    m_Address: Assets/AddressablesObjects/Enemies/TutorialEnemy
+  - m_GUID: 02a8be19512dc254dade2b26f4c4d015
+    m_Address: Assets/Scenes/MainMenu.unity
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5eab90405b532744f9263f23e431b11c
+    m_Address: Assets/Scenes/Sewers.unity
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 62ae755cc869b704a8a9a6b087b416ab
+    m_Address: SewersCards
     m_ReadOnly: 0
     m_SerializedLabels:
     - Sewers
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 62ae755cc869b704a8a9a6b087b416ab
-    m_Address: SewersCards
+  - m_GUID: 67d038785e0ba8f468a0f5fecad8a3a2
+    m_Address: Assets/AddressablesObjects/Locations/Sewers
     m_ReadOnly: 0
     m_SerializedLabels:
     - Sewers

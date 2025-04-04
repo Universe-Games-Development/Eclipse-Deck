@@ -3,15 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CardCollection {
-    public Dictionary<CardData, int> cardEntries;
-    private CardProvider _cardProvider;
+    public Dictionary<CardData, int> cardEntries = new();
 
-    public CardCollection(CardProvider cardProvider) {
-        _cardProvider = cardProvider;
-        cardEntries = new();
-    }
-
-    private void AddCardToCollection(CardData cardData) {
+    public void AddCardToCollection(CardData cardData) {
         if (cardData == null) {
             Debug.LogWarning("Collection adding null card!");
             return;
@@ -39,22 +33,6 @@ public class CardCollection {
             }
         } else {
             Debug.LogWarning("Collection removing non-existent card!");
-        }
-    }
-
-    // Test collection generation
-    public void GenerateTestCollection(int count = 20) {
-        List<CardData> cardDatas;
-
-        cardDatas = _cardProvider.GetRandomUnlockedCards(count);
-
-        if (cardDatas == null || cardDatas.Count == 0) {
-            Debug.LogWarning("Generating null collection");
-            return;
-        }
-
-        for (int i = 0; i < count; i++) {
-            AddCardToCollection(cardDatas[i]);
         }
     }
 }

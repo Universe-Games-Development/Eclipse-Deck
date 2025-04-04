@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 [CreateAssetMenu(fileName = "ExitActivityData", menuName = "Map/Activities/ExitActivityData")]
@@ -9,8 +10,9 @@ public class ExitActivityData : ActivityData {
     }
 }
 public class ExitRoomActivity : RoomActivity {
-    public override void Initialize(Room room) {
+    public override async UniTask Initialize(Room room) {
         Debug.Log("Exit effects");
         CompleteActivity();
+        await UniTask.CompletedTask;
     }
 }

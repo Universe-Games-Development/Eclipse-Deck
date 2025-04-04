@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 [CreateAssetMenu(fileName = "TutorialActivityData", menuName = "Map/Activities/TutorialActivityData")]
@@ -10,7 +11,8 @@ public class TutorialActivityData : ActivityData {
 }
 
 public class TutorialRoomActivity : EnemyRoomActivity{
-    protected override bool TrySpawnEnemy(out Enemy enemy) {
-        return _enemyManager.TrySpawnTutorialEnemy(out enemy);
+
+    protected override async UniTask<bool> SpawnEnemy() {
+        return await _enemySpawner.SpawnEnemy(EnemyType.Tutorial);
     }
 }

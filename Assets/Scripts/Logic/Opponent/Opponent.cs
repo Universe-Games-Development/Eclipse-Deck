@@ -15,7 +15,6 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
     public CardHand hand;
     public Deck deck;
     public Deck discardDeck;
-    public CardCollection cardCollection;
     public Action<Opponent> OnDefeat { get; internal set; }
     protected GameEventBus _eventBus;
     private CommandManager _commandManager;
@@ -36,7 +35,6 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
         discardDeck = new Deck(this, _eventBus);
         hand = new CardHand(this, _eventBus);
         hand.OnCardSelected += PlayCard;
-        cardCollection = new CardCollection(_cardProvider);
     }
 
     public void SetData(OpponentData data) {
@@ -68,7 +66,7 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
         _eventBus.SubscribeTo<OnTurnStart>(TurnStartActions);
 
         _commandManager.EnqueueCommands(new List<Command> {
-            new InitDeckCommand(this, 40, cardCollection, _eventBus).SetPriority(11),
+            new InitDeckCommand(this, 40, _cardProvider, _eventBus).SetPriority(11),
             new DrawCardCommand(this, 10),
         });
     }
@@ -92,30 +90,42 @@ public class Opponent : IDisposable, IHealthEntity, IAbilityOwner, IMannable {
 }
 
 public class InitDeckCommand : Command {
-    private Opponent opponent;
-    private int deckSize;
-    private CardCollection cardCollection;
-    private GameEventBus eventBus;
+    private Opponent _opponent;
+    private int _deckSize;
+    private CardCollection _cardCollection;
+    private CardProvider _cardProvider;
+    private GameEventBus _eventBus;
+    private int cardAmount = 20;
 
-    public InitDeckCommand(Opponent opponent, int amount, CardCollection cardCollection, GameEventBus eventBus) {
-        this.opponent = opponent;
-        this.deckSize = amount;
-        this.cardCollection = cardCollection;
-        this.eventBus = eventBus;
+    public InitDeckCommand(Opponent opponent, int amount, CardProvider cardProvider, GameEventBus eventBus) {
+        _opponent = opponent;
+        _deckSize = amount;
+        _cardProvider = cardProvider;
+        _eventBus = eventBus;
     }
 
     public async override UniTask Execute() {
-        Deck mainDeck = new(opponent, eventBus);
-        cardCollection.GenerateTestCollection(20);
-        mainDeck.Initialize(cardCollection);
+        Deck mainDeck = new(_opponent, _eventBus);
+        
+        _cardCollection = await GenerateRandomCollection(); 
+        mainDeck.Initialize(_cardCollection);
 
-        opponent.deck = mainDeck;
-        opponent.discardDeck = new Deck(opponent, eventBus);
+        _opponent.deck = mainDeck;
+        _opponent.discardDeck = new Deck(_opponent, _eventBus);
         await UniTask.CompletedTask;
     }
 
+    public async UniTask<CardCollection> GenerateRandomCollection() {
+        CardCollection collection = new();
+        List<CardData> _unclokedCards = await _cardProvider.GetRandomUnlockedCards(cardAmount);
+        foreach (var card in _unclokedCards) {
+            collection.AddCardToCollection(card);
+        }
+        return collection;
+    }
+
     public async override UniTask Undo() {
-        opponent.deck = null;
+        _opponent.deck = null;
         await UniTask.CompletedTask;
     }
 }

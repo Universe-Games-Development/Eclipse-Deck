@@ -335,7 +335,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   duration: 0.3
-  StartOnAwake: 0
   dolly: {fileID: 1127955067}
   delayToMove: 0.5
   endTime: 0
@@ -732,7 +731,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   duration: 5
-  StartOnAwake: 0
   dolly: {fileID: 0}
   delayToMove: 0
   endTime: 0

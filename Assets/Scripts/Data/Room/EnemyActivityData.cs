@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 [CreateAssetMenu(fileName = "EnemyActivityData", menuName = "Map/Activities/EnemyActivityData")]
@@ -10,18 +11,18 @@ public class EnemyActivityData : ActivityData {
 }
 
 public class EnemyRoomActivity : RoomActivity {
-    [Inject] protected EnemyManager _enemyManager;
+    [Inject] protected EnemySpawner _enemySpawner;
     [Inject] protected GameEventBus _eventBus;
-
     private Enemy _currentEnemy;
 
     public EnemyRoomActivity() {
         _blocksRoomClear = true;
     }
 
-    public override void Initialize(Room room) {
+    public override async UniTask Initialize(Room room) {
+        bool result = await SpawnEnemy();
         // Создаем врага при инициализации активности
-        if (!TrySpawnEnemy(out _currentEnemy)) {
+        if (!result) {
             Debug.LogWarning("No enemy to spawn. Clearing room...");
             _blocksRoomClear = false;
             CompleteActivity();
@@ -31,8 +32,8 @@ public class EnemyRoomActivity : RoomActivity {
         }
     }
 
-    protected virtual bool TrySpawnEnemy(out Enemy enemy) {
-        return _enemyManager.TrySpawnRegularEnemy(out enemy);
+    protected virtual async UniTask<bool> SpawnEnemy() {
+        return await _enemySpawner.SpawnEnemy(EnemyType.Regular);
     }
 
     private void HandleBattleEnd(ref BattleEndEventData eventData) {
@@ -48,8 +49,10 @@ public class EnemyRoomActivity : RoomActivity {
     }
 
     public override void Dispose() {
-        _eventBus.UnsubscribeFrom<BattleEndEventData>(HandleBattleEnd);
-        _eventBus.UnsubscribeFrom<EnemyDefeatedEvent>(HandleEnemyDefeated);
+        if (_eventBus != null) {
+            _eventBus.UnsubscribeFrom<BattleEndEventData>(HandleBattleEnd);
+            _eventBus.UnsubscribeFrom<EnemyDefeatedEvent>(HandleEnemyDefeated);
+        }
         _currentEnemy = null;
     }
 }

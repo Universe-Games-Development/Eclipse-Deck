@@ -19,6 +19,5 @@ MonoBehaviour:
   Mana: 0
   collection: {fileID: 11400000, guid: dbba24abb7466f24b844517de0bbcc20, type: 2}
   isFlying: 0
-  isBoss: 0
-  isTutorial: 1
+  enemyType: 1
   speechData: {fileID: 11400000, guid: 0df000d742c9ca54392ad9f249cb5d0e, type: 2}

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 [CreateAssetMenu(fileName = "NoneActivityData", menuName = "Map/Activities/NoneActivityData")]
@@ -10,7 +11,8 @@ public class NoneActivityData : ActivityData {
 }
 
 public class NoneRoomActivity : RoomActivity {
-    public override void Initialize(Room room) {
+    public override async UniTask Initialize(Room room) {
         CompleteActivity();
+        await UniTask.CompletedTask;
     }
 }

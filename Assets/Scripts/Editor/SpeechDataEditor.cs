@@ -30,8 +30,6 @@ public class SpeechDataEditor : Editor {
 
         EditorGUILayout.LabelField("Character Metadata", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(speechSound);
-        EditorGUILayout.PropertyField(characterName);
-        EditorGUILayout.PropertyField(characterPortrait);
         EditorGUILayout.PropertyField(typingSpeed);
 
         EditorGUILayout.Space();
