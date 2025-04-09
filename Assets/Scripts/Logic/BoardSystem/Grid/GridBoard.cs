@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public class GridBoard {
+    public Action<BoardUpdateData> OnGridUpdated;
+
     private CompasGrid[,] grids = new CompasGrid[2, 2];
     public BoardSettingsData Config {
         get => _config;
@@ -14,9 +17,7 @@ public class GridBoard {
 
     private BoardSettingsData _config;
 
-    public GridBoard(BoardSettingsData config) {
-        if (config == null) Debug.LogError("Init config is null");
-        _config = config;
+    public GridBoard() {
         for (int meridian = 0; meridian < grids.GetLength(0); meridian++) {
             for (int zonal = 0; zonal < grids.GetLength(1); zonal++) {
                 grids[meridian, zonal] = new CompasGrid(this, meridian, zonal);
@@ -25,7 +26,7 @@ public class GridBoard {
     }
 
     #region Update methods
-    public BoardUpdateData UpdateGlobalGrid(BoardSettingsData newConfig = null) {
+    public BoardUpdateData UpdateGlobalGrid(BoardSettingsData newConfig) {
         // Використовуємо передану конфігурацію або поточну, якщо newConfig == null
         Config = newConfig ?? Config;
 
@@ -47,7 +48,7 @@ public class GridBoard {
                 boardUpdateData.gridsUpdateData.Add(gridUpdateData);
             }
         }
-
+        OnGridUpdated?.Invoke(boardUpdateData);
         return boardUpdateData;
     }
 
@@ -95,10 +96,24 @@ public class GridBoard {
     #endregion
 
     #region Geometry
-    public Vector2Int? GetGridIndexByWorld(Transform origin, Vector3 worldPosition) {
-        if (Config == null) return null;
+    public bool GetFieldByLocal(Vector3 local, out Field field) {
+        field = null;
+        if (!GetGridIndexByLocal(local, out Vector2Int indexes)) {
+            Debug.LogWarning($"Can't get field by local: {local}");
+            return false;
+        }
+        field = GetFieldAt(indexes.x, indexes.y);
+        if (field == null) {
+            Debug.LogWarning($"Can't find field at local: {local}");
+            return false;
+        }
 
-        Vector3 localPosition = origin.InverseTransformPoint(worldPosition);
+        return true;
+    }
+
+    public bool GetGridIndexByLocal(Vector3 localPosition, out Vector2Int indexes) {
+        indexes = new();
+        if (Config == null) return false;
 
         float xCellOffset = Config.cellSize.width / 2;
         float yCellOffset = Config.cellSize.height / 2;
@@ -112,7 +127,11 @@ public class GridBoard {
         bool validRow = Mathf.Abs(row) < Config.northRows + Config.southRows;
         bool validColumn = Mathf.Abs(column) < Config.eastColumns + Config.westColumns;
 
-        return (validRow && validColumn) ? new Vector2Int(row, column) : (Vector2Int?)null;
+        if (validRow && validColumn) {
+            indexes = new Vector2Int(row, column);
+            return true;
+        }
+        return false;
     }
     public Vector3 GetGridBalanceOffset() {
         if (grids.Length == 0) return Vector3.zero;
@@ -277,5 +296,7 @@ public class GridBoard {
 
         return compasGrids;
     }
+
+    
     #endregion
 }

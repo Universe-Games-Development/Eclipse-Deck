@@ -112,7 +112,7 @@ public class RandomEventDialogue<TEvent> : BaseDialogue where TEvent : IEvent {
             processedMessages.Add(processedPage);
         }
 
-        dialogueSystem.ShowDialogue(speaker, new Queue<string>(processedMessages));
+        //dialogueSystem.ShowDialogue(speaker, new Queue<string>(processedMessages));
 
         activationCount++;
     }

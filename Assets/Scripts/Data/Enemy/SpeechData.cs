@@ -1,5 +1,7 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewSpeech", menuName = "Dialogues/Speech")]
@@ -11,6 +13,7 @@ public class SpeechData : ScriptableObject {
     public List<StoryDialogueData> storyDialogues;
     public List<BaseDialogueData> eventDialogues;
     public float typingSpeed = 1.0f;
+    public List<string> startDialog;
 }
 
 public class Speaker : IDisposable {
@@ -29,14 +32,16 @@ public class Speaker : IDisposable {
         Opponent = opponent;
         this.dialogueSystem = dialogueSystem;
         this.eventBus = eventBus;
-
-        eventBus.SubscribeTo<OnRoundStart>(UpdateStoryDialogs);
-        Initialize();
     }
 
-    private void Initialize() {
-        SetupStoryDialogues();
+    public void Initialize() {
+        eventBus.SubscribeTo<OnRoundStart>(UpdateStoryDialogs);
 
+        SetupStoryDialogues();
+        SetupEventDialogues();
+    }
+
+    private void SetupEventDialogues() {
         foreach (var dialogueData in SpeechData.eventDialogues) {
             var dialogue = dialogueData.CreateDialogue(this, dialogueSystem, eventBus);
             dialogue.Subscribe();
@@ -80,6 +85,11 @@ public class Speaker : IDisposable {
                 dialogue.Dispose();
             }
         }
+        eventBus.UnsubscribeFrom<OnRoundStart>(UpdateStoryDialogs);
+    }
+
+    public async UniTask StartDialogue() {
+        await dialogueSystem.StartDialogue(this, new Queue<string>(SpeechData.startDialog));
     }
 }
 

@@ -24,6 +24,7 @@ public class EnemySpawner : MonoBehaviour {
         var enemyData = enemiesData.GetRandomElement();
         Enemy enemy = InitializeEnemy(enemyData);
         _enemyPresenter.InitializeEnemy(enemy);
+        await _enemyPresenter.StartEnemyActivity();
         return true;
     }
 }

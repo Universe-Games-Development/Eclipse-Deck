@@ -12,9 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9664db39934f9fd48a0caa15675a2db3, type: 3}
   m_Name: Player
   m_EditorClassIdentifier: 
-  name: Tory
+  Name: Player
+  Sprite: {fileID: 0}
+  ViewModel: {fileID: 0}
   Health: 60
   Mana: 0
-  ViewModel: {fileID: 0}
-  speechData: {fileID: 0}
+  collection: {fileID: 0}
   isFlying: 0
+  enemyType: 0
+  speechData: {fileID: 0}

@@ -1,51 +1,34 @@
-using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
-public class EnemyPresenter : MonoBehaviour {
-    [SerializeField] EnemyView view;
-
-    [Inject] OpponentRegistrator opponentRegistrator;
-    [Inject] DialogueSystem dialogueSystem;
-    [Inject] GameEventBus eventBus;
-
-    public Enemy Enemy { get; private set; }
+public class EnemyPresenter : BaseOpponentPresenter {
+    public Enemy Enemy;
     private Speaker speech;
+    [SerializeField] private EnemyView view;
 
+    [Inject] protected BattleRegistrator opponentRegistrator;
+    [Inject] protected GameEventBus eventBus;
+    [Inject] private DialogueSystem dialogueSystem;
+    [SerializeField] private bool dialogueEnabled = false;
+    // Enemy-specific initialization
     public void InitializeEnemy(Enemy enemy) {
         Enemy = enemy;
-
-        // Инициализируем диалоговую систему, если есть данные для речи
+        view.Initialize(enemy.Data);
+        // Initialize dialogue system if speech data exists
         if (enemy.Data != null && enemy.Data.speechData != null) {
             speech = new Speaker(enemy.Data.speechData, enemy, dialogueSystem, eventBus);
         }
-
-        // Регистрируем врага и подписываемся на событие поражения
-        enemy.OnDefeat += OnDefeatActions;
-        opponentRegistrator.RegisterOpponent(enemy);
-
-        // Инициализируем представление
-        view.Initialize(enemy.Data);
     }
 
-    private void OnDefeatActions(Opponent opponent) {
-        // Публикуем событие о поражении врага
-        eventBus.Raise(new EnemyDefeatedEvent(opponent));
+    public async UniTask StartEnemyActivity() {
+        await view.PlayAppearAnimation();
 
-        // Отписываемся от событий
-        if (Enemy != null) {
-            Enemy.OnDefeat -= OnDefeatActions;
+        if (dialogueEnabled && speech != null) {
+            await speech.StartDialogue();
         }
 
-        // Можно добавить визуальные эффекты поражения
-        // view.PlayDefeatAnimation();
-    }
-
-    private void OnDestroy() {
-        // Очистка подписок при уничтожении объекта
-        if (Enemy != null) {
-            Enemy.OnDefeat -= OnDefeatActions;
-        }
+        // Register in the battle system
+        opponentRegistrator.RegisterEnemy(this);
     }
 }
-

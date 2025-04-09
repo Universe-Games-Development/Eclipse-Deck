@@ -75,7 +75,7 @@ public class StoryDialogue : BaseDialogue {
         if (isOwnTurn == storyDialogueData.triggerOnOwnTurn) return;
 
         Queue<string> messages = storyDialogueData.GetContextPages(eventData, storyDialogueData.triggerOnRound);
-        dialogueSystem.ShowDialogue(speaker, messages);
+        //dialogueSystem.ShowDialogue(speaker, messages);
 
         eventBus.UnsubscribeFrom<OnTurnStart>(OnTurnStart);
     }

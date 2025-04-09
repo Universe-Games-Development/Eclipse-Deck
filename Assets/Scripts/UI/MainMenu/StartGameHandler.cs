@@ -30,8 +30,8 @@ public class StartGameHandler : MonoBehaviour {
 
         yield return new WaitForSeconds(monitorMoveUp.length);
 
-        // Починаємо рух камери після завершення анімації
-        cameraSplineMover.StartCameraMovement();
+        //// Починаємо рух камери після завершення анімації
+        //cameraSplineMover.StartCameraMovement();
     }
 
     private void OnCameraMovementComplete() {

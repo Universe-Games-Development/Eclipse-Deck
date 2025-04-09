@@ -9,19 +9,18 @@ public class PlayerManager : MonoBehaviour {
     [Inject]
     public void Construct(DiContainer container) {
         _container = container;
-        currentPlayer = CreatePlayer(playerData);
     }
 
-    private Player CreatePlayer(OpponentData data) {
+    private Player CreatePlayer() {
         Player player = _container.Instantiate<Player>();
-        player.SetData(data);
+        player.SetData(playerData);
         return player;
     }
 
     public bool GetPlayer(out Player player) {
         if (currentPlayer == null) {
 
-            currentPlayer = CreatePlayer(playerData);
+            currentPlayer = CreatePlayer();
         }
         player = currentPlayer;
         return true;

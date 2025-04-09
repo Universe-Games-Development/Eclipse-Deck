@@ -15,15 +15,13 @@ public class CardBattleInfo : MonoBehaviour {
     [SerializeField] private string activeOpponentFormat = "Current Player: {0}";
 
     private TurnManager turnManager;
-    private BattleManager battleManager;
     private GameEventBus eventBus;
     public bool isInitialized = false;
 
     [Inject]
-    public void Construct(GameEventBus eventBus, [InjectOptional] TurnManager turnManager, [InjectOptional] BattleManager battleManager) {
+    public void Construct(GameEventBus eventBus, [InjectOptional] TurnManager turnManager) {
         this.eventBus = eventBus;
         this.turnManager = turnManager;
-        this.battleManager = battleManager;
     }
 
     private void Awake() {

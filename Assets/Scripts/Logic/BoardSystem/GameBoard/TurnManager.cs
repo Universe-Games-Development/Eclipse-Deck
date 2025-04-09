@@ -1,27 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Zenject;
 
-public class BattleManager {
-    private static readonly int OPPONENTS_TO_PLAY = 2;
-    [Inject] private GameEventBus eventBus;
-    public void StartBattle(List<Opponent> registeredOpponents) {
-        ValidateOpponents(registeredOpponents);
-        eventBus.Raise(new BattleStartedEvent(registeredOpponents));
-    }
-
-    public void EndBattle(Opponent testLooser) {
-        eventBus.Raise(new BattleEndEventData(testLooser));
-    }
-
-    private void ValidateOpponents(List<Opponent> registeredOpponents) {
-        if (registeredOpponents == null || registeredOpponents.Count < OPPONENTS_TO_PLAY) {
-            throw new ArgumentException($"Requires at least {OPPONENTS_TO_PLAY} opponents");
-        }
-    }
-}
 
 public class TurnManager : IDisposable {
     public Action<Opponent> OnOpponentChanged;

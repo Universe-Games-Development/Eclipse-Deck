@@ -6,23 +6,10 @@ using Zenject;
 public class CreatureNavigator {
     // Zenject needed
     public GridBoard GridBoard { get; private set; }
-    private GameboardBuilder _boardManager;
-    [Inject]
-    public void Construct(GameboardBuilder boardManager) {
-        if (boardManager.GridBoard == null) {
-            boardManager.OnGridInitialized += BoardUpdated;
-        } else {
-            GridBoard = boardManager.GridBoard;
-        }
-    }
-
-    // Used this way because grid not initialized at start
-    private async UniTask BoardUpdated(BoardUpdateData data) {
-        if (GridBoard == null) {
-            GridBoard = _boardManager.GridBoard;
-        }
-        _boardManager.OnGridInitialized -= BoardUpdated;
-        await UniTask.CompletedTask;
+    private BoardPresenter _boardPresenter;
+    
+    public CreatureNavigator(BoardPresenter boardPresenter) {
+        _boardPresenter = boardPresenter;
     }
 
     // Trying to move in the chosen direction
