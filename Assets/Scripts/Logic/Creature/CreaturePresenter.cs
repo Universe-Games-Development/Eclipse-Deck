@@ -6,7 +6,7 @@ using Zenject;
 
 [RequireComponent (typeof(CreatureAnimator))]
 public class CreaturePresenter : MonoBehaviour {
-    [Inject] private GameBoardPresenter gameBoardPresenter;
+    private BoardPresenter _boardPresenter;
     [Inject] private CreatureBehaviour creatureBehaviour;
     [Inject] private GameEventBus eventBus;
 
@@ -16,8 +16,9 @@ public class CreaturePresenter : MonoBehaviour {
     private CreatureView view;
     [SerializeField] private Transform viewParent;
 
-    public void Initialize(CreatureCard creatureCard, Field targetField) {
+    public void Initialize(BoardPresenter boardPresenter, CreatureCard creatureCard, Field targetField) {
         // creating model
+        _boardPresenter = boardPresenter;
         Model = new Creature(creatureCard, creatureBehaviour, eventBus);
         Model.OnSpawned += OnCreatureSpawned;
         Model.OnMoved += OnCreatureMoved;
@@ -49,7 +50,7 @@ public class CreaturePresenter : MonoBehaviour {
     }
 
     private Transform GetCreatureTransformPoint(Field targetField) {
-        FieldPresenter fc = gameBoardPresenter.GetFieldController(targetField);
+        FieldPresenter fc = _boardPresenter.GetFieldPresenter(targetField);
         if (fc == null) {
             Debug.LogError($"FieldController not found for {targetField}");
             return null;

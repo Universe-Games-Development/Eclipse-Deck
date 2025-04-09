@@ -5,19 +5,15 @@ using Zenject;
 // This class will handle all actions: Creatures abilities, moves, spells, opponent end turn and other battle actions, Even Dialogues!
 public class BatttleActionManager {
 
-    [Inject] CommandManager commandManager;
+    [Inject] CommandManager _commandManager;
     // Zenject
-    private GameEventBus eventBus;
+    private GameEventBus _eventBus;
 
     private BoardAssigner _boardAssigner;
-    private TurnManager _turnManager;
-
-    [Inject]
-    public void Construct(GameEventBus eventBus, BoardAssigner boardAssigner, TurnManager turnManager) {
+    public BatttleActionManager(GameEventBus eventBus, BoardAssigner boardAssigner, CommandManager commandManager) {
+        _commandManager = commandManager;
         _boardAssigner = boardAssigner;
-        _turnManager = turnManager;
-
-        this.eventBus = eventBus;
+        _eventBus = eventBus;
         eventBus.SubscribeTo<TurnEndStartedEvent>(GenerateEndTurnActions);
     }
 
@@ -30,8 +26,8 @@ public class BatttleActionManager {
             commands.Add(creature.GetEndTurnAction());
         }
 
-        commands.Add(new CreaturesPerformedTurnsCommand(creatures, eventBus));
-        commandManager.EnqueueCommands(commands);
+        commands.Add(new CreaturesPerformedTurnsCommand(creatures, _eventBus));
+        _commandManager.EnqueueCommands(commands);
     }
 }
 

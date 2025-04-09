@@ -4,7 +4,7 @@ using System.Threading;
 using UnityEngine;
 
 public class CardPlayService : IDisposable {
-    private readonly GameBoardPresenter _boardController;
+    private readonly BoardGame _boardController;
     private bool _isPlaying;
     private bool _isEnabled;
 
@@ -12,7 +12,7 @@ public class CardPlayService : IDisposable {
     private TurnManager _turnManager;
     private CancellationTokenSource _playCTS;
 
-    public CardPlayService(GameBoardPresenter boardController, TurnManager turnManager) {
+    public CardPlayService(BoardGame boardController, TurnManager turnManager) {
         _boardController = boardController;
 
         _turnManager = turnManager;

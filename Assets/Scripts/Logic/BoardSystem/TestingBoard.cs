@@ -5,21 +5,18 @@ using Zenject;
 
 public class TestingBoard : MonoBehaviour
 {
-    [SerializeField] private GameBoardPresenter gameboardController;
+    [SerializeField] private BoardGame gameboardController;
 
     [SerializeField] private PlayerPresenter playerPresenter;
     [SerializeField] private EnemyPresenter enemyPresenter;
 
     [Header("Test")]
     [SerializeField] private BoardSettingsData boardConfig;
-    [SerializeField] private int taskDelay = 250;
     [SerializeField] private int randomTaskAmount;
     [Range(0, 10)]
     [SerializeField] private int randomSizeOffset;
     [SerializeField] private bool TesOn;
 
-    // Scene Context
-    [Inject] private GameboardBuilder boardManager;
 
     // GAme context
     [Inject] CommandManager commandManager;
@@ -27,50 +24,15 @@ public class TestingBoard : MonoBehaviour
     private Enemy enemy;
     private Player player;
 
-    private OpponentRegistrator _registrator;
+    private BattleRegistrator _registrator;
     GameEventBus eventBus;
 
     [Inject]
-    public void Construct(OpponentRegistrator registrator, GameEventBus eventBus) {
+    public void Construct(BattleRegistrator registrator, GameEventBus eventBus) {
         _registrator = registrator;
         this.eventBus = eventBus;
     }
 
-    private void Start() {
-
-        if (!TesOn) return;
-        DebugLogic().Forget();
-    }
-
-
-    private async UniTask DebugLogic() {
-
-        await boardManager.UpdateGrid(boardConfig);
-
-        await UniTask.Delay(taskDelay);
-        boardConfig.RandomizeAllGrids();
-        await boardManager.UpdateGrid(boardConfig);
-
-        await RandomSizeSpawn();
-    }
-
-    private async UniTask RandomFieldSpawn() {
-        for (int i = 0; i < randomTaskAmount; i++) {
-            await UniTask.Delay(taskDelay);
-            boardConfig.RandomizeAllGrids();
-            await boardManager.UpdateGrid(boardConfig);
-        }
-    }
-
-    private async UniTask RandomSizeSpawn() {
-        while (randomTaskAmount > 0) {
-            randomTaskAmount--;
-            await UniTask.Delay(taskDelay);
-            SetRandomSize();
-            boardConfig.RandomizeAllGrids();
-            await boardManager.UpdateGrid(boardConfig);
-        }
-    }
 
     private void SetRandomSize() {
         for (int i = 0; i < randomSizeOffset; i++) {

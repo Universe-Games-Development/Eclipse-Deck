@@ -52,20 +52,11 @@ public class DialogueSystem : MonoBehaviour {
         }
     }
 
-    public void ShowDialogue(Speaker speaker, Queue<string> dialogMessages) {
-        // Скасовуємо попередній діалог, якщо він був
+    public async UniTask StartDialogue(Speaker speaker, Queue<string> messages, CancellationToken dialogueToken = default) {
         dialogueCts?.Cancel();
         dialogueCts = new CancellationTokenSource();
 
-        // Запам'ятовуємо поточного мовця
         currentSpeaker = speaker;
-
-        // Створюємо і додаємо команду діалогу
-        DialogueCommand command = new DialogueCommand(speaker, dialogMessages, dialogueCts, this);
-        commandManager.EnqueueCommand(command);
-    }
-
-    public async UniTask StartDialogue(Queue<string> messages, CancellationToken dialogueToken) {
         Queue<string> remainingMessages = new Queue<string>(messages);
 
         OpenDialoguePanel();
@@ -200,36 +191,36 @@ public class DialogueSystem : MonoBehaviour {
     }
 }
 
-public class DialogueCommand : Command {
-    private readonly Speaker speaker;
-    private readonly Queue<string> dialogMessages;
-    private readonly CancellationTokenSource dialogueCts;
-    private readonly DialogueSystem dialogueSystem;
+//public class DialogueCommand : Command {
+//    private readonly Speaker speaker;
+//    private readonly Queue<string> dialogMessages;
+//    private readonly CancellationTokenSource dialogueCts;
+//    private readonly DialogueSystem dialogueSystem;
 
-    public DialogueCommand(Speaker speaker, Queue<string> dialogMessages, CancellationTokenSource dialogueCts, DialogueSystem dialogueSystem) {
-        this.speaker = speaker;
-        this.dialogMessages = dialogMessages;
-        this.dialogueCts = dialogueCts;
-        this.dialogueSystem = dialogueSystem;
+//    public DialogueCommand(Speaker speaker, Queue<string> dialogMessages, CancellationTokenSource dialogueCts, DialogueSystem dialogueSystem) {
+//        this.speaker = speaker;
+//        this.dialogMessages = dialogMessages;
+//        this.dialogueCts = dialogueCts;
+//        this.dialogueSystem = dialogueSystem;
 
-        // Встановлюємо високий пріоритет для діалогів
-        Priority = CommandPriority.High;
-    }
+//        // Встановлюємо високий пріоритет для діалогів
+//        Priority = CommandPriority.High;
+//    }
 
-    public override async UniTask Execute() {
-        // Встановлюємо дані про персонажа
-        dialogueSystem.UpdateCharacterInfo(speaker.Opponent.Data);
+//    public override async UniTask Execute() {
+//        // Встановлюємо дані про персонажа
+//        dialogueSystem.UpdateCharacterInfo(speaker.Opponent.Data);
 
-        // Починаємо показ повідомлень
-        await dialogueSystem.StartDialogue(dialogMessages, dialogueCts.Token);
+//        // Починаємо показ повідомлень
+//        await dialogueSystem.StartDialogue(dialogMessages, dialogueCts.Token);
 
-        // Повертаємо завершене завдання
-        return;
-    }
+//        // Повертаємо завершене завдання
+//        return;
+//    }
 
-    public override UniTask Undo() {
-        // Скасовуємо діалог
-        dialogueSystem.ForceCloseDialogue();
-        return UniTask.CompletedTask;
-    }
-}
+//    public override UniTask Undo() {
+//        // Скасовуємо діалог
+//        dialogueSystem.ForceCloseDialogue();
+//        return UniTask.CompletedTask;
+//    }
+//}

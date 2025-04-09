@@ -2,12 +2,14 @@
 using System;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.Splines;
 using Zenject;
 
 public class RoomPresenter : MonoBehaviour {
-    [Inject] private IDungeonUIService _dungeonUI; // Використовуємо інтерфейс замість конкретного класу
-
     [SerializeField] private RoomView roomView;
+    [SerializeField] private SplineContainer playerEntrySpline;
+    [SerializeField] private SplineContainer playerExitSpline;
+    [SerializeField] private SplineContainer enemyEntrySpline;
 
     public Room CurrentRoom { get; private set; }
 
@@ -21,14 +23,15 @@ public class RoomPresenter : MonoBehaviour {
             Debug.LogError("Attempted to initialize RoomPresenter with null room");
             return;
         }
-
-
         CurrentRoom = room;
 
         if (roomView != null && CurrentRoom.Data != null)
             roomView.InitializeView(CurrentRoom.Data);
     }
 
+    public SplineContainer GetEntrySplineForPlayer() => playerEntrySpline;
+    public SplineContainer GetEntrySplineForEnemy() => enemyEntrySpline;
+    public SplineContainer GetExitSplineForPlayer() => playerExitSpline;
 }
 
 public class Room : IDisposable {
@@ -49,12 +52,6 @@ public class Room : IDisposable {
         IsCleared = false;
     }
 
-    public void Enter() {
-        if (_disposed) return;
-        BeginActivity();
-        OnEntered?.Invoke();
-    }
-
     public void SetActivity(RoomActivity activity) {
         if (_disposed) return;
 
@@ -62,6 +59,12 @@ public class Room : IDisposable {
         CleanupCurrentActivity();
 
         _currentActivity = activity;
+    }
+
+    public void Enter() {
+        if (_disposed) return;
+        BeginActivity();
+        OnEntered?.Invoke();
     }
 
     public void BeginActivity() {

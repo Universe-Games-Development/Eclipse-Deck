@@ -1,62 +1,52 @@
 using Cysharp.Threading.Tasks;
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
-public class PlayerPresenter : MonoBehaviour {
-    public Player Player { get; private set; }
-    [SerializeField] private CardHandUI handUI;
-    [SerializeField] CameraManager cameraManager;
-
-    private CardInputHandler _cardInputHandler;
-    private GameEventBus _eventBus;
+public class PlayerPresenter : BaseOpponentPresenter {
+    public Player Player;
     
-    [Inject] TravelManager travelManager;
+    [SerializeField] private CardHandUI handUI;
+    [SerializeField] private CameraManager cameraManager;
 
-    [Inject]
-    public void Construct(PlayerManager playerManager, CardInputHandler cardInputHandler, GameEventBus eventBus) {
-        if (!playerManager.GetPlayer(out Player player)) {
-            Debug.LogWarning("Failed to get player");
-            return;
-        }
-        Player = player;
-
-        _cardInputHandler = cardInputHandler;
-        _eventBus = eventBus;
-    }
+    [Inject] protected BattleRegistrator opponentRegistrator;
+    [Inject] protected GameEventBus eventBus;
+    [Inject] private CardInputHandler _cardInputHandler;
 
     private void Awake() {
         _cardInputHandler.OnLeftClickPerformed += HandleClick;
-
-        cameraManager.Initialize();
-        
-        travelManager.BeginRun();
     }
 
+    // Player-specific initialization
+    public void InitializePlayer(Player player) {
+        Player = player;
+
+        // Register with the opponent system
+        opponentRegistrator.RegisterPlayer(this);
+    }
 
     private void HandleClick() {
         //Debug.Log("Clicked Left Mouse Btn");
     }
 
     public async UniTask EnterRoom(Room chosenRoom) {
-        // Повідомляємо інтерфейс про початок переходу
         Debug.Log($"Starting to enter room: {chosenRoom.Data.name}");
-
-        // Запускаємо процес входу в кімнату
-        await Player.EnterRoom(chosenRoom);
+        await cameraManager.BeginEntranse();
+        Player.EnterRoom(chosenRoom);
     }
 
     public async UniTask ExitRoom() {
+        await cameraManager.BeginExiting();
         Room currentRoom = Player.GetCurrentRoom();
         if (currentRoom != null) {
             Debug.Log($"Starting to exit room: {currentRoom.Data.name}");
+            Player.ExitRoom();
         }
-
-        // Починаємо процес виходу з кімнати
-        await Player.ExitRoom();
     }
 
-    private void OnDestroy() {
+    // Override base destroy
+    protected void OnDestroy() {
         if (_cardInputHandler != null) {
             _cardInputHandler.OnLeftClickPerformed -= HandleClick;
         }
@@ -65,47 +55,67 @@ public class PlayerPresenter : MonoBehaviour {
 
 public class Player : Opponent {
     private Room currentRoom;
-    public Func<Room, UniTask> OnRoomEntered;
-    public Func<Room, UniTask> OnRoomExited;
 
     public Player(GameEventBus eventBus, CommandManager commandManager, CardProvider cardProvider)
         : base(eventBus, commandManager, cardProvider) {
         Name = "Player";
     }
 
-    public async UniTask EnterRoom(Room room) {
+    public void EnterRoom(Room room) {
         if (currentRoom != null) {
-            currentRoom.Exit();
+            ExitRoom();
         }
-        
+
         currentRoom = room;
-
-        Debug.Log($"Room entered: {currentRoom.GetName()}");
-
-        // Notify about room entry
-        if (OnRoomEntered != null) {
-            await OnRoomEntered.Invoke(room);
-        }
-
+        Debug.Log($"Room entered: {room.GetName()}");
         room.Enter();
-        await UniTask.CompletedTask;
     }
 
-    public async UniTask ExitRoom() {
+    public void ExitRoom() {
         if (currentRoom != null) {
             Room exitingRoom = currentRoom;
-            Debug.Log($"Exited room: {currentRoom.Data.name}");
-
-            // Notify about room exit
-            OnRoomExited?.Invoke(exitingRoom);
+            currentRoom.Exit();
+            Debug.Log($"Exited room: {exitingRoom.Data.name}");
 
             currentRoom = null;
         }
-
-        await UniTask.CompletedTask;
     }
 
     public Room GetCurrentRoom() {
         return currentRoom;
+    }
+}
+
+
+public class BaseOpponentPresenter : MonoBehaviour {
+    public Opponent OpponentModel { get; private set; }
+    // Initialize the presenter with the model
+    public void Initialize(Opponent opponentModel) {
+        OpponentModel = opponentModel;
+    }
+
+    public async UniTask MoveTo(Transform seatTransform) {
+        await MoveToPositionAsync(seatTransform);
+    }
+    public async UniTask MoveToPositionAsync(Transform target, float duration = 1f) {
+        Vector3 start = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        Vector3 end = target.position;
+        Quaternion endRot = target.rotation;
+
+        float elapsed = 0f;
+
+        while (elapsed < duration) {
+            float t = elapsed / duration;
+            transform.position = Vector3.Lerp(start, end, t);
+            transform.rotation = Quaternion.Slerp(startRot, endRot, t);
+            elapsed += Time.deltaTime;
+            await UniTask.Yield();
+        }
+
+        // Гарантуємо точну установку фінальної позиції
+        transform.position = end;
+        transform.rotation = endRot;
     }
 }

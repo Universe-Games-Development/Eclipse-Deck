@@ -8,21 +8,17 @@ public class HealthCellView : MonoBehaviour {
     [SerializeField] private AnimationCurve animationCurve = AnimationCurve.Linear(0, 0, 1, 1);
     [SerializeField] private float maxLevel = 1.5f;
     [SerializeField] private float minLevel = -1.5f;
-    [SerializeField] private float duration = 4f;
+    [SerializeField] private float duration = 2f;
 
     private Health health;
     private MaterialPropertyBlock propertyBlock;
     private CancellationTokenSource animationCTS;
     private const string LevelProperty = "_Level";
 
-    internal void Initialize() {
-        ValidateComponents();
-        InitializePropertyBlock();
-    }
-
-    private void ValidateComponents() {
+    public void Initialize() {
         if (liquidRenderer == null)
             Debug.LogError("Liquid Renderer is not assigned!");
+        InitializePropertyBlock();
     }
 
     private void InitializePropertyBlock() {
@@ -121,5 +117,10 @@ public class HealthCellView : MonoBehaviour {
     private void OnDestroy() {
         CancelCurrentAnimation();
         UnsubscribeFromPreviousHealth();
+    }
+
+    public void ClearOwner() {
+        UpdateLiquidLevel(0);
+        health = null;
     }
 }

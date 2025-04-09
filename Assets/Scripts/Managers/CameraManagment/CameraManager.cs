@@ -1,58 +1,23 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.Splines;
 using Zenject;
 
 public class CameraManager : MonoBehaviour {
-    public CinemachineCamera mainCamera;
-
     public CinemachineCamera activeCamera;
+
+    public CinemachineCamera mainCamera;
     public CinemachineCamera floorCamera;
+    public CinemachineCamera dollyCamera;
     [SerializeField] private BoardViews boardViewSwitcher;
     [SerializeField] private CameraSplineMover cameraSplineMover;
     [SerializeField] PlayerPresenter _playerPresenter;
 
-    private GameEventBus _eventBus;
-    [Inject]
-    public void Construct(GameEventBus eventBus) {
-        _eventBus = eventBus;
-    }
-
-    public void Initialize() {
-        SwitchCamera(floorCamera);
-        if (_eventBus != null) {
-            _eventBus.SubscribeTo<BattleStartedEvent>(OnBattleStart);
-            _eventBus.SubscribeTo<BattleEndEventData>(OnBattleEnd);
-        }
-
-        if (_playerPresenter != null && _playerPresenter.Player != null) {
-            _playerPresenter.Player.OnRoomEntered += HandleRoomEntered;
-            _playerPresenter.Player.OnRoomExited += HandleRoomExited;
-        }
-    }
-
-    private async UniTask HandleRoomEntered(Room room) {
-        // Даємо час поки кімната ініціалізується
-        await UniTask.Delay(500);
-        SwitchCamera(mainCamera);
-    }
-
-    private async UniTask HandleRoomExited(Room room) {
-        SwitchCamera(floorCamera);
-        await UniTask.Delay(500);
-    }
-
-
-    private void OnBattleEnd(ref BattleEndEventData eventData) {
-        boardViewSwitcher.enabled = false;
-        SwitchCamera(mainCamera);
-    }
-
-    private void OnBattleStart(ref BattleStartedEvent eventData) {
-        boardViewSwitcher.enabled = true;
-    }
+    [Inject] RoomPresenter roomPresenter;
 
     public void SwitchCamera(CinemachineCamera newCamera) {
         if (newCamera == null) {
@@ -72,10 +37,15 @@ public class CameraManager : MonoBehaviour {
         activeCamera.Priority = 1;
     }
 
-    private void OnDestroy() {
-        if (_eventBus != null) {
-            _eventBus.UnsubscribeFrom<BattleStartedEvent>(OnBattleStart);
-            _eventBus.UnsubscribeFrom<BattleEndEventData>(OnBattleEnd);
-        }
+    public async UniTask BeginEntranse() {
+        SwitchCamera(dollyCamera);
+        await cameraSplineMover.StartCameraMovementAsync(roomPresenter.GetEntrySplineForPlayer());
+        SwitchCamera(mainCamera);
+
+    }
+
+    public async UniTask BeginExiting() {
+        await cameraSplineMover.StartCameraMovementAsync(roomPresenter.GetExitSplineForPlayer());
+        SwitchCamera(floorCamera);
     }
 }

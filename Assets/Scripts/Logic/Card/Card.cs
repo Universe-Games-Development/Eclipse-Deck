@@ -57,7 +57,7 @@ public abstract class Card : IAbilityOwner {
         }
     }
     
-    public abstract UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardPresenter boardController, CancellationToken ct = default);
+    public abstract UniTask<bool> PlayCard(Opponent cardPlayer, BoardGame boardPresenter, CancellationToken ct = default);
 
     internal void Deselect() {
         Debug.LogError("Deselect");
@@ -98,7 +98,7 @@ public class SpellCard : Card {
     }
 
     
-    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardPresenter boardController, CancellationToken ct = default) {
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, BoardGame boardController, CancellationToken ct = default) {
         Debug.Log("Spell card played");
         await UniTask.CompletedTask;
         return false;
@@ -109,7 +109,7 @@ public class SupportCard : Card {
     public SupportCard(SupportCardData cardData, Opponent owner)
         : base(cardData, owner) { }
 
-    public override async UniTask<bool> PlayCard(Opponent cardPlayer, GameBoardPresenter boardController, CancellationToken ct = default) {
+    public override async UniTask<bool> PlayCard(Opponent cardPlayer, BoardGame boardController, CancellationToken ct = default) {
         Debug.Log("Support card played");
         await UniTask.CompletedTask;
         return false;
@@ -135,13 +135,13 @@ public class CreatureCard : Card {
             .Build();
     }
 
-    public override async UniTask<bool> PlayCard(Opponent summoner, GameBoardPresenter boardPresenter, CancellationToken ct = default) {
+    public override async UniTask<bool> PlayCard(Opponent summoner, BoardGame boardPresenter, CancellationToken ct = default) {
         Field field = await summoner.actionFiller.ProcessRequirementAsync(summoner, friendlyFieldRequirement, ct);
         if (field == null) {
             Debug.Log("Field is null");
             return false;
         }
 
-        return await boardPresenter.SpawnCreature(this, field, summoner);
+        return boardPresenter.SpawnCreature(this, field, summoner);
     }
 }
