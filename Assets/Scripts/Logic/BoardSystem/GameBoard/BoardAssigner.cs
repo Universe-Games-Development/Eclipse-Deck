@@ -25,8 +25,8 @@ public class BoardAssigner {
         foreach (var grid in GetOpponentGrids(endTurnOpponent)) {
             foreach (var row in grid.Fields) {
                 foreach (var field in row) {
-                    if (field != null && field.OccupiedCreature != null) {
-                        creatures.Add(field.OccupiedCreature);
+                    if (field != null && field.Creature != null) {
+                        creatures.Add(field.Creature);
                     }
                 }
             }

@@ -6,7 +6,5 @@ public class EntitiesInstaller : MonoInstaller<EntitiesInstaller> {
         Container.Bind<PlayerPresenter>().FromComponentInHierarchy().AsSingle().NonLazy();
         Container.Bind<EnemyPresenter>().FromComponentInHierarchy().AsSingle();
         Container.Bind<AnimationsDebugSettings>().FromComponentInHierarchy().AsSingle();
-        Container.Bind<IActionFiller>().To<ActionInputSystem>().FromComponentInHierarchy().AsSingle().WhenInjectedInto<Player>();
-        Container.Bind<IActionFiller>().To<EnemyInputSystem>().AsTransient().WhenInjectedInto<Enemy>();
     }
 }

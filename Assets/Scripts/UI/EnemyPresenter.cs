@@ -3,7 +3,7 @@ using UnityEngine;
 using Zenject;
 
 public class EnemyPresenter : BaseOpponentPresenter {
-    public Enemy Enemy;
+    public Enemy Enemy => (Enemy) OpponentModel;
     private Speaker speech;
     [SerializeField] private EnemyView view;
 
@@ -11,9 +11,9 @@ public class EnemyPresenter : BaseOpponentPresenter {
     [Inject] protected GameEventBus eventBus;
     [Inject] private DialogueSystem dialogueSystem;
     [SerializeField] private bool dialogueEnabled = false;
-    // Enemy-specific initialization
+
     public void InitializeEnemy(Enemy enemy) {
-        Enemy = enemy;
+        base.Initialize(enemy);
         view.Initialize(enemy.Data);
         // Initialize dialogue system if speech data exists
         if (enemy.Data != null && enemy.Data.speechData != null) {

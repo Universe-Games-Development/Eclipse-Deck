@@ -1,31 +1,25 @@
-using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
-using System.Linq;
+using System;
 using UnityEngine;
 
 public class CardHand {
-    public Action<Card> OnCardAdd;
-    public Action<Card> OnCardRemove;
-    public Action<Card> OnCardSelected;
-    public Action<Card> OnCardDeselected;
+    // Події, які сповіщають про зміни в моделі
+    public event Action<Card> CardAdded;
+    public event Action<Card> CardRemoved;
+    public event Action<Card> OnCardSelected;
+    public event Action<Card> OnCardDeselected;
+    public event Action<bool> OnToggled;
 
     private const int DEFAULT_SIZE = 10;
 
     private List<Card> cardsInHand = new();
-    private Dictionary<string, Card> idToCardMap = new();
 
-    private Opponent owner;
     private readonly int maxHandSize;
-    private GameEventBus gameEventBus;
 
     public Card SelectedCard { get; private set; }
-    
 
-    public CardHand(Opponent owner, GameEventBus gameEventBus, int maxHandSize = DEFAULT_SIZE) {
-        this.owner = owner;
+    public CardHand(int maxHandSize = DEFAULT_SIZE) {
         this.maxHandSize = maxHandSize;
-        this.gameEventBus = gameEventBus;
     }
 
     public bool AddCard(Card card) {
@@ -33,55 +27,45 @@ public class CardHand {
             Debug.LogWarning("Received null card in card Hand!");
             return false;
         }
+
         if (cardsInHand.Count < maxHandSize) {
             card.ChangeState(CardState.InHand);
 
-            var drawnCardData = new CardDrawnEvent(owner, card);
-            gameEventBus.Raise(drawnCardData);
-
-            idToCardMap[card.Id] = card;
             cardsInHand.Add(card);
-            OnCardAdd?.Invoke(card);
+            CardAdded?.Invoke(card);
             return true;
         } else {
+            Debug.Log("Failed to add card to hand");
             return false;
         }
     }
 
-    public void RemoveCard(Card card) {
+    public bool RemoveCard(Card card) {
         if (cardsInHand.Contains(card)) {
             if (card == SelectedCard) {
                 DeselectCurrentCard();
             }
 
             cardsInHand.Remove(card);
-            idToCardMap.Remove(card.Id);
 
-            var removedCardData = new CardPullEvent(owner, card);
-            gameEventBus.Raise(removedCardData);
-
-            OnCardRemove?.Invoke(card);
+            CardRemoved?.Invoke(card);
+            return true;
         }
+        return false;
     }
-
-    public Card GetCardById(string id) => cardsInHand.FirstOrDefault(c => c.Id == id);
 
     public void SelectCard(Card newCard) {
         if (newCard == null) return;
         if (SelectedCard == newCard) return;
-
+        OnCardSelected?.Invoke(SelectedCard);
         DeselectCurrentCard();
         SelectedCard = newCard;
         Debug.Log("Selected: " + newCard.Data.Name);
-
-        OnCardSelected?.Invoke(newCard); // Сповіщення про вибір карти
     }
 
     public void DeselectCurrentCard() {
         if (SelectedCard == null) return;
-
-        OnCardDeselected?.Invoke(SelectedCard); // Сповіщення про скасування вибору
-
+        OnCardDeselected?.Invoke(SelectedCard);
         SelectedCard = null;
     }
 
@@ -92,14 +76,17 @@ public class CardHand {
         return null;
     }
 
-    public Action<bool> OnInteractionChanged;
-    internal void SetInteraction(bool value) {
-        OnInteractionChanged?.Invoke(value);
-    }
-
-    internal void ClearHand() {
-        foreach (Card card in cardsInHand) {
-            card.Exile();
+    public void ClearHand() {
+        List<Card> cards = new List<Card>(cardsInHand);
+        foreach (Card card in cards) {
+            RemoveCard(card);
         }
     }
+
+    public void SetInteraction(bool v) {
+        OnToggled?.Invoke(v);
+    }
+
+    public int Count => cardsInHand.Count;
+    public List<Card> Cards => new List<Card>(cardsInHand);
 }

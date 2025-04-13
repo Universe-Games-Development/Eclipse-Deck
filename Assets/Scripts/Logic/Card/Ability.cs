@@ -1,6 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Zenject;
 
 // Ability activation event
 public struct AbilityActivatedEvent {
@@ -16,38 +17,36 @@ public interface IPassiveAbility {
 }
 
 public interface IActiveAbility {
-    UniTask<bool> PerformAbility(IActionFiller inputter);
+    UniTask<bool> PerformAbility();
 }
 
-
 public abstract class Ability<TData, TOwner> where TOwner : IAbilityOwner {
-    public TData Data { get; }
-    public TOwner Owner { get; }
-    protected GameEventBus EventBus { get; }
+    public TData Data { get; set; }
+    public TOwner Owner { get; set; }
 
-    protected Ability(TData data, TOwner owner, GameEventBus eventBus) {
+    public Ability(TData data, TOwner owner) {
         Data = data;
         Owner = owner;
-        EventBus = eventBus;
     }
 }
 
 public abstract class ActiveAbility<TData, TOwner>
     : Ability<TData, TOwner>, IActiveAbility
     where TOwner : IAbilityOwner {
-    protected ActiveAbility(TData data, TOwner owner, GameEventBus eventBus) : base(data, owner, eventBus) {
+    protected ActiveAbility(TData data, TOwner owner) : base(data, owner) {
     }
 
-    public abstract UniTask<bool> PerformAbility(IActionFiller inputter);
+    public abstract UniTask<bool> PerformAbility();
 }
 
 public abstract class PassiveAbility<TData, TOwner>
     : Ability<TData, TOwner>, IPassiveAbility
     where TOwner : IAbilityOwner {
     protected bool isActive;
+    protected IRequirement abilityActivationRequirement;
 
-    protected PassiveAbility(TData data, TOwner owner, GameEventBus eventBus)
-        : base(data, owner, eventBus) { }
+    protected PassiveAbility(TData data, TOwner owner) : base(data, owner) {
+    }
 
     public void Activate() {
         if (isActive) return;
@@ -86,17 +85,16 @@ public abstract class PassiveAbility<TData, TOwner>
 
 public abstract class CardActiveAbility : ActiveAbility<CardAbilityData, Card> {
     protected Card card;
-    public CardActiveAbility(CardAbilityData data, Card owner, GameEventBus eventBus)
-        : base(data, owner, eventBus) {
+
+    protected CardActiveAbility(CardAbilityData data, Card owner) : base(data, owner) {
         card = owner;
     }
 }
 
 public abstract class CardPassiveAbility : PassiveAbility<CardAbilityData, Card> {
     protected Card card;
-    public CardPassiveAbility(CardAbilityData data, Card owner, GameEventBus eventBus)
-        : base(data, owner, eventBus) {
-        card = owner;
+
+    protected CardPassiveAbility(CardAbilityData data, Card owner) : base(data, owner) {
     }
 
     protected override void RegisterStateChangeHandlers() {
@@ -118,25 +116,20 @@ public abstract class CardPassiveAbility : PassiveAbility<CardAbilityData, Card>
 
 public abstract class CreaturePassiveAbility : PassiveAbility<CreatureAbilityData, Creature> {
     private Creature creature;
-    protected IRequirement<Creature> abilityActivationRequirement;
-    public CreaturePassiveAbility(CreatureAbilityData data, Creature owner, GameEventBus eventBus)
-        : base(data, owner, eventBus) {
-        abilityActivationRequirement = new RequirementBuilder<Creature>()
-                .And(new CreatureAliveRequirement())
-                .Build();
+
+    protected CreaturePassiveAbility(CreatureAbilityData data, Creature owner) : base(data, owner) {
+        creature = owner;
     }
 
     protected override void RegisterStateChangeHandlers() {
-        creature.GetHealth().OnDeath += HandleStateChange;
+        creature.Health.OnDeath += HandleStateChange;
     }
 
     protected override void UnregisterStateChangeHandlers() {
-        creature.GetHealth().OnDeath -= HandleStateChange;
+        creature.Health.OnDeath -= HandleStateChange;
     }
 
     protected override bool CheckActivationConditions() {
-        bool result = abilityActivationRequirement.IsMet(creature, out string callbackMessage);
-        Debug.Log(callbackMessage);
-        return result;
+        return abilityActivationRequirement.Check(creature).IsValid;
     }
 }

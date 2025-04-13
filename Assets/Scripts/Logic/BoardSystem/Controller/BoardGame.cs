@@ -28,13 +28,20 @@ public class BoardGame : MonoBehaviour {
     }
 
     public async UniTask Initialize(PlayerPresenter player, EnemyPresenter enemy) {
+        if (player == null) {
+            Debug.LogError("PlayerPresenter is null");
+        }
+        if (enemy == null) {
+            Debug.LogError("EnemyPresenter is null");
+        }
         await UniTask.WhenAll(
-            gameBoardSeats.AssignEnemySeat(enemy.Enemy, enemy),
-            gameBoardSeats.AssignPlayerSeat(player.Player, player)
+            gameBoardSeats.AssignOpponentSeat(enemy),
+            gameBoardSeats.AssignOpponentSeat(player)
         );
         BoardAssigner boardAssigner = new BoardAssigner(gameBoardSeats, boardPresenter);
         boardPresenter.Initialize(boardAssigner);
         boardPresenter.UpdateGrid(boardConfig);
+        gameBoardSeats.InitializePlayersCards();
     }
 
     public void BeginBattle() {

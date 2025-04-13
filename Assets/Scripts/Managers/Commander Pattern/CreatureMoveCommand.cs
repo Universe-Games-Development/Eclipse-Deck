@@ -43,7 +43,7 @@ public class CreatureMoveCommand : Command {
     public async override UniTask Undo() {
         while (previousFields.Count > 0) {
             var lastField = previousFields.Pop();
-            if (lastField.OccupiedCreature != null) continue; // Пропускаємо зайняті поля
+            if (lastField.Creature != null) continue; // Пропускаємо зайняті поля
 
             bool placeResult = await TryMoveToField(lastField, creature);
             if (placeResult) {

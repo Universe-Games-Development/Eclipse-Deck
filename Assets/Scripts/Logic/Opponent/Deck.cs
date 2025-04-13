@@ -3,16 +3,10 @@ using UnityEngine;
 
 public class Deck {
     private Stack<Card> cards = new();
-    private GameEventBus eventBus;
-    private Opponent owner;
     private CardFactory cardFactory;
-    private int emptyDrawAttempts = 0;
-    private bool wasDeckEmpty = false;
 
-    public Deck(Opponent owner, GameEventBus eventBus) {
-        this.owner = owner;
-        this.eventBus = eventBus;
-        cardFactory = new CardFactory(owner, eventBus);
+    public Deck() {
+        cardFactory = new CardFactory();
     }
 
     public void Initialize(CardCollection collection) {
@@ -22,26 +16,16 @@ public class Deck {
             card.ChangeState(CardState.InDeck);
         }
         ShuffleDeck();
-        // Скидаємо лічильник спроб та прапорець порожньої колоди при ініціалізації
-        emptyDrawAttempts = 0;
-        wasDeckEmpty = false;
     }
 
     public Card DrawCard() {
         if (cards.Count > 0) {
             Card drawnCard = cards.Pop();
-            eventBus.Raise(new OnCardDrawn(drawnCard, owner));
+            
             return drawnCard;
-        } else {
-            wasDeckEmpty = true;
-            emptyDrawAttempts++;
-            // Calculate damage (2^(n-1))
-            int damage = 1 << (emptyDrawAttempts - 1);
-
-            eventBus.Raise(new OnDeckEmptyDrawn(owner, emptyDrawAttempts, damage));
-
-            return null;
         }
+        Debug.Log("Player doesn`t have more cards he need to take damage (TO DO Soon)");
+        return null;
     }
 
     public void ShuffleDeck() {
@@ -51,8 +35,6 @@ public class Deck {
         foreach (var card in tempCards) {
             cards.Push(card);
         }
-
-        CheckDeckRefilled();
     }
 
     private void ShuffleList(List<Card> list) {
@@ -64,45 +46,30 @@ public class Deck {
 
     public void AddCard(Card card) {
         cards.Push(card);
-
-        CheckDeckRefilled();
     }
 
-    private void CheckDeckRefilled() {
-        if (wasDeckEmpty && cards.Count > 0) {
-            // Deck was empty but refilled
-            ResetEmptyDrawAttempts();
-            eventBus.Raise(new OnDeckRefilled(owner));
-        }
-    }
-
-    public void ResetEmptyDrawAttempts() {
-        emptyDrawAttempts = 0;
-        wasDeckEmpty = false;
-    }
 
     public void ClearDeck() {
         cards.Clear();
-        emptyDrawAttempts = 0;
-        wasDeckEmpty = false;
     }
 
     public int GetCount() {
         return cards.Count;
     }
+}
 
-    public int GetEmptyDrawAttempts() {
-        return emptyDrawAttempts;
+public class DeckPresenter {
+    private DeckView deckView;
+
+    public Deck Deck { get; private set; }
+
+    public DeckPresenter(Deck deckModel, DeckView deckView) {
+        Deck = deckModel;
+        this.deckView = deckView;
     }
 }
 
 public class CardFactory {
-    public GameEventBus eventBus;
-    private Opponent owner;
-    public CardFactory(Opponent owner, GameEventBus eventBus) {
-        this.eventBus = eventBus;
-        this.owner = owner;
-    }
 
     public List<Card> CreateCardsFromCollection(CardCollection collection) {
         List<Card> cards = new();
@@ -119,9 +86,7 @@ public class CardFactory {
 
     public Card CreateCard(CardData cardData) {
         return cardData switch {
-            CreatureCardData creatureData => new CreatureCard(creatureData, owner),
-            SpellCardData spellData => new SpellCard(spellData, owner),
-            SupportCardData supportData => new SupportCard(supportData, owner),
+            CreatureCardData creatureData => new CreatureCard(creatureData),
             _ => null
         };
     }
@@ -139,13 +104,9 @@ public struct OnCardDrawn : IEvent {
 
 public struct OnDeckEmptyDrawn : IEvent {
     public Opponent owner;
-    public int attemptCount;
-    public int damage;
 
-    public OnDeckEmptyDrawn(Opponent owner, int attemptCount, int damage) {
+    public OnDeckEmptyDrawn(Opponent owner) {
         this.owner = owner;
-        this.attemptCount = attemptCount;
-        this.damage = damage;
     }
 }
 

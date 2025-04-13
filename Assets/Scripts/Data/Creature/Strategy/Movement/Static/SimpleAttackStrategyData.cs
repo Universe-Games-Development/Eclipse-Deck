@@ -14,7 +14,7 @@ public class SimpleAttackStrategy : AttackStrategy {
     public override AttackData CalculateAttackData() {
         List<Field> fields = navigator.GetFieldsInDirection(creature.CurrentField, 1, Direction.North);
         AttackData attackData = new();
-        attackData.AddFieldsDamage(fields, creature.GetAttack().CurrentValue);
+        attackData.AddFieldsDamage(fields, creature.Attack.CurrentValue);
         return attackData;
     }
 }

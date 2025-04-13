@@ -4,20 +4,21 @@ using UnityEngine;
 
 public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
     public Field CurrentField { get; private set; }
-    public Func<Field, UniTask> OnInterruptedMove { get; internal set; }
-    public Func<Field, UniTask> OnMoved { get; internal set; }
-    public Func<Field, UniTask> OnSpawned { get; internal set; }
-    
+    public Func<Field, UniTask> OnInterruptedMove;
+    public Func<Field, UniTask> OnMoved;
+    public Func<Field, UniTask> OnSpawned;
+
+    public IHealth Health { get; private set; }
+
+    public Attack Attack { get; private set; }
+
     public CreatureCard creatureCard;
     private CreatureBehaviour craetureBehaviour;
-
-    protected Health _health;
-    protected Attack _attack;
     
     public Creature(CreatureCard creatureCard, CreatureBehaviour craetureBehaviour, GameEventBus eventBus) {
         this.creatureCard = creatureCard;
-        _health = new Health(this, creatureCard.Health, eventBus);
-        _attack = new Attack(this, creatureCard.Attack, eventBus);
+        Health = new Health(this, creatureCard.Health, eventBus);
+        Attack = new Attack(this, creatureCard.Attack, eventBus);
         
         // Soon we define how to get the creatureSO
         CreatureCardData creatureData = creatureCard.creatureCardData;
@@ -62,14 +63,6 @@ public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
         Console.WriteLine($"Creature on field ({field.row}, {field.column}) is notified about its removal.");
         // - Вибір нового місця
         // - Знищення істоти
-    }
-
-    public Health GetHealth() {
-        return _health;
-    }
-
-    public Attack GetAttack() {
-        return _attack;
     }
 }
 

@@ -8,25 +8,18 @@ public class CardAnimator : MonoBehaviour {
 
     private bool isHovered;
     private Tween hoveringTween;
-    private CardUI cardUI;
-    private int originalSiblingIndex;
-    public CardLayoutGhost CardLayoutGhost { get; internal set; }
-
+    private CardView cardUI;
     [Header("Layout")]
     [SerializeField] private RectTransform globalBody;
     [SerializeField] private RectTransform innerBody;
 
-    private Tween mainFlyingTween;
-
-    public void AttachAnimator(CardUI cardUI) {
-        cardUI.OnLayoutUpdate += FlyByLayout;
+    public void AttachAnimator(CardView cardUI) {
         cardUI.OnCardClicked += ShrinkClick;
         cardUI.OnCardHovered += ToggleHover;
         cardUI.OnCardRemoval += RemovalAnimation;
-        originalSiblingIndex = cardUI.transform.GetSiblingIndex();
     }
 
-    private void ShrinkClick(CardUI uI) {
+    private void ShrinkClick(CardView uI) {
         // Create a sequence for the scaling animation
         Sequence shrinkSequence = DOTween.Sequence();
         shrinkSequence.Append(innerBody.DOScale(0.9f, 0.2f));
@@ -35,25 +28,8 @@ public class CardAnimator : MonoBehaviour {
         shrinkSequence.Play();
     }
 
-    private void FlyByLayout() {
-        if (mainFlyingTween != null && mainFlyingTween.IsPlaying()) {
-            mainFlyingTween.Kill();
-        }
 
-        // Отримуємо нову локальну позицію відносно батьківського контейнера
-        Vector3 newLocalPosition = globalBody.parent.InverseTransformPoint(CardLayoutGhost.transform.position);
-
-        mainFlyingTween = globalBody.transform.DOLocalMove(newLocalPosition, 0.8f)
-            .SetEase(Ease.InOutSine)
-            .OnComplete(() => { {
-                    mainFlyingTween = null;
-                    OnReachedLayout?.Invoke();
-                } 
-            });
-    }
-
-
-    private async UniTask RemovalAnimation(CardUI cardUI) {
+    private async UniTask RemovalAnimation(CardView cardUI) {
         var sequence = DOTween.Sequence();
         sequence.Append(globalBody.transform.DOScale(Vector3.zero, 0.3f));
         sequence.Join(globalBody.transform.DOLocalMoveY(globalBody.transform.position.y - 2f, 0.8f).SetEase(Ease.InOutSine));
@@ -105,12 +81,9 @@ public class CardAnimator : MonoBehaviour {
     }
 
     private void OnDrawGizmos() {
-        if (CardLayoutGhost && globalBody) {
-            Gizmos.DrawSphere(CardLayoutGhost.transform.position, 0.05f);
+        if (globalBody) {
             Gizmos.color = Color.red;
             Gizmos.DrawSphere(globalBody.transform.position, 0.05f);
-
-            Gizmos.DrawLine(globalBody.transform.position, CardLayoutGhost.transform.position);
         }
     }
 }

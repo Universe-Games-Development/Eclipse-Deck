@@ -10,22 +10,22 @@ public class CreaturePresenter : MonoBehaviour {
     [Inject] private CreatureBehaviour creatureBehaviour;
     [Inject] private GameEventBus eventBus;
 
-    public Creature Model { get; private set; }
+    public Creature Creature { get; private set; }
     
     [SerializeField] private CreatureAnimator dotweenAnimator;
     private CreatureView view;
     [SerializeField] private Transform viewParent;
 
-    public void Initialize(BoardPresenter boardPresenter, CreatureCard creatureCard, Field targetField) {
+    public void Initialize(CreatureCard creatureCard, Field targetField, BoardPresenter boardPresenter) {
         // creating model
         _boardPresenter = boardPresenter;
-        Model = new Creature(creatureCard, creatureBehaviour, eventBus);
-        Model.OnSpawned += OnCreatureSpawned;
-        Model.OnMoved += OnCreatureMoved;
-        Model.OnInterruptedMove += OnCreatureMoveInterrupted;
+        Creature = new Creature(creatureCard, creatureBehaviour, eventBus);
+        Creature.OnSpawned += OnCreatureSpawned;
+        Creature.OnMoved += OnCreatureMoved;
+        Creature.OnInterruptedMove += OnCreatureMoveInterrupted;
         // Creating view
-        view = Instantiate(Model.creatureCard.creatureCardData.viewPrefab, viewParent);
-        Model.Spawn(targetField);
+        view = Instantiate(Creature.creatureCard.creatureCardData.viewPrefab, viewParent);
+        Creature.Spawn(targetField);
     }
 
     private async UniTask OnCreatureSpawned(Field targetField) {
@@ -64,9 +64,9 @@ public class CreaturePresenter : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        if (Model == null) return;
+        if (Creature == null) return;
 
-        Model.OnMoved -= OnCreatureMoved;
-        Model.OnSpawned -= OnCreatureSpawned;
+        Creature.OnMoved -= OnCreatureMoved;
+        Creature.OnSpawned -= OnCreatureSpawned;
     }
 }

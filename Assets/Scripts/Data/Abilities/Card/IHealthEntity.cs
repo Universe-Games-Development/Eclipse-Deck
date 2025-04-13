@@ -1,11 +1,11 @@
 ﻿using System;
 
 public interface IHealthEntity {
-    Health GetHealth();
+    public IHealth Health { get; }
 }
 
 public interface IDamageDealer {
-    Attack GetAttack();
+    public Attack Attack { get; }
 }
 
 public interface IAbilityOwner {

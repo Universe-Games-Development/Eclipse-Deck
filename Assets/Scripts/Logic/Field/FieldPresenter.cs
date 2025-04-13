@@ -46,7 +46,7 @@ public class FieldPresenter : MonoBehaviour {
         field.OnCreatureRemoved += OnDeOccupy;
 
         if (field.Owner != null) {
-            ownerName = field.Owner.Name;
+            ownerName = field.Owner.ToString();
         }
     }
 

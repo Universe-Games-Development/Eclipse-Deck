@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public abstract class AbilityData<TSelf, TOwner> : ScriptableObject
     where TSelf : AbilityData<TSelf, TOwner>
@@ -8,7 +9,7 @@ public abstract class AbilityData<TSelf, TOwner> : ScriptableObject
     public string Description;
     public Sprite Icon;
 
-    public abstract Ability<TSelf, TOwner> CreateAbility(TOwner owner, GameEventBus eventBus);
+    public abstract Ability<TSelf, TOwner> CreateAbility(TOwner owner, DiContainer diContainer);
 }
 
 

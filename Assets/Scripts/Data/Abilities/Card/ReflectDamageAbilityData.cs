@@ -1,14 +1,14 @@
 using System;
 using UnityEngine;
+using Zenject;
 
 [CreateAssetMenu(fileName = "ReflectDamage", menuName = "Abilities/CreatureAbilities")]
 public class ReflectDamageAbilityData : CreatureAbilityData {
     public ReflectMode reflectMode = ReflectMode.Percentage;
     [Range(0, 1)] public float damagePercentage = 0.5f;
 
-    public override Ability<CreatureAbilityData, Creature> CreateAbility(Creature owner, GameEventBus eventBus) {
-        if (!(owner is Creature creature)) throw new ArgumentException("Owner must be a CreatureCard");
-        return new ReflectDamageAbility(creature, this, eventBus);
+    public override Ability<CreatureAbilityData, Creature> CreateAbility(Creature owner, DiContainer container) {
+        return container.Instantiate<ReflectDamageAbility>(new object[] { this, owner });
     }
 }
 
@@ -16,15 +16,15 @@ public class ReflectDamageAbility : CreaturePassiveAbility {
     private ReflectMode reflectMode = ReflectMode.Percentage;
     private float percentageDamage;
     protected Creature creature;
-    public ReflectDamageAbilityData ReflectAbilityData { get; set; }
 
-    public ReflectDamageAbility(Creature creature, ReflectDamageAbilityData abilityData, GameEventBus eventBus) : base(abilityData, creature, eventBus) {
-        // Dara initialization
-        reflectMode = abilityData.reflectMode;
+    public ReflectDamageAbility(ReflectDamageAbilityData data, Creature owner) : base(data, owner) {
+        reflectMode = data.reflectMode;
         if (reflectMode == ReflectMode.Percentage) {
-            percentageDamage = abilityData.damagePercentage;
+            percentageDamage = data.damagePercentage;
         }
     }
+
+    public ReflectDamageAbilityData ReflectAbilityData { get; set; }
 
     private void ReflectDamage(int damage, IDamageDealer damageDealer) {
         // Cast attacker to damagable to damage him
@@ -32,7 +32,7 @@ public class ReflectDamageAbility : CreaturePassiveAbility {
             return;
         }
 
-        Health attckSourceHealth = healthableSource.GetHealth();
+        IHealth attckSourceHealth = healthableSource.Health;
 
         switch (reflectMode) {
             case ReflectMode.Percentage:
@@ -46,16 +46,13 @@ public class ReflectDamageAbility : CreaturePassiveAbility {
         }
     }
     protected override void ActivateAbilityTriggers() {
-        Health health = creature.GetHealth();
+        IHealth health = creature.Health;
         health.OnDamageTaken += ReflectDamage;
     }
 
     protected override void DeactivateAbilityTriggers() {
-        Health health = creature.GetHealth();
+        IHealth health = creature.Health;
         health.OnDamageTaken -= ReflectDamage;
     }
-
-    protected override bool CheckActivationConditions() {
-        return abilityActivationRequirement.IsMet(creature, out string error);
-    }
 }
+

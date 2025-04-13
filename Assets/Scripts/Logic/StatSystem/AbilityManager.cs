@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Zenject;
 
 public class AbilityManager<TAbilityData, TOwner> : IDisposable
     where TAbilityData : AbilityData<TAbilityData, TOwner>
@@ -9,11 +10,10 @@ public class AbilityManager<TAbilityData, TOwner> : IDisposable
 
     private readonly List<Ability<TAbilityData, TOwner>> _abilities = new();
     private readonly TOwner _owner;
-    private readonly GameEventBus _eventBus;
-
-    public AbilityManager(TOwner caster, GameEventBus eventBus) {
+    private DiContainer _diContainer;
+    public AbilityManager(TOwner caster, DiContainer diContainer) {
         _owner = caster ?? throw new ArgumentNullException(nameof(caster));
-        _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+        _diContainer = _diContainer ?? throw new ArgumentNullException(nameof(diContainer));
     }
 
     public void AddAbilities(IEnumerable<TAbilityData> cardAbilityDatas) {
@@ -28,7 +28,7 @@ public class AbilityManager<TAbilityData, TOwner> : IDisposable
             return;
         }
 
-        var ability = abilityData.CreateAbility(_owner, _eventBus);
+        var ability = abilityData.CreateAbility(_owner, _diContainer);
 
         if (ability == null) {
             Debug.LogError($"Failed to create ability from {abilityData.name}");

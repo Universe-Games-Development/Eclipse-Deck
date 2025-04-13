@@ -2,11 +2,11 @@
 
 public class CardSpendable {
     private readonly Mana mana;
-    private readonly Health health;
+    private readonly IHealth health;
 
     public bool IsManaEnabled { get; private set; } = false;
 
-    public CardSpendable(Mana mana, Health health) {
+    public CardSpendable(Opponent opponent, Mana mana, IHealth health, GameEventBus eventBus) {
         this.mana = mana;
         this.health = health;
     }
@@ -52,6 +52,10 @@ public class CardSpendable {
         if (amount > 0) {
             health.Heal(amount);
         }
+    }
+
+    internal void TryRefund(ResourceData resourceData) {
+        throw new NotImplementedException();
     }
 }
 

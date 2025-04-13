@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 
-public class Field : IHealthEntity {
+public class Field {
     [Header("Grid Position")]
     public int row;
     public int column;
@@ -37,15 +37,15 @@ public class Field : IHealthEntity {
     }
 
     [Header("Game Board Params")]
-    public Creature OccupiedCreature { get; private set; }
+    public Creature Creature { get; private set; }
 
     public void ApplyDamage(int damage) {
-        if (OccupiedCreature != null) {
-            OccupiedCreature.GetHealth().TakeDamage(damage);
+        if (Creature != null) {
+            Creature.Health.TakeDamage(damage);
         } else {
             if (Owner != null) {
                 Owner.Health.TakeDamage(damage);
-                FieldLogger.Log($"{Owner.Name} takes {damage} damage.");
+                FieldLogger.Log($"{Owner} takes {damage} damage.");
             } else {
                 FieldLogger.Log($"Nobody takes {damage} damage");
             }
@@ -79,21 +79,21 @@ public class Field : IHealthEntity {
     #region Creature Logic
 
     public bool AssignCreature(Creature creature) {
-        if (OccupiedCreature != null) {
+        if (Creature != null) {
             FieldLogger.Warning($"Field at ({row}, {column}) is already occupied by another creature.");
             return false;
         }
 
-        OccupiedCreature = creature;
+        Creature = creature;
         OnCreaturePlaced?.Invoke(creature); // ¬икликаЇмо под≥ю
         FieldLogger.Log($"Creature placed on field ({row}, {column}).");
         return true;
     }
 
     public void UnAssignCreature() {
-        if (OccupiedCreature != null) {
-            var removedCreature = OccupiedCreature;
-            OccupiedCreature = null;
+        if (Creature != null) {
+            var removedCreature = Creature;
+            Creature = null;
             OnCreatureRemoved?.Invoke(removedCreature); // ¬икликаЇмо под≥ю
         } else {
             FieldLogger.Log("Received remove but nothing to remove!");
@@ -104,7 +104,7 @@ public class Field : IHealthEntity {
         return !HasCreature && creature != null;
     }
 
-    public bool HasCreature => OccupiedCreature != null;
+    public bool HasCreature => Creature != null;
     #endregion
 
     public int GetRow() {
@@ -119,24 +119,12 @@ public class Field : IHealthEntity {
         return $"{GetRow()} / {GetColumn()}";
     }
 
-    public Health GetHealth() {
-        if (Owner == null) {
-            throw new InvalidOperationException("Null owner");
-        }
-
-        return Owner.Health;
-    }
-
     internal Vector3 GetCoordinates() {
         return new Vector3(row, 0, column);
     }
 
-    internal bool CanSummonCreature(Opponent summoner) {
-        if (summoner == null && summoner != Owner) {
-            Debug.Log("Wrong opponent to summon creture");
-            return false;
-        }
-        if (OccupiedCreature != null) {
+    internal bool CanSummonCreature() {
+        if (Creature != null) {
             Debug.Log("Field is already occupied");
             return false;
         }

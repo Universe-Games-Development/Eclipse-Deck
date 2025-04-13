@@ -57,7 +57,7 @@ public class RetreatStrategy : SimpleMoveStrategy {
 
         if (escapePath.isInterrupted) {
             List<Field> freeFields = navigator.GetAdjacentFields(currentField)
-                .Where(field => field.Owner == currentField.Owner && field.OccupiedCreature == null)
+                .Where(field => field.Owner == currentField.Owner && field.Creature == null)
                 .ToList();
 
             if (freeFields.Count == 0) {
@@ -80,7 +80,7 @@ public class RetreatStrongEnemies : RetreatStrategy {
 
     protected override bool ConditionToEscape(Field currentField) {
         var enemies = navigator.GetCreaturesInDirection(currentField,retreatAmount, checkDirection);
-        return enemies.Any(enemy => enemy.GetAttack().CurrentValue > currentField.OccupiedCreature.GetAttack().CurrentValue);
+        return enemies.Any(enemy => enemy.Attack.CurrentValue > currentField.Creature.Attack.CurrentValue);
     }
 }
 
@@ -116,7 +116,7 @@ public class RetreatWillDamaged : RetreatStrategy {
 
     protected override bool ConditionToEscape(Field currentField) {
         var enemies = navigator.GetCreaturesInDirection(currentField, retreatAmount, checkDirection);
-        return enemies.Any(enemy => enemy.GetAttack().CurrentValue > _minDamagedScared);
+        return enemies.Any(enemy => enemy.Attack.CurrentValue > _minDamagedScared);
     }
 }
 

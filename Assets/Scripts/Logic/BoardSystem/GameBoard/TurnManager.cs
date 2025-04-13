@@ -79,7 +79,7 @@ public class TurnManager : IDisposable {
             ? starterOpponent
             : GetNextOpponent();
 
-        Debug.Log($"Turn started for {ActiveOpponent.Name}");
+        Debug.Log($"Turn started for {ActiveOpponent}");
         OnOpponentChanged?.Invoke(ActiveOpponent);
         OnTurnStart?.Invoke(ActiveOpponent);
         TurnCounter++;

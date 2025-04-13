@@ -1,12 +1,14 @@
 using System;
 
 public class Stat : IStat {
+    public event Action<int, int> OnValueChanged;
+    public event Action<int, int> OnChangedMaxValue;
+    
     public int CurrentValue { get; private set; }
     public int MinValue { get; private set; }
     public int MaxValue { get; private set; }
     public int InitialValue { get; private set; }
-    public event Action<int, int> OnValueChanged;
-
+    
     public Stat(int initialValue, int maxValue = 0, int minValue = 0) {
         MinValue = minValue;
         InitialValue = initialValue;
@@ -26,7 +28,9 @@ public class Stat : IStat {
 
     public void SetMaxValue(int newMaxValue) {
         if (newMaxValue < MinValue) return;
+        OnChangedMaxValue?.Invoke(MaxValue, newMaxValue);
         MaxValue = newMaxValue;
+        
     }
 
     public void SetMinValue(int newMinValue) {

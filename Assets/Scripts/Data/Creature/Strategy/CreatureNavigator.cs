@@ -39,7 +39,7 @@ public class CreatureNavigator {
             CurrentField
         };
         for (int i = 0; i < fieldsToMove.Count; i++) {
-            if (fieldsToMove[i].OccupiedCreature != null) {
+            if (fieldsToMove[i].Creature != null) {
                 path.isInterrupted = true;
                 path.interruptedAt = i;
                 break;
@@ -67,8 +67,8 @@ public class CreatureNavigator {
     public List<Creature> GetCreaturesOnFields(List<Field> fields) {
         List<Creature> creaturesInDirection = new();
         foreach (var field in fields) {
-            if (field.OccupiedCreature != null) {
-                creaturesInDirection.Add(field.OccupiedCreature);
+            if (field.Creature != null) {
+                creaturesInDirection.Add(field.Creature);
             }
         }
         return creaturesInDirection;

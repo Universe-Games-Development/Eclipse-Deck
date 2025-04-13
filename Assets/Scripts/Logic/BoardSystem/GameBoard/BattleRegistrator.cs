@@ -24,7 +24,7 @@ public class BattleRegistrator {
 
         // Subscribe to player's model defeat event
         _player.Player.OnDefeat += (opponent) => UnregisterPlayer();
-        Debug.Log($"Player {playerPresenter.Player.Name} registered.");
+        Debug.Log($"Player {playerPresenter.Player} registered.");
 
         CheckAndTriggerMatchSetup();
     }
@@ -41,7 +41,7 @@ public class BattleRegistrator {
 
         // Subscribe to enemy's model defeat event
         _enemy.Enemy.OnDefeat += (opponent) => UnregisterEnemy();
-        Debug.Log($"Enemy {enemyPresenter.Enemy.Name} registered.");
+        Debug.Log($"Enemy {enemyPresenter.Enemy} registered.");
 
         CheckAndTriggerMatchSetup();
     }
@@ -57,14 +57,14 @@ public class BattleRegistrator {
     // Unregister player
     public void UnregisterPlayer() {
         if (_player == null) return;
-        Debug.Log($"Player {_player.Player.Name} unregistered.");
+        Debug.Log($"Player {_player.Player} unregistered.");
         _player = null;
     }
 
     // Unregister enemy
     public void UnregisterEnemy() {
         if (_enemy == null) return;
-        Debug.Log($"Enemy {_enemy.Enemy.Name} unregistered.");
+        Debug.Log($"Enemy {_enemy.Enemy} unregistered.");
         _enemy = null;
     }
 

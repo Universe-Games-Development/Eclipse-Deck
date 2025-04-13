@@ -78,7 +78,7 @@ public class FieldMaterializer : MonoBehaviour {
         propBlock.SetColor(emissiveColorName, hoverEmissionColor);
 
         if (creature != null) {
-            int attackValue = creature.GetAttack().CurrentValue;
+            int attackValue = creature.Attack.CurrentValue;
             hoverHighlightIntensity = defaultHighlightIntensity * attackValue;
         } else {
             hoverHighlightIntensity = defaultHighlightIntensity;

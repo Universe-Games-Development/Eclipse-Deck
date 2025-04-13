@@ -5,9 +5,9 @@ using UnityEngine;
 using Zenject;
 
 public class PlayerPresenter : BaseOpponentPresenter {
-    public Player Player;
+    public Player Player => (Player) OpponentModel;
     
-    [SerializeField] private CardHandUI handUI;
+    [SerializeField] private CardHandView handUI;
     [SerializeField] private CameraManager cameraManager;
 
     [Inject] protected BattleRegistrator opponentRegistrator;
@@ -20,7 +20,7 @@ public class PlayerPresenter : BaseOpponentPresenter {
 
     // Player-specific initialization
     public void InitializePlayer(Player player) {
-        Player = player;
+        base.Initialize(player);
 
         // Register with the opponent system
         opponentRegistrator.RegisterPlayer(this);
@@ -56,9 +56,8 @@ public class PlayerPresenter : BaseOpponentPresenter {
 public class Player : Opponent {
     private Room currentRoom;
 
-    public Player(GameEventBus eventBus, CommandManager commandManager, CardProvider cardProvider)
-        : base(eventBus, commandManager, cardProvider) {
-        Name = "Player";
+    public Player(GameEventBus eventBus)
+        : base(eventBus) {
     }
 
     public void EnterRoom(Room room) {
@@ -88,9 +87,9 @@ public class Player : Opponent {
 
 
 public class BaseOpponentPresenter : MonoBehaviour {
-    public Opponent OpponentModel { get; private set; }
+    public Opponent OpponentModel { get; protected set; }
     // Initialize the presenter with the model
-    public void Initialize(Opponent opponentModel) {
+    public virtual void Initialize(Opponent opponentModel) {
         OpponentModel = opponentModel;
     }
 
@@ -117,5 +116,9 @@ public class BaseOpponentPresenter : MonoBehaviour {
         // Гарантуємо точну установку фінальної позиції
         transform.position = end;
         transform.rotation = endRot;
+    }
+
+    internal IActionFiller GetActionFiller() {
+        throw new NotImplementedException();
     }
 }

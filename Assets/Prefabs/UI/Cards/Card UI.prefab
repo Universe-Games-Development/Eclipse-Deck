@@ -1334,7 +1334,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5635097528816772106}
-  - component: {fileID: 199238208543599398}
   - component: {fileID: 7997040698821701614}
   - component: {fileID: 9047682594767481327}
   m_Layer: 5
@@ -1365,20 +1364,6 @@ RectTransform:
   m_AnchoredPosition: {x: -300, y: 0}
   m_SizeDelta: {x: 240, y: 338}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &199238208543599398
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6924749709543900274}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f585b42c01baa54189258f4a2eccce2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoTweenAnimator: {fileID: 9047682594767481327}
-  UIDataInfo: {fileID: 7997040698821701614}
 --- !u!114 &7997040698821701614
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -88,7 +88,7 @@ public class CardBattleInfo : MonoBehaviour {
     private void OnOpponentChanged(Opponent newOpponent) {
         // ќновлюЇмо ≥нформац≥ю про активного гравц€
         if (activeOpponentText != null) {
-            activeOpponentText.text = string.Format(activeOpponentFormat, newOpponent.Name);
+            activeOpponentText.text = string.Format(activeOpponentFormat, newOpponent);
         }
     }
 
@@ -107,7 +107,7 @@ public class CardBattleInfo : MonoBehaviour {
         }
 
         if (activeOpponentText != null && opponent != null) {
-            activeOpponentText.text = string.Format(activeOpponentFormat, opponent.Name);
+            activeOpponentText.text = string.Format(activeOpponentFormat, opponent);
         }
     }
 

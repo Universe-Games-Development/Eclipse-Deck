@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5473478481159613771}
-  - component: {fileID: 3149414862181245613}
+  - component: {fileID: 1900808853413060287}
   m_Layer: 0
-  m_Name: GameBoardCenter
+  m_Name: BoardView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -33,7 +33,7 @@ Transform:
   - {fileID: 472000139728645391}
   m_Father: {fileID: 3873133005714245127}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3149414862181245613
+--- !u!114 &1900808853413060287
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -46,9 +46,58 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   yInteractionRange: 1
-  fieldPrefab: {fileID: 0}
-  origin: {fileID: 0}
-  globalCenter: {fileID: 0}
+  fieldPrefab: {fileID: 7132759440185772485, guid: b335380be08b2fe48a40fd6efc1a9e25, type: 3}
+  origin: {fileID: 472000139728645391}
+  globalCenter: {fileID: 5473478481159613771}
+--- !u!1 &479497668989164647
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8295857972705338493}
+  - component: {fileID: 5190431117779892699}
+  m_Layer: 0
+  m_Name: EnemySeat
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8295857972705338493
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 479497668989164647}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5145793573401933110}
+  m_Father: {fileID: 5152991069838768900}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5190431117779892699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 479497668989164647}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b101779e029d8f84db65425bf5fa078c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Direction: 1
+  SeatTransform: {fileID: 8295857972705338493}
+  HealthCell: {fileID: 6336877048649123050}
+  cardsPlaySystem: {fileID: 0}
 --- !u!1 &1317348684897485221
 GameObject:
   m_ObjectHideFlags: 0
@@ -112,37 +161,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3873133005714245127}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &3713052233062751769
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8447347442755192150}
-  m_Layer: 0
-  m_Name: PlayerPostion
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8447347442755192150
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3713052233062751769}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5152991069838768900}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3879151963752143961
 GameObject:
   m_ObjectHideFlags: 0
@@ -169,12 +187,12 @@ Transform:
   m_GameObject: {fileID: 3879151963752143961}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.52, y: 0.79999995, z: 4}
+  m_LocalPosition: {x: 3.48, y: 0.79999995, z: 4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 362348680728326058}
-  m_Father: {fileID: 5152991069838768900}
+  m_Father: {fileID: 8295857972705338493}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6336877048649123050
 MonoBehaviour:
@@ -234,37 +252,6 @@ MonoBehaviour:
   maxLevel: 1.5
   minLevel: -1.5
   duration: 2
---- !u!1 &5476167921762980613
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6199639367158920266}
-  m_Layer: 0
-  m_Name: EnemyPosition
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6199639367158920266
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5476167921762980613}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5152991069838768900}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5535635529191298733
 GameObject:
   m_ObjectHideFlags: 0
@@ -295,11 +282,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7729669526934673938}
-  - {fileID: 5145793573401933110}
   - {fileID: 705914747662851110}
-  - {fileID: 8447347442755192150}
-  - {fileID: 6199639367158920266}
+  - {fileID: 3856109521899582928}
+  - {fileID: 8295857972705338493}
   m_Father: {fileID: 3873133005714245127}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5786279841290306945
@@ -314,14 +299,57 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 566601a25dafaf54d89b2d58957a93d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerSeatDefinition:
-    direction: 0
-    seatTransform: {fileID: 8447347442755192150}
-    healthCell: {fileID: 6698457022837411248}
-  enemySeatDefinition:
-    direction: 1
-    seatTransform: {fileID: 6199639367158920266}
-    healthCell: {fileID: 6336877048649123050}
+  playerSeat: {fileID: 0}
+  enemySeat: {fileID: 0}
+--- !u!1 &5901221799105879248
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3856109521899582928}
+  - component: {fileID: 36787110777578674}
+  m_Layer: 0
+  m_Name: PlayerSeat
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3856109521899582928
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5901221799105879248}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7729669526934673938}
+  m_Father: {fileID: 5152991069838768900}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &36787110777578674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5901221799105879248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b101779e029d8f84db65425bf5fa078c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Direction: 0
+  SeatTransform: {fileID: 3856109521899582928}
+  HealthCell: {fileID: 6698457022837411248}
+  cardsPlaySystem: {fileID: 0}
 --- !u!1 &6620236349734427890
 GameObject:
   m_ObjectHideFlags: 0
@@ -498,12 +526,12 @@ Transform:
   m_GameObject: {fileID: 7179270318635098290}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.69, y: 0.79999995, z: -4}
+  m_LocalPosition: {x: -3.69, y: 0.79999995, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5704889277102726794}
-  m_Father: {fileID: 5152991069838768900}
+  m_Father: {fileID: 3856109521899582928}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6698457022837411248
 MonoBehaviour:
@@ -1018,7 +1046,6 @@ GameObject:
   - component: {fileID: 3873133005714245127}
   - component: {fileID: 103742894711170591}
   - component: {fileID: 5170561439062991034}
-  - component: {fileID: 7878819136514111977}
   - component: {fileID: 3144423736842833839}
   m_Layer: 0
   m_Name: GameBoard
@@ -1058,8 +1085,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boardConfig: {fileID: 11400000, guid: e36584430f06fbd4bb261d61a68a5cac, type: 2}
-  boardPresenter: {fileID: 0}
-  gameBoardSeats: {fileID: 0}
+  boardPresenter: {fileID: 3144423736842833839}
+  gameBoardSeats: {fileID: 5786279841290306945}
   creatureSpawner: {fileID: 5170561439062991034}
 --- !u!114 &5170561439062991034
 MonoBehaviour:
@@ -1074,23 +1101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   creaturePrefab: {fileID: 8992983510157702227, guid: 26050d19d77ed9140a507c638bc492f2, type: 3}
-  boardPresenter: {fileID: 0}
---- !u!114 &7878819136514111977
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9050606716659945458}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33cf2817a7f955b41aaf43c4f6df8a3d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  yInteractionRange: 1
-  fieldPrefab: {fileID: 7132759440185772485, guid: b335380be08b2fe48a40fd6efc1a9e25, type: 3}
-  origin: {fileID: 472000139728645391}
-  globalCenter: {fileID: 5473478481159613771}
+  boardPresenter: {fileID: 3144423736842833839}
 --- !u!114 &3144423736842833839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1103,4 +1114,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0191171d8e964b34f9312025deb54e30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _view: {fileID: 0}
+  _view: {fileID: 1900808853413060287}

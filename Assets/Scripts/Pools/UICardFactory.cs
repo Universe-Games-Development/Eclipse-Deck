@@ -2,37 +2,27 @@
 
 // This class creates CardUI object and assign ghost layout to it so it knows own target position
 // 2 object pools for cards and it`s layout ghosts
-public class UICardFactory : MonoBehaviour {
-    [SerializeField] private Transform cardSpawnPoint;
-    [SerializeField] private Transform ghostLayoutParent;
-
-    [SerializeField] private CardUI cardPrefab;
-    [SerializeField] private CardLayoutGhost ghostPrefab;
-    [SerializeField] private CardAbilityUI abilityPrefab;
-
-    private CardUIPool cardPairPool;
+public class CardUIPool : BasePool<CardView> {
     private CardGhostPool ghostPool;
+    private CardAbilityPool abilityPool;
 
-    private void Awake() {
-        InitializePools();
+    public CardUIPool(CardView cardPrefab, CardGhostPool ghostPool, CardAbilityPool abilityPool, Transform defaultParent)
+        : base(cardPrefab, defaultParent) {
+        this.ghostPool = ghostPool;
+        this.abilityPool = abilityPool;
     }
 
-    private void InitializePools() {
-        ghostPool = new CardGhostPool(ghostPrefab, ghostLayoutParent);
-        CardAbilityPool abilityUIPool = new CardAbilityPool(abilityPrefab, cardSpawnPoint);
-
-        cardPairPool = new CardUIPool(cardPrefab, ghostPool, abilityUIPool, cardSpawnPoint); 
-    }
-
-    public CardUI CreateCardUI(Card card) {
-        CardUI cardUI = cardPairPool.Get();
-        cardUI.transform.position = cardSpawnPoint.position;
-        cardUI.SetCardLogic(card);
+    protected override CardView CreateObject() {
+        CardView cardUI = base.CreateObject();
+        cardUI.Description.SetAbilityPool(abilityPool);
         return cardUI;
     }
+    protected override void OnTakeFromPool(CardView card) {
+        base.OnTakeFromPool(card);
+    }
 
-    public void ReleaseCardUI(CardUI cardUI) {
-        cardUI.Reset();
-        cardPairPool.Release(cardUI);
+    protected override void OnReturnToPool(CardView card) {
+        card.Reset();
+        base.OnReturnToPool(card);
     }
 }

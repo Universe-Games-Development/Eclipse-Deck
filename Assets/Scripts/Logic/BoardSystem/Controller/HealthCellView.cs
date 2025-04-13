@@ -10,7 +10,7 @@ public class HealthCellView : MonoBehaviour {
     [SerializeField] private float minLevel = -1.5f;
     [SerializeField] private float duration = 2f;
 
-    private Health health;
+    private IHealth health;
     private MaterialPropertyBlock propertyBlock;
     private CancellationTokenSource animationCTS;
     private const string LevelProperty = "_Level";
@@ -38,26 +38,33 @@ public class HealthCellView : MonoBehaviour {
         health = opponent.Health;
 
         SubscribeToHealthEvents();
-        UpdateHealthBar();
+        UpdateHealthBar(health.Current, health.Current); // Встановлюємо початкове значення
     }
 
     private void SubscribeToHealthEvents() {
         health.Stat.OnValueChanged += UpdateHealthBar;
-        health.OnChangedMaxValue += UpdateHealthBar;
+        health.Stat.OnChangedMaxValue += UpdateMaxHealth;
     }
 
     private void UnsubscribeFromPreviousHealth() {
         if (health != null) {
             health.Stat.OnValueChanged -= UpdateHealthBar;
-            health.OnChangedMaxValue -= UpdateHealthBar;
+            health.Stat.OnChangedMaxValue -= UpdateMaxHealth;
         }
     }
 
-    private void UpdateHealthBar(int previousValue = 0, int newValue = 0) {
-        SmoothUpdateLiquidLevel().Forget();
+    // Обробка зміни максимального здоров'я
+    private void UpdateMaxHealth(int previousMaxValue, int newMaxValue) {
+        // При зміні максимального значення потрібно перерахувати рівень з урахуванням нового максимуму
+        SmoothUpdateLiquidLevel(health.Current, health.Current).Forget();
     }
 
-    private async UniTaskVoid SmoothUpdateLiquidLevel() {
+    // Обробка зміни поточного здоров'я
+    private void UpdateHealthBar(int previousValue, int newValue) {
+        SmoothUpdateLiquidLevel(previousValue, newValue).Forget();
+    }
+
+    private async UniTaskVoid SmoothUpdateLiquidLevel(int previousValue, int newValue) {
         CancelCurrentAnimation();
 
         // Створюємо НОВИЙ CTS для цієї конкретної анімації
@@ -68,7 +75,7 @@ public class HealthCellView : MonoBehaviour {
         try {
             liquidRenderer.GetPropertyBlock(propertyBlock);
             float startLevel = propertyBlock.GetFloat(LevelProperty);
-            float targetLevel = CalculateLiquidLevel();
+            float targetLevel = CalculateLiquidLevel(newValue);
 
             float elapsed = 0f;
             while (elapsed < duration) {
@@ -107,6 +114,15 @@ public class HealthCellView : MonoBehaviour {
         liquidRenderer.SetPropertyBlock(propertyBlock);
     }
 
+    // Оновлений метод для розрахунку рівня рідини з урахуванням конкретного значення здоров'я
+    private float CalculateLiquidLevel(int currentHealth) {
+        if (health == null || health.Max <= 0) return minLevel;
+
+        float normalizedLevel = (float)currentHealth / health.Max;
+        return Mathf.Lerp(minLevel, maxLevel, normalizedLevel);
+    }
+
+    // Оригінальний метод, використовує поточне значення здоров'я
     private float CalculateLiquidLevel() {
         if (health == null || health.Max <= 0) return minLevel;
 

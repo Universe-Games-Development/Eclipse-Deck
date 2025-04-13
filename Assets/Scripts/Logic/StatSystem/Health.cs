@@ -1,23 +1,28 @@
 using System;
-using static Unity.VisualScripting.Member;
 
 // TO DO: Add regen stat
 public interface IHealth {
+    event Action<int, IDamageDealer> OnDamageTaken;
     int Current { get; }
     int Max { get; }
+    Stat Stat { get;}
+    
     void TakeDamage(int amount, IDamageDealer source = null);
     void Heal(int amount);
+    bool IsAlive();
     event Action OnDeath;
 }
 
 public class Health : IHealth {
-    public Stat Stat { get; private set; }
-    private readonly IHealthEntity _owner;
-    private readonly GameEventBus _eventBus;
-
+    public event Action<int, IDamageDealer> OnDamageTaken;
     public event Action OnDeath;
+    public Stat Stat { get; private set; }
+    
+    public bool isDead = false;
     public int Current => Stat.CurrentValue;
     public int Max => Stat.MaxValue;
+    private readonly IHealthEntity _owner;
+    private readonly GameEventBus _eventBus;
 
     public Health(IHealthEntity owner, Stat stat, GameEventBus eventBus) {
         _owner = owner;
@@ -27,9 +32,8 @@ public class Health : IHealth {
         Stat.OnValueChanged += HandleStatChange;
     }
 
-    public Action<int, IDamageDealer> OnDamageTaken { get; internal set; }
-    public Action<int, int> OnChangedMaxValue { get; internal set; }
-    public bool isDead = false;
+    
+    
 
     public void TakeDamage(int amount, IDamageDealer source = null) {
         if (amount <= 0 || isDead) return;
@@ -38,6 +42,7 @@ public class Health : IHealth {
         Stat.Modify(-damage);
 
         _eventBus.Raise(new OnDamageTaken(_owner, source, damage));
+        OnDamageTaken?.Invoke(damage, source);
 
         if (Stat.CurrentValue <= 0) {
             isDead = true;
@@ -56,7 +61,7 @@ public class Health : IHealth {
     }
 
     public bool IsAlive() {
-        return Current > 0 || isDead;
+        return !isDead;
     }
 
     internal void SetMaxValue(int healthIncrease) {
