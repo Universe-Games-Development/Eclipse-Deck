@@ -9,7 +9,7 @@ public enum EventEnum
     OpponentTurnChanged = 5,
     TurnStart = 6,
     RoundStart = 7,
-    Summon = 8,
+    GameEnter = 8,
     BattleStarted = 9,
     BattleEndData = 10,
     CardPull = 11,

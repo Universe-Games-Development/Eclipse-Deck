@@ -8,11 +8,13 @@ public class Creature : IDamageable, IDamageDealer, IGameUnit {
     public Func<Field, UniTask> OnInterruptedMove;
     public Func<Field, UniTask> OnMoved;
     public Func<Field, UniTask> OnSpawned;
-    public event Action<SummonEvent> OnUnitDeployed;
+    public event Action<GameEnterEvent> OnUnitDeployed;
     public Opponent ControlOpponent { get; private set; }
     public Health Health => creatureCard.Stats.Health;
     public Attack Attack => creatureCard.Stats.Attack;
     public Ability AttackAbility { get; private set; }
+
+    public EffectManager EffectManager => creatureCard.EffectManager;
 
     public CreatureCard creatureCard;
     private CreatureBehaviour craetureBehaviour;
@@ -46,7 +48,7 @@ public class Creature : IDamageable, IDamageDealer, IGameUnit {
         fieldToSpawn.PlaceCreature(this);
         AssignField(fieldToSpawn);
         OnSpawned?.Invoke(fieldToSpawn);
-        OnUnitDeployed?.Invoke(new SummonEvent(this));
+        OnUnitDeployed?.Invoke(new GameEnterEvent(this));
     }
 
     public void AssignField(Field field) {
@@ -110,9 +112,9 @@ public class CreatureAttackCommand : Command {
     }
 }
 
-public struct SummonEvent : IEvent {
+public struct GameEnterEvent : IEvent {
     public IGameUnit Summoned;
-    public SummonEvent(IGameUnit summoned) {
+    public GameEnterEvent(IGameUnit summoned) {
         Summoned = summoned;
     }
 }

@@ -1,23 +1,27 @@
+using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 
-public class BoardAssigner {
+public class BoardAssigner : IDisposable {
     private BoardSeatSystem boardSeats;
-    private BoardSystem boardPresenter;
-    public BoardAssigner(BoardSeatSystem boardSeats, BoardSystem boardPresenter) {
+    private BoardSystem boardSystem;
+    public BoardAssigner(BoardSeatSystem boardSeats, BoardSystem boardSystem) {
         this.boardSeats = boardSeats;
-        this.boardPresenter = boardPresenter;
+        this.boardSystem = boardSystem;
+        boardSystem.OnBoardUpdated += HandleGridUpdate;
     }
 
-    public void HandleGridUpdate(BoardUpdateData data) {
+    public async UniTask HandleGridUpdate(BoardUpdateData data) {
         foreach (var pair in boardSeats.GetAllOpponentDirections()) {
             GridUpdateData gridUpdateData = data.GetUpdateByGlobalDirection(pair.Value);
 
             gridUpdateData?.addedFields?.ForEach(field => field.SetOwner(pair.Key));
             gridUpdateData?.removedFields?.ForEach(field => field.ClearOwner());
         }
+        await UniTask.CompletedTask;
     }
 
     public List<Creature> GetOpponentCreatures(Opponent endTurnOpponent) {
@@ -51,7 +55,7 @@ public class BoardAssigner {
     }
 
     public List<CompasGrid> GetOpponentGrids(Opponent opponent) {
-        if (boardPresenter.GridBoard == null) {
+        if (boardSystem.GridBoard == null) {
             Debug.LogError("GridBoard not initialized during assignment");
             return new List<CompasGrid>();
         }
@@ -61,7 +65,7 @@ public class BoardAssigner {
             return new List<CompasGrid>();
         }
 
-        return boardPresenter.GridBoard.GetGridsByGlobalDirection(direction);
+        return boardSystem.GridBoard.GetGridsByGlobalDirection(direction);
     }
 
     // When activated
@@ -70,5 +74,9 @@ public class BoardAssigner {
         foreach (Opponent opponent in boardSeats.GetAllOpponents()) {
             GetOpponentGrids(opponent).ForEach(grid => grid.Fields.SelectMany(row => row).ToList().ForEach(field => field.SetOwner(opponent)));
         }
+    }
+
+    public void Dispose() {
+        boardSystem.OnBoardUpdated -= HandleGridUpdate;
     }
 }

@@ -5,45 +5,27 @@ using Zenject;
 
 public class BoardGame : MonoBehaviour {
     [SerializeField] private BoardSettingsData boardConfig;
-    [SerializeField] private BoardSystem boardPresenter;
+    [SerializeField] private BoardSystem boardSystem;
 
     [SerializeField] private BoardSeatSystem gameBoardSeats;
     
     [SerializeField] private CreatureSpawner creatureSpawner;
 
     [Inject] GameEventBus _eventBus;
-    [Inject] BattleRegistrator opponentRegistrator;
+
     private void Awake() {
-        if (opponentRegistrator == null) return;
-
-        if (opponentRegistrator.IsMatchReady) {
-            PrepareBattle(
-                opponentRegistrator.GetPlayer(),
-                opponentRegistrator.GetEnemy()
-                );
+        if (gameBoardSeats == null) return;
+        if (gameBoardSeats.IsReady()) {
+            PrepareBattle();
         } else {
-            opponentRegistrator.OnMatchSetup += PrepareBattle;
+            gameBoardSeats.OnSeatsTook += PrepareBattle;
         }
     }
 
-    private void PrepareBattle(Player player, Enemy enemy) {
-        Initialize(player, enemy).Forget();
-    }
-
-    public async UniTask Initialize(Player player, Enemy enemy) {
-        if (player == null) {
-            Debug.LogError("PlayerPresenter is null");
-        }
-        if (enemy == null) {
-            Debug.LogError("EnemyPresenter is null");
-        }
-        await UniTask.WhenAll(
-            gameBoardSeats.AssignOpponentSeat(enemy),
-            gameBoardSeats.AssignOpponentSeat(player)
-        );
-        BoardAssigner boardAssigner = new BoardAssigner(gameBoardSeats, boardPresenter);
-        boardPresenter.Initialize(boardAssigner);
-        boardPresenter.UpdateGrid(boardConfig);
+    public void PrepareBattle() {
+        BoardAssigner boardAssigner = new BoardAssigner(gameBoardSeats, boardSystem);
+        boardSystem.Initialize();
+        boardSystem.UpdateGrid(boardConfig);
         gameBoardSeats.InitializePlayersCardsSystems();
 
         BeginBattle();
@@ -51,10 +33,6 @@ public class BoardGame : MonoBehaviour {
 
     public void BeginBattle() {
         _eventBus.Raise(new BattleStartedEvent());
-    }
-
-    public bool SpawnCreature(CreatureCard creatureCard, Field field, Opponent summoner) {
-        throw new NotImplementedException();
     }
 
     private void OnDrawGizmosSelected() {

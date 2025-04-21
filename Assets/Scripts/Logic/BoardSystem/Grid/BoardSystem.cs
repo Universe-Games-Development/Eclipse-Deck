@@ -11,10 +11,9 @@ public class BoardSystem : MonoBehaviour {
     public GridBoard GridBoard;
     private FieldManager _fieldManager;
     private BoardLayoutCalculator _layoutCalculator;
-    private BoardAssigner _boardAssigner;
+    public Func<BoardUpdateData, UniTask> OnBoardUpdated;
 
-    public void Initialize(BoardAssigner boardAssigner, BoardSettingsData boardSettingsData = null) {
-        _boardAssigner = boardAssigner;
+    public void Initialize(BoardSettingsData boardSettingsData = null) {
 
         GridBoard = new GridBoard();
 
@@ -36,7 +35,10 @@ public class BoardSystem : MonoBehaviour {
     public async UniTask UpdateVisualAsync(BoardUpdateData boardUpdateData) {
         _fieldManager.ProcessBoardUpdate(boardUpdateData);
         _layoutCalculator.AdjustBoardCenter();
-        _boardAssigner.HandleGridUpdate(boardUpdateData);
+        if (OnBoardUpdated != null) {
+            await OnBoardUpdated.Invoke(boardUpdateData);
+        }
+        
         await UniTask.CompletedTask;
     }
 

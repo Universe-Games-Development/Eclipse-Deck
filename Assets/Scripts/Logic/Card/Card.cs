@@ -1,11 +1,5 @@
-using FMOD;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
-using UnityEngine;
-using Zenject;
-using static Unity.Cinemachine.CinemachineFreeLookModifier;
 
 public abstract class Card : IGameUnit {
     public event Action<Card> OnCardDrawn;
@@ -15,7 +9,8 @@ public abstract class Card : IGameUnit {
     public CardState CurrentState { get; protected set; }
     public CardData Data { get; protected set; }
     public Cost Cost { get; protected set; }
-    public event Action<SummonEvent> OnUnitDeployed;
+    public event Action<GameEnterEvent> OnUnitDeployed;
+    public EffectManager EffectManager { get; set; }
 
     public Opponent ControlOpponent => throw new NotImplementedException();
 
@@ -52,7 +47,7 @@ public abstract class Card : IGameUnit {
 
     // used by deck
     internal void Deploy() {
-        OnUnitDeployed?.Invoke(new SummonEvent(this));
+        OnUnitDeployed?.Invoke(new GameEnterEvent(this));
     }
 }
 
@@ -61,7 +56,7 @@ public interface IStatable {
 }
 
 
-public class CreatureCard : Card, IStatable, IDamageable, IModifierProvider {
+public class CreatureCard : Card, IStatable, IDamageable {
     public CreatureStats Stats { get; }
     public CreatureCardData CreatureCardData => (CreatureCardData)Data;
 
@@ -79,10 +74,6 @@ public class CreatureCard : Card, IStatable, IDamageable, IModifierProvider {
 
     public override string ToString() {
         return $"{CreatureCardData.Name} {Stats}";
-    }
-
-    public List<IOperationModifier> GetAll() {
-        throw new NotImplementedException();
     }
 }
 

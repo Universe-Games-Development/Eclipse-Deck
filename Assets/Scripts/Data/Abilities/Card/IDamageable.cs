@@ -9,6 +9,7 @@ public interface IDamageDealer {
 }
 
 public interface IGameUnit {
-    event Action<SummonEvent> OnUnitDeployed;
+    event Action<GameEnterEvent> OnUnitDeployed;
+    EffectManager EffectManager { get; }
     Opponent ControlOpponent { get; }
 }

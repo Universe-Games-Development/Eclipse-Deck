@@ -32,12 +32,12 @@ public class CardsHandleSystem : MonoBehaviour {
         CardSpendable = new CardSpendable(Player, Player.Mana, Player.Health, _eventBus);
 
         OpponentData data = Player.Data; // soon opponent data will define deck and cards
-        CardFactory cardFactory = new CardFactory(diContainer);
-        Deck deckModel = new Deck(cardFactory);
-        CardHand handModel = new CardHand();
+        CardFactory cardFactory = new(diContainer);
+        Deck deckModel = new(cardFactory);
+        CardHand handModel = new();
 
-        _deckPresenter = new DeckPresenter(deckModel, deckView);
-        HandPresenter = new HandPresenter(handModel, handView);
+        _deckPresenter = new(deckModel, deckView);
+        HandPresenter = new(handModel, handView);
         HandPresenter.OnCardSelected += PlayCard;
 
         _eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
@@ -62,7 +62,7 @@ public class CardsHandleSystem : MonoBehaviour {
     }
 
     private void PlayCard(Card card) {
-        PlayCardCommand playCardCommand = new PlayCardCommand(this, card);
+        PlayCardCommand playCardCommand = new(this, card);
         _commandManager.EnqueueCommand(playCardCommand);
     }
 

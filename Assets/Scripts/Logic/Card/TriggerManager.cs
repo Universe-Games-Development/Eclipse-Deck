@@ -45,7 +45,7 @@ public class OnSelfSummonTrigger : AbilityTrigger {
         gameUnit.OnUnitDeployed -= HandleSummon;
     }
 
-    private void HandleSummon(SummonEvent eventData) {
+    private void HandleSummon(GameEnterEvent eventData) {
         OnTriggerActivation?.Invoke(eventData.Summoned.ControlOpponent, eventData.Summoned, eventData);
     }
 }
@@ -56,14 +56,14 @@ public class OnAnotherSummonTrigger : AbilityTrigger {
     }
 
     public override void ActivateTrigger(IGameUnit gameUnit) {
-        _eventBus.SubscribeTo<SummonEvent>(HandleSummon);
+        _eventBus.SubscribeTo<GameEnterEvent>(HandleSummon);
     }
 
     public override void DeactivateTrigger(IGameUnit gameUnit) {
-        _eventBus.UnsubscribeFrom<SummonEvent>(HandleSummon);
+        _eventBus.UnsubscribeFrom<GameEnterEvent>(HandleSummon);
     }
 
-    private void HandleSummon(ref SummonEvent eventData) {
+    private void HandleSummon(ref GameEnterEvent eventData) {
         OnTriggerActivation?.Invoke(eventData.Summoned.ControlOpponent, eventData.Summoned, eventData);
     }
 }
