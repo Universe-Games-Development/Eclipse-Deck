@@ -12,35 +12,9 @@ public class CardAbilityUI : MonoBehaviour, IPointerEnterHandler {
 
     [Inject] UIManager uiManager;
 
-    public void FillAbilityUI(Ability<CardAbilityData, Card> ability, bool abilityNamesEnabled = false) {
-        CardAbilityData abilityData = ability.Data;
+    public void FillAbilityUI(bool abilityNamesEnabled = false) {
 
-        if (ability == null || abilityData == null) {
-            Debug.LogWarning("CardAbility or its data is null!");
 
-            if (abilityName != null) abilityName.gameObject.SetActive(false);
-            if (abilityIcon != null) abilityIcon.gameObject.SetActive(false);
-        }
-
-        description = abilityData.Description ?? string.Empty;
-
-        if (abilityName != null) {
-            if (abilityNamesEnabled && !string.IsNullOrEmpty(abilityData.Name)) {
-                abilityName.text = abilityData.Name;
-                abilityName.gameObject.SetActive(true);
-            } else {
-                abilityName.gameObject.SetActive(false);
-            }
-        }
-
-        if (abilityIcon != null) {
-            if (abilityData.Icon != null) {
-                abilityIcon.sprite = abilityData.Icon;
-                abilityIcon.gameObject.SetActive(true);
-            } else {
-                abilityIcon.gameObject.SetActive(false);
-            }
-        }
     }
 
     #region User interaction

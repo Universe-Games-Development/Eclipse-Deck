@@ -20,6 +20,18 @@ public class CreatureBehaviour {
         _movementHandler = new CreatureMovementHandler(creature, data.movementData, navigator);
         _attackHandler = new CreatureAttackHandler(creature, data.attackData, navigator);
     }
+
+    // TODO: return also attack action
+    //public Command GetEndTurnAction() {
+    //    IMoveStrategy moveStrategy = craetureBehaviour.GetMovementStrategy(CurrentField);
+    //    CreatureMoveCommand moveCommand = new CreatureMoveCommand(this, moveStrategy);
+    //    IAttackStrategy attackStrategy = craetureBehaviour.GetAttackStrategy(CurrentField);
+    //    CreatureAttackCommand attackCommand = new CreatureAttackCommand(this, attackStrategy);
+    //    EndTurnActions endTurnCreatureCommands = new EndTurnActions();
+    //    endTurnCreatureCommands.AddChild(moveCommand);
+    //    endTurnCreatureCommands.AddChild(attackCommand);
+    //    return endTurnCreatureCommands;
+    //}
 }
 
 public class CreatureMovementHandler {

@@ -43,11 +43,11 @@ public class CreatureMoveCommand : Command {
     public async override UniTask Undo() {
         while (previousFields.Count > 0) {
             var lastField = previousFields.Pop();
-            if (lastField.Creature != null) continue; // Пропускаємо зайняті поля
+            if (lastField.OccupyingCreature != null) continue; // Пропускаємо зайняті поля
 
             bool placeResult = await TryMoveToField(lastField, creature);
             if (placeResult) {
-                Debug.Log($"Undo: Moved back to {lastField.GetTextCoordinates()}");
+                Debug.Log($"Undo: Moved back to {lastField.GetCoordinatesText()}");
                 return;
             }
         }
@@ -59,9 +59,9 @@ public class CreatureMoveCommand : Command {
         bool hasMoved = false;
         if (field == creature.CurrentField) return true;
 
-        hasMoved = field.AssignCreature(creature);
+        hasMoved = field.PlaceCreature(creature);
 
-        Debug.Log($"{(hasMoved ? "Failed" : "Made")} move to {field.GetTextCoordinates()}");
+        Debug.Log($"{(hasMoved ? "Failed" : "Made")} move to {field.GetCoordinatesText()}");
         if (hasMoved) {
             if (creature.OnMoved != null) {
                 await creature.OnMoved.Invoke(field);

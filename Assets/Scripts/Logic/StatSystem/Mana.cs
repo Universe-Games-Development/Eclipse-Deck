@@ -2,56 +2,61 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Mana : IMana {
-    private readonly Stat _stat;
+public class Mana : Attribute {
     public Opponent Owner { get; }
-
-    public int Current => _stat.CurrentValue;
-
-    public int Max => _stat.MaxValue;
-
     public event Action<Opponent> OnManaEmpty;
     public event Action<Opponent, int> OnManaSpent;
     public event Action<Opponent> OnManaRestored;
     private readonly GameEventBus _eventBus;
-    public int restoreAmount = 1;
+    public int RestoreAmount { get; private set; } = 1;
 
-    public Mana(Opponent owner, Stat manaStat, GameEventBus eventBus) {
+    public Mana(Opponent owner, int initialValue, GameEventBus eventBus) : base(initialValue) {
         Owner = owner;
         _eventBus = eventBus;
+
+        // Підписуємося на події зміни значень атрибуту
+        OnTotalValueChanged += HandleTotalValueChanged;
     }
 
-    private void RestoreMana(ref OnTurnStart eventData) {
+    private void HandleTotalValueChanged(object sender, AttributeTotalChangedEvent e) {
+        // Можна додати додаткову логіку при зміні значення мани
+    }
+
+    private void RestoreMana(ref TurnStartEvent eventData) {
         Opponent startTurnOpponent = eventData.StartingOpponent;
         if (startTurnOpponent != Owner) {
             return;
         }
-        if (restoreAmount <= 0) return;
-        var previousMana = Current;
-        _stat.Modify(restoreAmount);
-        if (Current == Max) {
+
+        if (RestoreAmount <= 0) return;
+
+        int previousMana = CurrentValue;
+        int restored = Add(RestoreAmount);
+
+        if (CurrentValue == TotalValue) {
             _eventBus.Raise(new OnManaRestored(Owner));
             OnManaRestored?.Invoke(Owner);
         } else {
-            Console.WriteLine($"Restored {restoreAmount} mana. Current mana: {Current}");
+            Console.WriteLine($"Restored {restored} mana. Current mana: {CurrentValue}/{TotalValue}");
         }
     }
 
     public int Spend(int amount) {
         if (amount <= 0) return 0;
 
-        var previousMana = Current;
-        var amountSpent = Mathf.Min(amount, Current);
-        _stat.Modify(-amountSpent);
+        int previousMana = CurrentValue;
+        int amountSpent = Math.Min(amount, CurrentValue);
+
+        Subtract(amountSpent);
 
         _eventBus.Raise(new OnManaSpent(Owner, amountSpent));
         OnManaSpent?.Invoke(Owner, amountSpent);
 
-        if (Current <= 0 && previousMana > 0) {
+        if (CurrentValue <= 0 && previousMana > 0) {
             _eventBus.Raise(new OnManaEmpty(Owner));
             OnManaEmpty?.Invoke(Owner);
         } else {
-            Console.WriteLine($"Spent {amountSpent} mana. Current mana: {Current}");
+            Console.WriteLine($"Spent {amountSpent} mana. Current mana: {CurrentValue}/{TotalValue}");
         }
 
         return amount - amountSpent;
@@ -59,36 +64,39 @@ public class Mana : IMana {
 
     public void SetRestoreAmount(int newRestoreAmount) {
         if (newRestoreAmount < 0) return;
-        restoreAmount = newRestoreAmount;
+        RestoreAmount = newRestoreAmount;
     }
 
     public void ModifyMax(int amount) {
         if (amount == 0) return;
 
-        int newMaxValue = Mathf.Max(_stat.MinValue, Max + amount);
-        _stat.SetMaxValue(newMaxValue);
-
-        if (Current > newMaxValue) {
-            _stat.Modify(newMaxValue - Current);
+        // Додаємо або видаляємо модифікатор максимального значення
+        if (amount > 0) {
+            AddModifier(amount);
+        } else {
+            RemoveModifier(-amount);
         }
     }
 
     public override string ToString() {
-        return $"Mana: {Current}/{Max}";
+        return $"Mana: {CurrentValue}/{TotalValue}";
     }
 
     public void Dispose() {
         if (_eventBus != null) {
-            _eventBus.UnsubscribeFrom<OnTurnStart>(RestoreMana);
+            _eventBus.UnsubscribeFrom<TurnStartEvent>(RestoreMana);
         }
+
+        // Відписуємося від власних подій
+        OnTotalValueChanged -= HandleTotalValueChanged;
     }
 
     public void EnableManaRestoreation() {
-        _eventBus.SubscribeTo<OnTurnStart>(RestoreMana);
+        _eventBus.SubscribeTo<TurnStartEvent>(RestoreMana);
     }
 
     public void DisableManaRestoreation() {
-        _eventBus.UnsubscribeFrom<OnTurnStart>(RestoreMana);
+        _eventBus.UnsubscribeFrom<TurnStartEvent>(RestoreMana);
     }
 }
 

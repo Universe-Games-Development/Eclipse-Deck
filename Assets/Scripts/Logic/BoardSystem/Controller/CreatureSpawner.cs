@@ -5,11 +5,11 @@ using Zenject;
 public class CreatureSpawner : MonoBehaviour {
     
     [SerializeField] private CreaturePresenter creaturePrefab;
-    [SerializeField] private BoardPresenter boardPresenter;
+    [SerializeField] private BoardSystem boardPresenter;
     [Inject] DiContainer container;
 
     public async UniTask<bool> SpawnCreature(CreatureCard creatureCard, Field targetField) {
-        bool canSummon = targetField.CanSummonCreature();
+        bool canSummon = targetField.OccupyingCreature == null;
         if (!canSummon) {
             Debug.LogWarning("Can't summon creature on this field");
             return false;

@@ -1,19 +1,22 @@
 using System.Collections.Generic;
+using Unity.Android.Gradle.Manifest;
 using UnityEngine;
+using Zenject;
 
 public class Deck {
     private Stack<Card> cards = new();
-    private CardFactory cardFactory;
+    private CardFactory _cardFactory;
 
-    public Deck() {
-        cardFactory = new CardFactory();
+    public Deck(CardFactory cardFactory) {
+        _cardFactory = cardFactory;
     }
 
     public void Initialize(CardCollection collection) {
-        List<Card> collectionCards = cardFactory.CreateCardsFromCollection(collection);
+        List<Card> collectionCards = _cardFactory.CreateCardsFromCollection(collection);
         foreach (var card in collectionCards) {
             cards.Push(card);
             card.ChangeState(CardState.InDeck);
+            card.Deploy();
         }
         ShuffleDeck();
     }
@@ -70,6 +73,10 @@ public class DeckPresenter {
 }
 
 public class CardFactory {
+    private DiContainer diContainer;
+    public CardFactory(DiContainer diContainer) {
+        this.diContainer = diContainer;
+    }
 
     public List<Card> CreateCardsFromCollection(CardCollection collection) {
         List<Card> cards = new();
@@ -86,7 +93,7 @@ public class CardFactory {
 
     public Card CreateCard(CardData cardData) {
         return cardData switch {
-            CreatureCardData creatureData => new CreatureCard(creatureData),
+            CreatureCardData creatureData => diContainer.Instantiate<CreatureCard>(new object[] { creatureData }),
             _ => null
         };
     }

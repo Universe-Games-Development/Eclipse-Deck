@@ -41,8 +41,8 @@ public class CardBattleInfo : MonoBehaviour {
         if (eventBus != null) {
             eventBus.SubscribeTo<BattleStartedEvent>(OnBattleStarted);
             eventBus.SubscribeTo<BattleEndEventData>(OnBattleEnded);
-            eventBus.SubscribeTo<OnTurnStart>(OnTurnStarted);
-            eventBus.SubscribeTo<OnRoundStart>(OnRoundStarted);
+            eventBus.SubscribeTo<TurnStartEvent>(OnTurnStarted);
+            eventBus.SubscribeTo<RoundStartEvent>(OnRoundStarted);
         }
 
         // Підписуємося на події TurnManager, якщо він існує
@@ -56,8 +56,8 @@ public class CardBattleInfo : MonoBehaviour {
         if (eventBus != null) {
             eventBus.UnsubscribeFrom<BattleStartedEvent>(OnBattleStarted);
             eventBus.UnsubscribeFrom<BattleEndEventData>(OnBattleEnded);
-            eventBus.UnsubscribeFrom<OnTurnStart>(OnTurnStarted);
-            eventBus.UnsubscribeFrom<OnRoundStart>(OnRoundStarted);
+            eventBus.UnsubscribeFrom<TurnStartEvent>(OnTurnStarted);
+            eventBus.UnsubscribeFrom<RoundStartEvent>(OnRoundStarted);
         }
 
         // Відписуємося від подій TurnManager, якщо він існує
@@ -77,11 +77,11 @@ public class CardBattleInfo : MonoBehaviour {
         SetHUDVisible(false);
     }
 
-    private void OnTurnStarted(ref OnTurnStart eventData) {
+    private void OnTurnStarted(ref TurnStartEvent eventData) {
         UpdateTurnInfo(eventData.TurnNumber, eventData.StartingOpponent);
     }
 
-    private void OnRoundStarted(ref OnRoundStart eventData) {
+    private void OnRoundStarted(ref RoundStartEvent eventData) {
         UpdateRoundInfo(eventData.RoundNumber);
     }
 

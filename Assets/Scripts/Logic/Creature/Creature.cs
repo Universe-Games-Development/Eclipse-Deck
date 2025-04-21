@@ -1,68 +1,72 @@
 using Cysharp.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class Creature : IHealthEntity, IDamageDealer, IAbilityOwner {
+public class Creature : IDamageable, IDamageDealer, IGameUnit {
     public Field CurrentField { get; private set; }
     public Func<Field, UniTask> OnInterruptedMove;
     public Func<Field, UniTask> OnMoved;
     public Func<Field, UniTask> OnSpawned;
-
-    public IHealth Health { get; private set; }
-
-    public Attack Attack { get; private set; }
+    public event Action<SummonEvent> OnUnitDeployed;
+    public Opponent ControlOpponent { get; private set; }
+    public Health Health => creatureCard.Stats.Health;
+    public Attack Attack => creatureCard.Stats.Attack;
+    public Ability AttackAbility { get; private set; }
 
     public CreatureCard creatureCard;
     private CreatureBehaviour craetureBehaviour;
     
     public Creature(CreatureCard creatureCard, CreatureBehaviour craetureBehaviour, GameEventBus eventBus) {
         this.creatureCard = creatureCard;
-        Health = new Health(this, creatureCard.Health, eventBus);
-        Attack = new Attack(this, creatureCard.Attack, eventBus);
-        
-        // Soon we define how to get the creatureSO
-        CreatureCardData creatureData = creatureCard.creatureCardData;
 
+        // Soon we define how to get the creatureSO
+        CreatureCardData creatureData = creatureCard.CreatureCardData;
         var movementData = creatureData.movementData;
         if (movementData == null) throw new ArgumentNullException("Movement Data not set in " + GetType().Name);
         // TO DO : abilities initialization
-
         this.craetureBehaviour = craetureBehaviour;
         craetureBehaviour.InitStrategies(this, creatureData);
+
     }
 
-    // TODO: return also attack action
-    public Command GetEndTurnAction() {
-        IMoveStrategy moveStrategy = craetureBehaviour.GetMovementStrategy(CurrentField);
-        CreatureMoveCommand moveCommand = new CreatureMoveCommand(this, moveStrategy);
-        IAttackStrategy attackStrategy = craetureBehaviour.GetAttackStrategy(CurrentField);
-        CreatureAttackCommand attackCommand = new CreatureAttackCommand(this, attackStrategy);
-        EndTurnActions endTurnCreatureCommands = new EndTurnActions();
-        endTurnCreatureCommands.AddChild(moveCommand);
-        endTurnCreatureCommands.AddChild(attackCommand);
-        return endTurnCreatureCommands;
+    private void InitializeAttackAbility() {
+        // Создаем триггер для способности атаки
+        var attackTrigger = new List<AbilityTrigger>(); // Для атаки обычно используется специальный триггер из UI
+
+        // Создаем операцию нанесения урона с указанием this как источника урона
+        var dealDamageOperation = new DealDamageOperation(this);
+
+        // Создаем способность
+        AttackAbility = new Ability(attackTrigger, creatureCard);
+        AttackAbility.Operations.Add(dealDamageOperation);
     }
 
     public void Spawn(Field fieldToSpawn) {
-        fieldToSpawn.AssignCreature(this);
+        fieldToSpawn.PlaceCreature(this);
         AssignField(fieldToSpawn);
         OnSpawned?.Invoke(fieldToSpawn);
+        OnUnitDeployed?.Invoke(new SummonEvent(this));
     }
 
     public void AssignField(Field field) {
         if (CurrentField != null) {
-            CurrentField.UnAssignCreature();
-            CurrentField.OnRemoval -= RemoveCreature;
+            CurrentField.RemoveCreature();
+            CurrentField.FieldRemoved -= RemoveCreature;
         }
-        field.OnRemoval += RemoveCreature;
+        field.FieldRemoved += RemoveCreature;
         CurrentField = field;
     }
 
     public void RemoveCreature(Field field) {
         // Реакція на видалення поля, наприклад, переміщення на інше поле або помилка.
-        Console.WriteLine($"Creature on field ({field.row}, {field.column}) is notified about its removal.");
+        Console.WriteLine($"Creature on field ({field.Row}, {field.Column}) is notified about its removal.");
         // - Вибір нового місця
         // - Знищення істоти
+    }
+
+    internal Command GetEndTurnAction() {
+        throw new NotImplementedException();
     }
 }
 
@@ -103,5 +107,12 @@ public class CreatureAttackCommand : Command {
 
     public override UniTask Undo() {
         throw new NotImplementedException();
+    }
+}
+
+public struct SummonEvent : IEvent {
+    public IGameUnit Summoned;
+    public SummonEvent(IGameUnit summoned) {
+        Summoned = summoned;
     }
 }

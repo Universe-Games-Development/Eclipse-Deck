@@ -5,130 +5,16 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
+public interface ICardHandView {
+    event Action<CardView> CardClicked;
 
-public class CardPresenterRegistry {
-    private readonly Dictionary<Card, CardPresenter> _byCard = new();
-    private readonly Dictionary<CardView, CardPresenter> _byView = new();
-
-    public void Register(CardPresenter presenter) {
-        _byCard[presenter.Card] = presenter;
-        _byView[presenter.View] = presenter;
-    }
-
-    public void Unregister(CardPresenter presenter) {
-        _byCard.Remove(presenter.Card);
-        _byView.Remove(presenter.View);
-    }
-
-    public CardPresenter GetByCard(Card card) {
-        if (!GetByCard(card, out CardPresenter cardPresenter)) {
-            Debug.LogWarning($"Card {card.Data.Name} not found in registry.");
-            return null;
-        }
-        return cardPresenter;
-    }
-    public CardPresenter GetByView(CardView view) {
-        if (!GetByView(view, out CardPresenter cardPresenter)) {
-            Debug.LogWarning($"CardView not found in registry.");
-            return null;
-        }
-        return cardPresenter;
-    }
-
-    public bool GetByCard(Card card, out CardPresenter cardPresenter) => _byCard.TryGetValue(card, out cardPresenter);
-    public bool GetByView(CardView view, out CardPresenter cardPresenter) => _byView.TryGetValue(view, out cardPresenter);
-
-    public IEnumerable<CardView> GetViews() {
-        return _byView.Keys;
-    }
+    void Cleanup();
+    CardView CreateCardView();
+    void DeselectCardView(CardView cardView);
+    void RemoveCardUI(CardView cardView);
+    void SelectCardView(CardView cardView);
+    void SetInteractable(bool value);
 }
-// PRESENTER - виступає як повноцінний посередник між Model і View
-public class HandPresenter : IDisposable {
-    public CardHand CardHand { get; private set; }
-    private readonly ICardHandView handView;
-    public CardPresenterRegistry CardPresenterRegistry;
-    public Action<Card> OnCardSelected;
-    public HandPresenter(CardHand cardHand, CardHandView handView) {
-        CardPresenterRegistry = new();
-        CardHand = cardHand ?? throw new ArgumentNullException(nameof(cardHand));
-        this.handView = handView ?? throw new ArgumentNullException(nameof(handView));
-
-        // Підписуємося на події моделі
-        cardHand.CardAdded += OnCardAdded;
-        cardHand.CardRemoved += OnCardRemoved;
-        cardHand.OnCardSelected += SelectCard;
-        cardHand.OnCardDeselected += DeselectCard;
-        cardHand.OnToggled += handView.SetInteractable;
-        // Підписуємося на події представлення
-        handView.CardClicked += OnCardUIClicked;
-
-        // Початкова синхронізація
-        SyncViewWithModel();
-    }
-    private void SyncViewWithModel() {
-        // Синхронізуємо представлення з поточним станом моделі
-        foreach (var card in CardHand.Cards) {
-            OnCardAdded(card);
-        }
-
-        // Встановлюємо вибрану карту, якщо вона є
-        if (CardHand.SelectedCard != null) {
-            SelectCard(CardHand.SelectedCard);
-        }
-    }
-
-    // Handle Model events
-    private void OnCardAdded(Card card) {
-        // Показуємо карту у представленні
-        CardView cardView = handView.CreateCardView();
-
-        CardPresenter cardPresenter = new CardPresenter(card, cardView);
-        CardPresenterRegistry.Register(cardPresenter);
-    }
-
-    private void OnCardRemoved(Card card) {
-        CardPresenter cardPresenter = CardPresenterRegistry.GetByCard(card);
-        CardPresenterRegistry.Unregister(cardPresenter);
-        handView.RemoveCardUI(cardPresenter.View);
-    }
-
-    private void SelectCard(Card card) {
-        CardPresenter cardPresenter = CardPresenterRegistry.GetByCard(card);
-        CardView cardView = cardPresenter.View;
-        handView.SelectCardView(cardView);
-        OnCardSelected?.Invoke(card);
-    }
-
-    private void DeselectCard(Card card) {
-        CardPresenter cardPresenter = CardPresenterRegistry.GetByCard(card);
-        CardView cardView = cardPresenter.View;
-        handView.DeselectCardView(cardView);
-    }
-
-    // Handle View events
-
-    private void OnCardUIClicked(CardView cardView) {
-        CardPresenter cardPresenter = CardPresenterRegistry.GetByView(cardView);
-        Card card = cardPresenter.Card;
-        CardHand.SelectCard(card);
-    }
-
-    public void Dispose() {
-        // Відписуємося від подій
-        CardHand.CardAdded -= OnCardAdded;
-        CardHand.CardRemoved -= OnCardRemoved;
-
-        handView.CardClicked -= OnCardUIClicked;
-        handView.Cleanup();
-    }
-
-    internal void ClearHand() {
-        throw new NotImplementedException();
-    }
-}
-
-
-
 // VIEW - відповідає лише за відображення і повідомляє про взаємодію через події
 public class CardHandView : MonoBehaviour, ICardHandView {
     public event Action<CardView> CardClicked;
@@ -155,6 +41,10 @@ public class CardHandView : MonoBehaviour, ICardHandView {
     }
 
     public void RemoveCardUI(CardView cardView) {
+        if (_viewsToGhosts.TryGetValue(cardView, out CardLayoutGhost ghost)) {
+            _viewsToGhosts.Remove(cardView);
+            Destroy(ghost.gameObject);
+        }
         cardView.RemoveCardView().Forget();
         UpdateCardsPositionsAsync().Forget();
     }
@@ -228,3 +118,124 @@ public class CardHandView : MonoBehaviour, ICardHandView {
         // Dotween animation for selected card moving down
     }
 }
+
+// PRESENTER - виступає як повноцінний посередник між Model і View
+public class HandPresenter : IDisposable {
+    public CardHand CardHand { get; private set; }
+    private readonly ICardHandView handView;
+    public CardPresenterRegistry CardPresenterRegistry;
+    public Action<Card> OnCardSelected;
+    public HandPresenter(CardHand cardHand, CardHandView handView) {
+        CardPresenterRegistry = new();
+        CardHand = cardHand ?? throw new ArgumentNullException(nameof(cardHand));
+        this.handView = handView ?? throw new ArgumentNullException(nameof(handView));
+
+        // Підписуємося на події моделі
+        cardHand.CardAdded += OnCardAdded;
+        cardHand.CardRemoved += OnCardRemoved;
+        cardHand.OnCardSelected += SelectCard;
+        cardHand.OnCardDeselected += DeselectCard;
+        cardHand.OnToggled += handView.SetInteractable;
+        // Підписуємося на події представлення
+        handView.CardClicked += OnCardUIClicked;
+
+        // Початкова синхронізація
+        SyncViewWithModel();
+    }
+    private void SyncViewWithModel() {
+        // Синхронізуємо представлення з поточним станом моделі
+        foreach (var card in CardHand.Cards) {
+            OnCardAdded(card);
+        }
+
+        // Встановлюємо вибрану карту, якщо вона є
+        if (CardHand.SelectedCard != null) {
+            SelectCard(CardHand.SelectedCard);
+        }
+    }
+
+    // Handle Model events
+    private void OnCardAdded(Card card) {
+        // Показуємо карту у представленні
+        CardView cardView = handView.CreateCardView();
+
+        CardPresenter cardPresenter = new CardPresenter(card, cardView);
+        CardPresenterRegistry.Register(cardPresenter);
+    }
+
+    private void OnCardRemoved(Card card) {
+        CardPresenter cardPresenter = CardPresenterRegistry.GetByCard(card);
+        CardPresenterRegistry.Unregister(cardPresenter);
+        handView.RemoveCardUI(cardPresenter.View);
+    }
+
+    private void SelectCard(Card card) {
+        CardPresenter cardPresenter = CardPresenterRegistry.GetByCard(card);
+        CardView cardView = cardPresenter.View;
+        handView.SelectCardView(cardView);
+        OnCardSelected?.Invoke(card);
+    }
+
+    private void DeselectCard(Card card) {
+        CardPresenter cardPresenter = CardPresenterRegistry.GetByCard(card);
+        CardView cardView = cardPresenter.View;
+        handView.DeselectCardView(cardView);
+    }
+
+    // Handle View events
+
+    private void OnCardUIClicked(CardView cardView) {
+        CardPresenter cardPresenter = CardPresenterRegistry.GetByView(cardView);
+        Card card = cardPresenter.Model;
+        CardHand.SelectCard(card);
+    }
+
+    public void Dispose() {
+        // Відписуємося від подій
+        CardHand.CardAdded -= OnCardAdded;
+        CardHand.CardRemoved -= OnCardRemoved;
+
+        handView.CardClicked -= OnCardUIClicked;
+        handView.Cleanup();
+    }
+
+    internal void ClearHand() {
+        throw new NotImplementedException();
+    }
+}
+public class CardPresenterRegistry {
+    private readonly Dictionary<Card, CardPresenter> _byCard = new();
+    private readonly Dictionary<CardView, CardPresenter> _byView = new();
+
+    public void Register(CardPresenter presenter) {
+        _byCard[presenter.Model] = presenter;
+        _byView[presenter.View] = presenter;
+    }
+
+    public void Unregister(CardPresenter presenter) {
+        _byCard.Remove(presenter.Model);
+        _byView.Remove(presenter.View);
+    }
+
+    public CardPresenter GetByCard(Card card) {
+        if (!_byCard.TryGetValue(card, out CardPresenter cardPresenter)) {
+            Debug.LogWarning($"Card {card.Data.Name} not found in registry.");
+            return null;
+        }
+        return cardPresenter;
+    }
+    public CardPresenter GetByView(CardView view) {
+        if (!_byView.TryGetValue(view, out CardPresenter cardPresenter)) {
+            Debug.LogWarning($"CardView not found in registry.");
+            return null;
+        }
+        return cardPresenter;
+    }
+
+    public IEnumerable<CardView> GetViews() {
+        return _byView.Keys;
+    }
+}
+
+
+

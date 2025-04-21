@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,17 +20,20 @@ public class CardsHandleSystem : MonoBehaviour {
     [Inject] GameEventBus _eventBus;
     [Inject] CommandManager _commandManager;
     [Inject] CardProvider _cardProvider;
+    [Inject] DiContainer diContainer;
 
-    public void Initialize(BaseOpponentPresenter presenter) {
-        if (handView == null || deckView == null || discardDeckView == null) {
+    public void Initialize(Opponent opponent) {
+        handView = gameObject.GetComponentInChildren<CardHandView>(true); // TODO: remove this line when we will have a proper UI system
+        if (handView == null ) {
             Debug.LogWarning($"{gameObject} is not set");
             return;
         } 
-        Player = presenter.OpponentModel;
+        Player = opponent;
         CardSpendable = new CardSpendable(Player, Player.Mana, Player.Health, _eventBus);
 
         OpponentData data = Player.Data; // soon opponent data will define deck and cards
-        Deck deckModel = new Deck();
+        CardFactory cardFactory = new CardFactory(diContainer);
+        Deck deckModel = new Deck(cardFactory);
         CardHand handModel = new CardHand();
 
         _deckPresenter = new DeckPresenter(deckModel, deckView);
@@ -44,7 +48,7 @@ public class CardsHandleSystem : MonoBehaviour {
         _eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
         _eventBus.UnsubscribeFrom<BattleEndEventData>(EndBattleActions);
 
-        _eventBus.SubscribeTo<OnTurnStart>(TurnStartActions);
+        _eventBus.SubscribeTo<TurnStartEvent>(TurnStartActions);
 
         _commandManager.EnqueueCommands(new List<Command> {
             new InitDeckCommand(_deckPresenter, 40, _cardProvider).SetPriority(11),
@@ -52,7 +56,7 @@ public class CardsHandleSystem : MonoBehaviour {
         });
     }
 
-    protected virtual void TurnStartActions(ref OnTurnStart eventData) {
+    protected virtual void TurnStartActions(ref TurnStartEvent eventData) {
         if (eventData.StartingOpponent == Player)
             _commandManager.EnqueueCommand(new DrawCardCommand(this));
     }
@@ -63,7 +67,7 @@ public class CardsHandleSystem : MonoBehaviour {
     }
 
     private void EndBattleActions(ref BattleEndEventData eventData) {
-        _eventBus.UnsubscribeFrom<OnTurnStart>(TurnStartActions);
+        _eventBus.UnsubscribeFrom<TurnStartEvent>(TurnStartActions);
         _deckPresenter.Deck.ClearDeck();
         HandPresenter.ClearHand();
     }
@@ -97,7 +101,7 @@ public class CardsHandleSystem : MonoBehaviour {
             _eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
             _eventBus.UnsubscribeFrom<BattleEndEventData>(EndBattleActions);
 
-            _eventBus.UnsubscribeFrom<OnTurnStart>(TurnStartActions);
+            _eventBus.UnsubscribeFrom<TurnStartEvent>(TurnStartActions);
         }
     }
 }
@@ -120,17 +124,15 @@ public class PlayCardCommand : Command {
     }
 
     public async override UniTask Execute() {
-        _cardHand.RemoveCard(_card);
-        List<GameOperation> cardPlayOperations = _card.GetCardPlayOperations();
-
-        // We need to check if any operation is possible first
-        if (!IsAnyOperationPossible(cardPlayOperations)) {
-            _cardHand.AddCard(_card);
-            return;
-        }
-
         try {
-            
+            _cardHand.RemoveCard(_card);
+            List<GameOperation> cardPlayOperations = _card.GetCardPlayOperations();
+
+            // We need to check if any operation is possible first
+            if (!IsAnyOperationPossible(cardPlayOperations)) {
+                _cardHand.AddCard(_card);
+                return;
+            }
             // If no operation was successfully executed, return card back else spend resources (players spend health so it always can be spent)
             if (!await PerformCardOperations(cardPlayOperations)) {
                 _cardHand.AddCard(_card);
@@ -150,7 +152,7 @@ public class PlayCardCommand : Command {
         bool isAnyOperationPerformed = false;
 
         foreach (var operation in cardPlayOperations) {
-            if (operation == null || !operation.IsPossible()) {
+            if (operation == null || !operation.AreTargetsFilled()) {
                 continue;
             }
 
@@ -175,7 +177,7 @@ public class PlayCardCommand : Command {
         }
 
         foreach (var operation in cardPlayOperations) {
-            if (operation != null && operation.IsPossible()) {
+            if (operation != null && operation.AreTargetsFilled()) {
                 return true;
             }
         }
@@ -220,17 +222,24 @@ public class InitDeckCommand : Command {
     public async UniTask<CardCollection> GenerateRandomCollection() {
         CardCollection collection = new();
         List<CardData> _unclokedCards = await _cardProvider.GetRandomUnlockedCards(_cardAmount);
-        foreach (var card in _unclokedCards) {
-            collection.AddCardToCollection(card);
+        if (_unclokedCards.IsEmpty()) return collection;
+
+        for (int i = 0; i < _cardAmount; i++) {
+            var randomIndex = UnityEngine.Random.Range(0, _unclokedCards.Count);
+            var randomCard = _unclokedCards[randomIndex];
+            collection.AddCardToCollection(randomCard);
         }
+
         return collection;
     }
+
 
     public async override UniTask Undo() {
         _deckPresenter.Deck.ClearDeck();
         await UniTask.CompletedTask;
     }
 }
+
 public class DrawCardCommand : Command {
     private CardsHandleSystem _cardsPlaySystem;
     private int _drawAmount;
@@ -247,5 +256,19 @@ public class DrawCardCommand : Command {
 
     public override UniTask Undo() {
         throw new NotImplementedException();
+    }
+}
+
+public struct DiscardCardEvent : IEvent {
+    public Card card;
+    public DiscardCardEvent(Card card, Opponent owner) {
+        this.card = card;
+    }
+}
+
+public struct ExileCardEvent : IEvent {
+    public Card card;
+    public ExileCardEvent(Card card) {
+        this.card = card;
     }
 }

@@ -35,7 +35,7 @@ public class Speaker : IDisposable {
     }
 
     public void Initialize() {
-        eventBus.SubscribeTo<OnRoundStart>(UpdateStoryDialogs);
+        eventBus.SubscribeTo<RoundStartEvent>(UpdateStoryDialogs);
 
         SetupStoryDialogues();
         SetupEventDialogues();
@@ -63,7 +63,7 @@ public class Speaker : IDisposable {
         }
     }
 
-    private void UpdateStoryDialogs(ref OnRoundStart eventData) {
+    private void UpdateStoryDialogs(ref RoundStartEvent eventData) {
         if (storyDialogues.TryGetValue(eventData.RoundNumber, out List<IDialogue> dialogues)) {
             foreach (var dialog in dialogues) {
                 dialog.Subscribe();
@@ -85,7 +85,7 @@ public class Speaker : IDisposable {
                 dialogue.Dispose();
             }
         }
-        eventBus.UnsubscribeFrom<OnRoundStart>(UpdateStoryDialogs);
+        eventBus.UnsubscribeFrom<RoundStartEvent>(UpdateStoryDialogs);
     }
 
     public async UniTask StartDialogue() {

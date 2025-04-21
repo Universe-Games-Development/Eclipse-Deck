@@ -3,131 +3,120 @@ using System;
 using UnityEngine;
 
 public class Field {
-    [Header("Grid Position")]
-    public int row;
-    public int column;
-
-    [Header("Actions")]
-    public Action<Opponent> OnChangedOwner;
-    public Action<FieldType> OnChangedType;
-    public Action<Creature> OnCreatureSummoned;
-    public Action<Creature> OnCreaturePlaced;
-    public Action<Creature> OnCreatureRemoved;
-
-    public Action<Field> OnRemoval;
-    public Action<bool> OnSelectToggled;
-    [Header("Board Set-up")]
+    // Properties with proper access modifiers
+    public int Row { get; }
+    public int Column { get; }
     public Opponent Owner { get; private set; }
+    public FieldType FieldType { get; private set; } = FieldType.Support;
+    public Creature OccupyingCreature { get; private set; }
 
-    private FieldType type = FieldType.Support;
+    // Events with proper naming conventions
+    public event Action<Opponent> OwnerChanged;
+    public event Action<FieldType> TypeChanged;
+    public event Action<Creature> CreaturePlaced;
+    public event Action<Creature> CreatureRemoved;
+    public event Action<Field> FieldRemoved;
+    public event Action<bool> SelectionToggled;
 
-    public Field((int row, int column) coordinates) {
-        row = coordinates.row;
-        column = coordinates.column;
+    public Field(int row, int column, FieldType fieldType = FieldType.Empty) {
+        Row = row;
+        Column = column;
+        FieldType = fieldType;
     }
-
-    public FieldType FieldType {
-        get { return type; }
-        set {
-            if (type != value) {
-                type = value;
-                OnChangedType?.Invoke(type);
-            }
-        }
-    }
-
-    [Header("Game Board Params")]
-    public Creature Creature { get; private set; }
 
     public void ApplyDamage(int damage) {
-        if (Creature != null) {
-            Creature.Health.TakeDamage(damage);
+        if (HasCreature) {
+            OccupyingCreature.Health.TakeDamage(damage);
+        } else if (Owner != null) {
+            Owner.Health.TakeDamage(damage);
+            FieldLogger.Log($"{Owner} takes {damage} damage.");
         } else {
-            if (Owner != null) {
-                Owner.Health.TakeDamage(damage);
-                FieldLogger.Log($"{Owner} takes {damage} damage.");
-            } else {
-                FieldLogger.Log($"Nobody takes {damage} damage");
-            }
+            FieldLogger.Log($"Nobody takes {damage} damage");
         }
     }
 
-    public void ToggleSelection(bool value) {
-        OnSelectToggled?.Invoke(value);
-    }
-    public void RemoveField() {
-        OnRemoval?.Invoke(this);
+    public void SetFieldType(FieldType newType) {
+        if (FieldType != newType) {
+            FieldType = newType;
+            OnTypeChanged(newType);
+        }
     }
 
-    #region Owner Logic
-    public void AssignOwner(Opponent player) {
-        if (Owner == player) {
-            return;
-        }
+    public void SetOwner(Opponent player) {
+        if (Owner == player) return;
+
         Owner = player;
-        OnChangedOwner?.Invoke(Owner);
+        OnOwnerChanged(player);
     }
 
-    public void UnassignOwner() {
+    public void ClearOwner() {
+        if (Owner == null) return;
+
         Owner = null;
-        OnChangedOwner?.Invoke(Owner);
+        OnOwnerChanged(null);
     }
 
-    public bool IsControlled => Owner != null;
-    #endregion
+    public bool PlaceCreature(Creature creature) {
+        if (!CanPlaceCreature(creature)) return false;
 
-    #region Creature Logic
-
-    public bool AssignCreature(Creature creature) {
-        if (Creature != null) {
-            FieldLogger.Warning($"Field at ({row}, {column}) is already occupied by another creature.");
-            return false;
-        }
-
-        Creature = creature;
-        OnCreaturePlaced?.Invoke(creature); // ¬икликаЇмо под≥ю
-        FieldLogger.Log($"Creature placed on field ({row}, {column}).");
+        OccupyingCreature = creature;
+        OnCreaturePlaced(creature);
         return true;
     }
 
-    public void UnAssignCreature() {
-        if (Creature != null) {
-            var removedCreature = Creature;
-            Creature = null;
-            OnCreatureRemoved?.Invoke(removedCreature); // ¬икликаЇмо под≥ю
-        } else {
-            FieldLogger.Log("Received remove but nothing to remove!");
-        }
+    public void RemoveCreature() {
+        if (OccupyingCreature == null) return;
+
+        var creature = OccupyingCreature;
+        OccupyingCreature = null;
+        OnCreatureRemoved(creature);
     }
-    // To walk
+
     public bool CanPlaceCreature(Creature creature) {
-        return !HasCreature && creature != null;
+        return OccupyingCreature == null && creature != null;
     }
 
-    public bool HasCreature => Creature != null;
-    #endregion
+    public bool HasCreature => OccupyingCreature != null;
+    public bool IsControlled => Owner != null;
 
-    public int GetRow() {
-        return row;
+    public void ToggleSelection(bool isSelected) {
+        OnSelectionToggled(isSelected);
     }
 
-    public int GetColumn() {
-        return column;
+    public void MarkForRemoval() {
+        OnFieldRemoved(this);
     }
 
-    public string GetTextCoordinates() {
-        return $"{GetRow()} / {GetColumn()}";
+    public Vector3 GetWorldPosition() {
+        return new Vector3(Row, 0, Column);
     }
 
-    internal Vector3 GetCoordinates() {
-        return new Vector3(row, 0, column);
+    public string GetCoordinatesText() {
+        return $"{Row} / {Column}";
     }
 
-    internal bool CanSummonCreature() {
-        if (Creature != null) {
-            Debug.Log("Field is already occupied");
-            return false;
-        }
-        return true;
+    // Protected event invokers
+    protected virtual void OnOwnerChanged(Opponent newOwner) {
+        OwnerChanged?.Invoke(newOwner);
+    }
+
+    protected virtual void OnTypeChanged(FieldType newType) {
+        TypeChanged?.Invoke(newType);
+    }
+
+    protected virtual void OnCreaturePlaced(Creature creature) {
+        CreaturePlaced?.Invoke(creature);
+    }
+
+    protected virtual void OnCreatureRemoved(Creature creature) {
+        CreatureRemoved?.Invoke(creature);
+    }
+
+    protected virtual void OnFieldRemoved(Field field) {
+        FieldRemoved?.Invoke(field);
+    }
+
+    protected virtual void OnSelectionToggled(bool isSelected) {
+        SelectionToggled?.Invoke(isSelected);
     }
 }

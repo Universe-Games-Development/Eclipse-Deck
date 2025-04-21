@@ -6,9 +6,9 @@ using Zenject;
 public class CreatureNavigator {
     // Zenject needed
     public GridBoard GridBoard { get; private set; }
-    private BoardPresenter _boardPresenter;
+    private BoardSystem _boardPresenter;
     
-    public CreatureNavigator(BoardPresenter boardPresenter) {
+    public CreatureNavigator(BoardSystem boardPresenter) {
         _boardPresenter = boardPresenter;
     }
 
@@ -39,7 +39,7 @@ public class CreatureNavigator {
             CurrentField
         };
         for (int i = 0; i < fieldsToMove.Count; i++) {
-            if (fieldsToMove[i].Creature != null) {
+            if (fieldsToMove[i].OccupyingCreature != null) {
                 path.isInterrupted = true;
                 path.interruptedAt = i;
                 break;
@@ -67,8 +67,8 @@ public class CreatureNavigator {
     public List<Creature> GetCreaturesOnFields(List<Field> fields) {
         List<Creature> creaturesInDirection = new();
         foreach (var field in fields) {
-            if (field.Creature != null) {
-                creaturesInDirection.Add(field.Creature);
+            if (field.OccupyingCreature != null) {
+                creaturesInDirection.Add(field.OccupyingCreature);
             }
         }
         return creaturesInDirection;
@@ -99,11 +99,11 @@ public class CreatureNavigator {
     }
 
     public Direction GetDirectionToField(Field currentField, Field fieldToEscape) {
-        int currentRow = currentField.row;
-        int currentColumn = currentField.column;
+        int currentRow = currentField.Row;
+        int currentColumn = currentField.Column;
 
-        int targetRow = fieldToEscape.row;
-        int targetColumn = fieldToEscape.column;
+        int targetRow = fieldToEscape.Row;
+        int targetColumn = fieldToEscape.Column;
 
         int rowDifference = targetRow - currentRow;
         int columnDifference = targetColumn - currentColumn;

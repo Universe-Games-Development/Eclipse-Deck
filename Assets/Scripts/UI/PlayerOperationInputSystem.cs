@@ -7,7 +7,13 @@ using UnityEngine.UI;
 using System;
 using Zenject;
 
-public class PlayerOperationInputSystem : MonoBehaviour, IActionFiller {
+public interface ITargetingService {
+    List<object> FindValidTargets(IRequirement value, IGameContext context);
+    UniTask<object> ProcessRequirementAsync(Opponent requestOpponent, IRequirement requirement);
+}
+
+
+public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
     [SerializeField] private TMP_Text _instructionText;
     [SerializeField] private GameObject _inputPanel;
     [SerializeField] private int _timeout = 5;
@@ -17,9 +23,10 @@ public class PlayerOperationInputSystem : MonoBehaviour, IActionFiller {
 
     private IRequirement _currentRequirement;
     private CancellationTokenSource _buttonCancellation;
-    private TimeoutController timeoutController = new TimeoutController();
+    private TimeoutController timeoutController = new ();
     private UniTaskCompletionSource<object> _completionSource;
-    List<EntityProvider> entityProviders = new();
+
+    private Opponent requestOpponent;
 
     [Inject]
     public void Construct(CardInputHandler cardInputHandler) {
@@ -29,11 +36,9 @@ public class PlayerOperationInputSystem : MonoBehaviour, IActionFiller {
     private void Awake() {
         _cancelButton.onClick.AddListener(Cancel);
         _inputPanel.SetActive(false);
-        entityProviders.Add(new CreatureEntityProvider());
-        entityProviders.Add(new FieldEntityProvider());
     }
 
-    public async UniTask<object> ProcessRequirementAsync(IRequirement requirement) {
+    public async UniTask<object> ProcessRequirementAsync(Opponent requestOpponent, IRequirement requirement) {
         SetupUI(requirement);
         _currentRequirement = requirement;
 
@@ -64,15 +69,16 @@ public class PlayerOperationInputSystem : MonoBehaviour, IActionFiller {
         GameObject hoveredObject = _inputHandler.hoveredObject;
         if (hoveredObject == null) return;
 
-        // Спроба отримати модель об'єкта
-        if (TryGetModelFromGameObject(hoveredObject, out object model)) {
-            // Перевірка моделі на відповідність вимогам
-            ValidationResult result = _currentRequirement.Check(model);
+        // Спочатку перевіряємо наявність IInteractable
+        ITargetable interactable = hoveredObject.GetComponent<ITargetable>();
+        if (interactable != null) {
+            ValidationResult result = interactable.CheckRequirement(_currentRequirement, requestOpponent);
             if (result.IsValid) {
-                CompleteRequirement(model);
+                CompleteRequirement(interactable.GetTargetModel());
             } else {
                 _instructionText.text = result.ErrorMessage;
             }
+            return;
         }
     }
 
@@ -80,16 +86,6 @@ public class PlayerOperationInputSystem : MonoBehaviour, IActionFiller {
         if (_completionSource != null && !_completionSource.Task.Status.IsCompleted()) {
             _completionSource.TrySetResult(result);
         }
-    }
-
-    private bool TryGetModelFromGameObject(GameObject hoveredObject, out object model) {
-        foreach (var provider in entityProviders) {
-            if (provider.TryGetEntity(hoveredObject, out model)) {
-                return true;
-            }
-        }
-        model = null;
-        return false;
     }
 
     private void SetupUI(IRequirement requirement) {
@@ -115,39 +111,69 @@ public class PlayerOperationInputSystem : MonoBehaviour, IActionFiller {
         _cancelButton.onClick.RemoveAllListeners();
         _buttonCancellation?.Dispose();
     }
-}
 
-public abstract class EntityProvider {
-    public abstract bool TryGetEntity(GameObject uiObject, out object entity);
-}
-
-public abstract class GenericEntityProvider<TPresenter, TModel> : EntityProvider
-    where TPresenter : Component
-    where TModel : class {
-
-    protected abstract TModel GetModel(TPresenter presenter);
-
-    public override bool TryGetEntity(GameObject uiObject, out object entity) {
-        entity = null;
-        var presenter = uiObject.GetComponent<TPresenter>();
-        if (presenter != null) {
-            var model = GetModel(presenter);
-            if (model == null) {
-                Debug.LogError($"{typeof(TModel).Name} model not found for {uiObject}");
-                return false;
-            }
-            entity = model;
-            return true;
-        }
-        return false;
+    public List<object> FindValidTargets(IRequirement value, IGameContext context) {
+        throw new NotImplementedException();
     }
 }
 
-// Реалізації провайдерів
-public class CreatureEntityProvider : GenericEntityProvider<CreaturePresenter, Creature> {
-    protected override Creature GetModel(CreaturePresenter presenter) => presenter.Creature;
+public interface ITargetable {
+    // Метод для перевірки, чи об'єкт відповідає вимогам
+    ValidationResult CheckRequirement(IRequirement requirement, Opponent requestOpponent);
+
+    // Метод для отримання моделі, яка буде передана в результат
+    object GetTargetModel();
 }
 
-public class FieldEntityProvider : GenericEntityProvider<FieldPresenter, Field> {
-    protected override Field GetModel(FieldPresenter presenter) => presenter.Field;
+// Конкретна реалізація для різних типів об'єктів
+public class CardInteractable : MonoBehaviour, ITargetable {
+    [SerializeField] private CardView _view; 
+    private CardPresenter _presenter; 
+
+    public void SetPresenter(CardPresenter presenter) {
+        _presenter = presenter;
+    }
+
+    public ValidationResult CheckRequirement(IRequirement requirement, Opponent requestOpponent) {
+        return requirement.Check(requestOpponent, _presenter.Model);
+    }
+
+    public object GetTargetModel() {
+        return _presenter.Model;
+    }
+}
+
+public class FieldInteractable : MonoBehaviour, ITargetable {
+    [SerializeField] private FieldView _view; 
+    private FieldPresenter _presenter; 
+
+    public void SetPresenter(FieldPresenter presenter) {
+        _presenter = presenter;
+    }
+
+    public ValidationResult CheckRequirement(IRequirement requirement, Opponent requestOpponent) {
+        return requirement.Check(requestOpponent, _presenter.Model);
+    }
+
+    public object GetTargetModel() {
+        return _presenter.Model;
+    }
+}
+
+
+public class Opponentnteractable : MonoBehaviour, ITargetable {
+    [SerializeField] private OpponentView _view;
+    private BaseOpponentPresenter _presenter;
+
+    public void SetPresenter(BaseOpponentPresenter presenter) {
+        _presenter = presenter;
+    }
+
+    public ValidationResult CheckRequirement(IRequirement requirement, Opponent requestOpponent) {
+        return requirement.Check(requestOpponent, _presenter.Model);
+    }
+
+    public object GetTargetModel() {
+        return _presenter.Model;
+    }
 }

@@ -14,10 +14,10 @@ public class BatttleActionManager {
         _commandManager = commandManager;
         _boardAssigner = boardAssigner;
         _eventBus = eventBus;
-        eventBus.SubscribeTo<TurnEndStartedEvent>(GenerateEndTurnActions);
+        eventBus.SubscribeTo<TurnEndEvent>(GenerateEndTurnActions);
     }
 
-    public void GenerateEndTurnActions(ref TurnEndStartedEvent turnEndEvent) {
+    public void GenerateEndTurnActions(ref TurnEndEvent turnEndEvent) {
         List<Command> commands = new();
 
         List<Creature> creatures = _boardAssigner.GetOpponentCreatures(turnEndEvent.endTurnOpponent);

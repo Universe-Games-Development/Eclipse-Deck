@@ -1,54 +1,55 @@
 ﻿using UnityEngine;
 using Cysharp.Threading.Tasks;
+using System;
 
 public class BoardSeat : MonoBehaviour {
     public Direction Direction;
-    [SerializeField] private Transform SeatTransform;
+    //[SerializeField] private Transform SeatTransform;
     [SerializeField] private HealthCellView HealthCell;
     [SerializeField] private CardsHandleSystem cardsPlaySystem;
-    public BaseOpponentPresenter CurrentPresenter { get; private set; }
-    public Opponent Owner { get; private set; }
-    // Saved data
-    private Vector3 presenterOriginalPosition;
-    private Transform presenterOriginalParent;
+    public Opponent CurrentOpponent { get; private set; }
+   
 
 
-    public async UniTask AssignOpponent(Opponent opponent, BaseOpponentPresenter presenter) {
-        Owner = opponent;
+    public async UniTask AssignOpponent(Opponent opponent) {
 
-        if (presenter != null) {
-            presenterOriginalPosition = presenter.transform.position;
-            presenterOriginalParent = presenter.transform.parent;
-            CurrentPresenter = presenter;
+        if (opponent == null) {
+            return;
+        }
+        CurrentOpponent = opponent;
 
-            await presenter.MoveTo(SeatTransform);
+        await CurrentOpponent.TakeSeat(this);
 
-            presenter.transform.SetParent(SeatTransform);
-
-            // Initialize health display if available
-            if (HealthCell != null) {
-                HealthCell.Initialize();
-                HealthCell.AssignOwner(Owner);
-            }
+        // Initialize health display if available
+        if (HealthCell != null) {
+            HealthCell.Initialize();
+            HealthCell.AssignOwner(GetOwner());
         }
     }
 
     public void ClearSeat() {
-        if (CurrentPresenter != null) {
-            CurrentPresenter.transform.SetParent(presenterOriginalParent);
-            CurrentPresenter.transform.position = presenterOriginalPosition;
-            CurrentPresenter = null;
+        if (CurrentOpponent != null) {
+            CurrentOpponent.ClearSeat().Forget();
+            CurrentOpponent = null;
         }
 
         if (HealthCell != null) {
             HealthCell.ClearOwner();
         }
-
-        Owner = null;
     }
 
     public void InitCards() {
-        cardsPlaySystem.Initialize(CurrentPresenter);
+        cardsPlaySystem.Initialize(GetOwner());
     }
+
+    public Opponent GetOwner() {
+        return CurrentOpponent;
+    }
+
+    private void OnDrawGizmosSelected() {
+        Gizmos.DrawSphere(transform.position, 1f);
+    }
+
+    
 }
 

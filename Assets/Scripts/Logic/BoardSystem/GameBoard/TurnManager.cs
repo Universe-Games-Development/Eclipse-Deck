@@ -6,8 +6,8 @@ using Zenject;
 
 public class TurnManager : IDisposable {
     public Action<Opponent> OnOpponentChanged;
-    public Action<Opponent> OnTurnEnd;
-    public Action<Opponent> OnTurnStart;
+    public Action<TurnEndEvent> OnTurnEnd;
+    public Action<TurnStartEvent> OnTurnStart;
 
     private List<Opponent> currentOpponents = new(2);
     public Opponent ActiveOpponent { get; private set; }
@@ -46,21 +46,20 @@ public class TurnManager : IDisposable {
         }
 
         inTransition = true;
-        OnTurnEnd?.Invoke(ActiveOpponent);
-        eventBus.Raise(new TurnEndStartedEvent(ActiveOpponent));
+        TurnEndEvent turnEndEvent = new TurnEndEvent(ActiveOpponent);
+        OnTurnEnd?.Invoke(turnEndEvent);
+        eventBus.Raise(turnEndEvent);
         return true;
     }
 
     private void OnEndTurnActionsPerformed(ref EndActionsExecutedEvent eventData) {
-        bool isRoundFinalTurn = UpdateRoundCounter();
-        if (isRoundFinalTurn) {
-            eventBus.Raise(new OnRoundStart(RoundCounter, ActiveOpponent));
-        }
+        inTransition = true;
+        UpdateRoundCounter();
         SwitchToNextOpponent();
         inTransition = false;
     }
 
-    private bool UpdateRoundCounter() {
+    private void UpdateRoundCounter() {
         completedTurnsInRound++;
         bool isRoundFinalTurn = completedTurnsInRound >= currentOpponents.Count;
 
@@ -68,9 +67,15 @@ public class TurnManager : IDisposable {
             RoundCounter++;
             Debug.Log($"Round {RoundCounter} started!");
             completedTurnsInRound = 0;
-            return true;
+            if (isRoundFinalTurn) {
+                eventBus.Raise(new RoundStartEvent(RoundCounter, ActiveOpponent));
+            }
         }
-        return isRoundFinalTurn;
+
+        TurnStartEvent turnStartEvent = new TurnStartEvent(TurnCounter, ActiveOpponent);
+        TurnCounter++;
+        OnTurnStart?.Invoke(turnStartEvent);
+        eventBus.Raise(turnStartEvent);
     }
 
     private void SwitchToNextOpponent(Opponent starterOpponent = null) {
@@ -81,10 +86,7 @@ public class TurnManager : IDisposable {
 
         Debug.Log($"Turn started for {ActiveOpponent}");
         OnOpponentChanged?.Invoke(ActiveOpponent);
-        OnTurnStart?.Invoke(ActiveOpponent);
-        TurnCounter++;
-        eventBus.Raise(new OnTurnStart(TurnCounter, ActiveOpponent));
-        eventBus.Raise(new TurnChangedEvent(previous, ActiveOpponent));
+        eventBus.Raise(new OpponentTurnChangedEvent(previous, ActiveOpponent));
     }
 
     private Opponent GetNextOpponent() {
@@ -107,35 +109,35 @@ public class TurnManager : IDisposable {
 
 
 
-public struct TurnEndStartedEvent : IEvent {
+public struct TurnEndEvent : IEvent {
     public Opponent endTurnOpponent;
 
-    public TurnEndStartedEvent(Opponent endTurnOpponent) {
+    public TurnEndEvent(Opponent endTurnOpponent) {
         this.endTurnOpponent = endTurnOpponent;
     }
 }
-public struct TurnChangedEvent : IEvent {
+public struct OpponentTurnChangedEvent : IEvent {
     public Opponent activeOpponent;
     public Opponent endTurnOpponent;
 
-    public TurnChangedEvent(Opponent previous, Opponent next) {
+    public OpponentTurnChangedEvent(Opponent previous, Opponent next) {
         this.activeOpponent = previous;
         this.endTurnOpponent = next;
     }
 }
-public struct OnTurnStart : IEvent {
+public struct TurnStartEvent : IEvent {
     public Opponent StartingOpponent { get; private set; }
     public int TurnNumber { get; private set; }
-    public OnTurnStart(int turnCount, Opponent startTurnOpponent) {
+    public TurnStartEvent(int turnCount, Opponent startTurnOpponent) {
         StartingOpponent = startTurnOpponent;
         TurnNumber = turnCount;
     }
 }
 
-public struct OnRoundStart : IEvent {
+public struct RoundStartEvent : IEvent {
     public Opponent StartingOpponent { get; private set; }
     public int RoundNumber { get; private set; }
-    public OnRoundStart(int roundCount, Opponent startingOpponent) {
+    public RoundStartEvent(int roundCount, Opponent startingOpponent) {
         RoundNumber = roundCount;
         StartingOpponent = startingOpponent;
     }

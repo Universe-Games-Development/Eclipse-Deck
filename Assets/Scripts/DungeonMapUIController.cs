@@ -137,13 +137,13 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
     private void ValidateReferences() {
         if (_travelManager == null)
-            Debug.LogError("TravelManager not injected into DungeonMapUIController");
+            Debug.LogWarning("TravelManager not injected into DungeonMapUIController");
 
         if (_locationManager == null)
-            Debug.LogError("LocationTransitionManager not injected into DungeonMapUIController");
+            Debug.LogWarning("LocationTransitionManager not injected into DungeonMapUIController");
 
         if (_nextRoomsButton == null)
-            Debug.LogError("NextRoomsButton reference missing in DungeonMapUIController");
+            Debug.LogWarning("NextRoomsButton reference missing in DungeonMapUIController");
     }
 
     private void SetupEventListeners() {
@@ -221,7 +221,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
     // Новый метод для обновления информации о локации
     public void UpdateLocationInfo(string locationName = null, int currentRoomLevel = -1, int totalRoomCount = -1) {
-        if (_locationInfoPanel == null)
+        if (_locationInfoPanel == null || _locationManager == null)
             return;
 
         // Если параметры не указаны явно, получаем их из менеджеров

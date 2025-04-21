@@ -1,80 +1,66 @@
 using System;
 
 // TO DO: Add regen stat
-public interface IHealth {
-    event Action<int, IDamageDealer> OnDamageTaken;
-    int Current { get; }
-    int Max { get; }
-    Stat Stat { get;}
+public class Health : Attribute {
+    public event Action<OnDamageTaken> OnDamageTaken;
+    public event Action<DeathEvent> OnDeath;
     
-    void TakeDamage(int amount, IDamageDealer source = null);
-    void Heal(int amount);
-    bool IsAlive();
-    event Action OnDeath;
-}
-
-public class Health : IHealth {
-    public event Action<int, IDamageDealer> OnDamageTaken;
-    public event Action OnDeath;
-    public Stat Stat { get; private set; }
-    
-    public bool isDead = false;
-    public int Current => Stat.CurrentValue;
-    public int Max => Stat.MaxValue;
-    private readonly IHealthEntity _owner;
+    public bool IsDead = false;
+    private readonly IDamageable _owner;
     private readonly GameEventBus _eventBus;
 
-    public Health(IHealthEntity owner, Stat stat, GameEventBus eventBus) {
-        _owner = owner;
-        Stat = stat;
-        _eventBus = eventBus;
+    
 
-        Stat.OnValueChanged += HandleStatChange;
+    public Health(int initialValue, IDamageable owner, GameEventBus eventBus) : base(initialValue) {
+        _owner = owner;
+        _eventBus = eventBus;
     }
 
-    
-    
+    public void TakeDamage(int damage, IDamageDealer source = null) {
+        if (IsDead) return;
 
-    public void TakeDamage(int amount, IDamageDealer source = null) {
-        if (amount <= 0 || isDead) return;
+        Subtract(damage); // Змінено зі Subtract(-amount) на Subtract(amount)
+        OnDamageTaken?.Invoke(new OnDamageTaken(_owner, source, damage));
 
-        var damage = Math.Min(amount, Stat.CurrentValue);
-        Stat.Modify(-damage);
-
-        _eventBus.Raise(new OnDamageTaken(_owner, source, damage));
-        OnDamageTaken?.Invoke(damage, source);
-
-        if (Stat.CurrentValue <= 0) {
-            isDead = true;
-            OnDeath?.Invoke();
-            _eventBus.Raise(new DeathEvent(_owner));
+        if (CurrentValue <= 0 && !IsDead) {
+            IsDead = true;
+            OnDeath?.Invoke(new DeathEvent(_owner));
         }
     }
 
-    public void Heal(int amount) {
-        if (amount <= 0) return;
-        Stat.Modify(amount);
+    public void Heal(int amount, out int excess) {
+        excess = 0;
+        if (IsDead || amount <= 0) return;
+
+        // Відновлюємо здоров'я тільки до базового значення
+        int mainDifference = BaseValue - MainValue;
+
+        if (mainDifference > 0) {
+            // Обмежуємо лікування базовим значенням
+            int healAmount = Math.Min(mainDifference, amount);
+            excess = Add(healAmount);
+        }
+        // НЕ додаємо бонус, незалежно від того, скільки лікування залишилось
     }
 
-    private void HandleStatChange(int oldValue, int newValue) {
-        // Додаткова логіка при зміні здоров'я
+    public void Resurrect(int healthAmount) {
+        if (!IsDead) return;
+
+        IsDead = false;
+        Heal(healthAmount, out int excess);
     }
 
     public bool IsAlive() {
-        return !isDead;
-    }
-
-    internal void SetMaxValue(int healthIncrease) {
-        Stat.SetMaxValue(healthIncrease);
+        return !IsDead;
     }
 }
 
 public struct OnDamageTaken : IEvent {
     public IDamageDealer Source { get; }
-    public IHealthEntity Target { get; }
+    public IDamageable Target { get; }
     public int Amount { get; }
 
-    public OnDamageTaken(IHealthEntity target, IDamageDealer source, int amount) {
+    public OnDamageTaken(IDamageable target, IDamageDealer source, int amount) {
         Source = source;
         Target = target;
         Amount = amount;
@@ -82,9 +68,9 @@ public struct OnDamageTaken : IEvent {
 }
 
 public struct DeathEvent : IEvent {
-    public IHealthEntity DeadEntity { get; }
+    public IDamageable DeadEntity { get; }
 
-    public DeathEvent(IHealthEntity deadEntity) {
+    public DeathEvent(IDamageable deadEntity) {
         DeadEntity = deadEntity;
     }
 }

@@ -209,7 +209,7 @@ public class CardResourceLoader : GenericResourceLoader<CardData> {
     public override int LoadPriority => 1;
 }
 
-public class EnemyResourceLoader : GenericResourceLoader<OpponentData> {
+public class EnemyResourceLoader : GenericResourceLoader<EnemyData> {
     public EnemyResourceLoader(ResourceLoadingManager resourceLoadingManager) : base(resourceLoadingManager) { }
 
     public override int LoadPriority => 2;
@@ -351,7 +351,7 @@ public class CardProvider : GenericResourceProvider<CardData> {
     }
 }
 
-public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
+public class EnemyResourceProvider : GenericResourceProvider<EnemyData> {
     private EnemiesLocationCache enemiesLocationCache = new();
 
     private LocationTransitionManager _transitionManager;
@@ -361,29 +361,29 @@ public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
         _transitionManager = transitionManager;
     }
 
-    public async UniTask<List<OpponentData>> GetEnemies(EnemyType requestEnemyType) {
+    public async UniTask<List<EnemyData>> GetEnemies(EnemyType requestEnemyType) {
         if (_transitionManager.GetSceneLocation() == null) {
             Debug.LogWarning("Current location data is null");
-            return new List<OpponentData>();
+            return new List<EnemyData>();
         }
         AssetLabelReference assetLabel = _transitionManager.GetSceneLocation().assetLabel;
         if (enemiesLocationCache.TryGetFromCache(requestEnemyType, assetLabel, out var cachedEnemies)) {
             return cachedEnemies;
         }
 
-        List<OpponentData> allEnemies = await _loader.GetResourcesForLocationAsync(assetLabel);
+        List<EnemyData> allEnemies = await _loader.GetResourcesForLocationAsync(assetLabel);
         enemiesLocationCache.Store(assetLabel, allEnemies);
 
         return enemiesLocationCache.TryGetFromCache(requestEnemyType, assetLabel, out var newlyCachedEnemies)
             ? newlyCachedEnemies
-            : new List<OpponentData>();
+            : new List<EnemyData>();
     }
 
-    public List<OpponentData> GetEnemies(AssetLabelReference assetLabel) {
+    public List<EnemyData> GetEnemies(AssetLabelReference assetLabel) {
         if (enemiesLocationCache.TryGetFromCache(assetLabel, out var enemies)) {
             return enemies;
         }
-        return new List<OpponentData>();
+        return new List<EnemyData>();
     }
 
 
@@ -392,9 +392,9 @@ public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
     }
 
     public class EnemiesLocationCache {
-        private readonly Dictionary<AssetLabelReference, Dictionary<EnemyType, List<OpponentData>>> _cacheByLabel = new();
+        private readonly Dictionary<AssetLabelReference, Dictionary<EnemyType, List<EnemyData>>> _cacheByLabel = new();
 
-        public bool TryGetFromCache(EnemyType type, AssetLabelReference label, out List<OpponentData> enemies) {
+        public bool TryGetFromCache(EnemyType type, AssetLabelReference label, out List<EnemyData> enemies) {
             enemies = null;
             if (_cacheByLabel.TryGetValue(label, out var byType)) {
                 return byType.TryGetValue(type, out enemies);
@@ -402,9 +402,9 @@ public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
             return false;
         }
 
-        public void Store(AssetLabelReference label, List<OpponentData> allEnemiesForLocation) {
+        public void Store(AssetLabelReference label, List<EnemyData> allEnemiesForLocation) {
             if (!_cacheByLabel.ContainsKey(label)) {
-                _cacheByLabel[label] = new Dictionary<EnemyType, List<OpponentData>>();
+                _cacheByLabel[label] = new Dictionary<EnemyType, List<EnemyData>>();
             }
 
             var typeDict = _cacheByLabel[label];
@@ -415,7 +415,7 @@ public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
             }
         }
 
-        public bool TryGetFromCache(AssetLabelReference label, out List<OpponentData> enemies) {
+        public bool TryGetFromCache(AssetLabelReference label, out List<EnemyData> enemies) {
             enemies = null;
             if (_cacheByLabel.TryGetValue(label, out var byType)) {
                 enemies = byType.Values.SelectMany(list => list).ToList();

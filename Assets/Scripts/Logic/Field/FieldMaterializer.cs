@@ -7,14 +7,14 @@ public class FieldMaterializer : MonoBehaviour {
     [SerializeField] private Color emptyColor = Color.gray;
     [SerializeField] private Color hoverEmissionColor;
 
-    [Header ("Type colors")]
+    [Header("Type colors")]
     [SerializeField] private Color attackColor = Color.red;
     [SerializeField] private Color supportColor = Color.green;
-    
+
     [Header("Opponents privacy colors")]
     [SerializeField] private Color enemyColor = Color.red;
     [SerializeField] private Color playerColor = Color.green;
-    
+
 
     [SerializeField] private string emissiveColorName = "_EmissionColor";
     [SerializeField] private float defaultHighlightIntensity = 1f;
@@ -69,7 +69,7 @@ public class FieldMaterializer : MonoBehaviour {
         propBlock.SetFloat("_EmissionIntensity", isOn ? hoverHighlightIntensity : 0);
         meshRenderer.SetPropertyBlock(propBlock);
     }
-    
+
 
     public void UpdateOccupyEmission(Creature creature = null) {
         bool isOccupied = creature != null;

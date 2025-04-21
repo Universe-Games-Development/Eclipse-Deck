@@ -15,6 +15,6 @@ public class CreatureCardData : CardData {
     [Header("Strategy")]
     public CreatureMovementData movementData;
     public CreatureAttackData attackData;
-    [Header("Creature Abilities")]
-    private List<Ability<CreatureAbilityData, Creature>> creatureAbilities = new();
+    //[Header("Creature Abilities")]
+    //private List<Ability<CreatureAbilityData, Creature>> creatureAbilities = new();
 }

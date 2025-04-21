@@ -57,9 +57,9 @@ public class CardHand {
     public void SelectCard(Card newCard) {
         if (newCard == null) return;
         if (SelectedCard == newCard) return;
-        OnCardSelected?.Invoke(SelectedCard);
         DeselectCurrentCard();
         SelectedCard = newCard;
+        OnCardSelected?.Invoke(SelectedCard);
         Debug.Log("Selected: " + newCard.Data.Name);
     }
 

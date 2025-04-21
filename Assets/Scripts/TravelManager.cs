@@ -4,27 +4,34 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
-public class TravelManager {
+public class TravelManager : MonoBehaviour {
     public Action<Room> OnRoomChanged;
 
     public DungeonGraph CurrentDungeon { get; private set; }
     public Room CurrentRoom;
     private LocationData _currentLocationData;
 
-    [Inject] private PlayerPresenter _playerPresenter;
-    
-    [Inject] private RoomPresenter _roomPresenter;
+    [Inject] private RoomSystem _roomPresenter;
     [Inject] private IDungeonGenerator _dungeonGenerator;
     [Inject] private VisitedLocationsService visitedLocationService;
     [Inject] GameEventBus _eventBus;
+    [Inject] BattleRegistrator _opponentRegistrator;
+    [Inject] PlayerManager playerManager;
+    [SerializeField] private PlayerView playerView;
 
-    private LocationTransitionManager _locationManager;
-    [Inject]
-    public void Construct(LocationTransitionManager locationManager) {
-        _locationManager = locationManager;
+    [Inject] private LocationTransitionManager _locationManager;
+    private Player CurrentPlayer;
+
+    private void Start() {
+        playerManager.GetPlayer(out CurrentPlayer);
+        new PlayerPresenter(CurrentPlayer, playerView);
+
+        _opponentRegistrator.RegisterPlayer(CurrentPlayer);
+        HandlePlayerAppearance(CurrentPlayer);
     }
 
-    public void BeginRun() {
+    private void HandlePlayerAppearance(Player player) {
+        CurrentPlayer = player;
         _locationManager.RegisterListener(LoadingPhase.PreLoad, ClearDungeon);
         _locationManager.RegisterListener(LoadingPhase.Complete, EnterLocationAsync);
     }
@@ -59,7 +66,7 @@ public class TravelManager {
         // Exiting from current room
         if (CurrentRoom != null) {
         _eventBus.Raise(new RoomExitingEvent(CurrentRoom));
-            await _playerPresenter.ExitRoom();
+            await CurrentPlayer.ExitRoom();
         }
 
         // Set new currentRoom
@@ -69,7 +76,7 @@ public class TravelManager {
         _roomPresenter.InitializeRoom(chosenRoom);
 
         _eventBus.Raise(new RoomEnteringEvent(chosenRoom));
-        await _playerPresenter.EnterRoom(chosenRoom);
+        await CurrentPlayer.EnterRoom(chosenRoom);
 
         OnRoomChanged?.Invoke(chosenRoom);
     }

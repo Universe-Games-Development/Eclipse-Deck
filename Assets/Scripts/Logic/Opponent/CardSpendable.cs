@@ -2,11 +2,11 @@
 
 public class CardSpendable {
     private readonly Mana mana;
-    private readonly IHealth health;
+    private readonly Health health;
 
     public bool IsManaEnabled { get; private set; } = false;
 
-    public CardSpendable(Opponent opponent, Mana mana, IHealth health, GameEventBus eventBus) {
+    public CardSpendable(Opponent opponent, Mana mana, Health health, GameEventBus eventBus) {
         this.mana = mana;
         this.health = health;
     }
@@ -34,14 +34,14 @@ public class CardSpendable {
     }
 
     private int TrySpendMana(int amount) {
-        if (IsManaEnabled && mana.Current > 0) {
+        if (IsManaEnabled && mana.CurrentValue > 0) {
             return mana.Spend(amount);
         }
         return 0;
     }
 
     private int SpendHealth(int amount) {
-        if (health.Current > 0) {
+        if (health.CurrentValue > 0) {
             health.TakeDamage(amount);
             return amount;
         }
@@ -50,7 +50,7 @@ public class CardSpendable {
 
     private void HealHealth(int amount) {
         if (amount > 0) {
-            health.Heal(amount);
+            health.Heal(amount, out int excess);
         }
     }
 

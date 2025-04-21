@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using System;
 
 public class BoardSeatSystem : MonoBehaviour {
     [Header ("Seats")]
@@ -10,15 +11,14 @@ public class BoardSeatSystem : MonoBehaviour {
 
     private Dictionary<Opponent, BoardSeat> activeSeatsByOpponent = new();
 
-    public async UniTask AssignOpponentSeat(BaseOpponentPresenter presenter) {
-        Opponent opponent = presenter.OpponentModel;
+    public async UniTask AssignOpponentSeat(Opponent opponent) {
         BoardSeat seat = opponent is Player ? playerSeat : enemySeat;
 
-        await seat.AssignOpponent(opponent, presenter);
+        await seat.AssignOpponent(opponent);
         activeSeatsByOpponent[opponent] = seat;
     }
 
-    public void InitializePlayersCards() {
+    public void InitializePlayersCardsSystems() {
         enemySeat.InitCards();
         playerSeat.InitCards(); 
     }
@@ -31,15 +31,15 @@ public class BoardSeatSystem : MonoBehaviour {
         activeSeatsByOpponent.Clear();
     }
 
-    public IActionFiller GetActionFiller(Opponent opponent) {
+    public ITargetingService GetActionFiller(Opponent opponent) {
         if (activeSeatsByOpponent.TryGetValue(opponent, out BoardSeat seat)) {
-            return seat.CurrentPresenter.GetActionFiller();
+            throw new NotImplementedException();
         }
         return null;
     }
 
     public Opponent GetAgainstOpponent(Opponent opponent) {
-        return opponent is Player ? enemySeat.Owner : playerSeat.Owner;
+        return opponent is Player ? enemySeat.GetOwner() : playerSeat.GetOwner();
     }
 
     public bool GetOpponentDirection(Opponent opponent, out Direction direction) {

@@ -17,7 +17,7 @@ public class CameraManager : MonoBehaviour {
     [SerializeField] private CameraSplineMover cameraSplineMover;
     [SerializeField] PlayerPresenter _playerPresenter;
 
-    [Inject] RoomPresenter roomPresenter;
+    [Inject] RoomSystem roomPresenter;
 
     public void SwitchCamera(CinemachineCamera newCamera) {
         if (newCamera == null) {

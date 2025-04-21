@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c96c658be1cc5b9418d1a2fd1794f0d7, type: 3}
+  m_Name: PlayerData
+  m_EditorClassIdentifier: 
+  viewPrefab: {fileID: 7192122273210244457, guid: be8f52e25901a4c4e86dd71b078ac3f2, type: 3}
+  Name: Player
+  Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  Health: 35
+  Mana: 0
+  collection: {fileID: 0}
+  isFlying: 0
+  speechData: {fileID: 0}

@@ -1,11 +1,34 @@
 using Cysharp.Threading.Tasks;
+using System;
+using System.Threading.Tasks;
 using UnityEngine;
+using Zenject;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class Enemy : Opponent {
-    private TurnManager _turnManager;
-    public Enemy(TurnManager turnManager, GameEventBus eventBus, CommandManager commandManager, CardProvider cardProvider) 
-        : base (eventBus) {
-        _turnManager = turnManager;
+    public Func<UniTask> OnSpawned;
+    private Speaker speech;
+    [Inject] private TurnManager _turnManager;
+    [Inject] protected BattleRegistrator opponentRegistrator;
+
+    public Enemy(OpponentData opponentData, DialogueSystem dialogueSystem, GameEventBus eventBus) 
+        : base (opponentData) {
+        SpeechData speechData = opponentData.speechData;
+        if (speechData != null) {
+            speech = new Speaker(speechData, this, dialogueSystem, eventBus);
+        }
+    }
+
+    internal async UniTask StartEnemyActivity() {
+        if (OnSpawned != null) {
+            await OnSpawned.Invoke();
+        }
+
+        if (speech != null) {
+            await speech.StartDialogue();
+        }
+
+        opponentRegistrator.RegisterEnemy(this);
     }
 
     private async UniTask PerformTestTurn() {

@@ -11,7 +11,7 @@ public class StoryDialogueData : BaseDialogueData {
     [TextArea(3, 10)]
     public List<string> pages = new List<string>();
 
-    public Dictionary<string, string> GetReplacements(OnTurnStart turnStartData, int roundCount) {
+    public Dictionary<string, string> GetReplacements(TurnStartEvent turnStartData, int roundCount) {
         return new Dictionary<string, string> {
             {
             "roundCount", roundCount.ToString()
@@ -26,7 +26,7 @@ public class StoryDialogueData : BaseDialogueData {
         return new StoryDialogue(this, dialogueSystem, eventBus, speaker);
     }
 
-    public Queue<string> GetContextPages(OnTurnStart turnStartData, int roundCount) {
+    public Queue<string> GetContextPages(TurnStartEvent turnStartData, int roundCount) {
         List<string> processedMessages = new List<string>();
         Dictionary<string, string> replacements = GetReplacements(turnStartData, roundCount);
 
@@ -51,32 +51,32 @@ public class StoryDialogue : BaseDialogue {
 
     public override void Subscribe() {
         if (isActive) return;
-        eventBus.SubscribeTo<OnRoundStart>(OnRoundStart);
+        eventBus.SubscribeTo<RoundStartEvent>(OnRoundStart);
         isActive = true;
     }
 
     public override void Unsubscribe() {
         if (!isActive) return;
-        eventBus.UnsubscribeFrom<OnRoundStart>(OnRoundStart);
+        eventBus.UnsubscribeFrom<RoundStartEvent>(OnRoundStart);
         isActive = false;
     }
 
-    private void OnRoundStart(ref OnRoundStart eventData) {
+    private void OnRoundStart(ref RoundStartEvent eventData) {
         if (eventData.RoundNumber != storyDialogueData.triggerOnRound) {
             return;
         }
-        eventBus.SubscribeTo<OnTurnStart>(OnTurnStart);
+        eventBus.SubscribeTo<TurnStartEvent>(OnTurnStart);
         // Since story dialogues only trigger once per round, we can unsubscribe after triggering
         Unsubscribe();
     }
 
-    private void OnTurnStart(ref OnTurnStart eventData) {
+    private void OnTurnStart(ref TurnStartEvent eventData) {
         bool isOwnTurn = eventData.StartingOpponent != speaker.Opponent;
         if (isOwnTurn == storyDialogueData.triggerOnOwnTurn) return;
 
         Queue<string> messages = storyDialogueData.GetContextPages(eventData, storyDialogueData.triggerOnRound);
         //dialogueSystem.ShowDialogue(speaker, messages);
 
-        eventBus.UnsubscribeFrom<OnTurnStart>(OnTurnStart);
+        eventBus.UnsubscribeFrom<TurnStartEvent>(OnTurnStart);
     }
 }

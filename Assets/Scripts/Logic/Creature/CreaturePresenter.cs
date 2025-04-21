@@ -6,7 +6,7 @@ using Zenject;
 
 [RequireComponent (typeof(CreatureAnimator))]
 public class CreaturePresenter : MonoBehaviour {
-    private BoardPresenter _boardPresenter;
+    private BoardSystem _boardPresenter;
     [Inject] private CreatureBehaviour creatureBehaviour;
     [Inject] private GameEventBus eventBus;
 
@@ -16,7 +16,7 @@ public class CreaturePresenter : MonoBehaviour {
     private CreatureView view;
     [SerializeField] private Transform viewParent;
 
-    public void Initialize(CreatureCard creatureCard, Field targetField, BoardPresenter boardPresenter) {
+    public void Initialize(CreatureCard creatureCard, Field targetField, BoardSystem boardPresenter) {
         // creating model
         _boardPresenter = boardPresenter;
         Creature = new Creature(creatureCard, creatureBehaviour, eventBus);
@@ -24,8 +24,12 @@ public class CreaturePresenter : MonoBehaviour {
         Creature.OnMoved += OnCreatureMoved;
         Creature.OnInterruptedMove += OnCreatureMoveInterrupted;
         // Creating view
-        view = Instantiate(Creature.creatureCard.creatureCardData.viewPrefab, viewParent);
+        view = Instantiate(Creature.creatureCard.Data.creatureViewPrefab, viewParent);
         Creature.Spawn(targetField);
+    }
+
+    private CreatureView Instantiate(object creatureViewPrefab, Transform viewParent) {
+        throw new NotImplementedException();
     }
 
     private async UniTask OnCreatureSpawned(Field targetField) {
@@ -50,15 +54,10 @@ public class CreaturePresenter : MonoBehaviour {
     }
 
     private Transform GetCreatureTransformPoint(Field targetField) {
-        FieldPresenter fc = _boardPresenter.GetFieldPresenter(targetField);
-        if (fc == null) {
-            Debug.LogError($"FieldController not found for {targetField}");
-            return null;
-        }
 
-        Transform point = fc.GetCreaturePlace();
+        Transform point = _boardPresenter.GetFieldCreaturePoint(targetField);
         if (point == null) {
-            Debug.LogError($"Creature place not set in {fc.name}");
+            Debug.LogError($"Creature place not set in {targetField}");
         }
         return point;
     }

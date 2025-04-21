@@ -4,20 +4,16 @@ using UnityEngine.Splines;
 using Zenject;
 
 public class SplineMover : MonoBehaviour {
-    [SerializeField] private SplineContainer splinePath;
     [SerializeField] private float duration = 2f;
     [SerializeField] private bool alignToDirection = true;
-    [Inject] AnimationsDebugSettings animationDebugSettings;
-    public void SetSpline(SplineContainer newSpline) {
-        splinePath = newSpline;
-    }
+   
 
     public void SetDuration(float newDuration) {
         duration = newDuration;
     }
 
-    public async UniTask MoveAlongSpline(Transform objectToMove) {
-        if (animationDebugSettings.SkipAllAnimations) {
+    public async UniTask MoveAlongSpline(Transform objectToMove, SplineContainer splinePath, bool skip) {
+        if (skip) {
             objectToMove.position = splinePath.EvaluatePosition(1);
             return;
         }

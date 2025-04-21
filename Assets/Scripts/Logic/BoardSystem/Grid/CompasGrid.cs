@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 public class CompasGrid {
     public List<List<Field>> Fields { get; private set; }
@@ -58,8 +60,9 @@ public class CompasGrid {
         FieldType rowType = GetTypeByRow(rowIndex);
 
         for (int col = 0; col < columns.Count; col++) {
-            Field newField = new Field(CalculateGlobalCoordinates(rowIndex, col));
-            DetermineFieldType(newField, columns[col], rowType, gridUpdateData);
+            (int row1, int column) cortage = CalculateGlobalCoordinates(rowIndex, col);
+            Field newField = new Field(cortage.row1, cortage.column);
+            DetermineFieldType(newField, columns[col], rowType);
 
             newRow.Add(newField);
             if (newField.FieldType != FieldType.Empty) {
@@ -79,8 +82,9 @@ public class CompasGrid {
         // Adjust columns within the row
         if (currentColumnCount < targetColumns) {
             for (int col = currentColumnCount; col < targetColumns; col++) {
-                Field newField = new Field(CalculateGlobalCoordinates(rowIndex, col));
-                DetermineFieldType(newField, columns[col], rowType, gridUpdateData);
+                (int row1, int column) cortage = CalculateGlobalCoordinates(rowIndex, col);
+                Field newField = new Field(cortage.row1, cortage.column);
+                DetermineFieldType(newField, columns[col], rowType);
                 fieldRow.Add(newField);
             }
         } else if (currentColumnCount > targetColumns) {
@@ -91,33 +95,16 @@ public class CompasGrid {
 
         // Update existing fields in the row
         for (int col = 0; col < targetColumns; col++) {
-            DetermineFieldType(fieldRow[col], columns[col], rowType, gridUpdateData);
+            DetermineFieldType(fieldRow[col], columns[col], rowType);
         }
     }
-    private void DetermineFieldType(Field field, int value, FieldType rowType, GridUpdateData gridUpdateData) {
-        if (value == 0) {
-            SetFieldType(field, FieldType.Empty, gridUpdateData);
-        } else {
-            SetFieldType(field, rowType, gridUpdateData);
-        }
-    }
+    private void DetermineFieldType(Field field, int value, FieldType rowType) {
+        FieldType newType = FieldType.Empty;
 
-    private void SetFieldType(Field field, FieldType newType, GridUpdateData gridUpdateData) {
-        FieldType oldFieldType = field.FieldType;
+        if (value != 0) newType = rowType;
 
-        if (oldFieldType != newType) {
-
-            // if old was empty and new not we add this to update visual board
-            if (oldFieldType == FieldType.Empty) {
-                gridUpdateData.addedFields.Add(field);
-            }
-
-            // if new type is empty and old was not we need to add it for update
-            if (newType == FieldType.Empty) {
-                gridUpdateData.markedEmpty.Add(field);
-            }
-
-            field.FieldType = newType;
+        if (field.FieldType != newType) {
+            field.SetFieldType(newType);
         }
     }
 
@@ -133,23 +120,7 @@ public class CompasGrid {
         Fields[rowIndex].RemoveAt(colIndex);
     }
 
-    private void RestoreEmpty(GridUpdateData updateData, int row, Field field) {
-        // Відновлюємо поле
-        if (row == 0) {
-            field.FieldType = FieldType.Attack;
-        } else {
-            field.FieldType = FieldType.Support;
-        }
-
-        // Видаляємо поле з markedEmpty, якщо воно є
-        bool removeResult = updateData.markedEmpty.Remove(field);
-        if (!removeResult) {
-            Debug.Log("Cannot find field to remove from update data");
-        }
-
-        // Додаємо поле до списку доданих полів
-        updateData.addedFields.Add(field);
-    }
+    
 
     #region Trimming
     private void TrimGrid(GridUpdateData gridUpdateData) {
@@ -237,13 +208,40 @@ public class CompasGrid {
     public int GetRowsCount() {
         return Fields.Count;
     }
-   
+
+    
+    private List<Field> RemoveColumn(int col) {
+        List<Field> removedColumn = new();
+        foreach (var row in Fields) {
+            removedColumn.Add(row[col]);
+            row.RemoveAt(col);
+        }
+        return removedColumn;
+    }
+    private void RestoreEmpty(GridUpdateData updateData, int row, Field field) {
+        // Відновлюємо поле
+        FieldType choosenType = FieldType.Empty;
+        if (row == 0) {
+            choosenType = FieldType.Attack;
+        } else {
+            choosenType = FieldType.Support;
+        }
+        field.SetFieldType(choosenType);
+        // Видаляємо поле з markedEmpty, якщо воно є
+        bool removeResult = updateData.markedEmpty.Remove(field);
+        if (!removeResult) {
+            Debug.Log("Cannot find field to remove from update data");
+        }
+
+        // Додаємо поле до списку доданих полів
+        updateData.addedFields.Add(field);
+    }
 
     private List<Field> MarkEmptyRow(int rowIndex) {
         List<Field> markedEmptyRow = new();
 
         foreach (var field in Fields[rowIndex]) {
-            field.FieldType = FieldType.Empty;
+            field.SetFieldType(FieldType.Empty);
             markedEmptyRow.Add(field);
         }
 
@@ -254,24 +252,15 @@ public class CompasGrid {
         List<Field> addedColumn = new();
 
         for (int row = 0; row < totalRows; row++) {
-            Field newField = new(CalculateGlobalCoordinates(row, columnIndex)) {
-                FieldType = rowTypes[row]
-            };
+            (int row1, int column) cortage = CalculateGlobalCoordinates(row, columnIndex);
+            FieldType fieldType = rowTypes[row];
+            Field newField = new Field(cortage.row1, cortage.column, fieldType);
+
             addedColumn.Add(newField);
             Fields[row].Add(newField);
         }
         return addedColumn;
     }
-
-    private List<Field> RemoveColumn(int col) {
-        List<Field> removedColumn = new();
-        foreach (var row in Fields) {
-            removedColumn.Add(row[col]);
-            row.RemoveAt(col);
-        }
-        return removedColumn;
-    }
-
     private List<Field> MarkEmptyColumn(int totalRows, int columnIndex) {
         List<Field> markedEmptyColumn = new();
 
@@ -279,11 +268,12 @@ public class CompasGrid {
             if (columnIndex >= Fields[row].Count) continue;
 
             Field field = Fields[row][columnIndex];
-            field.FieldType = FieldType.Empty;
+            field.SetFieldType(FieldType.Empty);
             markedEmptyColumn.Add(field);
         }
         return markedEmptyColumn;
     }
+
 
     //Transforms local field index to global field indexes
     private (int row, int column) CalculateGlobalCoordinates(int localRow, int localColumn) {

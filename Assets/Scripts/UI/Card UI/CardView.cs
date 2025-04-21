@@ -8,28 +8,17 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class CardPresenter {
-    public Card Card;
+    public Card Model;
     public CardView View;
     public CardPresenter(Card card, CardView cardView) {
-        Card = card;
+        Model = card;
         View = cardView;
 
         cardView.SetCardData(card.Data);
         AttachmentToCard(card);
     }
     private void AttachmentToCard(Card card) {
-        if (card is CreatureCard creatureCard) {
-            View.UpdateHealth(creatureCard.Health.CurrentValue, creatureCard.Health.CurrentValue);
-            View.UpdateAttack(creatureCard.Attack.CurrentValue, creatureCard.Attack.CurrentValue);
-
-
-            creatureCard.Health.OnValueChanged += UpdateHealth;
-            creatureCard.Attack.OnValueChanged += UpdateAttack;
-        }
-
-        View.UpdateCost(card.Cost.CurrentValue, card.Cost.CurrentValue);
-
-        card.Cost.OnValueChanged += UpdateCost;
+       
     }
 
     private void UpdateCost(int from, int to) {
@@ -45,13 +34,7 @@ public class CardPresenter {
     }
 
     private void UpdateDescriptionContent(Card card) {
-        List<Ability<CardAbilityData, Card>> cardAbilities = card._abilityManager.GetAbilities();
-
-        if (cardAbilities == null || cardAbilities.Count == 0) {
-            View.Description.SetDescripton(card.Data.Description);
-        } else {
-            View.Description.UpdateAbilities(cardAbilities);
-        }
+        
     }
 }
 
@@ -131,6 +114,7 @@ public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandle
     
     #endregion
     public void InitializeAnimator() {
+        if (DoTweenAnimator == null) return;
         DoTweenAnimator.AttachAnimator(this);
         DoTweenAnimator.OnReachedLayout += () => SetInteractable(true);
     }
@@ -163,39 +147,6 @@ public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandle
     public void Reset() {
         DoTweenAnimator?.Reset();
         isInteractable = false;
-    }
-
-    internal void SetAbilityPool(CardAbilityPool abilityPool) {
-        throw new NotImplementedException();
-    }
-}
-
-public class CardDescription : MonoBehaviour {
-    [SerializeField] private TextMeshProUGUI descriptionText;
-    [SerializeField] private RectTransform abilityFiller;
-    private CardAbilityPool cardAbilityPool;
-    List<CardAbilityUI> abilityUIs = new();
-
-    public void SetDescripton(string description) {
-        if (descriptionText != null) {
-            descriptionText.gameObject.SetActive(true);
-            descriptionText.text = description;
-        }
-    }
-
-    public void UpdateAbilities(List<Ability<CardAbilityData, Card>> cardAbilities) {
-        if (descriptionText != null) {
-            descriptionText.gameObject.SetActive(false);
-        }
-        foreach (var ability in cardAbilities) {
-            if (ability == null || ability.Data == null) continue;
-
-            CardAbilityUI abilityUI = cardAbilityPool.Get();
-            abilityUI.transform.SetParent(abilityFiller);
-
-            abilityUI.FillAbilityUI(ability, true);
-            abilityUIs.Add(abilityUI);
-        }
     }
 
     internal void SetAbilityPool(CardAbilityPool abilityPool) {

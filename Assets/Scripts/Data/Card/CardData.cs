@@ -19,9 +19,7 @@ public abstract class CardData : ScriptableObject {
     public Rarity rarity;
     public int cost;
     public float spawnChance;
-
-    public List<CardAbilityData> abilities;
-
+    public CreatureView creatureViewPrefab;
 
     private static readonly Dictionary<Rarity, Color> rarityColors = new Dictionary<Rarity, Color> {
         { Rarity.Common, Color.gray },

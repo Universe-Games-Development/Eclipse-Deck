@@ -1,77 +1,58 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Threading.Tasks;
 using UnityEngine;
-using Zenject;
-
 public class PlayerPresenter : BaseOpponentPresenter {
-    public Player Player => (Player) OpponentModel;
-    
-    [SerializeField] private CardHandView handUI;
-    [SerializeField] private CameraManager cameraManager;
+    public new Player Model => (Player)base.Model;
+    private new PlayerView View => (PlayerView)base.View;
 
-    [Inject] protected BattleRegistrator opponentRegistrator;
-    [Inject] protected GameEventBus eventBus;
-    [Inject] private CardInputHandler _cardInputHandler;
-
-    private void Awake() {
-        _cardInputHandler.OnLeftClickPerformed += HandleClick;
-    }
-
-    // Player-specific initialization
-    public void InitializePlayer(Player player) {
-        base.Initialize(player);
-
-        // Register with the opponent system
-        opponentRegistrator.RegisterPlayer(this);
-    }
-
-    private void HandleClick() {
-        //Debug.Log("Clicked Left Mouse Btn");
-    }
-
-    public async UniTask EnterRoom(Room chosenRoom) {
-        Debug.Log($"Starting to enter room: {chosenRoom.Data.name}");
-        await cameraManager.BeginEntranse();
-        Player.EnterRoom(chosenRoom);
-    }
-
-    public async UniTask ExitRoom() {
-        await cameraManager.BeginExiting();
-        Room currentRoom = Player.GetCurrentRoom();
-        if (currentRoom != null) {
-            Debug.Log($"Starting to exit room: {currentRoom.Data.name}");
-            Player.ExitRoom();
+    public PlayerPresenter(Opponent model, OpponentView view) : base(model, view) {
+        if (model is Player player) {
+            player.OnRoomEntered += OnRoomEntered;
+            player.OnRoomExited += OnRoomExited;
         }
+        if (view == null) throw new Exception("Null view for player");
     }
 
-    // Override base destroy
-    protected void OnDestroy() {
-        if (_cardInputHandler != null) {
-            _cardInputHandler.OnLeftClickPerformed -= HandleClick;
-        }
+    public async UniTask OnRoomEntered(Room chosenRoom) {
+        await View.BeginEntranse();
+    }
+
+    public async UniTask OnRoomExited(Room exitedRoom) {
+        await View.BeginExiting();
     }
 }
 
 public class Player : Opponent {
+    public Func<Room, UniTask> OnRoomEntered;
+    public Func<Room, UniTask> OnRoomExited;
+    public PlayerData PlayerData => (PlayerData)base.Data;
     private Room currentRoom;
 
-    public Player(GameEventBus eventBus)
-        : base(eventBus) {
+    public Player(PlayerData data) : base(data) {
+        
     }
 
-    public void EnterRoom(Room room) {
+    public async UniTask EnterRoom(Room room) {
         if (currentRoom != null) {
-            ExitRoom();
+            await ExitRoom();
+        }
+
+        if (OnRoomExited != null) {
+            await OnRoomEntered.Invoke(currentRoom);
         }
 
         currentRoom = room;
         Debug.Log($"Room entered: {room.GetName()}");
         room.Enter();
+        
     }
 
-    public void ExitRoom() {
+    public async UniTask ExitRoom() {
         if (currentRoom != null) {
+            if (OnRoomExited != null) {
+                await OnRoomExited.Invoke(currentRoom);
+            }
+
             Room exitingRoom = currentRoom;
             currentRoom.Exit();
             Debug.Log($"Exited room: {exitingRoom.Data.name}");
@@ -86,39 +67,21 @@ public class Player : Opponent {
 }
 
 
-public class BaseOpponentPresenter : MonoBehaviour {
-    public Opponent OpponentModel { get; protected set; }
-    // Initialize the presenter with the model
-    public virtual void Initialize(Opponent opponentModel) {
-        OpponentModel = opponentModel;
+public class BaseOpponentPresenter {
+    public Opponent Model { get; protected set; }
+    public OpponentView View { get; protected set; }
+
+    public BaseOpponentPresenter(Opponent model, OpponentView view) {
+        Model = model;
+        View = view;
+        Model.OnTookSeat += OnTookSeat;
     }
 
-    public async UniTask MoveTo(Transform seatTransform) {
-        await MoveToPositionAsync(seatTransform);
-    }
-    public async UniTask MoveToPositionAsync(Transform target, float duration = 1f) {
-        Vector3 start = transform.position;
-        Quaternion startRot = transform.rotation;
-
-        Vector3 end = target.position;
-        Quaternion endRot = target.rotation;
-
-        float elapsed = 0f;
-
-        while (elapsed < duration) {
-            float t = elapsed / duration;
-            transform.position = Vector3.Lerp(start, end, t);
-            transform.rotation = Quaternion.Slerp(startRot, endRot, t);
-            elapsed += Time.deltaTime;
-            await UniTask.Yield();
-        }
-
-        // Гарантуємо точну установку фінальної позиції
-        transform.position = end;
-        transform.rotation = endRot;
+    private async UniTask OnTookSeat(BoardSeat seat) {
+        await View.TookSeat(seat);
     }
 
-    internal IActionFiller GetActionFiller() {
+    internal ITargetingService GetActionFiller() {
         throw new NotImplementedException();
     }
 }
