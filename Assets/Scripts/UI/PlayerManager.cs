@@ -2,9 +2,10 @@
 using Zenject;
 
 public class PlayerManager : MonoBehaviour {
+    private Player _player;
+
     [SerializeField] private PlayerData playerData;
 
-    private Player _player;
 
     [Inject] private DiContainer _container;
 
@@ -26,28 +27,6 @@ public class PlayerManager : MonoBehaviour {
         return true;
     }
 
-    /// <summary>
-    /// Spawns the player in the game world
-    /// </summary>
-    /// <returns>The view component for the player</returns>
-    public PlayerView SpawnPlayer() {
-        if (!GetPlayer(out Player player)) {
-            Debug.LogError("Failed to create player");
-            return null;
-        }
-
-        // Instantiate the view from the prefab
-        PlayerView playerView = _container.InstantiatePrefabForComponent<PlayerView>(playerData.viewPrefab);
-        if (playerView == null) {
-            Debug.LogError("Failed to instantiate player view prefab");
-            return null;
-        }
-
-        // Create presenter to connect model and view
-        new PlayerPresenter(player, playerView);
-
-        return playerView;
-    }
 
     /// <summary>
     /// Creates a new player instance

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8443c77fbbc309749b5e4454e2b234e9, type: 3}
   m_Name: SimpleEnemy
   m_EditorClassIdentifier: 
-  viewPrefab: {fileID: 6157458490630827906, guid: b07fedc953f9b2a46b95af764640a59b, type: 3}
+  presenterPrefab: {fileID: 51170939575711222, guid: d8999df6fe6955846ace2094bc69c47d, type: 3}
   Name: Dog
   Sprite: {fileID: 0}
   Health: 30

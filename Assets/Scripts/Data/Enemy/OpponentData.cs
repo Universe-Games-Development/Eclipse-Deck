@@ -4,7 +4,7 @@
 public class OpponentData : ScriptableObject {
     [Header("Presentation")]
     [Tooltip("Усі вороги/гравці мають View на базі OpponentView")]
-    public OpponentView viewPrefab;
+    public OpponentPresenter presenterPrefab;
 
     [Header("Stats")]
     public string Name;

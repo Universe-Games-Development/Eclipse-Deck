@@ -2,7 +2,7 @@
 - Project name: Inscription
 - Unity version: Unity 6000.0.32f1
 - Active game object:
-  - Name: EnemySeat
+  - Name: Tutorial Drone
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

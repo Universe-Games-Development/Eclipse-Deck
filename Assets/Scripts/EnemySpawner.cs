@@ -5,9 +5,10 @@ using UnityEngine;
 using Zenject;
 
 public class EnemySpawner : MonoBehaviour {
+    
+    [SerializeField] private Transform spawnPoint;
     [Inject] private DiContainer _container;
     [Inject] private EnemyResourceProvider _enemyResourceProvider;
-    [SerializeField] private Transform spawnPoint;
 
     private Enemy CreateEnemy(EnemyData enemyData) {
         Enemy enemy = _container.Instantiate<Enemy>(new object[] { enemyData});
@@ -15,19 +16,45 @@ public class EnemySpawner : MonoBehaviour {
     }
 
     public async UniTask<bool> SpawnEnemy(EnemyType enemyType) {
+        // Завантажуємо дані ворогів асинхронно
         List<EnemyData> enemiesData = await _enemyResourceProvider.GetEnemies(enemyType);
 
-        if (enemiesData == null || enemiesData.IsEmpty()) {
+        // Перевірка на порожній список
+        if (enemiesData == null || enemiesData.Count == 0) {
             Debug.LogWarning($"Enemy type {enemyType} not found to spawn");
             return false;
         }
+
+        // Вибираємо випадкового ворога з отриманих даних
         var enemyData = enemiesData.GetRandomElement();
+
+        // Створюємо ворога на основі даних
         Enemy enemy = CreateEnemy(enemyData);
-        OpponentView _enemyView = _container.InstantiatePrefabForComponent<OpponentView>(enemyData.viewPrefab, spawnPoint);
-        EnemyPresenter enemyPresenter = new(enemy, _enemyView);
+
+        // Створюємо презентер ворога через DI контейнер
+        OpponentPresenter enemyPresenter = _container.InstantiatePrefabForComponent<OpponentPresenter>(
+            enemyData.presenterPrefab,
+            spawnPoint.position,
+            Quaternion.identity,
+            spawnPoint
+        );
+
+        // Перевірка успішності створення презентера
+        if (enemyPresenter == null) {
+            Debug.LogError("Failed to instantiate enemy presenter prefab");
+            return false;
+        }
+
+
+        // Ініціалізація презентера з ворогом і вью
+        enemyPresenter.Initialize(enemy);
+
+        // Запуск активності ворога асинхронно
         await enemy.StartEnemyActivity();
+
         return true;
     }
+
 }
 
 public enum EnemyType {

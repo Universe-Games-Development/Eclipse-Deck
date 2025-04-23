@@ -37,12 +37,14 @@ public class RoomSelectionMenu {
     private RoomButton _roomButtonPrefab;
     private Transform _buttonsContainer;
     private TravelManager _travelManager;
+    private RoomSystem _roomSystem;
 
-    public RoomSelectionMenu(GameObject roomsMenu, RoomButton roomButtonPrefab, Transform buttonsContainer, TravelManager travelManager) {
+    public RoomSelectionMenu(GameObject roomsMenu, RoomButton roomButtonPrefab, Transform buttonsContainer, TravelManager travelManager, RoomSystem roomSystem) {
         _roomsMenu = roomsMenu;
         _roomButtonPrefab = roomButtonPrefab;
         _buttonsContainer = buttonsContainer;
         _travelManager = travelManager;
+        _roomSystem = roomSystem;
     }
 
     public void Show(bool isVisible) {
@@ -51,8 +53,8 @@ public class RoomSelectionMenu {
 
         _roomsMenu.SetActive(isVisible);
 
-        if (isVisible && _travelManager != null && _travelManager.CurrentRoom != null) {
-            PrepareRoomButtons(_travelManager.CurrentRoom);
+        if (isVisible && _roomSystem != null && _roomSystem.CurrentRoom != null) {
+            PrepareRoomButtons(_roomSystem.CurrentRoom);
         }
     }
 
@@ -126,6 +128,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
     [Inject] private TravelManager _travelManager;
     [Inject] private LocationTransitionManager _locationManager;
+    [Inject] private RoomSystem _roomSystem;
 
     private RoomSelectionMenu _roomSelectionMenu;
 
@@ -157,7 +160,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
     }
 
     private void InitializeComponents() {
-        _roomSelectionMenu = new RoomSelectionMenu(_roomsMenu, _roomButtonPrefab, _buttonsContainer, _travelManager);
+        _roomSelectionMenu = new RoomSelectionMenu(_roomsMenu, _roomButtonPrefab, _buttonsContainer, _travelManager, _roomSystem);
         UpdateNavigationButtonState();
         UpdateLocationInfo();
     }
@@ -243,17 +246,16 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
         currentRoomLevel = 0;
         totalRoomCount = 0;
 
-        if (_travelManager == null || _locationManager == null || _travelManager.CurrentDungeon == null) {
+        if (_travelManager == null || _travelManager.CurrentDungeon == null) {
             return;
         }
-
-        // Получаем все комнаты текущей локации
         DungeonGraph dungeonGraph = _travelManager.CurrentDungeon;
-        totalRoomCount = dungeonGraph.GetLevelCount();
 
-        DungeonNode node = _travelManager.CurrentRoom.Node;
+        totalRoomCount = dungeonGraph.GetLevelCount();
+        
         // Находим индекс текущей комнаты
-        if (_travelManager.CurrentRoom != null) {
+        if (_roomSystem.CurrentRoom != null) {
+            DungeonNode node = _roomSystem.CurrentRoom.Node;
             currentRoomLevel = node.level;
         }
     }

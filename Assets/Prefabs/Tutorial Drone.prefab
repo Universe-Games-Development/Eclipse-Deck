@@ -65,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -876546973899608171, guid: 02ee38a1be1946c43a74cdbc5f5becc2, type: 3}
+  - {fileID: 2100000, guid: 2ead28dc5b6a87844ba54aed6c999dd8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -123,7 +123,7 @@ GameObject:
   - component: {fileID: 6157458490630827906}
   - component: {fileID: 2090815509159624961}
   m_Layer: 0
-  m_Name: Enemy
+  m_Name: Tutorial Drone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

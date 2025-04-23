@@ -163,9 +163,9 @@ public class FieldInteractable : MonoBehaviour, ITargetable {
 
 public class Opponentnteractable : MonoBehaviour, ITargetable {
     [SerializeField] private OpponentView _view;
-    private BaseOpponentPresenter _presenter;
+    private OpponentPresenter _presenter;
 
-    public void SetPresenter(BaseOpponentPresenter presenter) {
+    public void SetPresenter(OpponentPresenter presenter) {
         _presenter = presenter;
     }
 

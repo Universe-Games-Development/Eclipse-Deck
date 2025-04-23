@@ -13,7 +13,6 @@ public class CameraSplineMover : MonoBehaviour {
     [SerializeField] private AnimationCurve easingCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     [SerializeField] private bool useTimeScaleIndependent = true;
     [SerializeField] private float initialBlendTime = 0.5f;
-    [Inject] AnimationsDebugSettings animationDebugSettings;
 
     public Action OnMovementStart;
     public Action OnMovementComplete;
@@ -38,14 +37,6 @@ public class CameraSplineMover : MonoBehaviour {
         dolly.Spline = splineContainer;
         OnMovementStart?.Invoke();
 
-        // Если режим отладки включен - пропускаем анимации
-        if (animationDebugSettings.SkipAllAnimations) {
-            // Мгновенно переходим к конечной позиции
-            dolly.CameraPosition = 1f;
-            OnMovementComplete?.Invoke();
-            _isMoving = false;
-            return;
-        }
 
         // Затримка перед стартом руху
         if (delayToMove > 0f) {

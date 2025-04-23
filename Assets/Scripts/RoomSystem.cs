@@ -27,10 +27,21 @@ public class RoomSystem : MonoBehaviour {
         if (roomView != null && CurrentRoom.Data != null)
             roomView.InitializeView(CurrentRoom.Data);
     }
+    public SplineContainer GetEntrySplineForOpponent(Opponent opponent, Room chosenRoom) {
+        if (opponent is Player)
+            return roomView?.playerEntrySpline;  
+        if (opponent is Enemy)
+            return roomView.enemyEntrySpline;
+        throw new ArgumentException("Unknown opponent type");
+    }
 
-    public SplineContainer GetEntrySplineForPlayer() => playerEntrySpline;
-    public SplineContainer GetEntrySplineForEnemy() => enemyEntrySpline;
-    public SplineContainer GetExitSplineForPlayer() => playerExitSpline;
+    public SplineContainer GetExitSplineForOpponent(Opponent opponent, Room exitedRoom) {
+        if (opponent is Player)
+            return roomView?.playerExitSpline;
+        if (opponent is Enemy)
+            return roomView?.enemyExitSpline;// додайте окремий enemyExitSpline якщо потрібно
+        throw new ArgumentException("Unknown opponent type");
+    }
 }
 
 public class Room : IDisposable {

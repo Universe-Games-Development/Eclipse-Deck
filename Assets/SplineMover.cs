@@ -7,12 +7,11 @@ public class SplineMover : MonoBehaviour {
     [SerializeField] private float duration = 2f;
     [SerializeField] private bool alignToDirection = true;
    
-
     public void SetDuration(float newDuration) {
         duration = newDuration;
     }
 
-    public async UniTask MoveAlongSpline(Transform objectToMove, SplineContainer splinePath, bool skip) {
+    public async UniTask MoveAlongSpline(Transform objectToMove, SplineContainer splinePath, bool skip = false) {
         if (skip) {
             objectToMove.position = splinePath.EvaluatePosition(1);
             return;

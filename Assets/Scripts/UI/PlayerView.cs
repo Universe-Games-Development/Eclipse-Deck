@@ -1,13 +1,18 @@
 ﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Splines;
 
 public class PlayerView : OpponentView {
     [SerializeField] private CameraManager cameraManager;
-    public async UniTask BeginEntranse() {
-        await cameraManager.BeginEntranse();
+
+    public override async UniTask EnterRoom(SplineContainer splineContainer) {
+        cameraManager.SwitchCamera(cameraManager.dollyCamera);
+        await MoveAlongSpline(splineContainer);
+        cameraManager.SwitchCamera(cameraManager.mainCamera);
     }
 
-    public async UniTask BeginExiting() {
-        await cameraManager.BeginExiting();
+    public override async UniTask ExitRoom(SplineContainer splineContainer) {
+        await MoveAlongSpline(splineContainer);
+        cameraManager.SwitchCamera(cameraManager.floorCamera);
     }
 }

@@ -14,10 +14,8 @@ public class CameraManager : MonoBehaviour {
     public CinemachineCamera floorCamera;
     public CinemachineCamera dollyCamera;
     [SerializeField] private BoardViews boardViewSwitcher;
-    [SerializeField] private CameraSplineMover cameraSplineMover;
-    [SerializeField] PlayerPresenter _playerPresenter;
 
-    [Inject] RoomSystem roomPresenter;
+    
 
     public void SwitchCamera(CinemachineCamera newCamera) {
         if (newCamera == null) {
@@ -35,17 +33,5 @@ public class CameraManager : MonoBehaviour {
 
         activeCamera = newCamera;
         activeCamera.Priority = 1;
-    }
-
-    public async UniTask BeginEntranse() {
-        SwitchCamera(dollyCamera);
-        await cameraSplineMover.StartCameraMovementAsync(roomPresenter.GetEntrySplineForPlayer());
-        SwitchCamera(mainCamera);
-
-    }
-
-    public async UniTask BeginExiting() {
-        await cameraSplineMover.StartCameraMovementAsync(roomPresenter.GetExitSplineForPlayer());
-        SwitchCamera(floorCamera);
     }
 }

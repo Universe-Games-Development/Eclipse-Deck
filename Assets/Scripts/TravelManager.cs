@@ -4,28 +4,50 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
+public class PlayerHeroFactory {
+    [InjectOptional] private PlayerPresenter playerPresenter;
+    [Inject] PlayerManager playerManager;
+    [Inject] private DiContainer _container;
+
+    public bool SpawnPlayer(out Player player) {
+        if (!playerManager.GetPlayer(out player)) {
+            Debug.LogError("Failed to create player");
+            return false;
+        }
+
+        // Create presenter to connect model and view
+        if (playerPresenter == null) {
+            OpponentPresenter presenterPrefab = player.Data.presenterPrefab;
+            playerPresenter = (PlayerPresenter)_container.InstantiatePrefabForComponent<OpponentPresenter>(presenterPrefab);
+        }
+            
+
+        playerPresenter.Initialize(player);
+        return true;
+    }
+}
+
 public class TravelManager : MonoBehaviour {
     public Action<Room> OnRoomChanged;
 
     public DungeonGraph CurrentDungeon { get; private set; }
-    public Room CurrentRoom;
     private LocationData _currentLocationData;
 
-    [Inject] private RoomSystem _roomPresenter;
+    [SerializeField] private RoomSystem _roomSystem;
     [Inject] private IDungeonGenerator _dungeonGenerator;
     [Inject] private VisitedLocationsService visitedLocationService;
     [Inject] GameEventBus _eventBus;
     [Inject] BattleRegistrator _opponentRegistrator;
-    [Inject] PlayerManager playerManager;
-    [SerializeField] private PlayerView playerView;
+    [Inject] PlayerHeroFactory playerHeroFactory;
+    
 
     [Inject] private LocationTransitionManager _locationManager;
     private Player CurrentPlayer;
 
     private void Start() {
-        playerManager.GetPlayer(out CurrentPlayer);
-        new PlayerPresenter(CurrentPlayer, playerView);
-
+        if (!playerHeroFactory.SpawnPlayer(out CurrentPlayer)) {
+            return;
+        }
         _opponentRegistrator.RegisterPlayer(CurrentPlayer);
         HandlePlayerAppearance(CurrentPlayer);
     }
@@ -63,19 +85,8 @@ public class TravelManager : MonoBehaviour {
         if (chosenRoom == null)
             throw new ArgumentNullException(nameof(chosenRoom));
 
-        // Exiting from current room
-        if (CurrentRoom != null) {
-        _eventBus.Raise(new RoomExitingEvent(CurrentRoom));
-            await CurrentPlayer.ExitRoom();
-        }
-
-        // Set new currentRoom
-        CurrentRoom = chosenRoom;
-
         // Moving player to next room
-        _roomPresenter.InitializeRoom(chosenRoom);
-
-        _eventBus.Raise(new RoomEnteringEvent(chosenRoom));
+        _roomSystem.InitializeRoom(chosenRoom);
         await CurrentPlayer.EnterRoom(chosenRoom);
 
         OnRoomChanged?.Invoke(chosenRoom);
