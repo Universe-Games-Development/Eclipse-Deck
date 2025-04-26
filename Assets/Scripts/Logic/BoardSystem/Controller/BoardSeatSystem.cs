@@ -4,7 +4,6 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System;
 using Zenject;
-using System.Threading.Tasks;
 
 public class BoardSeatSystem : MonoBehaviour {
     public Action OnSeatsTook;
@@ -13,25 +12,25 @@ public class BoardSeatSystem : MonoBehaviour {
     [SerializeField] private BoardSeat enemySeat;
 
     private Dictionary<Opponent, BoardSeat> activeSeatsByOpponent = new();
-    [Inject] BattleRegistrator opponentRegistrator;
+    [Inject] OpponentRegistrator opponentRegistrator;
     private void Awake() {
         if (opponentRegistrator == null) return;
 
         if (opponentRegistrator.IsMatchReady) {
             PrepareBattle(
-                opponentRegistrator.GetPlayer(),
-                opponentRegistrator.GetEnemy()
+                opponentRegistrator.PlayerPresenter,
+                opponentRegistrator.EnemyPresenter
                 );
         } else {
             opponentRegistrator.OnMatchSetup += PrepareBattle;
         }
     }
 
-    private void PrepareBattle(Player player, Enemy enemy) {
+    private void PrepareBattle(PlayerPresenter player, EnemyPresenter enemy) {
         TookSeats(player, enemy).Forget();
     }
 
-    public async UniTask TookSeats(Player player, Enemy enemy) {
+    public async UniTask TookSeats(PlayerPresenter player, EnemyPresenter enemy) {
         if (player == null) {
             Debug.LogError("Player is null");
         }
@@ -46,11 +45,13 @@ public class BoardSeatSystem : MonoBehaviour {
         OnSeatsTook?.Invoke();
     }
 
-    public async UniTask AssignOpponentSeat(Opponent opponent) {
-        BoardSeat seat = opponent is Player ? playerSeat : enemySeat;
-
-        await seat.AssignOpponent(opponent);
-        activeSeatsByOpponent[opponent] = seat;
+    public async UniTask AssignOpponentSeat(OpponentPresenter presenter) {
+        Opponent model = presenter.Model;
+        BoardSeat seat = model is Player ? playerSeat : enemySeat;
+        
+        seat.AssignOpponent(model);
+        activeSeatsByOpponent[model] = seat;
+        await presenter.MoveToSeat(seat);
     }
 
     public void InitializePlayersCardsSystems() {

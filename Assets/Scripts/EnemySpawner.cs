@@ -9,6 +9,7 @@ public class EnemySpawner : MonoBehaviour {
     [SerializeField] private Transform spawnPoint;
     [Inject] private DiContainer _container;
     [Inject] private EnemyResourceProvider _enemyResourceProvider;
+    [Inject] private OpponentRegistrator _opponentRegistrator;
 
     private Enemy CreateEnemy(EnemyData enemyData) {
         Enemy enemy = _container.Instantiate<Enemy>(new object[] { enemyData});
@@ -46,11 +47,10 @@ public class EnemySpawner : MonoBehaviour {
         }
 
 
-        // Ініціалізація презентера з ворогом і вью
+        // Ініціалізація презентера з ворогом
         enemyPresenter.Initialize(enemy);
 
-        // Запуск активності ворога асинхронно
-        await enemy.StartEnemyActivity();
+        _opponentRegistrator.RegisterOpponent(enemyPresenter);
 
         return true;
     }

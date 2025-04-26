@@ -9,8 +9,9 @@ public class PlayerHeroFactory {
     [Inject] PlayerManager playerManager;
     [Inject] private DiContainer _container;
 
-    public bool SpawnPlayer(out Player player) {
-        if (!playerManager.GetPlayer(out player)) {
+    public bool SpawnPlayer(out PlayerPresenter presenter) {
+        presenter = null;
+        if (!playerManager.GetPlayer(out Player player)) {
             Debug.LogError("Failed to create player");
             return false;
         }
@@ -20,79 +21,104 @@ public class PlayerHeroFactory {
             OpponentPresenter presenterPrefab = player.Data.presenterPrefab;
             playerPresenter = (PlayerPresenter)_container.InstantiatePrefabForComponent<OpponentPresenter>(presenterPrefab);
         }
-            
 
+        presenter = playerPresenter;
         playerPresenter.Initialize(player);
         return true;
     }
 }
-
 public class TravelManager : MonoBehaviour {
     public Action<Room> OnRoomChanged;
-
     public DungeonGraph CurrentDungeon { get; private set; }
+
     private LocationData _currentLocationData;
 
     [SerializeField] private RoomSystem _roomSystem;
-    [Inject] private IDungeonGenerator _dungeonGenerator;
-    [Inject] private VisitedLocationsService visitedLocationService;
-    [Inject] GameEventBus _eventBus;
-    [Inject] BattleRegistrator _opponentRegistrator;
-    [Inject] PlayerHeroFactory playerHeroFactory;
-    
 
+    [Inject] private IDungeonGenerator _dungeonGenerator;
+    [Inject] private VisitedLocationsService _visitedLocationService;
+    [Inject] private GameEventBus _eventBus;
+    [Inject] private OpponentRegistrator _opponentRegistrator;
+    [Inject] private PlayerHeroFactory _playerHeroFactory;
     [Inject] private LocationTransitionManager _locationManager;
-    private Player CurrentPlayer;
+
+    private PlayerPresenter _playerPresenter;
 
     private void Start() {
-        if (!playerHeroFactory.SpawnPlayer(out CurrentPlayer)) {
+        if (!_playerHeroFactory.SpawnPlayer(out _playerPresenter)) {
+            Debug.LogError("Failed to spawn player");
             return;
         }
-        _opponentRegistrator.RegisterPlayer(CurrentPlayer);
-        HandlePlayerAppearance(CurrentPlayer);
+
+        _opponentRegistrator.RegisterOpponent(_playerPresenter);
+        HandlePlayerAppearance();
     }
 
-    private void HandlePlayerAppearance(Player player) {
-        CurrentPlayer = player;
+    private void HandlePlayerAppearance() {
         _locationManager.RegisterListener(LoadingPhase.PreLoad, ClearDungeon);
         _locationManager.RegisterListener(LoadingPhase.Complete, EnterLocationAsync);
     }
 
     private async UniTask ClearDungeon(LocationData data) {
-        if (CurrentDungeon != null) {
-            CurrentDungeon.Clear();
+        try {
+            if (CurrentDungeon != null) {
+                CurrentDungeon.Clear();
+            }
+        } catch (Exception ex) {
+            Debug.LogError($"Error clearing dungeon: {ex.Message}");
         }
+
         await UniTask.CompletedTask;
     }
 
     private async UniTask EnterLocationAsync(LocationData locationData) {
-        // Genereting next location
-        if (!_dungeonGenerator.GenerateDungeon(locationData, out DungeonGraph dungeon)) {
-            Debug.LogError("Failed to generate dungeon");
-            return;
-        }
-        CurrentDungeon = dungeon;
-        visitedLocationService.AddVisitedLocation(locationData);
-        // Entering start room
-        var entranceRoom = CurrentDungeon.GetEntranceNode().Room;
+        try {
+            // Generate next location
+            if (!_dungeonGenerator.GenerateDungeon(locationData, out DungeonGraph dungeon)) {
+                Debug.LogError("Failed to generate dungeon");
+                return;
+            }
 
-        _eventBus.Raise(new LocationChangedEvent(locationData, _currentLocationData));
-        _currentLocationData = locationData;
-        await GoToRoom(entranceRoom);
+            CurrentDungeon = dungeon;
+            _visitedLocationService.AddVisitedLocation(locationData);
+
+            // Enter start room
+            var entranceNode = CurrentDungeon.GetEntranceNode();
+            if (entranceNode == null) {
+                Debug.LogError("Entrance node is null");
+                return;
+            }
+
+            var entranceRoom = entranceNode.Room;
+            if (_eventBus != null) {
+                _eventBus.Raise(new LocationChangedEvent(locationData, _currentLocationData));
+            }
+
+            _currentLocationData = locationData;
+            await GoToRoom(entranceRoom);
+        } catch (Exception ex) {
+            Debug.LogError($"Error entering location: {ex.Message}");
+        }
     }
 
     public async UniTask GoToRoom(Room chosenRoom) {
         if (chosenRoom == null)
             throw new ArgumentNullException(nameof(chosenRoom));
 
-        // Moving player to next room
-        _roomSystem.InitializeRoom(chosenRoom);
-        await CurrentPlayer.EnterRoom(chosenRoom);
+        if (_roomSystem.CurrentRoom != null) {
+            await _playerPresenter.OnRoomExited(chosenRoom);
+        }
 
-        OnRoomChanged?.Invoke(chosenRoom);
+        try {
+            _roomSystem.InitializeRoom(chosenRoom);
+            await _playerPresenter.EnterRoom(chosenRoom);
+            OnRoomChanged?.Invoke(chosenRoom);
+        } catch (Exception ex) {
+            Debug.LogError($"Error going to room: {ex.Message}");
+            throw;
+        }
     }
 }
-
 public class VisitedLocationsService {
     private List<LocationData> _visitedLocations = new();
 

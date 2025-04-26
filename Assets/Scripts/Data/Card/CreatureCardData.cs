@@ -11,10 +11,4 @@ public class CreatureCardData : CardData {
 
     public int Attack;
     public int Health;
-
-    [Header("Strategy")]
-    public CreatureMovementData movementData;
-    public CreatureAttackData attackData;
-    //[Header("Creature Abilities")]
-    //private List<Ability<CreatureAbilityData, Creature>> creatureAbilities = new();
 }

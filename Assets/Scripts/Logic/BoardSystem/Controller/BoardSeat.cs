@@ -16,13 +16,11 @@ public class BoardSeat : MonoBehaviour, IGameUnit {
 
     public EffectManager EffectManager { get; private set; }
 
-    public async UniTask AssignOpponent(Opponent opponent) {
+    public void AssignOpponent(Opponent opponent) {
         if (opponent == null) {
             return;
         }
         ControlOpponent = opponent;
-
-        await ControlOpponent.TakeSeat(this);
 
         // Initialize health display if available
         if (HealthCell != null) {
@@ -36,7 +34,6 @@ public class BoardSeat : MonoBehaviour, IGameUnit {
 
     public void ClearSeat() {
         if (ControlOpponent != null) {
-            ControlOpponent.ClearSeat().Forget();
             ControlOpponent = null;
         }
 

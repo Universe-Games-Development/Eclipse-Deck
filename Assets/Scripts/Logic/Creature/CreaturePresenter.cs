@@ -1,13 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
 [RequireComponent (typeof(CreatureAnimator))]
 public class CreaturePresenter : MonoBehaviour {
     private BoardSystem _boardPresenter;
-    [Inject] private CreatureBehaviour creatureBehaviour;
     [Inject] private GameEventBus eventBus;
 
     public Creature Creature { get; private set; }
@@ -19,7 +17,7 @@ public class CreaturePresenter : MonoBehaviour {
     public void Initialize(CreatureCard creatureCard, Field targetField, BoardSystem boardPresenter) {
         // creating model
         _boardPresenter = boardPresenter;
-        Creature = new Creature(creatureCard, creatureBehaviour, eventBus);
+        Creature = new Creature(creatureCard, eventBus);
         Creature.OnSpawned += OnCreatureSpawned;
         Creature.OnMoved += OnCreatureMoved;
         Creature.OnInterruptedMove += OnCreatureMoveInterrupted;

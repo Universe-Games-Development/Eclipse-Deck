@@ -17,18 +17,12 @@ public class Creature : IDamageable, IDamageDealer, IGameUnit {
     public EffectManager EffectManager => creatureCard.EffectManager;
 
     public CreatureCard creatureCard;
-    private CreatureBehaviour craetureBehaviour;
     
-    public Creature(CreatureCard creatureCard, CreatureBehaviour craetureBehaviour, GameEventBus eventBus) {
+    public Creature(CreatureCard creatureCard, GameEventBus eventBus) {
         this.creatureCard = creatureCard;
 
         // Soon we define how to get the creatureSO
         CreatureCardData creatureData = creatureCard.CreatureCardData;
-        var movementData = creatureData.movementData;
-        if (movementData == null) throw new ArgumentNullException("Movement Data not set in " + GetType().Name);
-        // TO DO : abilities initialization
-        this.craetureBehaviour = craetureBehaviour;
-        craetureBehaviour.InitStrategies(this, creatureData);
 
     }
 
@@ -82,39 +76,5 @@ public class EndTurnActions : Command {
 
     public async override UniTask Undo() {
         await UniTask.CompletedTask;
-    }
-}
-
-public class CreatureAttackCommand : Command {
-    private Creature creature;
-    private IAttackStrategy attackStrategy;
-
-    public CreatureAttackCommand(Creature creature, IAttackStrategy attackStrategy) {
-        this.creature = creature;
-        this.attackStrategy = attackStrategy;
-    }
-
-    public override async UniTask Execute() {
-        AttackData attackData = attackStrategy.CalculateAttackData();
-        if (attackData.fieldDamageData == null) {
-            Debug.LogWarning("Empty attack data in " + GetType().Name);
-            return;
-        }
-        foreach (var fieldDAmage in attackData.fieldDamageData) {
-            Field field = fieldDAmage.Key;
-            field.ApplyDamage(fieldDAmage.Value);
-        }
-        await UniTask.CompletedTask;
-    }
-
-    public override UniTask Undo() {
-        throw new NotImplementedException();
-    }
-}
-
-public struct GameEnterEvent : IEvent {
-    public IGameUnit Summoned;
-    public GameEnterEvent(IGameUnit summoned) {
-        Summoned = summoned;
     }
 }

@@ -1,5 +1,8 @@
 ﻿using System;
 
+public interface IMannable {
+    public Mana Mana { get; }
+}
 public interface IDamageable {
     public Health Health { get; }
 }

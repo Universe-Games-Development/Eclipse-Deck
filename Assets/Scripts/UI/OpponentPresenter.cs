@@ -13,29 +13,26 @@ public class OpponentPresenter : MonoBehaviour, ITargetableObject {
         if (model == null) throw new Exception($"Null model for {this}");
 
         Model = model;
-
-        Model.OnTookSeat += OnTookSeat;
-        Model.OnClearedSeat += OnClearSeat;
-        Model.OnRoomEntered += OnRoomEntered;
-        Model.OnRoomExited += OnRoomExited;
     }
 
-    public async UniTask OnRoomEntered(Room chosenRoom) {
+    public async UniTask EnterRoom(Room chosenRoom) {
         SplineContainer splineContainer = roomSystem.GetEntrySplineForOpponent(Model, chosenRoom);
+        if (splineContainer == null) return;
         await View.EnterRoom(splineContainer);
     }
 
     public async UniTask OnRoomExited(Room exitedRoom) {
         SplineContainer splineContainer = roomSystem.GetExitSplineForOpponent(Model, exitedRoom);
+        if (splineContainer == null) return;
         await View.ExitRoom(splineContainer);
     }
 
 
-    private async UniTask OnTookSeat(BoardSeat seat) {
+    public async UniTask MoveToSeat(BoardSeat seat) {
         await View.TookSeat(seat);
     }
 
-    private async UniTask OnClearSeat() {
+    public async UniTask OnClearSeat() {
         await View.ClearSeat();
     }
 

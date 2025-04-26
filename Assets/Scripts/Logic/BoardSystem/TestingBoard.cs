@@ -24,11 +24,11 @@ public class TestingBoard : MonoBehaviour
     private Enemy enemy;
     private Player player;
 
-    private BattleRegistrator _registrator;
+    private OpponentRegistrator _registrator;
     GameEventBus eventBus;
 
     [Inject]
-    public void Construct(BattleRegistrator registrator, GameEventBus eventBus) {
+    public void Construct(OpponentRegistrator registrator, GameEventBus eventBus) {
         _registrator = registrator;
         this.eventBus = eventBus;
     }
