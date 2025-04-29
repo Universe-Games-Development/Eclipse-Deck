@@ -5,12 +5,12 @@ using Zenject;
 
 
 public class TurnManager : IDisposable {
-    public Action<Opponent> OnOpponentChanged;
+    public Action<BoardPlayer> OnOpponentChanged;
     public Action<TurnEndEvent> OnTurnEnd;
     public Action<TurnStartEvent> OnTurnStart;
 
-    private List<Opponent> currentOpponents = new(2);
-    public Opponent ActiveOpponent { get; private set; }
+    private List<BoardPlayer> currentOpponents = new(2);
+    public BoardPlayer ActiveOpponent { get; private set; }
     public int TurnCounter { get; private set; }
 
     private GameEventBus eventBus;
@@ -25,22 +25,22 @@ public class TurnManager : IDisposable {
         eventBus.SubscribeTo<EndActionsExecutedEvent>(OnEndTurnActionsPerformed);
     }
 
-    public void InitTurns(List<Opponent> registeredOpponents) {
+    public void InitTurns(List<BoardPlayer> registeredOpponents) {
         RoundCounter = 0;
         TurnCounter = 0;
         completedTurnsInRound = 0;
-        currentOpponents = new List<Opponent>(registeredOpponents);
+        currentOpponents = new List<BoardPlayer>(registeredOpponents);
         SwitchToNextOpponent(currentOpponents.GetRandomElement());
         isDisabled = false;
     }
 
-    public bool EndTurnRequest(bool isPlayer = false) {
+    public bool EndTurnRequest(BoardPlayer requester) {
         if (inTransition || isDisabled) {
             Debug.LogWarning($"Turn cannot be ended right now. Transition: {inTransition}, Disabled: {isDisabled}");
             return false;
         }
 
-        if (!(isPlayer && ActiveOpponent is Player)) {
+        if (!(requester == ActiveOpponent)) {
             Debug.LogWarning($"Player is not the active opponent and cannot end the turn.");
             return false;
         }
@@ -78,7 +78,7 @@ public class TurnManager : IDisposable {
         eventBus.Raise(turnStartEvent);
     }
 
-    private void SwitchToNextOpponent(Opponent starterOpponent = null) {
+    private void SwitchToNextOpponent(BoardPlayer starterOpponent = null) {
         var previous = ActiveOpponent;
         ActiveOpponent = (starterOpponent != null && currentOpponents.Contains(starterOpponent))
             ? starterOpponent
@@ -89,7 +89,7 @@ public class TurnManager : IDisposable {
         eventBus.Raise(new OpponentTurnChangedEvent(previous, ActiveOpponent));
     }
 
-    private Opponent GetNextOpponent() {
+    private BoardPlayer GetNextOpponent() {
         if (currentOpponents.Count == 0) return null;
         int index = (currentOpponents.IndexOf(ActiveOpponent) + 1) % currentOpponents.Count;
         return currentOpponents[index];
@@ -110,34 +110,34 @@ public class TurnManager : IDisposable {
 
 
 public struct TurnEndEvent : IEvent {
-    public Opponent endTurnOpponent;
+    public BoardPlayer endTurnOpponent;
 
-    public TurnEndEvent(Opponent endTurnOpponent) {
+    public TurnEndEvent(BoardPlayer endTurnOpponent) {
         this.endTurnOpponent = endTurnOpponent;
     }
 }
 public struct OpponentTurnChangedEvent : IEvent {
-    public Opponent activeOpponent;
-    public Opponent endTurnOpponent;
+    public BoardPlayer activeOpponent;
+    public BoardPlayer endTurnOpponent;
 
-    public OpponentTurnChangedEvent(Opponent previous, Opponent next) {
+    public OpponentTurnChangedEvent(BoardPlayer previous, BoardPlayer next) {
         this.activeOpponent = previous;
         this.endTurnOpponent = next;
     }
 }
 public struct TurnStartEvent : IEvent {
-    public Opponent StartingOpponent { get; private set; }
+    public BoardPlayer StartingOpponent { get; private set; }
     public int TurnNumber { get; private set; }
-    public TurnStartEvent(int turnCount, Opponent startTurnOpponent) {
+    public TurnStartEvent(int turnCount, BoardPlayer startTurnOpponent) {
         StartingOpponent = startTurnOpponent;
         TurnNumber = turnCount;
     }
 }
 
 public struct RoundStartEvent : IEvent {
-    public Opponent StartingOpponent { get; private set; }
+    public BoardPlayer StartingOpponent { get; private set; }
     public int RoundNumber { get; private set; }
-    public RoundStartEvent(int roundCount, Opponent startingOpponent) {
+    public RoundStartEvent(int roundCount, BoardPlayer startingOpponent) {
         RoundNumber = roundCount;
         StartingOpponent = startingOpponent;
     }

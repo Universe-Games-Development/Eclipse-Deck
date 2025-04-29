@@ -6,21 +6,19 @@ using Zenject;
 
 // Добавим дополнительные методы доступа
 public interface IGameContext {
+    BoardGame BoardGame { get; }
     CreatureSpawner CreatureSpawner { get; }
     CardsHandleSystem CardsHandleSystem { get; }
-    BoardSeatSystem BoardSeatSystem { get; }
 }
 
 public class GameDataAggregator : IGameContext {
     public BoardSystem BoardPresenter { get; }
-
+    public BoardGame BoardGame { get; }
     public CreatureSpawner CreatureSpawner { get; }
     public CardsHandleSystem CardsHandleSystem { get; }
-    public BoardSeatSystem BoardSeatSystem { get; }
 
-    public GameDataAggregator(BoardSystem boardPresenter, BoardSeatSystem seats, CreatureSpawner creatureSpawner, CardsHandleSystem cardsPlaySystem) {
+    public GameDataAggregator(BoardSystem boardPresenter, CreatureSpawner creatureSpawner, CardsHandleSystem cardsPlaySystem) {
         BoardPresenter = boardPresenter;
-        BoardSeatSystem = seats;
         CreatureSpawner = creatureSpawner;
         CardsHandleSystem = cardsPlaySystem;
     }
@@ -46,7 +44,7 @@ public class RequirementFactory {
 public interface IRequirement {
     bool IsCasterFill { get; } // Whether the caster or opponent fills this
     bool IsForcedChoice { get; } // Whether the choice can be canceled or not
-    ValidationResult Check(Opponent initiator, object selected);
+    ValidationResult Check(BoardPlayer initiator, object selected);
     string GetInstruction();
 }
 
@@ -63,7 +61,7 @@ public abstract class Requirement<T> : IRequirement where T : class {
         IsForcedChoice = false; // За замовчуванням не примусова
     }
 
-    public ValidationResult Check(Opponent initiator, object selected) {
+    public ValidationResult Check(BoardPlayer initiator, object selected) {
         if (!TryConvertToRequired(selected, out T defined)) {
             Debug.Log($"Wrong type selected: {selected}");
             return ValidationResult.Fail();
@@ -133,10 +131,10 @@ public struct ValidationResult {
 }
 
 public abstract class Condition<T> where T : class {
-    protected Opponent Initiator;
+    protected BoardPlayer Initiator;
     [Inject] private IGameContext _gameData;
 
-    public void SetInitiator(Opponent opponent) {
+    public void SetInitiator(BoardPlayer opponent) {
         Initiator = opponent;
     }
 
@@ -175,7 +173,7 @@ public class AliveCreatureCOndition : Condition<Creature> {
 
 public class EnemyCreatureCondition : Condition<Creature> {
     protected override ValidationResult CheckCondition(Creature creature) {
-        return creature.ControlOpponent != Initiator
+        return creature.ControlledBy != Initiator
             ? ValidationResult.Success
             : ValidationResult.Fail("Not enemy creature");
     }
@@ -183,7 +181,7 @@ public class EnemyCreatureCondition : Condition<Creature> {
 
 public class FriendlyCreatureCondition: Condition<Creature> {
     protected override ValidationResult CheckCondition(Creature creature) {
-        return creature.ControlOpponent == Initiator
+        return creature.ControlledBy == Initiator
             ? ValidationResult.Success
             : ValidationResult.Fail("Not friendly creature");
     }

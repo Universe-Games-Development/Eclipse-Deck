@@ -3,16 +3,14 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 public class Mana : Attribute {
-    public Opponent Owner { get; }
     public event Action<Opponent> OnManaEmpty;
     public event Action<Opponent, int> OnManaSpent;
     public event Action<Opponent> OnManaRestored;
-    private readonly GameEventBus _eventBus;
     public int RestoreAmount { get; private set; } = 1;
+    private IMannable _owner;
 
-    public Mana(Opponent owner, int initialValue, GameEventBus eventBus) : base(initialValue) {
-        Owner = owner;
-        _eventBus = eventBus;
+    public Mana(IMannable owner, int initialValue) : base(initialValue) {
+        _owner = owner;
 
         // Підписуємося на події зміни значень атрибуту
         OnTotalValueChanged += HandleTotalValueChanged;
@@ -22,20 +20,15 @@ public class Mana : Attribute {
         // Можна додати додаткову логіку при зміні значення мани
     }
 
-    private void RestoreMana(ref TurnStartEvent eventData) {
-        Opponent startTurnOpponent = eventData.StartingOpponent;
-        if (startTurnOpponent != Owner) {
-            return;
-        }
-
+    public void RestoreMana() {
         if (RestoreAmount <= 0) return;
 
         int previousMana = CurrentValue;
         int restored = Add(RestoreAmount);
 
         if (CurrentValue == TotalValue) {
-            _eventBus.Raise(new OnManaRestored(Owner));
-            OnManaRestored?.Invoke(Owner);
+            //_eventBus.Raise(new OnManaRestored(Owner));
+            //OnManaRestored?.Invoke(Owner);
         } else {
             Console.WriteLine($"Restored {restored} mana. Current mana: {CurrentValue}/{TotalValue}");
         }
@@ -49,12 +42,12 @@ public class Mana : Attribute {
 
         Subtract(amountSpent);
 
-        _eventBus.Raise(new OnManaSpent(Owner, amountSpent));
-        OnManaSpent?.Invoke(Owner, amountSpent);
+        //_eventBus.Raise(new OnManaSpent(Owner, amountSpent));
+        //OnManaSpent?.Invoke(Owner, amountSpent);
 
         if (CurrentValue <= 0 && previousMana > 0) {
-            _eventBus.Raise(new OnManaEmpty(Owner));
-            OnManaEmpty?.Invoke(Owner);
+            //_eventBus.Raise(new OnManaEmpty(Owner));
+            //OnManaEmpty?.Invoke(Owner);
         } else {
             Console.WriteLine($"Spent {amountSpent} mana. Current mana: {CurrentValue}/{TotalValue}");
         }
@@ -83,20 +76,8 @@ public class Mana : Attribute {
     }
 
     public void Dispose() {
-        if (_eventBus != null) {
-            _eventBus.UnsubscribeFrom<TurnStartEvent>(RestoreMana);
-        }
-
         // Відписуємося від власних подій
         OnTotalValueChanged -= HandleTotalValueChanged;
-    }
-
-    public void EnableManaRestoreation() {
-        _eventBus.SubscribeTo<TurnStartEvent>(RestoreMana);
-    }
-
-    public void DisableManaRestoreation() {
-        _eventBus.UnsubscribeFrom<TurnStartEvent>(RestoreMana);
     }
 }
 

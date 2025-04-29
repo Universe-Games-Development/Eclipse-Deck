@@ -7,7 +7,7 @@ using Zenject;
  */
 public class TriggerManager {
     private List<AbilityTrigger> _triggers = new();
-    public Action<Opponent, IGameUnit, IEvent> OnTriggerActivation;
+    public Action<BoardPlayer, IGameUnit, IEvent> OnTriggerActivation;
 
     public void AddTrigger(AbilityTrigger trigger) {
         if (!_triggers.Contains(trigger)) {
@@ -25,7 +25,7 @@ public class TriggerManager {
 
 public abstract class AbilityTrigger {
     [Inject] protected GameEventBus _eventBus;
-    public Action<Opponent, IGameUnit, IEvent> OnTriggerActivation;
+    public Action<BoardPlayer, IGameUnit, IEvent> OnTriggerActivation;
     public string TriggerName { get; protected set; }
     public abstract void ActivateTrigger(IGameUnit gameUnit);
     public abstract void DeactivateTrigger(IGameUnit gameUnit);
@@ -46,7 +46,7 @@ public class OnSelfSummonTrigger : AbilityTrigger {
     }
 
     private void HandleSummon(GameEnterEvent eventData) {
-        OnTriggerActivation?.Invoke(eventData.Summoned.ControlOpponent, eventData.Summoned, eventData);
+        OnTriggerActivation?.Invoke(eventData.Summoned.ControlledBy, eventData.Summoned, eventData);
     }
 }
 
@@ -64,7 +64,7 @@ public class OnAnotherSummonTrigger : AbilityTrigger {
     }
 
     private void HandleSummon(ref GameEnterEvent eventData) {
-        OnTriggerActivation?.Invoke(eventData.Summoned.ControlOpponent, eventData.Summoned, eventData);
+        OnTriggerActivation?.Invoke(eventData.Summoned.ControlledBy, eventData.Summoned, eventData);
     }
 }
 

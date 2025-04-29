@@ -58,7 +58,7 @@ public class FieldMaterializer : MonoBehaviour {
     }
 
 
-    public void UpdateColorBasedOnOwner(Opponent opponent) {
+    public void UpdateColorBasedOnOwner(BoardPlayer opponent) {
         Color ownerColor = opponent is Player ? playerColor : enemyColor;
         propBlock.SetColor("_BaseColor", ownerColor); // color of middle ground
         meshRenderer.SetPropertyBlock(propBlock);

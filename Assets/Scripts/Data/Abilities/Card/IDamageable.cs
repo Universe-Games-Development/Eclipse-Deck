@@ -13,6 +13,6 @@ public interface IDamageDealer {
 
 public interface IGameUnit {
     event Action<GameEnterEvent> OnUnitDeployed;
-    EffectManager EffectManager { get; }
-    Opponent ControlOpponent { get; }
+    EffectManager Effects { get; }
+    BoardPlayer ControlledBy { get; }
 }

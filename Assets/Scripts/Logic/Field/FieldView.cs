@@ -25,7 +25,7 @@ public class FieldView : MonoBehaviour {
         materializer.UpdateOccupyEmission(creature);
     }
 
-    public void UpdateOwnerVisuals(Opponent opponent) {
+    public void UpdateOwnerVisuals(BoardPlayer opponent) {
         materializer.UpdateColorBasedOnOwner(opponent);
     }
 

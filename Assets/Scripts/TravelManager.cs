@@ -43,20 +43,17 @@ public class TravelManager : MonoBehaviour {
     [Inject] private LocationTransitionManager _locationManager;
 
     private PlayerPresenter _playerPresenter;
-
+    [Inject] BoardGame boardGame; 
     private void Start() {
         if (!_playerHeroFactory.SpawnPlayer(out _playerPresenter)) {
             Debug.LogError("Failed to spawn player");
             return;
         }
 
-        _opponentRegistrator.RegisterOpponent(_playerPresenter);
-        HandlePlayerAppearance();
-    }
-
-    private void HandlePlayerAppearance() {
         _locationManager.RegisterListener(LoadingPhase.PreLoad, ClearDungeon);
         _locationManager.RegisterListener(LoadingPhase.Complete, EnterLocationAsync);
+
+        boardGame.TookSeat(_playerPresenter);
     }
 
     private async UniTask ClearDungeon(LocationData data) {

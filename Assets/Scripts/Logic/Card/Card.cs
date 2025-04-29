@@ -10,9 +10,9 @@ public abstract class Card : IGameUnit {
     public CardData Data { get; protected set; }
     public Cost Cost { get; protected set; }
     public event Action<GameEnterEvent> OnUnitDeployed;
-    public EffectManager EffectManager { get; set; }
+    public EffectManager Effects { get; set; }
 
-    public Opponent ControlOpponent => throw new NotImplementedException();
+    public BoardPlayer ControlledBy { get; set; }
 
     public CardView cardUI;
 

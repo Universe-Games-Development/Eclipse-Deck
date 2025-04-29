@@ -9,7 +9,7 @@ public class AiInputSystem : ITargetingService {
         throw new NotImplementedException();
     }
 
-    public UniTask<object> ProcessRequirementAsync(Opponent requestOpponent, IRequirement requirement) {
+    public UniTask<object> ProcessRequirementAsync(BoardPlayer requestOpponent, IRequirement requirement) {
         throw new NotImplementedException();
     }
 }

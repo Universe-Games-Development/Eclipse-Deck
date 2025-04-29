@@ -31,7 +31,7 @@ public class FieldPresenter {
     }
 
     // Event handlers
-    private void HandleOwnerChanged(Opponent opponent) {
+    private void HandleOwnerChanged(BoardPlayer opponent) {
         View.UpdateOwnerVisuals(opponent);
     }
 

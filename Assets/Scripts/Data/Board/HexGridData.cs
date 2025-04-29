@@ -3,10 +3,6 @@ using System.Collections.Generic;
 using UnityEditor;
 using System;
 
-using UnityEngine;
-using System.Collections.Generic;
-using System;
-
 // Клас для представлення окремої клітинки
 [Serializable]
 public class CellData {

@@ -1,24 +1,33 @@
 ﻿using System;
+using Unity.VisualScripting;
+
+
 
 public class CardSpendable {
     private readonly Mana mana;
     private readonly Health health;
 
     public bool IsManaEnabled { get; private set; } = false;
+    private GameEventBus _eventBus;
 
-    public CardSpendable(Opponent opponent, Mana mana, Health health, GameEventBus eventBus) {
+    public CardSpendable(Mana mana, Health health, GameEventBus eventBus) {
         this.mana = mana;
         this.health = health;
+        _eventBus = eventBus;
     }
 
     public void EnableMana() {
         IsManaEnabled = true;
-        mana.EnableManaRestoreation();
+        _eventBus.SubscribeTo<TurnStartEvent>(RestoreMana);
     }
 
     public void DisableMana() {
         IsManaEnabled = false;
-        mana.DisableManaRestoreation();
+        _eventBus.UnsubscribeFrom<TurnStartEvent>(RestoreMana);
+    }
+
+    private void RestoreMana(ref TurnStartEvent eventData) {
+        throw new NotImplementedException();
     }
 
     // Try to spend mana, if not enough mana - spend health
@@ -56,6 +65,12 @@ public class CardSpendable {
 
     internal void TryRefund(ResourceData resourceData) {
         throw new NotImplementedException();
+    }
+
+    public void Dispose() {
+        if (_eventBus != null) {
+            _eventBus.UnsubscribeFrom<TurnStartEvent>(RestoreMana);
+        }
     }
 }
 

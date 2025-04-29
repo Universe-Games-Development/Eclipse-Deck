@@ -35,11 +35,11 @@ public class OpponentView : MonoBehaviour {
         }
     }
 
-    public async UniTask TookSeat(BoardSeat seat) {
+    public async UniTask MoveToTransform(Transform destination) {
         previousPosition = transform.position;
         previousParent = transform.parent;
-        transform.SetParent(seat.transform);
-        await MoveToPositionAsync(seat.transform.position, 0.5f);
+        transform.SetParent(destination);
+        await MoveToPositionAsync(destination.position, 0.5f);
         OnSeatTaken?.Invoke(); // Now this event is properly invoked
     }
 

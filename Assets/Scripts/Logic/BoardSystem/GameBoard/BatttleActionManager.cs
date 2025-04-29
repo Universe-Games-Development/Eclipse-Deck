@@ -8,26 +8,9 @@ public class BatttleActionManager {
     [Inject] CommandManager _commandManager;
     // Zenject
     private GameEventBus _eventBus;
-
-    private BoardAssigner _boardAssigner;
-    public BatttleActionManager(GameEventBus eventBus, BoardAssigner boardAssigner, CommandManager commandManager) {
+    public BatttleActionManager(GameEventBus eventBus, CommandManager commandManager) {
         _commandManager = commandManager;
-        _boardAssigner = boardAssigner;
         _eventBus = eventBus;
-        eventBus.SubscribeTo<TurnEndEvent>(GenerateEndTurnActions);
-    }
-
-    public void GenerateEndTurnActions(ref TurnEndEvent turnEndEvent) {
-        List<Command> commands = new();
-
-        List<Creature> creatures = _boardAssigner.GetOpponentCreatures(turnEndEvent.endTurnOpponent);
-
-        foreach (var creature in creatures) {
-            commands.Add(creature.GetEndTurnAction());
-        }
-
-        commands.Add(new CreaturesPerformedTurnsCommand(creatures, _eventBus));
-        _commandManager.EnqueueCommands(commands);
     }
 }
 

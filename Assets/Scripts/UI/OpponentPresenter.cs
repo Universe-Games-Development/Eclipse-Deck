@@ -28,8 +28,8 @@ public class OpponentPresenter : MonoBehaviour, ITargetableObject {
     }
 
 
-    public async UniTask MoveToSeat(BoardSeat seat) {
-        await View.TookSeat(seat);
+    public async UniTask MoveToSeat(Transform destination) {
+        await View.MoveToTransform(destination);
     }
 
     public async UniTask OnClearSeat() {

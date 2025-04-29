@@ -13,25 +13,24 @@ public class CardsHandleSystem : MonoBehaviour {
     public HandPresenter HandPresenter { get; private set; }
     private DeckPresenter _deckPresenter;
     private DeckPresenter _discardeckPresenter; // not used now
-    public Opponent Player { get; private set; }
+    public BoardPlayer BoardPlayer { get; private set; }
     public CardSpendable CardSpendable { get; private set; }
-    public Opponent CurrentPlayer { get; internal set; }
 
     [Inject] GameEventBus _eventBus;
     [Inject] CommandManager _commandManager;
     [Inject] CardProvider _cardProvider;
     [Inject] DiContainer diContainer;
 
-    public void Initialize(Opponent opponent) {
+    public void Initialize(BoardPlayer boardPlayer) {
         handView = gameObject.GetComponentInChildren<CardHandView>(true); // TODO: remove this line when we will have a proper UI system
         if (handView == null ) {
             Debug.LogWarning($"{gameObject} is not set");
             return;
         } 
-        Player = opponent;
-        CardSpendable = new CardSpendable(Player, Player.Mana, Player.Health, _eventBus);
+        BoardPlayer = boardPlayer;
+        CardSpendable = new CardSpendable(BoardPlayer.Mana, BoardPlayer.Health, _eventBus);
 
-        OpponentData data = Player.Data; // soon opponent data will define deck and cards
+        OpponentData data = BoardPlayer.Info.Data; // soon opponent data will define deck and cards
         CardFactory cardFactory = new(diContainer);
         Deck deckModel = new(cardFactory);
         CardHand handModel = new();
@@ -50,14 +49,11 @@ public class CardsHandleSystem : MonoBehaviour {
 
         _eventBus.SubscribeTo<TurnStartEvent>(TurnStartActions);
 
-        _commandManager.EnqueueCommands(new List<Command> {
-            new InitDeckCommand(_deckPresenter, 40, _cardProvider).SetPriority(11),
-            new DrawCardCommand(this, 3),
-        });
+        BattleStartAction();
     }
 
     protected virtual void TurnStartActions(ref TurnStartEvent eventData) {
-        if (eventData.StartingOpponent == Player)
+        if (eventData.StartingOpponent == BoardPlayer)
             _commandManager.EnqueueCommand(new DrawCardCommand(this));
     }
 
@@ -72,25 +68,31 @@ public class CardsHandleSystem : MonoBehaviour {
         HandPresenter.ClearHand();
     }
 
-    public async UniTask<List<Card>> DrawCards(int drawAmount) {
+    public void BattleStartAction() {
+        _commandManager.EnqueueCommands(new List<Command> {
+            new InitDeckCommand(_deckPresenter, 40, _cardProvider).SetPriority(11),
+            new DrawCardCommand(this, 3),
+        });
+    }
+
+    public List<Card> DrawCards(int drawAmount) {
         List<Card> drawnCards = new();
 
         while (drawAmount > 0) {
             Card card = _deckPresenter.Deck.DrawCard();
             if (card == null) {
-                _eventBus.Raise(new OnDeckEmptyDrawn(Player));
+                _eventBus.Raise(new OnDeckEmptyDrawn(BoardPlayer));
                 
-                await UniTask.CompletedTask;
                 return drawnCards;
             }
 
             if (!HandPresenter.CardHand.AddCard(card)) {
                 
                 _discardeckPresenter.Deck.AddCard(card);
-                _eventBus.Raise(new DiscardCardEvent(card, Player));
+                _eventBus.Raise(new DiscardCardEvent(card, BoardPlayer));
             }
             drawnCards.Add(card);
-            _eventBus.Raise(new OnCardDrawn(card, Player));
+            _eventBus.Raise(new OnCardDrawn(card, BoardPlayer));
             drawAmount--;
         }
         return drawnCards;
@@ -110,7 +112,7 @@ public class PlayCardCommand : Command {
     private Card _card;
     private bool _isPlayed = false;
     private CardsHandleSystem _cardsPlaySystem;
-    private Opponent _cardPlayer;
+    private BoardPlayer _cardPlayer;
     private CardHand _cardHand;
     private CardSpendable _cardSpendable;
     private ResourceData _resourceData;
@@ -118,7 +120,7 @@ public class PlayCardCommand : Command {
     public PlayCardCommand(CardsHandleSystem cardsPlaySystem, Card card) {
         _cardsPlaySystem = cardsPlaySystem;
         _card = card;
-        _cardPlayer = cardsPlaySystem.Player;
+        _cardPlayer = cardsPlaySystem.BoardPlayer;
         _cardHand = cardsPlaySystem.HandPresenter.CardHand;
         _cardSpendable = cardsPlaySystem.CardSpendable;
     }
@@ -250,7 +252,7 @@ public class DrawCardCommand : Command {
     }
 
     public async override UniTask Execute() {
-        List<Card> drawnCards = await _cardsPlaySystem.DrawCards(_drawAmount);
+        List<Card> drawnCards = _cardsPlaySystem.DrawCards(_drawAmount);
         await UniTask.CompletedTask;
     }
 
@@ -261,7 +263,7 @@ public class DrawCardCommand : Command {
 
 public struct DiscardCardEvent : IEvent {
     public Card card;
-    public DiscardCardEvent(Card card, Opponent owner) {
+    public DiscardCardEvent(Card card, BoardPlayer owner) {
         this.card = card;
     }
 }

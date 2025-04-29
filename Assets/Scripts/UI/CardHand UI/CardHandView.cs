@@ -27,6 +27,10 @@ public class CardHandView : MonoBehaviour, ICardHandView {
     private bool isInteractable = true;
     private Dictionary<CardView, CardLayoutGhost> _viewsToGhosts = new();
 
+    public void Start() {
+        UpdateCardsPositionsAsync().Forget();
+    }
+
     public CardView CreateCardView() {
         CardView cardView = Instantiate(cardPrefab, cardSpawnPoint);
         CardLayoutGhost ghost = Instantiate(ghostPrefab, ghostLayoutParent);

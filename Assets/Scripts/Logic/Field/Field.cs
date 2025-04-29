@@ -6,12 +6,12 @@ public class Field {
     // Properties with proper access modifiers
     public int Row { get; }
     public int Column { get; }
-    public Opponent Owner { get; private set; }
+    public BoardPlayer Owner { get; private set; }
     public FieldType FieldType { get; private set; } = FieldType.Support;
     public Creature OccupyingCreature { get; private set; }
 
     // Events with proper naming conventions
-    public event Action<Opponent> OwnerChanged;
+    public event Action<BoardPlayer> OwnerChanged;
     public event Action<FieldType> TypeChanged;
     public event Action<Creature> CreaturePlaced;
     public event Action<Creature> CreatureRemoved;
@@ -42,7 +42,7 @@ public class Field {
         }
     }
 
-    public void SetOwner(Opponent player) {
+    public void SetOwner(BoardPlayer player) {
         if (Owner == player) return;
 
         Owner = player;
@@ -96,7 +96,7 @@ public class Field {
     }
 
     // Protected event invokers
-    protected virtual void OnOwnerChanged(Opponent newOwner) {
+    protected virtual void OnOwnerChanged(BoardPlayer newOwner) {
         OwnerChanged?.Invoke(newOwner);
     }
 

@@ -9,7 +9,7 @@ using Zenject;
 
 public interface ITargetingService {
     List<object> FindValidTargets(IRequirement value, IGameContext context);
-    UniTask<object> ProcessRequirementAsync(Opponent requestOpponent, IRequirement requirement);
+    UniTask<object> ProcessRequirementAsync(BoardPlayer requestOpponent, IRequirement requirement);
 }
 
 
@@ -26,7 +26,7 @@ public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
     private TimeoutController timeoutController = new ();
     private UniTaskCompletionSource<object> _completionSource;
 
-    private Opponent requestOpponent;
+    private BoardPlayer requestOpponent;
 
     [Inject]
     public void Construct(CardInputHandler cardInputHandler) {
@@ -38,7 +38,7 @@ public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
         _inputPanel.SetActive(false);
     }
 
-    public async UniTask<object> ProcessRequirementAsync(Opponent requestOpponent, IRequirement requirement) {
+    public async UniTask<object> ProcessRequirementAsync(BoardPlayer requestOpponent, IRequirement requirement) {
         SetupUI(requirement);
         _currentRequirement = requirement;
 
@@ -119,7 +119,7 @@ public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
 
 public interface ITargetable {
     // Метод для перевірки, чи об'єкт відповідає вимогам
-    ValidationResult CheckRequirement(IRequirement requirement, Opponent requestOpponent);
+    ValidationResult CheckRequirement(IRequirement requirement, BoardPlayer requestOpponent);
 
     // Метод для отримання моделі, яка буде передана в результат
     object GetTargetModel();
@@ -134,7 +134,7 @@ public class CardInteractable : MonoBehaviour, ITargetable {
         _presenter = presenter;
     }
 
-    public ValidationResult CheckRequirement(IRequirement requirement, Opponent requestOpponent) {
+    public ValidationResult CheckRequirement(IRequirement requirement, BoardPlayer requestOpponent) {
         return requirement.Check(requestOpponent, _presenter.Model);
     }
 
@@ -151,7 +151,7 @@ public class FieldInteractable : MonoBehaviour, ITargetable {
         _presenter = presenter;
     }
 
-    public ValidationResult CheckRequirement(IRequirement requirement, Opponent requestOpponent) {
+    public ValidationResult CheckRequirement(IRequirement requirement, BoardPlayer requestOpponent) {
         return requirement.Check(requestOpponent, _presenter.Model);
     }
 
@@ -169,7 +169,7 @@ public class Opponentnteractable : MonoBehaviour, ITargetable {
         _presenter = presenter;
     }
 
-    public ValidationResult CheckRequirement(IRequirement requirement, Opponent requestOpponent) {
+    public ValidationResult CheckRequirement(IRequirement requirement, BoardPlayer requestOpponent) {
         return requirement.Check(requestOpponent, _presenter.Model);
     }
 

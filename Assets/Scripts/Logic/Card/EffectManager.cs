@@ -162,12 +162,12 @@ public class Ability : BaseEffect {
     }
 
     // Sonn become command 
-    private void Activate(Opponent opponent, IGameUnit unit, IEvent @event) {
-        ActivateAsync(opponent).Forget();
+    private void Activate(BoardPlayer invoker, IGameUnit unit, IEvent @event) {
+        ActivateAsync(invoker).Forget();
     }
 
     // Активувати здібність
-    public async UniTask<bool> ActivateAsync(Opponent invoker) {
+    public async UniTask<bool> ActivateAsync(BoardPlayer invoker) {
         bool atLeastOneOperationSucceeded = false;
 
         foreach (var operation in Operations) {
@@ -175,7 +175,7 @@ public class Ability : BaseEffect {
 
             // Якщо всі необхідні цілі заповнені, виконуємо операцію
             if (operation.AreTargetsFilled()) {
-                List<OperationModifier> operationModifiers = Owner.EffectManager.GetEffectsOfType<OperationModifier>().ToList();
+                List<OperationModifier> operationModifiers = Owner.Effects.GetEffectsOfType<OperationModifier>().ToList();
 
                 foreach (var modifier in operationModifiers) {
                     modifier.Attach(operation);
@@ -217,12 +217,12 @@ public abstract class GameOperation {
 
     public abstract void PerformOperation();
 
-    public async UniTask<bool> FillRequirements(Opponent requestingPlayer) {
+    public async UniTask<bool> FillRequirements(BoardPlayer requestingPlayer) {
         foreach (var entry in Requirements) {
             string fieldName = entry.Key;
             IRequirement requirement = entry.Value;
 
-            ITargetingService filler = PickTargetingService(requirement.IsCasterFill ? requestingPlayer : _data.BoardSeatSystem.GetAgainstOpponent(requestingPlayer));
+            ITargetingService filler = requestingPlayer.TargetService;
             object result = await filler.ProcessRequirementAsync(requestingPlayer, requirement);
 
             if (result == null) {
@@ -235,9 +235,6 @@ public abstract class GameOperation {
 
     public virtual void SetTarget(string key, object target) {
         Results[key] = target;
-    }
-    private ITargetingService PickTargetingService(Opponent inputPlayer) {
-        return _data.BoardSeatSystem.GetActionFiller(inputPlayer);
     }
 
     // Перевірити, чи всі необхідні цілі заповнені

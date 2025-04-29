@@ -1,32 +1,19 @@
-using Cysharp.Threading.Tasks;
-using System;
 using UnityEngine;
 using Zenject;
 
 public class BoardGame : MonoBehaviour {
     [SerializeField] private BoardSettingsData boardConfig;
     [SerializeField] private BoardSystem boardSystem;
-
-    [SerializeField] private BoardSeatSystem gameBoardSeats;
     
     [SerializeField] private CreatureSpawner creatureSpawner;
 
+    [SerializeField] public OpponentRepresentator PlayersRepresentation;
+
     [Inject] GameEventBus _eventBus;
 
-    private void Awake() {
-        if (gameBoardSeats == null) return;
-        if (gameBoardSeats.IsReady()) {
-            PrepareBattle();
-        } else {
-            gameBoardSeats.OnSeatsTook += PrepareBattle;
-        }
-    }
-
     public void PrepareBattle() {
-        BoardAssigner boardAssigner = new BoardAssigner(gameBoardSeats, boardSystem);
         boardSystem.Initialize();
         boardSystem.UpdateGrid(boardConfig);
-        gameBoardSeats.InitializePlayersCardsSystems();
 
         BeginBattle();
     }
@@ -58,6 +45,10 @@ public class BoardGame : MonoBehaviour {
                 Gizmos.DrawWireCube(cellCenter, new Vector3(cellSize.x, 0.01f, cellSize.y));
             }
         }
+    }
+
+    public void TookSeat(OpponentPresenter opponentPresenter) {
+        PlayersRepresentation.RegisterOpponent(opponentPresenter);
     }
 }
 

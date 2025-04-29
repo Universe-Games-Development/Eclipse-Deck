@@ -9,12 +9,12 @@ public class Creature : IDamageable, IDamageDealer, IGameUnit {
     public Func<Field, UniTask> OnMoved;
     public Func<Field, UniTask> OnSpawned;
     public event Action<GameEnterEvent> OnUnitDeployed;
-    public Opponent ControlOpponent { get; private set; }
+    public BoardPlayer ControlledBy { get; private set; }
     public Health Health => creatureCard.Stats.Health;
     public Attack Attack => creatureCard.Stats.Attack;
     public Ability AttackAbility { get; private set; }
 
-    public EffectManager EffectManager => creatureCard.EffectManager;
+    public EffectManager Effects => creatureCard.Effects;
 
     public CreatureCard creatureCard;
     

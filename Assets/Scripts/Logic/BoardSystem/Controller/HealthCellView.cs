@@ -29,14 +29,14 @@ public class HealthCellView : MonoBehaviour {
         liquidRenderer.SetPropertyBlock(propertyBlock);
     }
 
-    public void AssignOwner(Opponent opponent) {
-        if (opponent?.Health == null) {
+    public void AssignOwner(IDamageable healthable) {
+        if (healthable?.Health == null) {
             Debug.LogError("Invalid opponent or health component!");
             return;
         }
 
         UnsubscribeFromPreviousHealth();
-        health = opponent.Health;
+        health = healthable.Health;
 
         SubscribeToHealthEvents();
         SmoothUpdateLiquidLevel(health.CurrentValue, health.CurrentValue).Forget(); // Встановлюємо початкове значення
