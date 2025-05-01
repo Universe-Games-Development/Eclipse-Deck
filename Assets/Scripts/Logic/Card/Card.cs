@@ -11,15 +11,14 @@ public abstract class Card : IGameUnit {
     public Cost Cost { get; protected set; }
     public event Action<GameEnterEvent> OnUnitDeployed;
     public EffectManager Effects { get; set; }
-
     public BoardPlayer ControlledBy { get; set; }
-
-    public CardView cardUI;
+    public string Id { get; set; } // Unique identifier for the card
 
     public Card(CardData cardData)  // Add owner to constructor
     {
         Data = cardData;
         Cost = new Cost(cardData.MAX_CARDS_COST, cardData.cost);
+        Id = $"{Data.Name}_{Guid.NewGuid()}";
     }
 
     public virtual void ChangeState(CardState newState) {

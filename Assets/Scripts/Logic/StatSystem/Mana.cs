@@ -1,11 +1,7 @@
 ﻿using System;
-using Unity.VisualScripting;
-using UnityEngine;
 
 public class Mana : Attribute {
-    public event Action<Opponent> OnManaEmpty;
-    public event Action<Opponent, int> OnManaSpent;
-    public event Action<Opponent> OnManaRestored;
+    public event Action<ManaSpentEvent> OnManaSpent;
     public int RestoreAmount { get; private set; } = 1;
     private IMannable _owner;
 
@@ -38,21 +34,19 @@ public class Mana : Attribute {
         if (amount <= 0) return 0;
 
         int previousMana = CurrentValue;
-        int amountSpent = Math.Min(amount, CurrentValue);
 
-        Subtract(amountSpent);
+        int amountSpent = Subtract(amount);
 
         //_eventBus.Raise(new OnManaSpent(Owner, amountSpent));
         //OnManaSpent?.Invoke(Owner, amountSpent);
 
-        if (CurrentValue <= 0 && previousMana > 0) {
-            //_eventBus.Raise(new OnManaEmpty(Owner));
-            //OnManaEmpty?.Invoke(Owner);
+        if (amountSpent > 0) {
+            OnManaSpent?.Invoke(new ManaSpentEvent(_owner, amountSpent));
         } else {
             Console.WriteLine($"Spent {amountSpent} mana. Current mana: {CurrentValue}/{TotalValue}");
         }
 
-        return amount - amountSpent;
+        return amountSpent;
     }
 
     public void SetRestoreAmount(int newRestoreAmount) {
@@ -82,24 +76,24 @@ public class Mana : Attribute {
 }
 
 public struct OnManaEmpty : IEvent {
-    public Opponent Owner { get; }
-    public OnManaEmpty(Opponent owner) {
+    public IMannable Owner { get; }
+    public OnManaEmpty(IMannable owner) {
         Owner = owner;
     }
 }
 
-public struct OnManaSpent : IEvent {
-    public Opponent Owner { get; }
+public struct ManaSpentEvent : IEvent {
+    public IMannable Owner { get; }
     public int Amount { get; }
-    public OnManaSpent(Opponent owner, int amount) {
+    public ManaSpentEvent(IMannable owner, int amount) {
         Owner = owner;
         Amount = amount;
     }
 }
 
 public struct OnManaRestored : IEvent {
-    public Opponent Owner { get; }
-    public OnManaRestored(Opponent owner) {
+    public IMannable Owner { get; }
+    public OnManaRestored(IMannable owner) {
         Owner = owner;
     }
 }

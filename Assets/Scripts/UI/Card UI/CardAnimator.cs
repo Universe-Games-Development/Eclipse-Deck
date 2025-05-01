@@ -8,18 +8,18 @@ public class CardAnimator : MonoBehaviour {
 
     private bool isHovered;
     private Tween hoveringTween;
-    private CardView cardUI;
+    private CardUIView cardUI;
     [Header("Layout")]
     [SerializeField] private RectTransform globalBody;
     [SerializeField] private RectTransform innerBody;
 
-    public void AttachAnimator(CardView cardUI) {
+    public void AttachAnimator(CardUIView cardUI) {
         cardUI.OnCardClicked += ShrinkClick;
         cardUI.OnCardHovered += ToggleHover;
         cardUI.OnCardRemoval += RemovalAnimation;
     }
 
-    private void ShrinkClick(CardView uI) {
+    private void ShrinkClick(CardUIView uI) {
         // Create a sequence for the scaling animation
         Sequence shrinkSequence = DOTween.Sequence();
         shrinkSequence.Append(innerBody.DOScale(0.9f, 0.2f));
@@ -29,7 +29,7 @@ public class CardAnimator : MonoBehaviour {
     }
 
 
-    private async UniTask RemovalAnimation(CardView cardUI) {
+    private async UniTask RemovalAnimation(CardUIView cardUI) {
         var sequence = DOTween.Sequence();
         sequence.Append(globalBody.transform.DOScale(Vector3.zero, 0.3f));
         sequence.Join(globalBody.transform.DOLocalMoveY(globalBody.transform.position.y - 2f, 0.8f).SetEase(Ease.InOutSine));

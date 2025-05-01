@@ -4,67 +4,95 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using ModestTree;
-using Zenject;
 using UnityEngine.AddressableAssets;
 
 public class ResourceLoadingManager {
     public event Action OnResourcesLoaded;
     public event Action<float> OnLoadingProgressChanged;
-
     private List<IResourceLoader> _resourceLoaders = new();
 
-    private LocationTransitionManager _locationManager;
-    [Inject]
-    public void Construct(LocationTransitionManager locationManager) {
-        _locationManager = locationManager;
-        _locationManager.RegisterListener(LoadingPhase.LoadResources, LoadResourcesForLocation);
-    }
+    // Зберігаємо стан останнього/поточного завантаження
+    private LocationData _currentLoadingLocation;
+    private UniTaskCompletionSource<bool> _currentLoadingTask;
 
     public void RegisterResourceLoader(IResourceLoader loader) {
         _resourceLoaders.Add(loader);
         _resourceLoaders = _resourceLoaders
             .OrderByDescending(l => l.LoadPriority)
             .ToList();
+
+        // Якщо є активне завантаження, додамо і цей лоадер до нього
+        if (_currentLoadingLocation != null) {
+            TryLoadResourcesForLoader(loader, _currentLoadingLocation).Forget();
+        }
     }
 
     public void UnregisterResourceLoader(IResourceLoader loader) {
         _resourceLoaders.Remove(loader);
     }
 
-    public async UniTask LoadResourcesForLocation(LocationData locationData) {
-        float totalProgress = 0f;
-        int loadersCount = _resourceLoaders.Count;
+    private async UniTask TryLoadResourcesForLoader(IResourceLoader loader, LocationData locationData) {
         AssetLabelReference assetLabel = locationData.assetLabel;
+        if (loader.HasResources(assetLabel)) return;
 
-        foreach (var loader in _resourceLoaders) {
-            if (loader.HasResources(assetLabel)) continue;
+        try {
+            float loaderProgress = 0;
+            var progress = new Progress<float>(value => {
+                loaderProgress = value;
+                // Тут можна реалізувати більш складну логіку прогресу
+                OnLoadingProgressChanged?.Invoke(loaderProgress);
+            });
+            await loader.LoadResources(assetLabel, progress);
+        } catch (Exception e) {
+            Debug.LogError($"Resource loader {loader.GetType().Name} failed: {e.Message}");
+        }
+    }
 
-            try {
-                float loaderProgress = 0;
-                var progress = new Progress<float>(value => {
-                    loaderProgress = value;
-                    OnLoadingProgressChanged?.Invoke((totalProgress + loaderProgress) / loadersCount);
-                });
-
-                await loader.LoadResources(assetLabel, progress);
-                totalProgress += 1f;
-            } catch (Exception e) {
-                Debug.LogError($"Resource loader {loader.GetType().Name} failed: {e.Message}");
-            }
+    public async UniTask<bool> LoadResourcesForLocation(LocationData locationData) {
+        // Якщо вже йде завантаження для цієї локації, повертаємо поточне завдання
+        if (_currentLoadingLocation == locationData && _currentLoadingTask != null) {
+            return await _currentLoadingTask.Task;
         }
 
-        OnResourcesLoaded?.Invoke();
+        // Початок нового завантаження
+        _currentLoadingLocation = locationData;
+        _currentLoadingTask = new UniTaskCompletionSource<bool>();
+
+        try {
+            float totalProgress = 0f;
+            int loadersCount = _resourceLoaders.Count;
+
+            // Запускаємо завантаження для всіх наявних лоадерів
+            var loadingTasks = _resourceLoaders
+                .Select(loader => TryLoadResourcesForLoader(loader, locationData))
+                .ToArray();
+
+            // Чекаємо на завершення всіх завантажень
+            await UniTask.WhenAll(loadingTasks);
+
+            OnResourcesLoaded?.Invoke();
+            _currentLoadingTask.TrySetResult(true);
+            return true;
+        } catch (Exception ex) {
+            Debug.LogError($"Resource loading failed: {ex}");
+            _currentLoadingTask.TrySetException(ex);
+            throw;
+        } finally {
+            if (_currentLoadingLocation == locationData) {
+                _currentLoadingLocation = null;
+            }
+        }
     }
 
     public bool IsLocationLoaded(LocationData locationData) {
-        bool isLocationLoaded = true;
+        if (_resourceLoaders.Count == 0) return true;
+
         foreach (var loader in _resourceLoaders) {
             if (!loader.HasResources(locationData.assetLabel)) {
-                isLocationLoaded = false;
-                break;
+                return false;
             }
         }
-        return isLocationLoaded;
+        return true;
     }
 
     public bool HasLoaders() {

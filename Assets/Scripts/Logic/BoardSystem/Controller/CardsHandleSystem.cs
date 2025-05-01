@@ -6,7 +6,7 @@ using UnityEngine;
 using Zenject;
 
 public class CardsHandleSystem : MonoBehaviour {
-    [SerializeField] private CardHandView handView;
+    [SerializeField] private CardHandUIView handUIView;
     [SerializeField] private DeckView deckView;
     [SerializeField] private DeckView discardDeckView;
 
@@ -21,12 +21,7 @@ public class CardsHandleSystem : MonoBehaviour {
     [Inject] CardProvider _cardProvider;
     [Inject] DiContainer diContainer;
 
-    public void Initialize(BoardPlayer boardPlayer) {
-        handView = gameObject.GetComponentInChildren<CardHandView>(true); // TODO: remove this line when we will have a proper UI system
-        if (handView == null ) {
-            Debug.LogWarning($"{gameObject} is not set");
-            return;
-        } 
+    public void Initialize(BoardPlayer boardPlayer) { 
         BoardPlayer = boardPlayer;
         CardSpendable = new CardSpendable(BoardPlayer.Mana, BoardPlayer.Health, _eventBus);
 
@@ -36,20 +31,28 @@ public class CardsHandleSystem : MonoBehaviour {
         CardHand handModel = new();
 
         _deckPresenter = new(deckModel, deckView);
-        HandPresenter = new(handModel, handView);
-        HandPresenter.OnCardSelected += PlayCard;
+        HandPresenter = new(handModel, handUIView);
+        HandPresenter.CardHand.OnCardSelected += PlayCard;
 
         _eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
         _eventBus.SubscribeTo<BattleEndEventData>(EndBattleActions);
     }
 
-    private void StartBattleActions(ref BattleStartedEvent eventData) {
+    public void StartBattleActions(ref BattleStartedEvent eventData) {
         _eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
         _eventBus.UnsubscribeFrom<BattleEndEventData>(EndBattleActions);
 
         _eventBus.SubscribeTo<TurnStartEvent>(TurnStartActions);
 
-        BattleStartAction();
+        Deck deck = _deckPresenter.Deck;
+        CardCollection _cardCollection = GenerateRandomCollection(40);
+        deck.Initialize(_cardCollection);
+
+        DrawCards(6);
+
+        //_commandManager.EnqueueCommands(new List<Command> {
+        //    new DrawCardCommand(this, 3),
+        //});
     }
 
     protected virtual void TurnStartActions(ref TurnStartEvent eventData) {
@@ -68,11 +71,19 @@ public class CardsHandleSystem : MonoBehaviour {
         HandPresenter.ClearHand();
     }
 
-    public void BattleStartAction() {
-        _commandManager.EnqueueCommands(new List<Command> {
-            new InitDeckCommand(_deckPresenter, 40, _cardProvider).SetPriority(11),
-            new DrawCardCommand(this, 3),
-        });
+
+    public CardCollection GenerateRandomCollection(int cardAmount) {
+        CardCollection collection = new();
+        List<CardData> _unclokedCards = _cardProvider.GetRandomUnlockedCards(cardAmount);
+        if (_unclokedCards.IsEmpty()) return collection;
+
+        for (int i = 0; i < cardAmount; i++) {
+            var randomIndex = UnityEngine.Random.Range(0, _unclokedCards.Count);
+            var randomCard = _unclokedCards[randomIndex];
+            collection.AddCardToCollection(randomCard);
+        }
+
+        return collection;
     }
 
     public List<Card> DrawCards(int drawAmount) {
@@ -198,46 +209,6 @@ public class PlayCardCommand : Command {
                 Debug.LogError($"Error undoing PlayCardCommand: {ex.Message}");
             }
         }
-        await UniTask.CompletedTask;
-    }
-}
-
-public class InitDeckCommand : Command {
-    private DeckPresenter _deckPresenter;
-    private CardCollection _cardCollection;
-    private CardProvider _cardProvider;
-    private int _cardAmount;
-
-    public InitDeckCommand(DeckPresenter deckPresenter, int amount, CardProvider cardProvider) {
-        _deckPresenter = deckPresenter;
-        _cardAmount = amount;
-        _cardProvider = cardProvider;
-    }
-
-    public async override UniTask Execute() {
-        Deck deck = _deckPresenter.Deck;
-        _cardCollection = await GenerateRandomCollection();
-        deck.Initialize(_cardCollection);
-        await UniTask.CompletedTask;
-    }
-
-    public async UniTask<CardCollection> GenerateRandomCollection() {
-        CardCollection collection = new();
-        List<CardData> _unclokedCards = await _cardProvider.GetRandomUnlockedCards(_cardAmount);
-        if (_unclokedCards.IsEmpty()) return collection;
-
-        for (int i = 0; i < _cardAmount; i++) {
-            var randomIndex = UnityEngine.Random.Range(0, _unclokedCards.Count);
-            var randomCard = _unclokedCards[randomIndex];
-            collection.AddCardToCollection(randomCard);
-        }
-
-        return collection;
-    }
-
-
-    public async override UniTask Undo() {
-        _deckPresenter.Deck.ClearDeck();
         await UniTask.CompletedTask;
     }
 }

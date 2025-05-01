@@ -14,5 +14,7 @@ public class OpponentData : ScriptableObject {
     public CardCollectionSO collection;
     public bool isFlying;
     public SpeechData speechData;
+
+    public Color Color;
 }
 

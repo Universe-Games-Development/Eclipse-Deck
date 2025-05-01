@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class FieldMaterializer : MonoBehaviour {
@@ -58,9 +59,8 @@ public class FieldMaterializer : MonoBehaviour {
     }
 
 
-    public void UpdateColorBasedOnOwner(BoardPlayer opponent) {
-        Color ownerColor = opponent is Player ? playerColor : enemyColor;
-        propBlock.SetColor("_BaseColor", ownerColor); // color of middle ground
+    public void UpdateColor(Color color) {
+        propBlock.SetColor("_BaseColor", color); // color of middle ground
         meshRenderer.SetPropertyBlock(propBlock);
 
     }
@@ -98,5 +98,9 @@ public class FieldMaterializer : MonoBehaviour {
         if (meshRenderer != null) {
             meshRenderer.SetPropertyBlock(propBlock);
         }
+    }
+
+    internal void UpdateColor(object color) {
+        throw new NotImplementedException();
     }
 }

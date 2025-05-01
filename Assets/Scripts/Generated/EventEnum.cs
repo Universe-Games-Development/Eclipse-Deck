@@ -22,7 +22,7 @@ public enum EventEnum
     OnDamageTaken = 18,
     Death = 19,
     OnManaEmpty = 20,
-    OnManaSpent = 21,
+    ManaSpent = 21,
     OnManaRestored = 22,
     LocationChanged = 23,
     RoomExiting = 24,

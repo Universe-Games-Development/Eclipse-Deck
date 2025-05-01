@@ -22,11 +22,13 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
     /// <summary>
     /// Прив'язує об'єкт опонента до цього представлення на дошці
     /// </summary>
-    public void BindPlayer(Opponent player) {
-        if (player == null) {
+    public void BindPlayer(OpponentPresenter opponentPresenter) {
+        if (opponentPresenter == null) {
             return;
         }
-        Info = player;
+        opponentPresenter.MoveToSeat(transform).Forget();
+
+        Info = opponentPresenter.Model;
         OpponentData Data = Info.Data;
 
         ControlledBy = this;
@@ -48,7 +50,10 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
     /// </summary>
     public void InitializeCards() {
         _cardsSystem.Initialize(ControlledBy);
-        _cardsSystem.BattleStartAction();
+
+
+        BattleStartedEvent battleStartedEvent = new BattleStartedEvent();
+        _cardsSystem.StartBattleActions(ref battleStartedEvent);
     }
 
     public void DrawTestCards() {
@@ -70,12 +75,6 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
         Gizmos.DrawSphere(transform.position, 1f);
     }
 
-    /// <summary>
-    /// Отримує сервіс таргетингу для вказаного гравця
-    /// </summary>
-    public ITargetingService GetActionTargeting(Opponent player) {
-        throw new NotImplementedException();
-    }
 
     public override string ToString() {
         return $"{GetType().Name} {Info.Data.Name} ({Health.CurrentValue}/{Health.TotalValue})";

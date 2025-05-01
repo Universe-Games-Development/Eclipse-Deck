@@ -127,7 +127,7 @@ public interface ITargetable {
 
 // Конкретна реалізація для різних типів об'єктів
 public class CardInteractable : MonoBehaviour, ITargetable {
-    [SerializeField] private CardView _view; 
+    [SerializeField] private ICardView _view; 
     private CardPresenter _presenter; 
 
     public void SetPresenter(CardPresenter presenter) {

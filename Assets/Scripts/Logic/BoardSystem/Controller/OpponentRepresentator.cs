@@ -4,13 +4,12 @@ using UnityEngine;
 public class OpponentRepresentator : MonoBehaviour {
     [SerializeField] private BoardPlayer _boardPlayer;
     [SerializeField] private BoardPlayer _boardEnemy;
-    private Dictionary<Opponent, BoardPlayer> _activePlayers = new Dictionary<Opponent, BoardPlayer>();
+    private Dictionary<OpponentPresenter, BoardPlayer> _activePlayers = new();
 
     public void RegisterOpponent(OpponentPresenter presenter) {
-        var model = presenter.Model;
-        var opponentRepresenter = model is Player ? _boardPlayer : _boardEnemy;
-        opponentRepresenter.BindPlayer(model);
-        _activePlayers[model] = opponentRepresenter;
+        var opponentRepresenter = presenter.Model is Player ? _boardPlayer : _boardEnemy;
+        opponentRepresenter.BindPlayer(presenter);
+        _activePlayers[presenter] = opponentRepresenter;
     }
 }
 

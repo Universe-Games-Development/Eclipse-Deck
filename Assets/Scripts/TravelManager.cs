@@ -27,6 +27,7 @@ public class PlayerHeroFactory {
         return true;
     }
 }
+
 public class TravelManager : MonoBehaviour {
     public Action<Room> OnRoomChanged;
     public DungeonGraph CurrentDungeon { get; private set; }
@@ -35,28 +36,40 @@ public class TravelManager : MonoBehaviour {
 
     [SerializeField] private RoomSystem _roomSystem;
 
+
     [Inject] private IDungeonGenerator _dungeonGenerator;
     [Inject] private VisitedLocationsService _visitedLocationService;
     [Inject] private GameEventBus _eventBus;
     [Inject] private OpponentRegistrator _opponentRegistrator;
     [Inject] private PlayerHeroFactory _playerHeroFactory;
-    [Inject] private LocationTransitionManager _locationManager;
+    
+    
 
     private PlayerPresenter _playerPresenter;
-    [Inject] BoardGame boardGame; 
+    [Inject] BoardGame boardGame;
+    [Inject] private LocationTransitionManager _locationManager;
+    [Inject] ResourceLoadingManager loadingManager;
+
     private void Start() {
+        BeginPlayerRun().Forget();
+        _locationManager.RegisterListener(LoadingPhase.Complete, EnterLocationAsync);
+    }
+
+    public async UniTask BeginPlayerRun() {
         if (!_playerHeroFactory.SpawnPlayer(out _playerPresenter)) {
             Debug.LogError("Failed to spawn player");
             return;
         }
 
-        _locationManager.RegisterListener(LoadingPhase.PreLoad, ClearDungeon);
-        _locationManager.RegisterListener(LoadingPhase.Complete, EnterLocationAsync);
+        LocationData locationData = _locationManager.GetSceneLocation();
+        if (!loadingManager.IsLocationLoaded(locationData)) {
+            await loadingManager.LoadResourcesForLocation(locationData);
+        }
 
         boardGame.TookSeat(_playerPresenter);
     }
 
-    private async UniTask ClearDungeon(LocationData data) {
+    private void ClearDungeon(LocationData data) {
         try {
             if (CurrentDungeon != null) {
                 CurrentDungeon.Clear();
@@ -64,8 +77,6 @@ public class TravelManager : MonoBehaviour {
         } catch (Exception ex) {
             Debug.LogError($"Error clearing dungeon: {ex.Message}");
         }
-
-        await UniTask.CompletedTask;
     }
 
     private async UniTask EnterLocationAsync(LocationData locationData) {

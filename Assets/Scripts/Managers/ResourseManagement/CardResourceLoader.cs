@@ -239,16 +239,12 @@ public abstract class GenericResourceProvider<T> : IResourceProvider<T> where T 
 }
 
 public class CardProvider : GenericResourceProvider<CardData> {
-    private readonly Dictionary<AssetLabelReference, List<CardData>> _cardCache = new();
-    private readonly Dictionary<System.Type, List<CardData>> _cardsByType = new();
+    private readonly Dictionary<Type, List<CardData>> _cardsByType = new();
     private readonly List<CardData> _unlockedCards = new();
-    private readonly VisitedLocationsService _visitedLocationsService;
 
     public CardProvider(
-        VisitedLocationsService visitedLocationsService,
         CardResourceLoader loader
     ) : base(loader) {
-        _visitedLocationsService = visitedLocationsService;
     }
 
     public void UpdateAvailableCards(List<CardData> rewardSets) {
@@ -271,83 +267,19 @@ public class CardProvider : GenericResourceProvider<CardData> {
     }
 
     // Завантаження карт із локації з кешуванням
-    private async UniTask<List<CardData>> LoadCardsFromLocation(LocationData locationData) {
-        if (_cardCache.TryGetValue(locationData.assetLabel, out var cachedCards)) {
-            return cachedCards;
-        }
-
-        var locationCards = await _loader.GetResourcesForLocationAsync(locationData.assetLabel);
-        if (locationCards != null && locationCards.Count > 0) {
-            _cardCache[locationData.assetLabel] = locationCards;
-            return locationCards;
-        }
-
-        return new List<CardData>();
+    public List<CardData> GetCardsForLocation(LocationData locationData) {
+        return _loader.GetResourcesForLocation(locationData.assetLabel);
     }
 
-    public async UniTask<List<CardData>> GetUnlockedCards() {
-        List<LocationData> visitedLocationDatas = _visitedLocationsService.GetVisitedLocations();
-        List<CardData> unlockedCards = new();
-
-        // Використовуємо WhenAll для паралельного завантаження
-        var loadTasks = visitedLocationDatas.Select(LoadCardsFromLocation).ToArray();
-        var allLocationCards = await UniTask.WhenAll(loadTasks);
-
-        foreach (var locationCards in allLocationCards) {
-            unlockedCards.AddRange(locationCards);
-        }
-
-        // Додаємо карти з винагород, якщо вони не є дублікатами
-        foreach (var card in _unlockedCards) {
-            if (!unlockedCards.Any(c => c.resourseId == card.resourseId)) {
-                unlockedCards.Add(card);
-            }
-        }
-
-        return unlockedCards;
+    public List<CardData> GetUnlockedCards() {
+        return _loader.GetAllResources();
     }
 
-    public async UniTask<List<CardData>> GetRandomUnlockedCards(int count) {
+    public List<CardData> GetRandomUnlockedCards(int count) {
         if (count <= 0) return new List<CardData>();
 
-        List<CardData> cardDatas = await GetUnlockedCards();
+        List<CardData> cardDatas = GetUnlockedCards();
         return cardDatas.OrderBy(_ => UnityEngine.Random.value).Take(count).ToList();
-    }
-
-    // Отримання карт за типом
-    public async UniTask<List<T>> GetCardsByType<T>() where T : CardData {
-        var allCards = await GetUnlockedCards();
-
-        // Оновлюємо кеш за типами, якщо потрібно
-        if (_cardsByType.Count == 0) {
-            RefreshCardTypeCache(allCards);
-        }
-
-        var requestedType = typeof(T);
-        if (_cardsByType.TryGetValue(requestedType, out var typedCards)) {
-            return typedCards.Cast<T>().ToList();
-        }
-
-        // Якщо в кеші немає, фільтруємо вручну
-        return allCards.OfType<T>().ToList();
-    }
-
-    // Отримання випадкових карт певного типу
-    public async UniTask<List<T>> GetRandomCardsByType<T>(int count) where T : CardData {
-        if (count <= 0) return new List<T>();
-
-        var typedCards = await GetCardsByType<T>();
-        return typedCards.OrderBy(_ => UnityEngine.Random.value).Take(count).ToList();
-    }
-
-    // Очищення кешу локацій
-    public void ClearLocationCache() {
-        _cardCache.Clear();
-    }
-
-    // Очищення кешу для конкретної локації
-    public void ClearLocationCache(AssetLabelReference locationLabel) {
-        _cardCache.Remove(locationLabel);
     }
 }
 

@@ -1,53 +1,37 @@
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System;
-using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class CardPresenter {
-    public Card Model;
-    public CardView View;
-    public CardPresenter(Card card, CardView cardView) {
-        Model = card;
-        View = cardView;
-
-        cardView.SetCardData(card.Data);
-        AttachmentToCard(card);
-    }
-    private void AttachmentToCard(Card card) {
-       
-    }
-
-    private void UpdateCost(int from, int to) {
-        View.UpdateCost(from, to);
-    }
-
-    private void UpdateAttack(int from, int to) {
-        View.UpdateHealth(from, to);
-    }
-
-    private void UpdateHealth(int from, int to) {
-        View.UpdateHealth(from, to);
-    }
-
-    private void UpdateDescriptionContent(Card card) {
-        
-    }
+public interface ICardView {
+    public string Id { get; set; }
+    void InitializeAnimator();
+    void OnPointerClick(PointerEventData eventData);
+    void OnPointerEnter(PointerEventData eventData);
+    void OnPointerExit(PointerEventData eventData);
+    UniTask RemoveCardView();
+    void Reset();
+    void SetCardData(CardData cardData);
+    void SetInteractable(bool value);
+    void UpdateCost(int from, int to);
+    void UpdateHealth(int from, int to);
 }
 
-public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, ICardView {
+public class CardUIView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, ICardView {
     public Action<bool> OnCardHovered;
-    public Action<CardView> OnCardClicked; // used by cardHand to define selected card
+    public Action<CardUIView> OnCardClicked; // used by cardHand to define selected card
     public Action<bool, UniTask> OnCardSelection; // used by animator to lift card or lower
-    public Func<CardView, UniTask> OnCardRemoval;
+    public Func<CardUIView, UniTask> OnCardRemoval;
 
     private bool isInteractable;
+    private CardLayoutGhost ghost;
+    
 
     [Header("Params")]
-    [SerializeField] private string id;
+    public string Id { get; set; }
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI costTMP;
     [SerializeField] private TextMeshProUGUI healthText;
@@ -56,7 +40,7 @@ public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandle
 
     [Header("Visuals")]
     [SerializeField] private TextMeshProUGUI authorTMP;
-    
+
     [SerializeField] private Image cardBackground;
     [SerializeField] private Image characterImage;
 
@@ -76,20 +60,27 @@ public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandle
         }
 
         // Visuals
-        rarity.color = data.GetRarityColor();
-        authorTMP.text = data.AuthorName;
-        characterImage.sprite = data.CharacterSprite;
+        
+        
+       
     }
 
+    public void SetGhost(CardLayoutGhost ghost) {
+        this.ghost = ghost;
+    }
 
     #region Updaters
-    // CreatureCard UI
-    public void UpdateHealth(int beforeAmount, int currentAmount) {
-        UpdateStat(healthText, beforeAmount, currentAmount);
+
+    public void UpdateRarity(Color color) {
+        rarity.color = color;
     }
 
-    public void UpdateAttack(int beforeAmount, int currentAmount) {
-        UpdateStat(attackText, beforeAmount, currentAmount);
+    public void UpdateAuthor(string author) {
+        authorTMP.text = author;
+    }
+
+    public void UpdateAuthor(Sprite characterSprite) {
+        characterImage.sprite = characterSprite;
     }
 
     // Base Card UI
@@ -105,13 +96,22 @@ public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandle
         UpdateStat(costTMP, beforeAmount, currentAmount);
     }
 
+    // CreatureCard UI
+    public void UpdateHealth(int beforeAmount, int currentAmount) {
+        UpdateStat(healthText, beforeAmount, currentAmount);
+    }
+
+    public void UpdateAttack(int beforeAmount, int currentAmount) {
+        UpdateStat(attackText, beforeAmount, currentAmount);
+    }
+
     protected void UpdateStat(TMP_Text textComponent, int beforeAmount, int currentAmount) {
         if (textComponent != null) {
             textComponent.text = $"{currentAmount}";
         }
     }
-    
-    
+
+
     #endregion
     public void InitializeAnimator() {
         if (DoTweenAnimator == null) return;
@@ -121,7 +121,7 @@ public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandle
 
     public void SetInteractable(bool value) => isInteractable = value;
 
-    
+
 
     public async UniTask RemoveCardView() {
         isInteractable = false;
@@ -151,5 +151,18 @@ public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandle
 
     internal void SetAbilityPool(CardAbilityPool abilityPool) {
         throw new NotImplementedException();
+    }
+
+    internal void UpdatePosition() {
+        Vector3 newLocalPosition = transform.parent.InverseTransformPoint(ghost.transform.position);
+
+        SetInteractable(false);
+        transform.DOLocalMove(newLocalPosition, 0.8f)
+            .SetEase(Ease.InOutSine)
+            .OnComplete(() => {
+                {
+                    SetInteractable(isInteractable);
+                }
+            });
     }
 }
