@@ -44,7 +44,7 @@ public class RequirementFactory {
 public interface IRequirement {
     bool IsCasterFill { get; } // Whether the caster or opponent fills this
     bool IsForcedChoice { get; } // Whether the choice can be canceled or not
-    ValidationResult Check(BoardPlayer initiator, object selected);
+    ValidationResult Check(object selected, BoardPlayer initiator);
     string GetInstruction();
 }
 
@@ -61,7 +61,7 @@ public abstract class Requirement<T> : IRequirement where T : class {
         IsForcedChoice = false; // За замовчуванням не примусова
     }
 
-    public ValidationResult Check(BoardPlayer initiator, object selected) {
+    public ValidationResult Check(object selected, BoardPlayer initiator) {
         if (!TryConvertToRequired(selected, out T defined)) {
             Debug.Log($"Wrong type selected: {selected}");
             return ValidationResult.Fail();

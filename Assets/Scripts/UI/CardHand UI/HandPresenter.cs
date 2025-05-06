@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 public class HandPresenter : IDisposable {
     public CardHand CardHand { get; private set; }
@@ -18,7 +19,7 @@ public class HandPresenter : IDisposable {
         cardHand.OnCardDeselected += DeselectCard;
         cardHand.OnToggled += handView.SetInteractable;
         // Підписуємося на події представлення
-        handView.CardClicked += OnCardViewClicked;
+        handView.OnCardClicked += OnCardViewClicked;
 
         // Початкова синхронізація
         SyncViewWithModel();
@@ -38,9 +39,10 @@ public class HandPresenter : IDisposable {
 
     // Handle Model events
     private void OnCardAdded(Card card) {
-        ICardView cardView = handView.CreateCardView(card.Id);
-        CardPresenter cardPresenter = new CardPresenter(card, cardView);
-        cardPresenters.Add(card.Id, cardPresenter);
+        CardView cardView = handView.CreateCardView(card.Id);
+        CardPresenter presenter = cardView.AddComponent<CardPresenter>();
+        presenter.Initialize(card, cardView);
+        cardPresenters.Add(card.Id, presenter);
     }
 
     private void OnCardRemoved(Card card) {
@@ -79,36 +81,6 @@ public class HandPresenter : IDisposable {
     }
 
     internal void ClearHand() {
-        throw new NotImplementedException();
-    }
-}
-
-
-public class CardPresenter {
-    public Card Model;
-    public ICardView View;
-    public CardPresenter(Card card, ICardView cardView) {
-        Model = card;
-        View = cardView;
-    }
-
-    private void UpdateCost(int from, int to) {
-        View.UpdateCost(from, to);
-    }
-
-    private void UpdateAttack(int from, int to) {
-        View.UpdateHealth(from, to);
-    }
-
-    private void UpdateHealth(int from, int to) {
-        View.UpdateHealth(from, to);
-    }
-
-    private void UpdateDescriptionContent(Card card) {
-
-    }
-
-    internal void HandleRemoval() {
         throw new NotImplementedException();
     }
 }

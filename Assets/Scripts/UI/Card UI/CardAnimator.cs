@@ -8,18 +8,12 @@ public class CardAnimator : MonoBehaviour {
 
     private bool isHovered;
     private Tween hoveringTween;
-    private CardUIView cardUI;
     [Header("Layout")]
     [SerializeField] private RectTransform globalBody;
     [SerializeField] private RectTransform innerBody;
 
-    public void AttachAnimator(CardUIView cardUI) {
-        cardUI.OnCardClicked += ShrinkClick;
-        cardUI.OnCardHovered += ToggleHover;
-        cardUI.OnCardRemoval += RemovalAnimation;
-    }
 
-    private void ShrinkClick(CardUIView uI) {
+    public void ShrinkClick() {
         // Create a sequence for the scaling animation
         Sequence shrinkSequence = DOTween.Sequence();
         shrinkSequence.Append(innerBody.DOScale(0.9f, 0.2f));
@@ -29,14 +23,14 @@ public class CardAnimator : MonoBehaviour {
     }
 
 
-    private async UniTask RemovalAnimation(CardUIView cardUI) {
+    public async UniTask RemovalAnimation(CardUIView cardUI) {
         var sequence = DOTween.Sequence();
         sequence.Append(globalBody.transform.DOScale(Vector3.zero, 0.3f));
         sequence.Join(globalBody.transform.DOLocalMoveY(globalBody.transform.position.y - 2f, 0.8f).SetEase(Ease.InOutSine));
         await sequence.AsyncWaitForCompletion();
     }
 
-    private void ToggleHover(bool value) {
+    public void ToggleHover(bool value) {
         // Якщо картка вже в потрібному стані (піднята або опущена), ігноруємо повторний виклик
         if (isHovered == value)
             return;
@@ -73,11 +67,6 @@ public class CardAnimator : MonoBehaviour {
     }
     internal void Reset() {
         Debug.Log("Reset animator card logic");
-    }
-
-    private void OnDestroy() {
-        if (cardUI)
-        cardUI.OnCardClicked -= ShrinkClick;
     }
 
     private void OnDrawGizmos() {

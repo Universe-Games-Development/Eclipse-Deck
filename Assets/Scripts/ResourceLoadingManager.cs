@@ -59,7 +59,6 @@ public class ResourceLoadingManager {
         _currentLoadingTask = new UniTaskCompletionSource<bool>();
 
         try {
-            float totalProgress = 0f;
             int loadersCount = _resourceLoaders.Count;
 
             // Запускаємо завантаження для всіх наявних лоадерів

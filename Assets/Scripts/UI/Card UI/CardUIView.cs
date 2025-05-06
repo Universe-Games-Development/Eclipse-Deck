@@ -1,168 +1,103 @@
 using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
+using DG.Tweening;
 
-public interface ICardView {
-    public string Id { get; set; }
-    void InitializeAnimator();
-    void OnPointerClick(PointerEventData eventData);
-    void OnPointerEnter(PointerEventData eventData);
-    void OnPointerExit(PointerEventData eventData);
-    UniTask RemoveCardView();
-    void Reset();
-    void SetCardData(CardData cardData);
-    void SetInteractable(bool value);
-    void UpdateCost(int from, int to);
-    void UpdateHealth(int from, int to);
-}
-
-public class CardUIView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, ICardView {
+public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
     public Action<bool> OnCardHovered;
-    public Action<CardUIView> OnCardClicked; // used by cardHand to define selected card
     public Action<bool, UniTask> OnCardSelection; // used by animator to lift card or lower
     public Func<CardUIView, UniTask> OnCardRemoval;
+    public Action OnChanged;
 
-    private bool isInteractable;
+    public RectTransform RectTransform;
     private CardLayoutGhost ghost;
-    
-
-    [Header("Params")]
-    public string Id { get; set; }
-    [SerializeField] private TextMeshProUGUI nameText;
-    [SerializeField] private TextMeshProUGUI costTMP;
-    [SerializeField] private TextMeshProUGUI healthText;
-    [SerializeField] private TextMeshProUGUI attackText;
-    [SerializeField] private Image rarity;
-
-    [Header("Visuals")]
-    [SerializeField] private TextMeshProUGUI authorTMP;
-
-    [SerializeField] private Image cardBackground;
-    [SerializeField] private Image characterImage;
 
     // Components
     [SerializeField] public CardAnimator DoTweenAnimator;
-    [SerializeField] public CardUIInfo UIDataInfo;
+    
     public CardDescription Description;
 
     private void Awake() {
-        InitializeAnimator();
+        if (RectTransform == null) {
+            RectTransform = GetComponent<RectTransform>();
+        }
+        CardInfo.OnDataChanged += InvokeCardChangedEvent;
     }
 
-    public void SetCardData(CardData data) {
-        if (data == null) {
-            Debug.LogError("data is null during initialization!");
-            return;
-        }
+    private void InvokeCardChangedEvent() {
+        OnChanged?.Invoke();
+    }
 
-        // Visuals
-        
-        
-       
+    private void OnDestroy() {
+        if (CardInfo)
+        CardInfo.OnDataChanged -= InvokeCardChangedEvent;
     }
 
     public void SetGhost(CardLayoutGhost ghost) {
         this.ghost = ghost;
     }
 
-    #region Updaters
-
-    public void UpdateRarity(Color color) {
-        rarity.color = color;
-    }
-
-    public void UpdateAuthor(string author) {
-        authorTMP.text = author;
-    }
-
-    public void UpdateAuthor(Sprite characterSprite) {
-        characterImage.sprite = characterSprite;
-    }
-
-    // Base Card UI
-    public void UpdateName(string newName) {
-        if (nameText != null && !string.IsNullOrEmpty(newName)) {
-            nameText.text = newName;
-        } else {
-            Debug.LogWarning("Attempted to set name to an empty or null value.");
-        }
-    }
-
-    public void UpdateCost(int beforeAmount, int currentAmount) {
-        UpdateStat(costTMP, beforeAmount, currentAmount);
-    }
-
-    // CreatureCard UI
-    public void UpdateHealth(int beforeAmount, int currentAmount) {
-        UpdateStat(healthText, beforeAmount, currentAmount);
-    }
-
-    public void UpdateAttack(int beforeAmount, int currentAmount) {
-        UpdateStat(attackText, beforeAmount, currentAmount);
-    }
-
-    protected void UpdateStat(TMP_Text textComponent, int beforeAmount, int currentAmount) {
-        if (textComponent != null) {
-            textComponent.text = $"{currentAmount}";
-        }
-    }
-
-
-    #endregion
-    public void InitializeAnimator() {
+    public override void InitializeAnimator() {
         if (DoTweenAnimator == null) return;
-        DoTweenAnimator.AttachAnimator(this);
         DoTweenAnimator.OnReachedLayout += () => SetInteractable(true);
     }
 
-    public void SetInteractable(bool value) => isInteractable = value;
+    public override void SetInteractable(bool value) {
+        base.SetInteractable(value);
+    }
 
-
-
-    public async UniTask RemoveCardView() {
+    public override async UniTask RemoveCardView() {
         isInteractable = false;
         if (OnCardRemoval != null) {
             await OnCardRemoval.Invoke(this);
         }
-        await UniTask.CompletedTask;
-        Destroy(gameObject);
+        await base.RemoveCardView();
     }
+
     public void OnPointerEnter(PointerEventData eventData) {
         if (!isInteractable) return;
+        DoTweenAnimator.ToggleHover(true);
         OnCardHovered?.Invoke(true);
     }
+
     public void OnPointerExit(PointerEventData eventData) {
         if (!isInteractable) return;
+        DoTweenAnimator.ToggleHover(false);
         OnCardHovered?.Invoke(false);
     }
+
     public void OnPointerClick(PointerEventData eventData) {
         if (!isInteractable) return;
-        OnCardClicked?.Invoke(this);
+        DoTweenAnimator.ShrinkClick();
+        RaiseCardClickedEvent();
     }
 
-    public void Reset() {
+    public override void Reset() {
         DoTweenAnimator?.Reset();
-        isInteractable = false;
+        base.Reset();
     }
 
-    internal void SetAbilityPool(CardAbilityPool abilityPool) {
-        throw new NotImplementedException();
+    public override void Select() {
+        // Implement selection logic for UI cards
+        DoTweenAnimator?.ToggleHover(true);
     }
 
-    internal void UpdatePosition() {
+    public override void Deselect() {
+        // Implement deselection logic for UI cards
+        DoTweenAnimator?.ToggleHover(false);
+    }
+
+    public void UpdatePosition() {
+        if (ghost == null) return;
+
         Vector3 newLocalPosition = transform.parent.InverseTransformPoint(ghost.transform.position);
 
         SetInteractable(false);
         transform.DOLocalMove(newLocalPosition, 0.8f)
             .SetEase(Ease.InOutSine)
             .OnComplete(() => {
-                {
-                    SetInteractable(isInteractable);
-                }
+                SetInteractable(isInteractable);
             });
     }
 }

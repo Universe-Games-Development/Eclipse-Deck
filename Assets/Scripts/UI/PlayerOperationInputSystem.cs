@@ -72,7 +72,7 @@ public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
         // Спочатку перевіряємо наявність IInteractable
         ITargetable interactable = hoveredObject.GetComponent<ITargetable>();
         if (interactable != null) {
-            ValidationResult result = interactable.CheckRequirement(_currentRequirement, requestOpponent);
+            ValidationResult result = _currentRequirement.Check(interactable, requestOpponent);
             if (result.IsValid) {
                 CompleteRequirement(interactable.GetTargetModel());
             } else {
@@ -118,62 +118,7 @@ public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
 }
 
 public interface ITargetable {
-    // Метод для перевірки, чи об'єкт відповідає вимогам
-    ValidationResult CheckRequirement(IRequirement requirement, BoardPlayer requestOpponent);
 
     // Метод для отримання моделі, яка буде передана в результат
     object GetTargetModel();
-}
-
-// Конкретна реалізація для різних типів об'єктів
-public class CardInteractable : MonoBehaviour, ITargetable {
-    [SerializeField] private ICardView _view; 
-    private CardPresenter _presenter; 
-
-    public void SetPresenter(CardPresenter presenter) {
-        _presenter = presenter;
-    }
-
-    public ValidationResult CheckRequirement(IRequirement requirement, BoardPlayer requestOpponent) {
-        return requirement.Check(requestOpponent, _presenter.Model);
-    }
-
-    public object GetTargetModel() {
-        return _presenter.Model;
-    }
-}
-
-public class FieldInteractable : MonoBehaviour, ITargetable {
-    [SerializeField] private FieldView _view; 
-    private FieldPresenter _presenter; 
-
-    public void SetPresenter(FieldPresenter presenter) {
-        _presenter = presenter;
-    }
-
-    public ValidationResult CheckRequirement(IRequirement requirement, BoardPlayer requestOpponent) {
-        return requirement.Check(requestOpponent, _presenter.Model);
-    }
-
-    public object GetTargetModel() {
-        return _presenter.Model;
-    }
-}
-
-
-public class Opponentnteractable : MonoBehaviour, ITargetable {
-    [SerializeField] private OpponentView _view;
-    private OpponentPresenter _presenter;
-
-    public void SetPresenter(OpponentPresenter presenter) {
-        _presenter = presenter;
-    }
-
-    public ValidationResult CheckRequirement(IRequirement requirement, BoardPlayer requestOpponent) {
-        return requirement.Check(requestOpponent, _presenter.Model);
-    }
-
-    public object GetTargetModel() {
-        return _presenter.Model;
-    }
 }
