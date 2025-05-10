@@ -139,11 +139,11 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
     }
 
     private void ValidateReferences() {
-        if (_travelManager == null)
-            Debug.LogWarning("TravelManager not injected into DungeonMapUIController");
+        if (_travelManager == null) return;
+           // Debug.LogWarning("TravelManager not injected into DungeonMapUIController");
 
-        if (_locationManager == null)
-            Debug.LogWarning("LocationTransitionManager not injected into DungeonMapUIController");
+        if (_locationManager == null) return;
+        // Debug.LogWarning("LocationTransitionManager not injected into DungeonMapUIController");
 
         if (_nextRoomsButton == null)
             Debug.LogWarning("NextRoomsButton reference missing in DungeonMapUIController");

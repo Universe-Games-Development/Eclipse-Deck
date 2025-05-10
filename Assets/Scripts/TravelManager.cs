@@ -51,6 +51,7 @@ public class TravelManager : MonoBehaviour {
     [Inject] ResourceLoadingManager loadingManager;
 
     private void Start() {
+        if (_playerHeroFactory == null) return;
         BeginPlayerRun().Forget();
         _locationManager.RegisterListener(LoadingPhase.Complete, EnterLocationAsync);
     }

@@ -11,6 +11,12 @@ public class CardPresenter : MonoBehaviour {
     public void Initialize(Card card, CardView cardView) {
         Model = card;
         View = cardView;
+
+        CardUIInfo cardInfo = cardView.CardInfo;
+        cardInfo.BatchUpdate( cardInfo => {
+            cardInfo.UpdateCost(card.Cost.CurrentValue);
+            cardInfo.UpdateName(card.Data.Name);
+        });
     }
 
     private void UpdateCost(int value) {

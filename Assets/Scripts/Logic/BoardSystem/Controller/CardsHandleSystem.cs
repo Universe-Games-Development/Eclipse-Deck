@@ -6,7 +6,7 @@ using UnityEngine;
 using Zenject;
 
 public class CardsHandleSystem : MonoBehaviour {
-    [SerializeField] private CardHandUIView handUIView;
+    [SerializeField] private CardHandView handView;
     [SerializeField] private DeckView deckView;
     [SerializeField] private DeckView discardDeckView;
 
@@ -31,7 +31,7 @@ public class CardsHandleSystem : MonoBehaviour {
         CardHand handModel = new();
 
         _deckPresenter = new(deckModel, deckView);
-        HandPresenter = new(handModel, handUIView);
+        HandPresenter = new(handModel, handView);
         HandPresenter.CardHand.OnCardSelected += PlayCard;
 
         _eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);

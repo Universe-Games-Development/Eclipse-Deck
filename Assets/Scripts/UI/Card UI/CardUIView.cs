@@ -6,42 +6,25 @@ using DG.Tweening;
 
 public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
     public Action<bool> OnCardHovered;
-    public Action<bool, UniTask> OnCardSelection; // used by animator to lift card or lower
+    public Action<bool, UniTask> OnCardSelection;
     public Func<CardUIView, UniTask> OnCardRemoval;
     public Action OnChanged;
 
     public RectTransform RectTransform;
-    private CardLayoutGhost ghost;
-
-    // Components
     [SerializeField] public CardAnimator DoTweenAnimator;
-    
     public CardDescription Description;
 
     private void Awake() {
-        if (RectTransform == null) {
-            RectTransform = GetComponent<RectTransform>();
-        }
+        RectTransform ??= GetComponent<RectTransform>();
         CardInfo.OnDataChanged += InvokeCardChangedEvent;
-    }
-
-    private void InvokeCardChangedEvent() {
-        OnChanged?.Invoke();
     }
 
     private void OnDestroy() {
         if (CardInfo)
-        CardInfo.OnDataChanged -= InvokeCardChangedEvent;
+            CardInfo.OnDataChanged -= InvokeCardChangedEvent;
     }
 
-    public void SetGhost(CardLayoutGhost ghost) {
-        this.ghost = ghost;
-    }
-
-    public override void InitializeAnimator() {
-        if (DoTweenAnimator == null) return;
-        DoTweenAnimator.OnReachedLayout += () => SetInteractable(true);
-    }
+    private void InvokeCardChangedEvent() => OnChanged?.Invoke();
 
     public override void SetInteractable(bool value) {
         base.SetInteractable(value);
@@ -49,9 +32,8 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
 
     public override async UniTask RemoveCardView() {
         isInteractable = false;
-        if (OnCardRemoval != null) {
+        if (OnCardRemoval != null)
             await OnCardRemoval.Invoke(this);
-        }
         await base.RemoveCardView();
     }
 
@@ -79,25 +61,10 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
     }
 
     public override void Select() {
-        // Implement selection logic for UI cards
         DoTweenAnimator?.ToggleHover(true);
     }
 
     public override void Deselect() {
-        // Implement deselection logic for UI cards
         DoTweenAnimator?.ToggleHover(false);
-    }
-
-    public void UpdatePosition() {
-        if (ghost == null) return;
-
-        Vector3 newLocalPosition = transform.parent.InverseTransformPoint(ghost.transform.position);
-
-        SetInteractable(false);
-        transform.DOLocalMove(newLocalPosition, 0.8f)
-            .SetEase(Ease.InOutSine)
-            .OnComplete(() => {
-                SetInteractable(isInteractable);
-            });
     }
 }

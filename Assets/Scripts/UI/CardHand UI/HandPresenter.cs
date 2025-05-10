@@ -4,10 +4,10 @@ using Unity.VisualScripting;
 
 public class HandPresenter : IDisposable {
     public CardHand CardHand { get; private set; }
-    private readonly ICardHandView handView;
+    private readonly CardHandView handView;
     private readonly Dictionary<string, CardPresenter> cardPresenters = new();
 
-    public HandPresenter(CardHand cardHand, ICardHandView handView) {
+    public HandPresenter(CardHand cardHand, CardHandView handView) {
         CardHand = cardHand ?? throw new ArgumentNullException(nameof(cardHand));
         this.handView = handView ?? throw new ArgumentNullException(nameof(handView));
         handView.Toggle(true);

@@ -1,8 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Triggers;
 using DG.Tweening;
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Zenject;
 
 // Creates CardUIView for 3D cards and render textures for it
 public interface ICardTextureRenderer {
@@ -12,6 +13,7 @@ public interface ICardTextureRenderer {
 
 
 public class Card3DView : CardView, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
+    public event Action OnInitialized;
     [SerializeField] private SkinnedMeshRenderer cardRenderer;
     [SerializeField] private Card3DAnimator animator;
     private static readonly int CardFrontTextureId = Shader.PropertyToID("_CardFrontTexture");
@@ -23,20 +25,10 @@ public class Card3DView : CardView, IPointerClickHandler, IPointerEnterHandler, 
     private bool isHovered = false;
 
 
-    public void Initialize() {
-        //_uiReference = cardTextureRenderer.Register3DCard(this);
-    }
-
-    public void SetUiReference(CardUIView cardUIView) {
+    public void Initialize(CardUIView cardUIView) {
         _uiReference = cardUIView;
-        CardInfo = cardUIView.CardInfo;
-    }
-
-
-    public override void InitializeAnimator() {
-        if (animator != null) {
-            animator.Initialize();
-        }
+        CardInfo = _uiReference.CardInfo;
+        OnInitialized?.Invoke();
     }
 
     // Used by ICardTextureRenderer to update the texture
@@ -142,7 +134,7 @@ public class Card3DAnimator : MonoBehaviour {
 
     private Sequence currentAnimation;
 
-    public void Initialize() {
+    public void Awake() {
         // Store original transform values
         originalPosition = transform.localPosition;
         originalScale = transform.localScale;

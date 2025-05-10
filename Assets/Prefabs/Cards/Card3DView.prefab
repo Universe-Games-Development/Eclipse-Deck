@@ -62,7 +62,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5da048aa57d65e4e967d033cd219c81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  renderCell: {fileID: 0}
   card3DView: {fileID: 2702028589246237682}
   updateTimes: 5
 --- !u!1001 &1939813236717090575
@@ -87,31 +86,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 309dd6ca024f5784f9b0bfecc7dd21f6, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7069834
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 309dd6ca024f5784f9b0bfecc7dd21f6, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.7072302
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 309dd6ca024f5784f9b0bfecc7dd21f6, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 309dd6ca024f5784f9b0bfecc7dd21f6, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 309dd6ca024f5784f9b0bfecc7dd21f6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: -89.98
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 309dd6ca024f5784f9b0bfecc7dd21f6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 180
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 309dd6ca024f5784f9b0bfecc7dd21f6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: -180
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -3887185075125053422, guid: 309dd6ca024f5784f9b0bfecc7dd21f6, type: 3}
       propertyPath: m_DirtyAABB

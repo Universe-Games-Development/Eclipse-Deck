@@ -70,6 +70,6 @@ public class RandomSeedInitializer : IInitializable {
         }
 
         UnityEngine.Random.InitState(seed);
-        Debug.Log($"UnityEngine.Random initialized with seed: {seed}");
+        //Debug.Log($"UnityEngine.Random initialized with seed: {seed}");
     }
 }

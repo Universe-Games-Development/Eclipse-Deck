@@ -3,22 +3,29 @@ using System;
 using UnityEngine;
 
 public class TestCard3DWrapper : MonoBehaviour {
-    [SerializeField] RenderCell renderCell;
     [SerializeField] private Card3DView card3DView;
+
     [SerializeField] int updateTimes;
-    private void Start() {
-        CardUIView uiView = renderCell.Register3DCard(card3DView);
-        card3DView.SetUiReference(uiView);
+    private System.Random random; // ”н≥кальний генератор випадкових чисел дл€ кожного екземпл€ра класу
+
+    private void Awake() {
+        random = new System.Random(Guid.NewGuid().GetHashCode()); // ¬икористанн€ ун≥кального генератора дл€ кожного екземпл€ра
+        card3DView.OnInitialized += () => {
+            Debug.Log("Card3DView Initialized");
+            Test();
+        };
+    }
+
+    private void Test() {
         TestUpdateHealth().Forget();
     }
 
     private async UniTask TestUpdateHealth() {
         for (int i = 0; i < updateTimes; i++) {
-            card3DView.CardInfo.UpdateHealth(i + 1);
-            Debug.Log("Update! " + i);
+            int randomHealth = random.Next(1, 100); // √енеруЇмо випадкове значенн€ в д≥апазон≥ 1-100
+            card3DView.CardInfo.UpdateHealth(randomHealth);
+            Debug.Log($"Update! Iteration {i}, Health: {randomHealth}");
             await UniTask.Delay(TimeSpan.FromSeconds(2));
         }
     }
-
 }
-

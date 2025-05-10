@@ -7,13 +7,8 @@ public abstract class CardView : MonoBehaviour {
 
     public CardUIInfo CardInfo;
     [SerializeField] protected bool isInteractable = true;
-    private void Awake() {
-        InitializeAnimator();
-    }
 
     public string Id { get; set; }
-    
-    public abstract void InitializeAnimator();
 
     public virtual async UniTask RemoveCardView() {
         // Base implementation for card removal
