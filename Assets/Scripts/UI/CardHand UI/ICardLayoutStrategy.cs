@@ -2,15 +2,20 @@
 using DG.Tweening;
 using UnityEngine;
 using System.Linq;
+using System.Collections.Generic;
 
 public interface ICardLayoutStrategy {
-    UniTask LayoutCards(CardHandView handView, Transform[] cardTransforms, bool immediate = false);
     void SetSettings(CardLayoutSettings settings);
+    UniTask LayoutCards(CardHandView handView, Transform[] cardTransforms, bool immediate = false);
+    UniTask SetCardHovered(Transform cardTransform, bool isHovered);
 }
 
 
 public abstract class BaseCardLayoutStrategy : ICardLayoutStrategy {
     protected CardLayoutSettings Settings { get; private set; }
+    protected Dictionary<Transform, Vector3> _originalPositions = new ();
+    protected Dictionary<Transform, Quaternion> _originalRotations = new ();
+    protected Dictionary<Transform, bool> _hoveredStates = new();
 
     protected BaseCardLayoutStrategy(CardLayoutSettings settings = null) {
         Settings = settings;
@@ -24,11 +29,68 @@ public abstract class BaseCardLayoutStrategy : ICardLayoutStrategy {
 
     public abstract UniTask LayoutCards(CardHandView handView, Transform[] cardTransforms, bool immediate = false);
 
-    protected async UniTask AnimateCardToPosition(Transform cardTransform, Vector3 targetPos,
-        Quaternion targetRot, float delay = 0, bool immediate = false) {
+    public UniTask SetCardHovered(Transform cardTransform, bool isHovered) {
+        if (cardTransform == null) return UniTask.CompletedTask;
+
+        _hoveredStates[cardTransform] = isHovered;
+
+        if (!_originalPositions.ContainsKey(cardTransform) || !_originalRotations.ContainsKey(cardTransform)) {
+            return UniTask.CompletedTask;
+        }
+
+        // Получаем оригинальную позицию и поворот
+        Vector3 originalPosition = _originalPositions[cardTransform];
+        Quaternion originalRotation = _originalRotations[cardTransform];
+
+        if (isHovered) {
+            // Поднимаем и выдвигаем карту вперед при наведении
+            Vector3 hoverPosition = originalPosition + new Vector3(
+                0,
+                Settings.hoverYOffset,
+                Settings.hoverZOffset
+            );
+
+            return AnimateCardToPosition(
+                cardTransform,
+                hoverPosition,
+                originalRotation,
+                0,
+                false,
+                Settings.hoverAnimationDuration
+            );
+        } else {
+            // Возвращаем карту на место
+            return AnimateCardToPosition(
+                cardTransform,
+                originalPosition,
+                originalRotation,
+                0,
+                false,
+                Settings.hoverAnimationDuration
+            );
+        }
+    }
+
+    // Обновленный метод анимации с возможностью указать длительность
+    protected async UniTask AnimateCardToPosition(
+        Transform cardTransform,
+        Vector3 targetPos,
+        Quaternion targetRot,
+        float delay = 0,
+        bool immediate = false,
+        float? customDuration = null) {
+
+        // Сохраняем оригинальную позицию и поворот
+        _originalPositions[cardTransform] = targetPos;
+        _originalRotations[cardTransform] = targetRot;
+
+        // Если карта в состоянии hover, применяем соответствующее смещение
+        if (_hoveredStates.TryGetValue(cardTransform, out bool isHovered) && isHovered) {
+            targetPos += new Vector3(0, Settings.hoverYOffset, Settings.hoverZOffset);
+        }
+
         if (immediate) {
-            cardTransform.localPosition = targetPos;
-            cardTransform.localRotation = targetRot;
+            cardTransform.SetLocalPositionAndRotation(targetPos, targetRot);
             return;
         }
 
@@ -37,8 +99,8 @@ public abstract class BaseCardLayoutStrategy : ICardLayoutStrategy {
             await UniTask.Delay((int)(delay * 1000));
         }
 
-        float animDuration = Settings != null ? Settings.animationDuration : 0.3f;
-        float rotDuration = Settings != null ? Settings.rotationDuration : 0.2f;
+        float animDuration = customDuration ?? (Settings != null ? Settings.animationDuration : 0.3f);
+        float rotDuration = customDuration ?? (Settings != null ? Settings.rotationDuration : 0.2f);
 
         // Запускаем анимации параллельно
         var moveTask = cardTransform.DOLocalMove(targetPos, animDuration)
@@ -52,20 +114,25 @@ public abstract class BaseCardLayoutStrategy : ICardLayoutStrategy {
         await UniTask.WhenAll(moveTask, rotateTask);
     }
 
+    // Обновленный метод для получения правильной последовательности карт
+    // с поддержкой направления справа налево или слева направо
     protected int[] GetCardOrderSequence(int count) {
-        // Определяем порядок анимации: сначала центральные карты, затем к краям
         var order = new int[count];
-        int mid = count / 2;
-        int sign = 1;
-        int counter = 0;
+        bool rightToLeft = Settings == null || Settings.rightToLeftOrder;
 
-        for (int i = 0; i < count; i++) {
-            order[i] = mid + sign * counter;
-            sign *= -1;
-            if (sign < 0) counter++;
+        // Если нужно чтобы первой была правая карта
+        if (rightToLeft) {
+            for (int i = 0; i < count; i++) {
+                order[i] = count - i - 1;
+            }
+        } else {
+            // Обычный порядок слева направо
+            for (int i = 0; i < count; i++) {
+                order[i] = i;
+            }
         }
 
-        return count % 2 == 0 ? order.Take(count).ToArray() : order.Take(count).ToArray();
+        return order;
     }
 
     protected float GetCardThickness() {
@@ -80,6 +147,8 @@ public abstract class BaseCardLayoutStrategy : ICardLayoutStrategy {
         return Settings != null ? Settings.maxCardYOffset : 0.2f;
     }
 }
+
+// Обновленная стратегия размещения по кривой
 public class CurvedHandLayoutStrategy : BaseCardLayoutStrategy {
     public CurvedHandLayoutStrategy(CardLayoutSettings settings = null) : base(settings) { }
 
@@ -99,7 +168,6 @@ public class CurvedHandLayoutStrategy : BaseCardLayoutStrategy {
         var animationTasks = new UniTask[totalCards];
         float maxDelay = GetMaxAnimationDelay();
         float maxCardYOffset = GetMaxCardYOffset();
-        float cardThickness = GetCardThickness();
 
         // Get settings for curved layout
         float curveHeight = Settings != null ? Settings.cardCurveHeight : 0.5f;
@@ -107,15 +175,17 @@ public class CurvedHandLayoutStrategy : BaseCardLayoutStrategy {
 
         for (int i = 0; i < totalCards; i++) {
             int cardIndex = orderSequence[i];
-            var cardTransform = cardTransforms[cardIndex];
+            var cardTransform = cardTransforms[i]; // Используем i вместо cardIndex, так как порядок уже учтен в orderSequence
             if (cardTransform == null) continue;
 
             // Рассчитываем позицию на кривой
             float xPos = (cardIndex * cardSpacing) - centerOffset;
             float yPos = CalculateYPosition(xPos, centerOffset, curveHeight);
 
-            // Z-позиция для правильного порядка отрисовки (центральные карты поверх)
-            float zPos = -Mathf.Abs(xPos) * cardThickness;
+            // Z-позиция учитывает приоритет отображения согласно настройкам
+            float zPos = Settings != null
+                ? Settings.CalculateZOrder(cardIndex, totalCards, xPos)
+                : -Mathf.Abs(xPos) * GetCardThickness();
 
             // Рассчитываем поворот (карты веером)
             float rotAngle = CalculateRotationAngle(xPos, centerOffset, rotationAngle);
@@ -123,13 +193,13 @@ public class CurvedHandLayoutStrategy : BaseCardLayoutStrategy {
             // Небольшой случайный Y-отступ для естественности
             float randomYOffset = Random.Range(-maxCardYOffset, maxCardYOffset) * 0.1f;
 
-            Vector3 targetPosition = new Vector3(xPos, yPos + randomYOffset, zPos);
+            Vector3 targetPosition = new(xPos, yPos + randomYOffset, zPos);
             Quaternion targetRotation = Quaternion.Euler(0, rotAngle, 0);
 
             // Задержка для последовательной анимации
             float delay = immediate ? 0 : maxDelay * (i / (float)totalCards);
 
-            animationTasks[cardIndex] = AnimateCardToPosition(
+            animationTasks[i] = AnimateCardToPosition(
                 cardTransform,
                 targetPosition,
                 targetRotation,
@@ -144,6 +214,7 @@ public class CurvedHandLayoutStrategy : BaseCardLayoutStrategy {
     private float CalculateYPosition(float xPos, float maxOffset, float curveHeight) {
         if (maxOffset == 0) return 0;
         float normalizedX = xPos / maxOffset;
+        // Пересмотренная функция для лучшей кривой
         return -curveHeight * (1 - normalizedX * normalizedX);
     }
 
@@ -153,6 +224,8 @@ public class CurvedHandLayoutStrategy : BaseCardLayoutStrategy {
         return normalizedX * maxRotation;
     }
 }
+
+// Обновленная линейная стратегия размещения
 public class LinearHandLayoutStrategy : BaseCardLayoutStrategy {
     public LinearHandLayoutStrategy(CardLayoutSettings settings = null) : base(settings) { }
 
@@ -172,11 +245,10 @@ public class LinearHandLayoutStrategy : BaseCardLayoutStrategy {
         var animationTasks = new UniTask[totalCards];
         float maxDelay = GetMaxAnimationDelay();
         float maxCardYOffset = GetMaxCardYOffset();
-        float cardThickness = GetCardThickness();
 
         for (int i = 0; i < totalCards; i++) {
             int cardIndex = orderSequence[i];
-            var cardTransform = cardTransforms[cardIndex];
+            var cardTransform = cardTransforms[i]; // Используем i вместо cardIndex
             if (cardTransform == null) continue;
 
             // Линейное расположение
@@ -185,16 +257,18 @@ public class LinearHandLayoutStrategy : BaseCardLayoutStrategy {
             // Небольшой случайный Y-отступ для естественности
             float yPos = Random.Range(-maxCardYOffset, maxCardYOffset);
 
-            // Z-позиция для правильного порядка отрисовки
-            float zPos = -i * cardThickness;
+            // Z-позиция с учетом настроек приоритета
+            float zPos = Settings != null
+                ? Settings.CalculateZOrder(cardIndex, totalCards, xPos)
+                : -i * GetCardThickness();
 
             Quaternion targetRotation = Quaternion.identity;
-            Vector3 targetPosition = new Vector3(xPos, yPos, zPos);
+            Vector3 targetPosition = new (xPos, yPos, zPos);
 
             // Задержка для последовательной анимации
             float delay = immediate ? 0 : maxDelay * (i / (float)totalCards);
 
-            animationTasks[cardIndex] = AnimateCardToPosition(
+            animationTasks[i] = AnimateCardToPosition(
                 cardTransform,
                 targetPosition,
                 targetRotation,

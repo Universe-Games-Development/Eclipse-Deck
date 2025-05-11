@@ -25,8 +25,8 @@ public class CardAnimator : MonoBehaviour {
 
     public async UniTask RemovalAnimation(CardUIView cardUI) {
         var sequence = DOTween.Sequence();
-        sequence.Append(globalBody.transform.DOScale(Vector3.zero, 0.3f));
-        sequence.Join(globalBody.transform.DOLocalMoveY(globalBody.transform.position.y - 2f, 0.8f).SetEase(Ease.InOutSine));
+        await sequence.Append(globalBody.transform.DOScale(Vector3.zero, 0.3f));
+        await sequence.Join(globalBody.transform.DOLocalMoveY(globalBody.transform.position.y - 2f, 0.8f).SetEase(Ease.InOutSine));
         await sequence.AsyncWaitForCompletion();
     }
 

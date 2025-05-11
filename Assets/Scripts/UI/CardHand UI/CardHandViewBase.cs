@@ -22,6 +22,8 @@ public abstract class CardHandView : MonoBehaviour {
         cardView.SetInteractable(isInteractable);
         _cardViews.Add(id, cardView);
 
+        UpdateCardPositions();
+
         return cardView;
     }
 

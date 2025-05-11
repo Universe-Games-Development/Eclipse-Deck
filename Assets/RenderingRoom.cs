@@ -11,9 +11,10 @@ public class RenderingRoom : MonoBehaviour {
     [SerializeField] private CardUIView cardUIPrefab;
 
     [SerializeField] RectTransform uiContainer;
-    [SerializeField] RenderTexture renderTextureTemplate;
 
+    [SerializeField] RenderTexture renderTextureTemplate;
     private RenderTexture renderTexture;
+
     private List<CardUIView> activeCards = new List<CardUIView>();
     private Dictionary<CardUIView, Texture2D> cardTextures = new Dictionary<CardUIView, Texture2D>();
 
@@ -78,7 +79,7 @@ public class RenderingRoom : MonoBehaviour {
         cardUI.gameObject.SetActive(true);
         cardUI.RectTransform.anchoredPosition = Vector2.zero;
 
-        renderTexture.name = $"CardTexture_{GetInstanceID()}";
+        
         // Активуємо камеру і канвас для рендеру
         renderCamera.gameObject.SetActive(true);
         renderCanvas.gameObject.SetActive(true);
@@ -89,10 +90,12 @@ public class RenderingRoom : MonoBehaviour {
         // Створюємо або отримуємо Texture2D для цієї карти
         Texture2D resultTexture;
         if (!cardTextures.TryGetValue(cardUI, out resultTexture)) {
-            resultTexture = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGBA32, false);
+            resultTexture = CreateTextureFromTemplate();
+            resultTexture.name = $"CardTexture_{GetInstanceID()}";
             cardTextures[cardUI] = resultTexture;
         }
 
+        
         // Копіюємо пікселі з RenderTexture в Texture2D
         RenderTexture.active = renderTexture;
         Texture2D texture = resultTexture;
@@ -117,6 +120,16 @@ public class RenderingRoom : MonoBehaviour {
         // Якщо текстури немає, рендеримо її
         return RenderCardTexture(cardUI);
     }
+
+    private Texture2D CreateTextureFromTemplate() {
+        return new Texture2D(
+            renderTextureTemplate.width,
+            renderTextureTemplate.height,
+            TextureFormat.RGBA32,
+            false
+        );
+    }
+
 
     private void OnDestroy() {
         // Звільняємо ресурси

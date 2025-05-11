@@ -6,10 +6,19 @@ public class HandDebug : MonoBehaviour
     [SerializeField] CardHandView hand;
 
     [SerializeField] Button addCardButton;
+    [SerializeField] int initialCards = 0;
 
-    private void Awake() {
+    private void Start() {
         addCardButton.onClick.AddListener(() => {
-            hand.CreateCardView("Card" + Random.Range(0, 100));
+            AddCard();
         });
+
+        for (int i = 0; i < initialCards; i++) {
+            AddCard();
+        }
+    }
+
+    private void AddCard() {
+        hand.CreateCardView("Card" + Random.Range(0, 100));
     }
 }

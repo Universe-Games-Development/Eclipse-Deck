@@ -3,7 +3,9 @@ using System;
 using UnityEngine;
 
 public abstract class CardView : MonoBehaviour {
-    public event Action<CardView> OnCardClicked;
+    public Action<CardView> OnCardClicked;
+    public Action<CardView, bool> OnHoverChanged;
+    
 
     public CardUIInfo CardInfo;
     [SerializeField] protected bool isInteractable = true;

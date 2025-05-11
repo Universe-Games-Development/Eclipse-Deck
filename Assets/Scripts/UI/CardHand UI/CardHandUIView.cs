@@ -69,7 +69,7 @@ public class CardHandUIView : CardHandView {
                     Vector3 newLocalPosition = card.transform.parent.InverseTransformPoint(ghost.transform.position);
 
                     card.SetInteractable(false);
-                    card.transform.DOLocalMove(newLocalPosition, 0.8f)
+                    await card.transform.DOLocalMove(newLocalPosition, 0.8f)
                         .SetEase(Ease.InOutSine)
                         .OnComplete(() => {
                             card.SetInteractable(isInteractable);

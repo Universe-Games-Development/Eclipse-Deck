@@ -36,10 +36,8 @@ public class DoTweenMover : IMover {
         // Створюємо UniTask completion source для очікування завершення твіна
         var completionSource = new UniTaskCompletionSource();
 
-        target.DOMove(destination, duration)
+        await target.DOMove(destination, duration)
             .SetEase(Ease.OutQuad)
             .OnComplete(() => completionSource.TrySetResult());
-
-        await completionSource.Task;
     }
 }

@@ -48,7 +48,7 @@ public class CardsHandleSystem : MonoBehaviour {
         CardCollection _cardCollection = GenerateRandomCollection(40);
         deck.Initialize(_cardCollection);
 
-        DrawCards(6);
+        //DrawCards(6);
 
         //_commandManager.EnqueueCommands(new List<Command> {
         //    new DrawCardCommand(this, 3),

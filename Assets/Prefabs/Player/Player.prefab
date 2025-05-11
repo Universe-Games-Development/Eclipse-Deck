@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4554503301762678338}
   - component: {fileID: 3693629151821050016}
   - component: {fileID: 7603419046986661878}
-  - component: {fileID: 2196526257197750514}
+  - component: {fileID: 7384511607807375529}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1624684670638592839}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -63,9 +63,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 0}
   useDoTween: 0
-  splineMover: {fileID: 2196526257197750514}
+  splineMover: {fileID: 7384511607807375529}
   cameraManager: {fileID: 4787104202938000959}
---- !u!114 &2196526257197750514
+--- !u!114 &7384511607807375529
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

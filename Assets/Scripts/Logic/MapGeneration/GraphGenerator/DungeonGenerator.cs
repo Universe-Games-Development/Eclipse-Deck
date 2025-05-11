@@ -38,7 +38,7 @@ public class DungeonGenerator : IDungeonGenerator {
         centerer.CenterGraph(dungeonGraph);
 
         var endTime = Time.realtimeSinceStartup;
-        Debug.Log($"Dungeon map generation took {endTime - startTime} seconds");
+        //Debug.Log($"Dungeon map generation took {endTime - startTime} seconds");
         return true;
     }
 

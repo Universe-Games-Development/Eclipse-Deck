@@ -12,17 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b2015e0d7e3f4846bb0cf7fe6dec4ac, type: 3}
   m_Name: CardLayoutSettings
   m_EditorClassIdentifier: 
-  cardThickness: -0.11
+  cardThickness: 0.32
   animationDuration: 0.7
   rotationDuration: 0.2
   maxAnimationDelay: 0.1
   maxCardYOffset: 0.2
   baseCardSpacing: 1.2
-  minCardSpacing: 3.01
-  maxCardSpacing: 10.16
+  minCardSpacing: 4.27
+  maxCardSpacing: 8.42
   optimalCardCount: 3
   fewCardsSpacingMultiplier: 1.8
   manyCardsSpacingReduction: 0.8
-  cardCurveHeight: 0.5
-  cardRotationAngle: 15
+  cardCurveHeight: 1.8
+  cardRotationAngle: 5
   linearBaseSpacing: 1.5
+  hoverYOffset: 0.5
+  hoverZOffset: -0.5
+  hoverAnimationDuration: 0.2
+  rightToLeftOrder: 1
+  zOrderPriority: 3

@@ -11,13 +11,13 @@ public class TestCard3DWrapper : MonoBehaviour {
     private void Awake() {
         random = new System.Random(Guid.NewGuid().GetHashCode()); // ¬икористанн€ ун≥кального генератора дл€ кожного екземпл€ра
         card3DView.OnInitialized += () => {
-            Debug.Log("Card3DView Initialized");
+            
             Test();
         };
     }
 
     private void Test() {
-        TestUpdateHealth().Forget();
+        //TestUpdateHealth().Forget();
     }
 
     private async UniTask TestUpdateHealth() {
