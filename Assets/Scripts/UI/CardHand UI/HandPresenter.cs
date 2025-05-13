@@ -53,19 +53,18 @@ public class HandPresenter : IDisposable {
         }
     }
 
-    private void SelectCard(Card card) {
-        if (cardPresenters.TryGetValue(card.Id, out CardPresenter cardPresenter)) {
-            handView.SelectCardView(card.Id);
-        }
-    }
-
     private void DeselectCard(Card card) {
         if (cardPresenters.TryGetValue(card.Id, out CardPresenter cardPresenter)) {
             handView.DeselectCardView(card.Id);
         }
     }
 
-    // Handle View events
+    private void SelectCard(Card card) {
+        if (cardPresenters.TryGetValue(card.Id, out CardPresenter cardPresenter)) {
+            handView.SelectCardView(card.Id);
+        }
+    }
+
     private void OnCardViewClicked(string id) {
         if (cardPresenters.TryGetValue(id, out CardPresenter cardPresenter)) {
             Card card = cardPresenter.Model;
@@ -77,10 +76,10 @@ public class HandPresenter : IDisposable {
         // Відписуємося від подій
         CardHand.CardAdded -= OnCardAdded;
         CardHand.CardRemoved -= OnCardRemoved;
-        handView.Cleanup();
+        handView.OnCardClicked -= OnCardViewClicked;
     }
 
-    internal void ClearHand() {
-        throw new NotImplementedException();
+    public void ClearHand() {
+        CardHand.ClearHand();
     }
 }

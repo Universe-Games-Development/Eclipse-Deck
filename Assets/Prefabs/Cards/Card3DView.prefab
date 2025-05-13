@@ -99,7 +99,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6b3e8e25e416f64f9e887c0b06665fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hoverHeight: 0.3
+  hoverHeight: 3
   hoverDuration: 0.2
   hoverEase: 6
   selectedHeight: 0.5

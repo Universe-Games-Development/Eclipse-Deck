@@ -9,6 +9,9 @@ public abstract class CardHandView : MonoBehaviour {
     protected Dictionary<string, CardView> _cardViews = new();
     protected bool isInteractable = true;
 
+    // Кэш для оптимизации поиска индексов
+    protected Dictionary<CardView, int> _cardIndexCache = new();
+
     public virtual void Toggle(bool value = true) {
         if (gameObject.activeSelf != value) {
             gameObject.SetActive(value);
@@ -21,12 +24,26 @@ public abstract class CardHandView : MonoBehaviour {
         CardView cardView = BuildCardView(id);
         cardView.Id = id;
         cardView.OnCardClicked += OnCardViewClicked;
+        cardView.OnHoverChanged += HandleCardHover;
+
         cardView.SetInteractable(isInteractable);
         _cardViews.Add(id, cardView);
 
+        // Обновляем кэш индексов
+        RefreshCardIndexCache();
         UpdateCardPositions();
 
         return cardView;
+    }
+
+    protected abstract void HandleCardHover(CardView changedCardView, bool isHovered);
+
+    protected void RefreshCardIndexCache() {
+        _cardIndexCache.Clear();
+        int index = 0;
+        foreach (var kvp in _cardViews) {
+            _cardIndexCache[kvp.Value] = index++;
+        }
     }
 
     public abstract CardView BuildCardView(string id);
@@ -69,15 +86,11 @@ public abstract class CardHandView : MonoBehaviour {
         }
     }
 
-    public virtual void Cleanup() {
+    protected virtual void OnDestroy() {
         foreach (var cardView in _cardViews.Values) {
             cardView.OnCardClicked -= OnCardViewClicked;
         }
         _cardViews.Clear();
-    }
-
-    protected virtual void OnDestroy() {
-        Cleanup();
     }
 }
 

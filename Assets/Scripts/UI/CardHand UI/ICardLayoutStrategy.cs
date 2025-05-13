@@ -7,89 +7,97 @@ using UnityEngine;
 
 public class LinearHandLayoutStrategy {
     private readonly Linear3DHandLayoutSettings _settings;
-    private readonly Dictionary<CardView, int> _cardSortingOrders = new Dictionary<CardView, int>();
-    private CardView _hoveredCard;
     private CancellationTokenSource _cts = new();
+
+    private List<UniTask> _animationTasks = new List<UniTask>();
 
     public LinearHandLayoutStrategy(Linear3DHandLayoutSettings settings) {
         _settings = settings;
     }
 
     public async UniTask UpdateLayout(List<CardView> cards, Transform handTransform) {
-        _cts.Cancel(); // Скасовуємо попереднє оновлення
-        _cts = new CancellationTokenSource(); // Створюємо новий токен
+        _cts.Cancel();
+        _cts = new CancellationTokenSource();
         var token = _cts.Token;
 
         if (cards == null || cards.Count == 0) return;
 
-        float totalWidth = Mathf.Max(_settings.MaxHandWidth, (cards.Count - 1) * _settings.CardThickness);
-        float spacing = cards.Count > 1 ? totalWidth / (cards.Count - 1) : 0f;
-        float startX = -totalWidth / 2f;
+        CalculateLayoutParameters(cards.Count, out float totalWidth, out float spacing, out float startX);
 
-        // Список для всіх анімаційних задач
-        List<UniTask> animationTasks = new();
+        _animationTasks.Clear();
+
+        float speedFactor = Mathf.Clamp01(10f / Mathf.Max(1f, cards.Count));
+        float moveDuration = _settings.MoveDuration * speedFactor;
 
         for (int i = 0; i < cards.Count; i++) {
             if (token.IsCancellationRequested) return;
 
             CardView card = cards[i];
-            bool isHovered = card == _hoveredCard;
 
-            float xPos = startX + i * spacing;
-            float yPos = _settings.DefaultYPosition + (isHovered ? _settings.HoverHeight : 0f);
-            float zPos = -i * _settings.VerticalOffset;
+            (Vector3 targetPosition, Quaternion targetRotation) = CalculateCardTransform(
+                handTransform, i, cards.Count, startX, spacing);
 
-            Vector3 targetPosition = handTransform.TransformPoint(new Vector3(xPos, yPos, zPos));
-            float rotationAngle = CalculateRotationAngle(i, cards.Count);
-            Quaternion targetRotation = handTransform.rotation * Quaternion.Euler(0f, rotationAngle, 0f);
-
-            // Додаємо задачу в список, але не чекаємо одразу
-            animationTasks.Add(AnimateCard(card, targetPosition, targetRotation, isHovered, token));
+            _animationTasks.Add(AnimateCard(card, targetPosition, targetRotation, moveDuration, token));
         }
 
         try {
-            // Чекаємо завершення всіх анімацій одночасно
-            await UniTask.WhenAll(animationTasks);
+            if (_animationTasks.Count > 0) {
+                await UniTask.WhenAll(_animationTasks);
+            }
         } catch (OperationCanceledException) {
-            // Можеш обробити скасування, якщо потрібно
+            // Optional cancellation handling
         }
+    }
+
+    private void CalculateLayoutParameters(int cardCount, out float totalWidth, out float spacing, out float startX) {
+        totalWidth = Mathf.Max(_settings.MaxHandWidth, (cardCount - 1) * _settings.CardThickness);
+        spacing = cardCount > 1 ? totalWidth / (cardCount - 1) : 0f;
+        startX = -totalWidth / 2f;
+    }
+
+    private (Vector3, Quaternion) CalculateCardTransform(Transform handTransform, int index, int totalCards, float startX, float spacing) {
+        float xPos = startX + index * spacing;
+        float yPos = _settings.DefaultYPosition;
+        float zPos = -index * _settings.VerticalOffset;
+
+        float randomOffset = (index % 3 - 1) * _settings.PositionVariation;
+        xPos += randomOffset;
+
+        Vector3 targetPosition = handTransform.TransformPoint(new Vector3(xPos, yPos, zPos));
+        float rotationAngle = CalculateRotationAngle(index, totalCards);
+        Quaternion targetRotation = handTransform.rotation * Quaternion.Euler(0f, rotationAngle, 0f);
+
+        return (targetPosition, targetRotation);
     }
 
     private float CalculateRotationAngle(int index, int totalCards) {
         if (totalCards == 1) return 0f;
 
-        // Calculate rotation angle based on position in hand
         float t = (float)index / (totalCards - 1);
         float angle = Mathf.Lerp(-_settings.MaxRotationAngle, _settings.MaxRotationAngle, t);
-
-        // Add small offset to prevent perfect alignment
-        angle += (index % 2 == 0 ? 1 : -1) * _settings.RotationOffset;
+        float randomOffset = (index % 2 == 0 ? 1 : -1) * _settings.RotationOffset;
+        angle += randomOffset;
 
         return angle;
     }
 
-    private async UniTask AnimateCard(CardView card, Vector3 targetPosition, Quaternion targetRotation, bool isHovered, CancellationToken token) {
-        int cardCount = _cardSortingOrders.Count;
+    private async UniTask AnimateCard(CardView card, Vector3 targetPosition, Quaternion targetRotation, float duration, CancellationToken token) {
+        var moveTask = card.transform.DOMove(targetPosition, duration)
+            .SetEase(_settings.MoveEase)
+            .ToUniTask(cancellationToken: token);
 
-        float speedFactor = Mathf.Clamp01(10f / (float)cardCount);
-        float moveDuration = (isHovered ? _settings.HoverMoveDuration : _settings.MoveDuration) * speedFactor;
-        float rotationDuration = _settings.RotationDuration * speedFactor;
-
-        // Создаем задачи анимации движения и вращения
-        var moveTask = card.transform.DOMove(targetPosition, moveDuration).SetEase(_settings.MoveEase).ToUniTask(cancellationToken: token);
-        var rotateTask = card.transform.DORotateQuaternion(targetRotation, rotationDuration).SetEase(_settings.RotationEase).ToUniTask(cancellationToken: token);
+        var rotateTask = card.transform.DORotateQuaternion(targetRotation, duration)
+            .SetEase(_settings.RotationEase)
+            .ToUniTask(cancellationToken: token);
 
         try {
-            // Ждем выполнения обеих анимаций одновременно
             await UniTask.WhenAll(moveTask, rotateTask);
         } catch (OperationCanceledException) {
-            // Если задача отменена, отменяем все твины
             card.transform.DOKill();
         }
     }
 
     public void Cleanup() {
-        _cardSortingOrders.Clear();
-        _hoveredCard = null;
+        _cts.Cancel();
     }
 }

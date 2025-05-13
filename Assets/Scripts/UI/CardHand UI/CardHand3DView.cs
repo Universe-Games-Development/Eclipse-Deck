@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 using Zenject;
 
 public class CardHand3DView : CardHandView {
@@ -8,48 +9,151 @@ public class CardHand3DView : CardHandView {
     [SerializeField] private Transform cardsContainer;
     [SerializeField] private Linear3DHandLayoutSettings layoutSettings;
     [SerializeField] private bool debugMode = false;
+
     [Header("Hover Settings")]
     [SerializeField] private int baseRenderQueueValue = 3000; // Базовое значение для прозрачных материалов
     [SerializeField] private int hoverRenderQueueBoost = 100; // Увеличение для карты под наведением
 
+    [Header("Performance")]
+    [SerializeField] private int initialPoolSize = 10;
+
     private LinearHandLayoutStrategy _layoutStrategy;
-    [Inject] private CardTextureRenderer cardTextureRenderer;
+    [Inject] private CardTextureRenderer _cardTextureRenderer;
 
     private Card3DView _hoveredCard = null;
+    private ObjectPool<Card3DView> _cardPool;
+
+
+    #region Unity Lifecycle
 
     private void Awake() {
         _layoutStrategy = new LinearHandLayoutStrategy(layoutSettings);
+
+        InitializeCardPool();
     }
+
+    private void OnEnable() {
+        // Подписка на события, если необходимо
+    }
+
+    private void OnDisable() {
+        // Отписка от событий
+    }
+
 
     public void Update() {
         if (debugMode)
             UpdateCardPositions();
     }
 
-    public override CardView BuildCardView(string id) {
-        if (cardPrefab == null || cardsContainer == null) {
-            Debug.LogError("CardPrefab or CardsContainer not set!", this);
-            return null;
-        }
+    protected override void OnDestroy() {
+        // Очищаем все состояния
+        _hoveredCard = null;
+        _cardIndexCache.Clear();
 
-        Card3DView card3D = Instantiate(cardPrefab, cardsContainer);
-        card3D.OnHoverChanged += HandleCardHover;
-        cardTextureRenderer.Register3DCard(card3D);
+        // Отписываем все обработчики событий
+        foreach (var cardView in _cardViews.Values) {
+            if (cardView is Card3DView card3D) {
+                card3D.OnHoverChanged -= HandleCardHover;
+                _cardTextureRenderer.UnRegister3DCard(card3D);
+            }
+        }
+        _cardPool?.Clear();
+        base.OnDestroy();
+    }
+
+    #endregion
+
+    #region Pool Management
+
+    private void InitializeCardPool() {
+        if (_cardPool == null) {
+            _cardPool = new ObjectPool<Card3DView>(
+                createFunc: () => Instantiate(cardPrefab, cardsContainer),
+                actionOnGet: card => {
+                    card.gameObject.SetActive(true);
+                    
+                },
+                actionOnRelease: card => {
+                    card.Reset(); // ваш Reset метод
+                    card.gameObject.SetActive(false);
+                    card.transform.SetParent(cardsContainer); // або спеціальний контейнер
+                },
+                actionOnDestroy: card => Destroy(card.gameObject),
+                collectionCheck: false, // або true для дебагу
+                defaultCapacity: initialPoolSize,
+                maxSize: 100
+            );
+        }
+    }
+
+    #endregion
+
+    #region Card Management
+
+    public override CardView BuildCardView(string id) {
+        Card3DView card3D = _cardPool.Get();
+        card3D.Id = id;
+
+        // Регистрируем карту для создания текстуры через ICardTextureRenderer
+        var uiView = _cardTextureRenderer.Register3DCard(card3D);
+
+        
 
         return card3D;
     }
 
+    public override void HandleCardViewRemoval(CardView cardView) {
+        if (cardView is Card3DView card3D) {
+            _cardTextureRenderer.UnRegister3DCard(card3D);
+            _cardPool.Release(card3D);
+        }
 
+        if (_hoveredCard == cardView) {
+            _hoveredCard = null;
+        }
+
+        base.HandleCardViewRemoval(cardView);
+        RefreshCardIndexCache();
+    }
+
+    #endregion
+
+    #region Hover and Rendering
+
+    protected override void HandleCardHover(CardView changedCardView, bool isHovered) {
+        Card3DView changedCard3D = changedCardView as Card3DView;
+        if (changedCard3D == null) return;
+
+        if (isHovered) {
+            // Если другая карта уже была под курсором — сбрасываем её
+            if (_hoveredCard != null && _hoveredCard != changedCardView) {
+                _hoveredCard.ResetRenderingOrder();
+            }
+
+            _hoveredCard = changedCard3D;
+            UpdateCardRenderOrder(changedCard3D, true);
+        } else {
+            // Если убирается наведение с текущей карты
+            if (_hoveredCard == changedCardView) {
+                _hoveredCard = null;
+            }
+
+            UpdateCardRenderOrder(changedCard3D, false);
+        }
+    }
 
     private void UpdateCardRenderOrder(Card3DView card3D, bool isHovered) {
         if (card3D == null) return;
 
-        // Получаем базовый индекс сортировки из позиции карты в руке
-        int index = GetCardIndex(card3D);
+        // Получаем индекс карты из кэша для оптимизации
+        int index;
+        if (!_cardIndexCache.TryGetValue(card3D, out index)) {
+            index = GetCardIndex(card3D);
+            _cardIndexCache[card3D] = index;
+        }
 
-        // Рассчитываем порядок рендеринга:
-        // - Базовый порядок согласно положению в руке
-        // - Если карта под наведением, добавляем большое смещение
+        // Рассчитываем порядок рендеринга
         int sortingOrder = baseRenderQueueValue + index;
         if (isHovered) {
             sortingOrder += hoverRenderQueueBoost;
@@ -70,52 +174,6 @@ public class CardHand3DView : CardHandView {
         return 0;
     }
 
-    private void HandleCardHover(CardView changedCardView, bool isHovered) {
-        Card3DView changedCard3D = changedCardView as Card3DView;
-        if (changedCard3D == null) return;
-
-        if (isHovered) {
-            // Якщо інша карта вже була під курсором — скидаємо її
-            if (_hoveredCard != null && _hoveredCard != changedCardView) {
-                _hoveredCard.ResetRenderingOrder();
-            }
-
-            _hoveredCard = changedCard3D;
-            UpdateCardRenderOrder(changedCard3D, true);
-        } else {
-            // Якщо забирається наведення з поточної карти
-            if (_hoveredCard == changedCardView) {
-                _hoveredCard = null;
-            }
-
-            UpdateCardRenderOrder(changedCard3D, false);
-        }
-    }
-
-
-    public override void UpdateCardPositions() {
-        if (_layoutStrategy != null && _cardViews.Count == 0) {
-            return;
-        }
-        UpdateAllCardsRenderOrder();
-        _layoutStrategy.UpdateLayout(new List<CardView>(_cardViews.Values), cardsContainer).Forget();
-    }
-
-    public override void HandleCardViewRemoval(CardView cardView) {
-        // Снимаем обработчик события наведения перед удалением
-        if (cardView is Card3DView card3D) {
-            card3D.OnHoverChanged -= HandleCardHover;
-        }
-
-        // Если удаляемая карта была под наведением, сбрасываем состояние
-        if (_hoveredCard == cardView) {
-            _hoveredCard = null;
-        }
-
-        // Вызываем базовый метод
-        base.HandleCardViewRemoval(cardView);
-    }
-
     private void UpdateAllCardsRenderOrder() {
         int index = 0;
         foreach (var cardView in _cardViews.Values) {
@@ -131,62 +189,21 @@ public class CardHand3DView : CardHandView {
         }
     }
 
-    public override void Cleanup() {
-        // Очищаем все обработчики событий
-        foreach (var cardView in _cardViews.Values) {
-            if (cardView is Card3DView card3D) {
-                card3D.OnHoverChanged -= HandleCardHover;
-            }
+    #endregion
+
+    #region Layout
+
+    public override void UpdateCardPositions() {
+        if (_layoutStrategy == null || _cardViews.Count == 0) {
+            return;
         }
 
-        _hoveredCard = null;
-        base.Cleanup();
-    }
-}
+        // Обновляем порядок рендеринга всех карт
+        UpdateAllCardsRenderOrder();
 
-public class CardObjectPool : MonoBehaviour {
-    [SerializeField] private Card3DView cardPrefab;
-    [SerializeField] private int initialPoolSize = 10;
-    [SerializeField] private Transform poolContainer;
-
-    private Queue<Card3DView> _pool = new Queue<Card3DView>();
-
-    private void Awake() {
-        InitializePool();
+        // Обновляем позиции через стратегию размещения
+        _layoutStrategy.UpdateLayout(new List<CardView>(_cardViews.Values), cardsContainer).Forget();
     }
 
-    private void InitializePool() {
-        for (int i = 0; i < initialPoolSize; i++) {
-            CreateNewCardInPool();
-        }
-    }
-
-    private Card3DView CreateNewCardInPool() {
-        Card3DView instance = Instantiate(cardPrefab, poolContainer);
-        instance.gameObject.SetActive(false);
-        _pool.Enqueue(instance);
-        return instance;
-    }
-
-    public Card3DView GetCard() {
-        if (_pool.Count == 0) {
-            CreateNewCardInPool();
-        }
-
-        Card3DView card = _pool.Dequeue();
-        card.gameObject.SetActive(true);
-        return card;
-    }
-
-    public void ReturnCard(Card3DView card) {
-        if (card == null) return;
-
-        // Сбрасываем состояние карты перед возвратом в пул
-        card.Reset();
-        card.gameObject.SetActive(false);
-
-        // Перемещаем в контейнер пула и добавляем обратно в очередь
-        card.transform.SetParent(poolContainer);
-        _pool.Enqueue(card);
-    }
+    #endregion
 }

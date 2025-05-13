@@ -57,9 +57,9 @@ public class RenderingRoom : MonoBehaviour {
     /// Видаляє UI-карту з цієї кімнати
     /// </summary>
     public void RemoveCardUI(CardUIView cardUI) {
-        activeCards.Remove(cardUI);
         // Не знищуємо GameObject, оскільки його можна перемістити в іншу кімнату
-        cardUI.gameObject.SetActive(false);
+        if (activeCards.Remove(cardUI)) {
+        }
     }
 
     /// <summary>

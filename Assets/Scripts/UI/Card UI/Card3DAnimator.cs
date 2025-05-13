@@ -40,7 +40,7 @@ public class Card3DAnimator : MonoBehaviour {
         originalRotation = transform.localRotation;
     }
 
-    public void SetHovered(bool hovered) {
+    public void Hover(bool hovered) {
         isHovered = hovered;
 
         // Don't animate hover when selected

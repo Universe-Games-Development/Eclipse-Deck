@@ -1,36 +1,79 @@
 using DG.Tweening;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "Linear3DHandLayoutSettings", menuName = "CardGame/Layouts/Linear3DHandLayoutSettings")]
+[CreateAssetMenu(fileName = "HandLayoutSettings", menuName = "Cards/3D Hand Layout Settings")]
 public class Linear3DHandLayoutSettings : ScriptableObject {
-    [Header("Positioning")]
-    [SerializeField] private float _maxHandWidth = 10f;
-    [SerializeField] private float _cardThickness = 0.02f;
-    [SerializeField] private float _defaultYPosition = 0f;
-    [SerializeField] private float _hoverHeight = 0.5f;
-    [SerializeField] private float _verticalOffset = 0.1f;
+    [Header("Cards Positioning")]
+    [Tooltip("Максимальная ширина руки (в локальных координатах)")]
+    public float MaxHandWidth = 3.0f;
 
-    [Header("Rotation")]
-    [SerializeField] private float _maxRotationAngle = 30f;
-    [SerializeField] private float _rotationOffset = 5f;
+    [Tooltip("Толщина карты для расчета распределения")]
+    public float CardThickness = 0.1f;
 
-    [Header("Animation")]
-    [SerializeField] private float _moveDuration = 0.3f;
-    [SerializeField] private float _rotationDuration = 0.2f;
-    [SerializeField] private float _hoverMoveDuration = 0.15f;
-    [SerializeField] private Ease _moveEase = Ease.OutBack;
-    [SerializeField] private Ease _rotationEase = Ease.OutQuad;
+    [Tooltip("Базовая Y-позиция карт в руке")]
+    public float DefaultYPosition = 0.0f;
 
-    public float MaxHandWidth => _maxHandWidth;
-    public float CardThickness => _cardThickness;
-    public float DefaultYPosition => _defaultYPosition;
-    public float HoverHeight => _hoverHeight;
-    public float VerticalOffset => _verticalOffset;
-    public float MaxRotationAngle => _maxRotationAngle;
-    public float RotationOffset => _rotationOffset;
-    public float MoveDuration => _moveDuration;
-    public float RotationDuration => _rotationDuration;
-    public float HoverMoveDuration => _hoverMoveDuration;
-    public Ease MoveEase => _moveEase;
-    public Ease RotationEase => _rotationEase;
+    [Tooltip("Вертикальное смещение между картами для создания эффекта глубины")]
+    public float VerticalOffset = 0.01f;
+
+    [Tooltip("Небольшая вариация позиции для визуального разнообразия")]
+    public float PositionVariation = 0.02f;
+
+    [Header("Hover Settings")]
+    [Tooltip("Высота подъема карты при наведении")]
+    public float HoverHeight = 0.3f;
+
+    [Header("Rotation Settings")]
+    [Tooltip("Максимальный угол поворота крайних карт")]
+    [Range(0f, 45f)]
+    public float MaxRotationAngle = 15.0f;
+
+    [Tooltip("Небольшое смещение поворота для визуального разнообразия")]
+    [Range(0f, 5f)]
+    public float RotationOffset = 1.0f;
+
+    [Header("Animation Settings")]
+    [Tooltip("Длительность анимации перемещения")]
+    public float MoveDuration = 0.3f;
+
+    [Tooltip("Длительность анимации перемещения при наведении")]
+    public float HoverMoveDuration = 0.2f;
+
+    [Tooltip("Длительность анимации поворота")]
+    public float RotationDuration = 0.3f;
+
+    [Tooltip("Кривая анимации для движения")]
+    public Ease MoveEase = Ease.OutQuad;
+
+    [Tooltip("Кривая анимации для поворота")]
+    public Ease RotationEase = Ease.OutQuad;
+
+    [Header("Advanced Settings")]
+    [Tooltip("Максимальное количество карт, при котором используется полная ширина")]
+    public int MaxCardsAtFullWidth = 7;
+
+    [Tooltip("Масштабирование карт при большом количестве")]
+    public bool ScaleCardsWhenCrowded = true;
+
+    [Tooltip("Минимальный масштаб карты при большом количестве")]
+    [Range(0.5f, 1f)]
+    public float MinCardScale = 0.8f;
+
+    // Методы для получения динамических настроек в зависимости от числа карт
+    public float GetScaleForCardCount(int cardCount) {
+        if (!ScaleCardsWhenCrowded || cardCount <= MaxCardsAtFullWidth) {
+            return 1.0f;
+        }
+
+        float t = Mathf.Clamp01((float)(cardCount - MaxCardsAtFullWidth) / 10f);
+        return Mathf.Lerp(1.0f, MinCardScale, t);
+    }
+
+    public float GetSpacingForCardCount(int cardCount) {
+        float baseSpacing = MaxHandWidth / Mathf.Max(1, cardCount - 1);
+        float scale = GetScaleForCardCount(cardCount);
+
+        // При уменьшении масштаба можно немного уменьшить расстояние между картами
+        return baseSpacing * Mathf.Lerp(1.0f, 0.8f, 1f - scale);
+    }
 }

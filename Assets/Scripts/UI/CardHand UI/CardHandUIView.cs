@@ -50,6 +50,10 @@ public class CardHandUIView : CardHandView {
         UpdateCardsPositionsAsync().Forget();
     }
 
+    protected override void HandleCardHover(CardView changedCardView, bool isHovered) {
+        CardUIView changedCard3D = changedCardView as CardUIView;
+    }
+
     private async UniTask UpdateCardsPositionsAsync(int delayFrames = 3) {
         updatePositionCts?.Cancel();
         var newCts = new CancellationTokenSource();
@@ -86,9 +90,7 @@ public class CardHandUIView : CardHandView {
         }
     }
 
-    public override void Cleanup() {
-        base.Cleanup();
-
+    protected override void OnDestroy() {
         updatePositionCts?.Cancel();
         updatePositionCts?.Dispose();
 

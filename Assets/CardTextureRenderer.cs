@@ -22,7 +22,7 @@ public class CardTextureRenderer : MonoBehaviour {
     /// <summary>
     /// Реєструє 3D-карту та створює для неї UI-представлення
     /// </summary>
-    public void Register3DCard(Card3DView card3D, bool isDynamic = false) {
+    public CardUIView Register3DCard(Card3DView card3D, bool isDynamic = false) {
         // Створюємо UI-карту у відповідній кімнаті рендерингу
         CardUIView cardUIView = isDynamic
             ? dynamicRenderingRoom.CreateCardUI()
@@ -43,6 +43,7 @@ public class CardTextureRenderer : MonoBehaviour {
 
         // Підписуємось на зміни в UI-карті
         cardUIView.OnChanged += () => OnCardUIViewChanged(cardUIView);
+        return cardUIView;
     }
 
     /// <summary>
@@ -97,7 +98,7 @@ public class CardTextureRenderer : MonoBehaviour {
     /// <summary>
     /// Очищує ресурси при видаленні карти
     /// </summary>
-    public void UnregisterCard(Card3DView card3D) {
+    public void UnRegister3DCard(Card3DView card3D) {
         if (cardMappings.TryGetValue(card3D, out CardUIView cardUI)) {
             if (dynamicCards.Contains(cardUI)) {
                 dynamicCards.Remove(cardUI);
