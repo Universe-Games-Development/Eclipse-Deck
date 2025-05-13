@@ -15,7 +15,9 @@ public abstract class CardHandView : MonoBehaviour {
         }
     }
 
-    public virtual CardView CreateCardView(string id) {
+    public virtual CardView CreateCardView(string id = null) {
+        id ??= Guid.NewGuid().ToString();
+
         CardView cardView = BuildCardView(id);
         cardView.Id = id;
         cardView.OnCardClicked += OnCardViewClicked;
@@ -46,9 +48,7 @@ public abstract class CardHandView : MonoBehaviour {
         OnCardClicked?.Invoke(cardView.Id);
     }
 
-    public virtual void UpdateCardPositions() {
-        // Optional: можно переопределить
-    }
+    public abstract void UpdateCardPositions();
 
     public virtual void SetInteractable(bool value) {
         isInteractable = value;

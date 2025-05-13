@@ -19,6 +19,6 @@ public class HandDebug : MonoBehaviour
     }
 
     private void AddCard() {
-        hand.CreateCardView("Card" + Random.Range(0, 100));
+        hand.CreateCardView();
     }
 }
