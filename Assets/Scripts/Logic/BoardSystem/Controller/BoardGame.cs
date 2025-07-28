@@ -11,9 +11,13 @@ public class BoardGame : MonoBehaviour {
 
     [Inject] GameEventBus _eventBus;
 
+    private void Start() {
+        PrepareBattle();
+    }
+
     public void PrepareBattle() {
         boardSystem.Initialize();
-        boardSystem.UpdateGrid(boardConfig);
+        //boardSystem.UpdateGrid(boardConfig);
 
         BeginBattle();
     }

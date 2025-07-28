@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public static class ListExtensions {
 
-    // Returns Random element from the list
-    public static T GetRandomElement<T>(this List<T> list) {
+    public static bool TryGetRandomElement<T>(this List<T> list, out T value) {
+        value = default;
         if (list == null || list.Count == 0) {
-            throw new InvalidOperationException("Cannot get a random element from an empty or null list.");
+            Debug.LogWarning("List is null or empty");
+            return false;
         }
+        
         int index = UnityEngine.Random.Range(0, list.Count);
-        return list[index];
+        value = list[index];
+        return true;
     }
 
     public static void Shuffle<T>(this List<T> list) {

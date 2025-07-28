@@ -1,6 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
+using UnityEngine.UIElements;
+using UnityEngine.WSA;
 
 public abstract class CardView : MonoBehaviour {
     public Action<CardView> OnCardClicked;
@@ -39,5 +41,6 @@ public abstract class CardView : MonoBehaviour {
         if (isInteractable) {
             OnCardClicked?.Invoke(this);
         }
+        
     }
 }

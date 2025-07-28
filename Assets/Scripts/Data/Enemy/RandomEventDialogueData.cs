@@ -24,7 +24,8 @@ public abstract class RandomEventDialogueData<TEvent> : EventDialogData<TEvent> 
     public List<DialogueSet> speeches = new();
 
     public override DialogueSet GetDialogSet() {
-        return speeches.GetRandomElement();
+        speeches.TryGetRandomElement(out DialogueSet dialogueSet);
+        return dialogueSet;
     }
 
     [Range(0, 1f)] public float probability = 0.3f;

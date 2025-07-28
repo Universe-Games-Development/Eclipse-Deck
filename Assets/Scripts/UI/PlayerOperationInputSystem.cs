@@ -19,7 +19,6 @@ public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
     [SerializeField] private int _timeout = 5;
     [SerializeField] private Button _cancelButton;
 
-    private CardInputHandler _inputHandler;
 
     private IRequirement _currentRequirement;
     private CancellationTokenSource _buttonCancellation;
@@ -27,11 +26,6 @@ public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
     private UniTaskCompletionSource<object> _completionSource;
 
     private BoardPlayer requestOpponent;
-
-    [Inject]
-    public void Construct(CardInputHandler cardInputHandler) {
-        _inputHandler = cardInputHandler;
-    }
 
     private void Awake() {
         _cancelButton.onClick.AddListener(Cancel);
@@ -51,13 +45,13 @@ public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
         );
 
         try {
-            _inputHandler.OnLeftClickPerformed += HandleLeftClick;
+            //_inputHandler.OnLeftClickPerformed += HandleLeftClick;
             return await _completionSource.Task.AttachExternalCancellation(linkedCts.Token);
         } catch (OperationCanceledException) {
             // Операція була скасована (таймаут або кнопка відміни)
             return null;
         } finally {
-            _inputHandler.OnLeftClickPerformed -= HandleLeftClick; // Відписка від події
+            //_inputHandler.OnLeftClickPerformed -= HandleLeftClick; // Відписка від події
             timeoutController.Reset();
             DisableUI();
         }
@@ -66,7 +60,7 @@ public class PlayerOperationInputSystem : MonoBehaviour, ITargetingService {
     private void HandleLeftClick() {
         if (_completionSource == null || _currentRequirement == null) return;
 
-        GameObject hoveredObject = _inputHandler.hoveredObject;
+        GameObject hoveredObject = null; // _inputHandler.hoveredObject;
         if (hoveredObject == null) return;
 
         // Спочатку перевіряємо наявність IInteractable

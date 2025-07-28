@@ -30,7 +30,8 @@ public class TurnManager : IDisposable {
         TurnCounter = 0;
         completedTurnsInRound = 0;
         currentOpponents = new List<BoardPlayer>(registeredOpponents);
-        SwitchToNextOpponent(currentOpponents.GetRandomElement());
+        currentOpponents.TryGetRandomElement(out var player);
+        SwitchToNextOpponent(player);
         isDisabled = false;
     }
 

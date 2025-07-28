@@ -22,7 +22,6 @@ public class GlobalInstaller : MonoInstaller {
                 Debug.LogWarning($"Prefab {prefab.name} does not have a component.");
             }
         }
-        Container.Bind<InputMapManager>().AsSingle();
 
         // Resourses
         Container.Bind<LocationTransitionManager>().AsSingle().WithArguments(locationsData).NonLazy();

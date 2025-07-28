@@ -7,13 +7,9 @@ public class Health : Attribute {
     
     public bool IsDead = false;
     private readonly IDamageable _owner;
-    private readonly GameEventBus _eventBus;
 
-    
-
-    public Health(int initialValue, IDamageable owner, GameEventBus eventBus) : base(initialValue) {
+    public Health(int initialValue, IDamageable owner) : base(initialValue) {
         _owner = owner;
-        _eventBus = eventBus;
     }
 
     public void TakeDamage(int damage, IDamageDealer source = null) {

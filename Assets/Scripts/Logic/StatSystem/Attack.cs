@@ -1,13 +1,11 @@
 using UnityEngine;
 
 public class Attack : Attribute {
-    public GameEventBus eventBus;
     private readonly IDamageable _owner;
     private readonly GameEventBus _eventBus;
 
-    public Attack(int initialValue, IDamageable owner, GameEventBus eventBus) : base(initialValue) {
+    public Attack(int initialValue, IDamageable owner) : base(initialValue) {
         _owner = owner;
-        _eventBus = eventBus;
     }
 
     public void DealDamage(IDamageable target) {

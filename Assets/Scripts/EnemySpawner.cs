@@ -26,8 +26,11 @@ public class EnemySpawner : MonoBehaviour {
             return false;
         }
 
-        // Вибираємо випадкового ворога з отриманих даних
-        var enemyData = enemiesData.GetRandomElement();
+        if (enemiesData.TryGetRandomElement(out var enemyData)) {
+            return false;
+        }
+
+        
 
         // Створюємо ворога на основі даних
         Enemy enemy = CreateEnemy(enemyData);

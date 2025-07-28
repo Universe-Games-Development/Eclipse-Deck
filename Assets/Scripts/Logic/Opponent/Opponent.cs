@@ -28,7 +28,7 @@ public class Player : Opponent {
     public PlayerData PlayerData => (PlayerData)base.Data;
 
     public Player(PlayerData data) : base(data) {
-
+        
     }
 }
 

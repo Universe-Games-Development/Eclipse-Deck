@@ -12,7 +12,7 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
     public Opponent Info { get; private set; }
     public Health Health { get; private set; }
     public Mana Mana { get; private set; }
-    public EffectManager Effects { get; private set; }
+    public EffectManager EffectManager { get; private set; }
     public ITargetingService TargetService { get; internal set; }
 
     //IGameUnit
@@ -32,7 +32,7 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
         OpponentData Data = Info.Data;
 
         ControlledBy = this;
-        Health = new Health(Data.Health, this, _eventBus);
+        Health = new Health(Data.Health, this);
         Mana = new Mana(this, Data.Mana);
 
         if (_healthDisplay != null) {
@@ -40,7 +40,7 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
             _healthDisplay.AssignOwner(this);
         }
 
-        Effects = new EffectManager(_turnManager);
+        EffectManager = new EffectManager(_eventBus);
         OnUnitDeployed?.Invoke(new GameEnterEvent(this));
         InitializeCards();
     }

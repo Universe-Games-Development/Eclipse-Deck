@@ -5,7 +5,6 @@ using System.Linq;
 using Zenject;
 using UnityEngine;
 
-
 public class EffectManager {
     private readonly List<BaseEffect> permanents = new();
     private readonly List<TimedEffectWrapper<BaseEffect>> temporary = new();
@@ -13,11 +12,11 @@ public class EffectManager {
     public event Action OnCleared;
     public event Action<BaseEffect> OnEffectAdded;
     public event Action<BaseEffect> OnEffectRemoved;
-    public EffectManager(TurnManager turnManager) {
-        turnManager.OnTurnEnd += OnTurnEnd;
+    public EffectManager(GameEventBus eventBus) {
+        eventBus.SubscribeTo<TurnEndEvent>(OnTurnEnd);
     }
 
-    private void OnTurnEnd(TurnEndEvent @event) {
+    private void OnTurnEnd(ref TurnEndEvent @event) {
         List<TimedEffectWrapper<BaseEffect>> timedEffects = temporary.ToList();
         foreach (var timedEffect in timedEffects) {
             timedEffect.DecreaseTurns();
@@ -175,7 +174,8 @@ public class Ability : BaseEffect {
 
             // Якщо всі необхідні цілі заповнені, виконуємо операцію
             if (operation.AreTargetsFilled()) {
-                List<OperationModifier> operationModifiers = Owner.Effects.GetEffectsOfType<OperationModifier>().ToList();
+                List<OperationModifier> operationModifiers = new();
+                    //Owner.EffectManager.GetEffectsOfType<OperationModifier>().ToList();
 
                 foreach (var modifier in operationModifiers) {
                     modifier.Attach(operation);

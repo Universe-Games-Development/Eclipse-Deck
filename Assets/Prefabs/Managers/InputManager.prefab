@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &7851716948553483407
+--- !u!1 &832670027732235507
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,56 +8,51 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5281233914555625369}
-  - component: {fileID: 2408952059697335417}
+  - component: {fileID: 4642717543246929500}
+  - component: {fileID: 2280659781408163671}
   m_Layer: 0
-  m_Name: CardInputHandler
+  m_Name: InputManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5281233914555625369
+--- !u!4 &4642717543246929500
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7851716948553483407}
+  m_GameObject: {fileID: 832670027732235507}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.106, y: 3.031, z: 0}
+  m_LocalPosition: {x: -19.86, y: 4.13, z: -7.69}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2408952059697335417
+--- !u!114 &2280659781408163671
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7851716948553483407}
+  m_GameObject: {fileID: 832670027732235507}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1eb3510bf5aa89440bfecafe00cf83ac, type: 3}
+  m_Script: {fileID: 11500000, guid: 75dee6ab265b5a64ab8972a0ee5e0c03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _cardBattleMap:
-    m_Name: Card Battle Map
-    m_Id: f0b4f144-4b67-48bf-89c6-77641f7a7402
+  _mainMap:
+    m_Name: Main Map
+    m_Id: 9ebcabe4-39b2-4d83-832a-3fc11c6a0adc
     m_Asset: {fileID: 0}
     m_Actions: []
     m_Bindings: []
-  moveInput: {x: 0, y: 0}
-  mousePosition: {x: 0, y: 0}
-  worldPosition: {x: 0, y: 0, z: 0}
-  isDragging: 0
-  isLeftClicking: 0
-  isRightClicking: 0
-  hoveredObject: {fileID: 0}
-  dragThreshold: 5
-  raycastLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
+  previousMap:
+    m_Name: Previous Map
+    m_Id: 22c7b0a8-7fa5-4783-8600-cda961594460
+    m_Asset: {fileID: 0}
+    m_Actions: []
+    m_Bindings: []

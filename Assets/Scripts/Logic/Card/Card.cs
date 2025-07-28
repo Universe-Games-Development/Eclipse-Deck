@@ -10,7 +10,6 @@ public abstract class Card : IGameUnit {
     public CardData Data { get; protected set; }
     public Cost Cost { get; protected set; }
     public event Action<GameEnterEvent> OnUnitDeployed;
-    public EffectManager Effects { get; set; }
     public BoardPlayer ControlledBy { get; set; }
     public string Id { get; set; } // Unique identifier for the card
 
@@ -50,29 +49,22 @@ public abstract class Card : IGameUnit {
     }
 }
 
-public interface IStatable {
-    CreatureStats Stats { get; }
-}
 
-
-public class CreatureCard : Card, IStatable, IDamageable {
-    public CreatureStats Stats { get; }
+public class CreatureCard : Card, IDamageable {
     public CreatureCardData CreatureCardData => (CreatureCardData)Data;
 
-    public Health Health => Stats.Health;
+    public Health Health { get; private set; }
+    public Attack Attack { get; private set; }
 
-    public CreatureCard(CreatureCardData cardData, GameEventBus gameEventBus, TurnManager turnManager)
+    public CreatureCard(CreatureCardData cardData)
         : base(cardData) {
         
-        Health health = new(cardData.Health, this, gameEventBus);
-        Attack attack = new(cardData.Attack, this, gameEventBus);
-        EffectManager effectManager = new(turnManager);
-
-        Stats = new CreatureStats(attack, health, effectManager);
+        Health = new(cardData.Health, this);
+        Attack = new(cardData.Attack, this);
     }
 
     public override string ToString() {
-        return $"{CreatureCardData.Name} {Stats}";
+        return $"{CreatureCardData.Name} Hp: {Health}";
     }
 }
 

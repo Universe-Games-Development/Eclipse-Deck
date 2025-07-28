@@ -6,11 +6,11 @@ public class CardHand {
     // Події, які сповіщають про зміни в моделі
     public event Action<Card> CardAdded;
     public event Action<Card> CardRemoved;
-    public event Action<Card> OnCardSelected;
+    public event Action<Card> OnCardSelection;
     public event Action<Card> OnCardDeselected;
     public event Action<bool> OnToggled;
 
-    private const int DEFAULT_SIZE = 10;
+    private const int DEFAULT_SIZE = 2;
 
     private List<Card> cardsInHand = new();
 
@@ -59,7 +59,7 @@ public class CardHand {
         if (SelectedCard == newCard) return;
         DeselectCurrentCard();
         SelectedCard = newCard;
-        OnCardSelected?.Invoke(SelectedCard);
+        OnCardSelection?.Invoke(SelectedCard);
         Debug.Log("Selected: " + newCard.Data.Name);
     }
 
@@ -69,11 +69,9 @@ public class CardHand {
         SelectedCard = null;
     }
 
-    public Card GetRandomCard() {
-        if (cardsInHand.Count > 0) {
-            return cardsInHand.GetRandomElement();
-        }
-        return null;
+    public Card GetRandomCard() { 
+        cardsInHand.TryGetRandomElement(out var card);
+        return card;
     }
 
     public void ClearHand() {

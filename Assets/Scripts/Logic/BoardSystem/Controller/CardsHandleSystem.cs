@@ -9,8 +9,9 @@ public class CardsHandleSystem : MonoBehaviour {
     [SerializeField] private CardHandView handView;
     [SerializeField] private DeckView deckView;
     [SerializeField] private DeckView discardDeckView;
+    public HandPresenter HandPresenter;
 
-    public HandPresenter HandPresenter { get; private set; }
+
     private DeckPresenter _deckPresenter;
     private DeckPresenter _discardeckPresenter; // not used now
     public BoardPlayer BoardPlayer { get; private set; }
@@ -21,18 +22,23 @@ public class CardsHandleSystem : MonoBehaviour {
     [Inject] CardProvider _cardProvider;
     [Inject] DiContainer diContainer;
 
+    private void Awake() {
+        CardFactory cardFactory = new(diContainer);
+        Deck deckModel = new(cardFactory);
+        CardHand handModel = new();
+
+        handModel.OnCardSelection += PlayCard;
+        _deckPresenter = new(deckModel, deckView);
+
+        HandPresenter.Initialize(handModel, handView);
+    }
+
     public void Initialize(BoardPlayer boardPlayer) { 
         BoardPlayer = boardPlayer;
         CardSpendable = new CardSpendable(BoardPlayer.Mana, BoardPlayer.Health, _eventBus);
 
         OpponentData data = BoardPlayer.Info.Data; // soon opponent data will define deck and cards
-        CardFactory cardFactory = new(diContainer);
-        Deck deckModel = new(cardFactory);
-        CardHand handModel = new();
-
-        _deckPresenter = new(deckModel, deckView);
-        HandPresenter = new(handModel, handView);
-        HandPresenter.CardHand.OnCardSelected += PlayCard;
+        
 
         _eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
         _eventBus.SubscribeTo<BattleEndEventData>(EndBattleActions);
@@ -62,7 +68,7 @@ public class CardsHandleSystem : MonoBehaviour {
 
     private void PlayCard(Card card) {
         PlayCardCommand playCardCommand = new(this, card);
-        _commandManager.EnqueueCommand(playCardCommand);
+        //_commandManager.EnqueueCommand(playCardCommand);
     }
 
     private void EndBattleActions(ref BattleEndEventData eventData) {
@@ -70,7 +76,7 @@ public class CardsHandleSystem : MonoBehaviour {
         _deckPresenter.Deck.ClearDeck();
         HandPresenter.ClearHand();
     }
-
+    
 
     public CardCollection GenerateRandomCollection(int cardAmount) {
         CardCollection collection = new();
