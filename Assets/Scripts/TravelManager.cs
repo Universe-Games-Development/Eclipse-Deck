@@ -18,8 +18,8 @@ public class PlayerHeroFactory {
 
         // Create presenter to connect model and view
         if (playerPresenter == null) {
-            OpponentPresenter presenterPrefab = player.Data.presenterPrefab;
-            playerPresenter = (PlayerPresenter)_container.InstantiatePrefabForComponent<OpponentPresenter>(presenterPrefab);
+            CharacterPresenter presenterPrefab = player.Data.presenterPrefab;
+            playerPresenter = (PlayerPresenter)_container.InstantiatePrefabForComponent<CharacterPresenter>(presenterPrefab);
         }
 
         presenter = playerPresenter;

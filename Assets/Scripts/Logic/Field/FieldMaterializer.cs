@@ -71,18 +71,11 @@ public class FieldMaterializer : MonoBehaviour {
     }
 
 
-    public void UpdateOccupyEmission(Creature creature = null) {
-        bool isOccupied = creature != null;
+    public void UpdateOccupyEmission(bool isOccupied) {
 
         Color hoverEmissionColor = isOccupied ? occupyColor : freeColor;
         propBlock.SetColor(emissiveColorName, hoverEmissionColor);
-
-        if (creature != null) {
-            int attackValue = creature.Attack.CurrentValue;
-            hoverHighlightIntensity = defaultHighlightIntensity * attackValue;
-        } else {
-            hoverHighlightIntensity = defaultHighlightIntensity;
-        }
+        hoverHighlightIntensity = defaultHighlightIntensity;
 
         // Check if we highlight now
         float currentIntensity = propBlock.GetFloat("_EmissionIntensity");

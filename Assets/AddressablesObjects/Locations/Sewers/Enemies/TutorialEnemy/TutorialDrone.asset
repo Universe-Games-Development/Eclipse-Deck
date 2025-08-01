@@ -9,15 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9664db39934f9fd48a0caa15675a2db3, type: 3}
-  m_Name: Tutorial Drone
+  m_Script: {fileID: 11500000, guid: 8443c77fbbc309749b5e4454e2b234e9, type: 3}
+  m_Name: TutorialDrone
   m_EditorClassIdentifier: 
-  Name: Tutorial Drone
+  presenterPrefab: {fileID: 0}
+  Name: Drone
   Sprite: {fileID: 21300000, guid: 1acaaa61e37518946a7c4e2274fd23cc, type: 3}
-  ViewModel: {fileID: 2405701885984559001, guid: 4bca8d02a2029a642afedf1824c61f7b, type: 3}
-  Health: 25
+  Health: 20
   Mana: 0
   collection: {fileID: 11400000, guid: dbba24abb7466f24b844517de0bbcc20, type: 2}
   isFlying: 0
-  enemyType: 1
-  speechData: {fileID: 11400000, guid: 0df000d742c9ca54392ad9f249cb5d0e, type: 2}
+  speechData: {fileID: 0}
+  Color: {r: 0.16299021, g: 0.111294046, b: 0.5754717, a: 0}
+  enemyType: 0

@@ -21,12 +21,8 @@ public class FieldView : MonoBehaviour {
         }
     }
 
-    public void UpdateCreatureVisuals(Creature creature) {
-        materializer.UpdateOccupyEmission(creature);
-    }
-
     public void UpdateOwnerVisuals(BoardPlayer opponent) {
-        materializer.UpdateColor(opponent.Info.Data.Color);
+        materializer.UpdateColor(opponent.Character.Data.Color);
     }
 
     public void UpdateTypeVisuals(FieldType type) {

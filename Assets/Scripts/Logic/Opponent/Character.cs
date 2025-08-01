@@ -5,14 +5,14 @@ using Zenject;
 
 
 
-public class Opponent : IDisposable {
-    public Action<Opponent> OnDefeat { get; internal set; }
+public class Character : IDisposable {
+    public Action<Character> OnDefeat { get; internal set; }
 
     
-    public OpponentData Data { get; private set; }
+    public CharacterData Data { get; private set; }
 
     
-    public Opponent(OpponentData data) {
+    public Character(CharacterData data) {
         Data = data;
         
     }
@@ -23,7 +23,7 @@ public class Opponent : IDisposable {
     }
 }
 
-public class Player : Opponent {
+public class Player : Character {
     
     public PlayerData PlayerData => (PlayerData)base.Data;
 
@@ -33,12 +33,12 @@ public class Player : Opponent {
 }
 
 
-public class Enemy : Opponent {
+public class Enemy : Character {
     private Speaker speech;
     [Inject] private TurnManager _turnManager;
     [Inject] protected OpponentRegistrator opponentRegistrator;
 
-    public Enemy(OpponentData opponentData, DialogueSystem dialogueSystem, GameEventBus eventBus)
+    public Enemy(CharacterData opponentData, DialogueSystem dialogueSystem, GameEventBus eventBus)
         : base(opponentData) {
         SpeechData speechData = opponentData.speechData;
         if (speechData != null) {

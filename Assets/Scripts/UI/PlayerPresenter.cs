@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 using Zenject;
 
-public class PlayerPresenter : OpponentPresenter {
+public class PlayerPresenter : CharacterPresenter {
     
     
 }

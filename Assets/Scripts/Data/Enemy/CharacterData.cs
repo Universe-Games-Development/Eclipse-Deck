@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 
 
-public class OpponentData : ScriptableObject {
+public class CharacterData : ScriptableObject {
     [Header("Presentation")]
     [Tooltip("Усі вороги/гравці мають View на базі OpponentView")]
-    public OpponentPresenter presenterPrefab;
+    public CharacterPresenter presenterPrefab;
 
     [Header("Stats")]
     public string Name;

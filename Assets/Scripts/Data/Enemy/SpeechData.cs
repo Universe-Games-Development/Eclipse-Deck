@@ -17,7 +17,7 @@ public class SpeechData : ScriptableObject {
 }
 
 public class Speaker : IDisposable {
-    public Opponent Opponent { get; private set; }
+    public Character Opponent { get; private set; }
 
     private readonly DialogueSystem dialogueSystem;
     private readonly GameEventBus eventBus;
@@ -27,7 +27,7 @@ public class Speaker : IDisposable {
 
     public SpeechData SpeechData { get; }
 
-    public Speaker(SpeechData speechData, Opponent opponent, DialogueSystem dialogueSystem, GameEventBus eventBus) {
+    public Speaker(SpeechData speechData, Character opponent, DialogueSystem dialogueSystem, GameEventBus eventBus) {
         SpeechData = speechData;
         Opponent = opponent;
         this.dialogueSystem = dialogueSystem;

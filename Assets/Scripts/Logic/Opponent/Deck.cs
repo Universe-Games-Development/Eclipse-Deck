@@ -1,63 +1,12 @@
 using System.Collections.Generic;
-using Unity.Android.Gradle.Manifest;
-using UnityEngine;
 using Zenject;
 
-public class Deck {
-    private Stack<Card> cards = new();
-    private CardFactory _cardFactory;
-
-    public Deck(CardFactory cardFactory) {
-        _cardFactory = cardFactory;
-    }
-
-    public void Initialize(CardCollection collection) {
-        List<Card> collectionCards = _cardFactory.CreateCardsFromCollection(collection);
-        foreach (var card in collectionCards) {
-            cards.Push(card);
-            card.ChangeState(CardState.InDeck);
-            card.Deploy();
-        }
-        ShuffleDeck();
-    }
-
-    public Card DrawCard() {
-        if (cards.Count > 0) {
-            Card drawnCard = cards.Pop();
-            
-            return drawnCard;
-        }
-        Debug.Log("Player doesn`t have more cards he need to take damage (TO DO Soon)");
-        return null;
-    }
-
-    public void ShuffleDeck() {
-        List<Card> tempCards = new(cards);
-        cards.Clear();
-        ShuffleList(tempCards);
-        foreach (var card in tempCards) {
-            cards.Push(card);
-        }
-    }
-
-    private void ShuffleList(List<Card> list) {
-        for (int i = list.Count - 1; i > 0; i--) {
-            int randomIndex = Random.Range(0, i + 1);
-            (list[i], list[randomIndex]) = (list[randomIndex], list[i]);
-        }
-    }
-
-    public void AddCard(Card card) {
-        cards.Push(card);
-    }
-
-
-    public void ClearDeck() {
-        cards.Clear();
-    }
-
-    public int GetCount() {
-        return cards.Count;
+public class Deck : CardContainer {
+    public Card Draw() {
+        if (cards.Count == 0) return null;
+        var card = cards[^1];
+        cards.RemoveAt(cards.Count - 1);
+        return card;
     }
 }
 

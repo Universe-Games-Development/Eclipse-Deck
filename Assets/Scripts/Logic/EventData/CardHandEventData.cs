@@ -3,10 +3,10 @@
 using System.Collections.Generic;
 
 public struct CardPullEvent : IEvent {
-    public Opponent Owner;
+    public Character Owner;
     public Card Card;
 
-    public CardPullEvent(Opponent owner, Card card) {
+    public CardPullEvent(Character owner, Card card) {
         Owner = owner;
         Card = card;
     }
@@ -14,10 +14,10 @@ public struct CardPullEvent : IEvent {
 }
 
 public struct CardDrawnEvent : IEvent {
-    public Opponent Owner;
+    public Character Owner;
     public Card Card;
 
-    public CardDrawnEvent(Opponent owner, Card card) {
+    public CardDrawnEvent(Character owner, Card card) {
         Owner = owner;
         Card = card;
     }

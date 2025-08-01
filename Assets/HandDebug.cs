@@ -20,20 +20,14 @@ public class HandDebug : MonoBehaviour
             AddCard();
         });
 
-        handPresenter.CardHand.OnCardSelection += UpdateSelectedCard;
-
         for (int i = 0; i < initialCards; i++) {
             AddCard();
         }
     }
 
-    private void UpdateSelectedCard(Card card) {
-        selectedCard.text = "Sel. Card: " + card;
-    }
-
     private void AddCard() {
         EffectManager effectManager = new EffectManager(eventBus);
         Card card = new CreatureCard(cardData);
-        handPresenter.CardHand.AddCard(card);
+        handPresenter.CardHand.Add(card);
     }
 }

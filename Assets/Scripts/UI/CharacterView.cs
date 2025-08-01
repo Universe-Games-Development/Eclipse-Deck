@@ -4,7 +4,7 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.Splines;
 
-public class OpponentView : MonoBehaviour {
+public class CharacterView : MonoBehaviour {
     public event Action OnSeatTaken;
 
     [SerializeField] private Animator animator;

@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Splines;
 
-public class PlayerView : OpponentView {
+public class PlayerView : CharacterView {
     [SerializeField] private CameraManager cameraManager;
 
     public override async UniTask EnterRoom(SplineContainer splineContainer) {

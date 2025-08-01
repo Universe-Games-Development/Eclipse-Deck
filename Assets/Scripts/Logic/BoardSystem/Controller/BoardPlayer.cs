@@ -3,35 +3,27 @@ using System;
 using UnityEngine;
 using Zenject;
 
-public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
-    [Inject] private TurnManager _turnManager;
+public class BoardPlayer : MonoBehaviour, IDamageable, IMannable {
     [Inject] protected GameEventBus _eventBus;
     public Direction FacingDirection;
     [SerializeField] private HealthCellView _healthDisplay;
     [SerializeField] private CardsHandleSystem _cardsSystem;
-    public Opponent Info { get; private set; }
+    public Character Character { get; private set; }
     public Health Health { get; private set; }
     public Mana Mana { get; private set; }
     public EffectManager EffectManager { get; private set; }
-    public ITargetingService TargetService { get; internal set; }
-
-    //IGameUnit
-    public BoardPlayer ControlledBy { get; private set; }
-    public event Action<GameEnterEvent> OnUnitDeployed;
 
     /// <summary>
     /// Прив'язує об'єкт опонента до цього представлення на дошці
     /// </summary>
-    public void BindPlayer(OpponentPresenter opponentPresenter) {
-        if (opponentPresenter == null) {
+    public void BindPlayer(CharacterPresenter characterPresenter) {
+        if (characterPresenter == null) {
             return;
         }
-        opponentPresenter.MoveToSeat(transform).Forget();
 
-        Info = opponentPresenter.Model;
-        OpponentData Data = Info.Data;
+        Character = characterPresenter.Model;
+        CharacterData Data = Character.Data;
 
-        ControlledBy = this;
         Health = new Health(Data.Health, this);
         Mana = new Mana(this, Data.Mana);
 
@@ -41,7 +33,6 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
         }
 
         EffectManager = new EffectManager(_eventBus);
-        OnUnitDeployed?.Invoke(new GameEnterEvent(this));
         InitializeCards();
     }
 
@@ -49,7 +40,7 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
     /// Ініціалізує систему карт для гравця
     /// </summary>
     public void InitializeCards() {
-        _cardsSystem.Initialize(ControlledBy);
+        _cardsSystem.Initialize(this);
 
 
         BattleStartedEvent battleStartedEvent = new BattleStartedEvent();
@@ -64,7 +55,6 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
     /// Очищає гравця з позиції за дошкою
     /// </summary>
     public void SelfClear() {
-        ControlledBy = null;
 
         if (_healthDisplay != null) {
             _healthDisplay.ClearOwner();
@@ -77,11 +67,7 @@ public class BoardPlayer : MonoBehaviour, IGameUnit, IDamageable, IMannable {
 
 
     public override string ToString() {
-        return $"{GetType().Name} {Info.Data.Name} ({Health.CurrentValue}/{Health.TotalValue})";
+        return $"{GetType().Name} {Character.Data.Name} ({Health.CurrentValue}/{Health.TotalValue})";
     }
 
-    private async UniTask EndOwnTurn() {
-        await UniTask.Delay(1500);
-        _turnManager.EndTurnRequest(this);
-    }
 }

@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
 
-public abstract class Card : IGameUnit {
-    public event Action<Card> OnCardDrawn;
-    public event Action<Card> OnCardShuffled;
-    public event Action<Card> OnCardDiscarded;
-    public Action<CardState> OnStateChanged { get; internal set; }
-    public CardState CurrentState { get; protected set; }
+public abstract class Card : GameUnit {
+    public Action<CardContainer> OnContainerChanged { get; internal set; }
+    public CardContainer CurrentContainer { get; protected set; }
     public CardData Data { get; protected set; }
     public Cost Cost { get; protected set; }
-    public event Action<GameEnterEvent> OnUnitDeployed;
-    public BoardPlayer ControlledBy { get; set; }
     public string Id { get; set; } // Unique identifier for the card
+    public List<GameOperation> Operations = new List<GameOperation>();
 
     public Card(CardData cardData)  // Add owner to constructor
     {
@@ -20,27 +16,8 @@ public abstract class Card : IGameUnit {
         Id = $"{Data.Name}_{Guid.NewGuid()}";
     }
 
-    public virtual void ChangeState(CardState newState) {
-        if (newState != CurrentState) {
-            CurrentState = newState;
-            switch (newState) {
-                case CardState.InDeck:
-                    OnCardShuffled?.Invoke(this);
-                    break;
-                case CardState.InHand:
-                    OnCardDrawn?.Invoke(this);
-                    break;
-                case CardState.Discarded:
-                    OnCardDiscarded?.Invoke(this);
-                    break;
-                default:
-                    throw new ArgumentException("Wrong new state");
-            }
-        }
-    }
-
-    internal List<GameOperation> GetCardPlayOperations() {
-        throw new NotImplementedException();
+    public virtual void SetContainer(CardContainer newContainer) {
+        CurrentContainer = newContainer;
     }
 
     // used by deck
@@ -61,6 +38,7 @@ public class CreatureCard : Card, IDamageable {
         
         Health = new(cardData.Health, this);
         Attack = new(cardData.Attack, this);
+        Operations.Add(new SpawnCreatureOperation(CreatureCardData));
     }
 
     public override string ToString() {

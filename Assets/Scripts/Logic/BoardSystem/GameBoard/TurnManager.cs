@@ -22,7 +22,6 @@ public class TurnManager : IDisposable {
     [Inject]
     public void Construct(GameEventBus eventBus) {
         this.eventBus = eventBus;
-        eventBus.SubscribeTo<EndActionsExecutedEvent>(OnEndTurnActionsPerformed);
     }
 
     public void InitTurns(List<BoardPlayer> registeredOpponents) {
@@ -53,7 +52,7 @@ public class TurnManager : IDisposable {
         return true;
     }
 
-    private void OnEndTurnActionsPerformed(ref EndActionsExecutedEvent eventData) {
+    private void PerformEndTurn() {
         inTransition = true;
         UpdateRoundCounter();
         SwitchToNextOpponent();
@@ -104,7 +103,6 @@ public class TurnManager : IDisposable {
 
     public void Dispose() {
         ResetTurnManager();
-        eventBus.UnsubscribeFrom<EndActionsExecutedEvent>(OnEndTurnActionsPerformed);
     }
 }
 

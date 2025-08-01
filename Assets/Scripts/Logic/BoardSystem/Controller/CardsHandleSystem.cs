@@ -11,7 +11,6 @@ public class CardsHandleSystem : MonoBehaviour {
     [SerializeField] private DeckView discardDeckView;
     public HandPresenter HandPresenter;
 
-
     private DeckPresenter _deckPresenter;
     private DeckPresenter _discardeckPresenter; // not used now
     public BoardPlayer BoardPlayer { get; private set; }
@@ -21,13 +20,14 @@ public class CardsHandleSystem : MonoBehaviour {
     [Inject] CommandManager _commandManager;
     [Inject] CardProvider _cardProvider;
     [Inject] DiContainer diContainer;
+    CardFactory _cardFactory;
 
     private void Awake() {
         CardFactory cardFactory = new(diContainer);
-        Deck deckModel = new(cardFactory);
+        Deck deckModel = new();
         CardHand handModel = new();
+        _cardFactory = new(diContainer);
 
-        handModel.OnCardSelection += PlayCard;
         _deckPresenter = new(deckModel, deckView);
 
         HandPresenter.Initialize(handModel, handView);
@@ -37,9 +37,9 @@ public class CardsHandleSystem : MonoBehaviour {
         BoardPlayer = boardPlayer;
         CardSpendable = new CardSpendable(BoardPlayer.Mana, BoardPlayer.Health, _eventBus);
 
-        OpponentData data = BoardPlayer.Info.Data; // soon opponent data will define deck and cards
-        
+        CharacterData data = BoardPlayer.Character.Data; // soon opponent data will define deck and cards
 
+        // Move to the global game manager
         _eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
         _eventBus.SubscribeTo<BattleEndEventData>(EndBattleActions);
     }
@@ -51,14 +51,8 @@ public class CardsHandleSystem : MonoBehaviour {
         _eventBus.SubscribeTo<TurnStartEvent>(TurnStartActions);
 
         Deck deck = _deckPresenter.Deck;
-        CardCollection _cardCollection = GenerateRandomCollection(40);
-        deck.Initialize(_cardCollection);
-
-        //DrawCards(6);
-
-        //_commandManager.EnqueueCommands(new List<Command> {
-        //    new DrawCardCommand(this, 3),
-        //});
+        List<Card> _cards = GenerateRandomCards(40);
+        deck.AddRange(_cards);
     }
 
     protected virtual void TurnStartActions(ref TurnStartEvent eventData) {
@@ -66,46 +60,41 @@ public class CardsHandleSystem : MonoBehaviour {
             _commandManager.EnqueueCommand(new DrawCardCommand(this));
     }
 
-    private void PlayCard(Card card) {
-        PlayCardCommand playCardCommand = new(this, card);
-        //_commandManager.EnqueueCommand(playCardCommand);
-    }
-
     private void EndBattleActions(ref BattleEndEventData eventData) {
         _eventBus.UnsubscribeFrom<TurnStartEvent>(TurnStartActions);
-        _deckPresenter.Deck.ClearDeck();
+        _deckPresenter.Deck.Clear();
         HandPresenter.ClearHand();
     }
     
 
-    public CardCollection GenerateRandomCollection(int cardAmount) {
+    public List<Card> GenerateRandomCards(int cardAmount) {
         CardCollection collection = new();
         List<CardData> _unclokedCards = _cardProvider.GetRandomUnlockedCards(cardAmount);
-        if (_unclokedCards.IsEmpty()) return collection;
-
+        if (_unclokedCards.IsEmpty()) return new List<Card>();
+        
         for (int i = 0; i < cardAmount; i++) {
             var randomIndex = UnityEngine.Random.Range(0, _unclokedCards.Count);
             var randomCard = _unclokedCards[randomIndex];
             collection.AddCardToCollection(randomCard);
         }
 
-        return collection;
+        return _cardFactory.CreateCardsFromCollection(collection); ;
     }
 
     public List<Card> DrawCards(int drawAmount) {
         List<Card> drawnCards = new();
 
         while (drawAmount > 0) {
-            Card card = _deckPresenter.Deck.DrawCard();
+            Card card = _deckPresenter.Deck.Draw();
             if (card == null) {
                 _eventBus.Raise(new OnDeckEmptyDrawn(BoardPlayer));
                 
                 return drawnCards;
             }
 
-            if (!HandPresenter.CardHand.AddCard(card)) {
+            if (!HandPresenter.CardHand.Add(card)) {
                 
-                _discardeckPresenter.Deck.AddCard(card);
+                _discardeckPresenter.Deck.Add(card);
                 _eventBus.Raise(new DiscardCardEvent(card, BoardPlayer));
             }
             drawnCards.Add(card);
@@ -122,100 +111,6 @@ public class CardsHandleSystem : MonoBehaviour {
 
             _eventBus.UnsubscribeFrom<TurnStartEvent>(TurnStartActions);
         }
-    }
-}
-
-public class PlayCardCommand : Command {
-    private Card _card;
-    private bool _isPlayed = false;
-    private CardsHandleSystem _cardsPlaySystem;
-    private BoardPlayer _cardPlayer;
-    private CardHand _cardHand;
-    private CardSpendable _cardSpendable;
-    private ResourceData _resourceData;
-
-    public PlayCardCommand(CardsHandleSystem cardsPlaySystem, Card card) {
-        _cardsPlaySystem = cardsPlaySystem;
-        _card = card;
-        _cardPlayer = cardsPlaySystem.BoardPlayer;
-        _cardHand = cardsPlaySystem.HandPresenter.CardHand;
-        _cardSpendable = cardsPlaySystem.CardSpendable;
-    }
-
-    public async override UniTask Execute() {
-        try {
-            _cardHand.RemoveCard(_card);
-            List<GameOperation> cardPlayOperations = _card.GetCardPlayOperations();
-
-            // We need to check if any operation is possible first
-            if (!IsAnyOperationPossible(cardPlayOperations)) {
-                _cardHand.AddCard(_card);
-                return;
-            }
-            // If no operation was successfully executed, return card back else spend resources (players spend health so it always can be spent)
-            if (!await PerformCardOperations(cardPlayOperations)) {
-                _cardHand.AddCard(_card);
-            } else {
-                _isPlayed = true;
-                _resourceData = _cardSpendable.TrySpend(_card.Cost.CurrentValue);
-            }
-        } catch (Exception ex) {
-            // Make sure card is returned to hand if any exception occurs
-            _cardHand.AddCard(_card);
-            _isPlayed = false;
-            Debug.LogError($"Error executing PlayCardCommand: {ex.Message}");
-        }
-    }
-
-    private async UniTask<bool> PerformCardOperations(List<GameOperation> cardPlayOperations) {
-        bool isAnyOperationPerformed = false;
-
-        foreach (var operation in cardPlayOperations) {
-            if (operation == null || !operation.AreTargetsFilled()) {
-                continue;
-            }
-
-            try {
-                bool requirementsFilled = await operation.FillRequirements(_cardPlayer);
-
-                if (requirementsFilled) {
-                    operation.PerformOperation();
-                    isAnyOperationPerformed = true;
-                }
-            } catch (Exception ex) {
-                Debug.LogWarning($"Failed to perform operation for card {_card}: {ex.Message}");
-                // Continue to next operation if one fails
-            }
-        }
-
-        return isAnyOperationPerformed;
-    }
-    private bool IsAnyOperationPossible(List<GameOperation> cardPlayOperations) {
-        if (cardPlayOperations == null || cardPlayOperations.Count == 0) {
-            return false;
-        }
-
-        foreach (var operation in cardPlayOperations) {
-            if (operation != null && operation.AreTargetsFilled()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public override async UniTask Undo() {
-        if (_card != null && _isPlayed) {
-            try {
-                _cardHand.AddCard(_card);
-
-                if (_resourceData != null) {
-                    _cardsPlaySystem.CardSpendable.TryRefund(_resourceData);
-                }
-            } catch (Exception ex) {
-                Debug.LogError($"Error undoing PlayCardCommand: {ex.Message}");
-            }
-        }
-        await UniTask.CompletedTask;
     }
 }
 

@@ -36,7 +36,7 @@ public class EnemySpawner : MonoBehaviour {
         Enemy enemy = CreateEnemy(enemyData);
 
         // Створюємо презентер ворога через DI контейнер
-        OpponentPresenter enemyPresenter = _container.InstantiatePrefabForComponent<OpponentPresenter>(
+        CharacterPresenter enemyPresenter = _container.InstantiatePrefabForComponent<CharacterPresenter>(
             enemyData.presenterPrefab,
             spawnPoint.position,
             Quaternion.identity,

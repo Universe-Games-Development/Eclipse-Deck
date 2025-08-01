@@ -159,7 +159,7 @@ public class DialogueSystem : MonoBehaviour {
         }
     }
 
-    public void UpdateCharacterInfo(OpponentData opponentData) {
+    public void UpdateCharacterInfo(CharacterData opponentData) {
         characterName.text = opponentData.Name;
         characterSprite.sprite = opponentData.Sprite;
     }

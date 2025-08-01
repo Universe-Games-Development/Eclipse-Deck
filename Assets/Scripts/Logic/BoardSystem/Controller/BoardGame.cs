@@ -3,22 +3,19 @@ using Zenject;
 
 public class BoardGame : MonoBehaviour {
     [SerializeField] private BoardSettingsData boardConfig;
-    [SerializeField] private BoardSystem boardSystem;
-    
-    [SerializeField] private CreatureSpawner creatureSpawner;
 
-    [SerializeField] public OpponentRepresentator PlayersRepresentation;
+    [SerializeField] public OpponentRepresentator OpponentsRepresentation;
 
     [Inject] GameEventBus _eventBus;
+    [Inject] CommandManager _commandManager;
+    [Inject] CardProvider _cardProvider;
+    [Inject] DiContainer diContainer;
 
     private void Start() {
         PrepareBattle();
     }
 
     public void PrepareBattle() {
-        boardSystem.Initialize();
-        //boardSystem.UpdateGrid(boardConfig);
-
         BeginBattle();
     }
 
@@ -51,8 +48,8 @@ public class BoardGame : MonoBehaviour {
         }
     }
 
-    public void TookSeat(OpponentPresenter opponentPresenter) {
-        PlayersRepresentation.RegisterOpponent(opponentPresenter);
+    public void TookSeat(CharacterPresenter opponentPresenter) {
+        OpponentsRepresentation.RegisterOpponent(opponentPresenter);
     }
 }
 

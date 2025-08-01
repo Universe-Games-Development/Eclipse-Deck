@@ -3,11 +3,11 @@
 public interface IMana {
     int Current { get; }
     int Max { get; }
-    Opponent Owner { get; }
+    Character Owner { get; }
 
-    event Action<Opponent> OnManaEmpty;
-    event Action<Opponent> OnManaRestored;
-    event Action<Opponent, int> OnManaSpent;
+    event Action<Character> OnManaEmpty;
+    event Action<Character> OnManaRestored;
+    event Action<Character, int> OnManaSpent;
     int Spend(int amount);
     void ModifyMax(int amount);
 

@@ -2703,10 +2703,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f728bbcb96f00d4cbc4f28eb23af79f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _instructionText: {fileID: 553086737}
-  _inputPanel: {fileID: 687860893}
-  _timeout: 3
-  _cancelButton: {fileID: 2139604164}
 --- !u!1001 &829997193
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3684,6 +3680,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 103742894711170591, guid: 50b782f30c512794c85422110fb8869e, type: 3}
+      propertyPath: OpponentsRepresentation
+      value: 
+      objectReference: {fileID: 2089529216}
     - target: {fileID: 343972818839070410, guid: 50b782f30c512794c85422110fb8869e, type: 3}
       propertyPath: m_LocalScale.x
       value: 1
@@ -3886,6 +3886,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 4382956197082679602, guid: 50b782f30c512794c85422110fb8869e, type: 3}
+    - {fileID: 304560515670025999, guid: 50b782f30c512794c85422110fb8869e, type: 3}
+    - {fileID: 5170561439062991034, guid: 50b782f30c512794c85422110fb8869e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 3873133005714245127, guid: 50b782f30c512794c85422110fb8869e, type: 3}
@@ -3904,6 +3906,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2446043340640409990, guid: 50b782f30c512794c85422110fb8869e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1844863618}
+    - targetCorrespondingSourceObject: {fileID: 2446043340640409990, guid: 50b782f30c512794c85422110fb8869e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1844863619}
   m_SourcePrefab: {fileID: 100100000, guid: 50b782f30c512794c85422110fb8869e, type: 3}
 --- !u!1 &1321046337
 GameObject:
@@ -5492,7 +5497,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   handPresenter: {fileID: 1844863615}
-  actionPlayModule: {fileID: 0}
+  operationPlayModule: {fileID: 1844863619}
+--- !u!114 &1844863619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1844863607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28b7ab3c36822ab4f9f0ca86b426ea68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boardLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  gameCamera: {fileID: 0}
+  cancelButton: {fileID: 0}
 --- !u!1 &1867915714
 GameObject:
   m_ObjectHideFlags: 0
@@ -6235,6 +6257,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3873133005714245127, guid: 50b782f30c512794c85422110fb8869e, type: 3}
   m_PrefabInstance: {fileID: 1293060040}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2089529216 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 538347714545373980, guid: 50b782f30c512794c85422110fb8869e, type: 3}
+  m_PrefabInstance: {fileID: 1293060040}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de39304c8a2fcdd49ade63976057a533, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2139604162
 GameObject:
   m_ObjectHideFlags: 0

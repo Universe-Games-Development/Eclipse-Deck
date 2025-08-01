@@ -7,7 +7,7 @@ using Zenject;
  */
 public class TriggerManager {
     private List<AbilityTrigger> _triggers = new();
-    public Action<BoardPlayer, IGameUnit, IEvent> OnTriggerActivation;
+    public Action<BoardPlayer, GameUnit, IEvent> OnTriggerActivation;
 
     public void AddTrigger(AbilityTrigger trigger) {
         if (!_triggers.Contains(trigger)) {
@@ -25,10 +25,10 @@ public class TriggerManager {
 
 public abstract class AbilityTrigger {
     [Inject] protected GameEventBus _eventBus;
-    public Action<BoardPlayer, IGameUnit, IEvent> OnTriggerActivation;
+    public Action<BoardPlayer, GameUnit, IEvent> OnTriggerActivation;
     public string TriggerName { get; protected set; }
-    public abstract void ActivateTrigger(IGameUnit gameUnit);
-    public abstract void DeactivateTrigger(IGameUnit gameUnit);
+    public abstract void ActivateTrigger(GameUnit gameUnit);
+    public abstract void DeactivateTrigger(GameUnit gameUnit);
 }
 
 public class OnSelfSummonTrigger : AbilityTrigger {
@@ -38,10 +38,10 @@ public class OnSelfSummonTrigger : AbilityTrigger {
 
     // Logic for activating the trigger
 
-    public override void ActivateTrigger(IGameUnit gameUnit) {
+    public override void ActivateTrigger(GameUnit gameUnit) {
         gameUnit.OnUnitDeployed += HandleSummon;
     }
-    public override void DeactivateTrigger(IGameUnit gameUnit) {
+    public override void DeactivateTrigger(GameUnit gameUnit) {
         gameUnit.OnUnitDeployed -= HandleSummon;
     }
 
@@ -55,11 +55,11 @@ public class OnAnotherSummonTrigger : AbilityTrigger {
         TriggerName = "When another creature sommons";
     }
 
-    public override void ActivateTrigger(IGameUnit gameUnit) {
+    public override void ActivateTrigger(GameUnit gameUnit) {
         _eventBus.SubscribeTo<GameEnterEvent>(HandleSummon);
     }
 
-    public override void DeactivateTrigger(IGameUnit gameUnit) {
+    public override void DeactivateTrigger(GameUnit gameUnit) {
         _eventBus.UnsubscribeFrom<GameEnterEvent>(HandleSummon);
     }
 

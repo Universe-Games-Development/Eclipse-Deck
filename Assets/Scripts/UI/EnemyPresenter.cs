@@ -1,2 +1,2 @@
-﻿public class EnemyPresenter : OpponentPresenter {
+﻿public class EnemyPresenter : CharacterPresenter {
 }

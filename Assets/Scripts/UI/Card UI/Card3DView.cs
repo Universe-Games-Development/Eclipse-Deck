@@ -133,10 +133,6 @@ public class Card3DView : CardView {
     }
 
     private void OnMouseDown() {
-        Debug.Log($"Card3DView: Mouse down on card {this}");
-    }
-
-    private void OnMouseUpAsButton() {
         if (!isInteractable) return;
 
         // Вызываем клик по карте

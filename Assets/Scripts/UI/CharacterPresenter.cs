@@ -4,12 +4,12 @@ using UnityEngine;
 using UnityEngine.Splines;
 using Zenject;
 
-public class OpponentPresenter : MonoBehaviour, ITargetableObject {
-    public Opponent Model { get; protected set; }
-    [SerializeField] public OpponentView View;
+public class CharacterPresenter : MonoBehaviour, ITargetableObject {
+    public Character Model { get; protected set; }
+    [SerializeField] public CharacterView View;
 
     [Inject] protected RoomSystem roomSystem;
-    public void Initialize(Opponent model) {
+    public void Initialize(Character model) {
         if (model == null) throw new Exception($"Null model for {this}");
 
         Model = model;

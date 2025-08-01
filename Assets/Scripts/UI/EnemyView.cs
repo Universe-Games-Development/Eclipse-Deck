@@ -1,4 +1,4 @@
 ﻿using System;
 
-public class EnemyView : OpponentView {
+public class EnemyView : CharacterView {
 }

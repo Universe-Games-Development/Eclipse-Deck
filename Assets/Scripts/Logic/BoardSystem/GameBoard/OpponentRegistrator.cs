@@ -12,7 +12,7 @@ public class OpponentRegistrator {
     // Event for game start when both opponents are ready
     public bool IsMatchReady => PlayerPresenter != null && EnemyPresenter != null;
 
-    public void RegisterOpponent(OpponentPresenter opponentPresenter) {
+    public void RegisterOpponent(CharacterPresenter opponentPresenter) {
         if (opponentPresenter == null) {
             Debug.LogError("Attempted to register null opponent");
             return;
@@ -32,14 +32,14 @@ public class OpponentRegistrator {
                 return;
         }
 
-        Opponent opponent = opponentPresenter.Model;
+        Character opponent = opponentPresenter.Model;
         opponent.OnDefeat += UnregisterOpponent;
 
         // Check if match is ready after registration
         CheckAndTriggerMatchSetup();
     }
 
-    private void UnregisterOpponent(Opponent opponent) {
+    private void UnregisterOpponent(Character opponent) {
         if (opponent == null) return;
         opponent.OnDefeat -= UnregisterOpponent;
         switch (opponent) {
@@ -89,8 +89,8 @@ public class OpponentRegistrator {
     }
 
     // Get all active opponent models
-    public List<Opponent> GetActiveOpponents() {
-        var list = new List<Opponent>();
+    public List<Character> GetActiveOpponents() {
+        var list = new List<Character>();
 
         Player player = GetPlayer();
         if (player != null) list.Add(player);

@@ -11,7 +11,7 @@ public interface IDamageDealer {
     public Attack Attack { get; }
 }
 
-public interface IGameUnit {
-    event Action<GameEnterEvent> OnUnitDeployed;
-    BoardPlayer ControlledBy { get; }
+public class GameUnit {
+    public Action<GameEnterEvent> OnUnitDeployed;
+    public BoardPlayer ControlledBy { get; }
 }

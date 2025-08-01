@@ -15,8 +15,6 @@ public class FieldPresenter {
         // Subscribe to field events
         field.OwnerChanged += HandleOwnerChanged;
         field.TypeChanged += HandleTypeChanged;
-        field.CreaturePlaced += HandleCreaturePlaced;
-        field.CreatureRemoved += HandleCreatureRemoved;
         field.FieldRemoved += HandleFieldRemoved;
     }
 
@@ -25,8 +23,6 @@ public class FieldPresenter {
         // Unsubscribe from events
         Model.OwnerChanged -= HandleOwnerChanged;
         Model.TypeChanged -= HandleTypeChanged;
-        Model.CreaturePlaced -= HandleCreaturePlaced;
-        Model.CreatureRemoved -= HandleCreatureRemoved;
         Model.FieldRemoved -= HandleFieldRemoved;
     }
 
@@ -37,14 +33,6 @@ public class FieldPresenter {
 
     private void HandleTypeChanged(FieldType type) {
         View.UpdateTypeVisuals(type);
-    }
-
-    private void HandleCreaturePlaced(Creature creature) {
-        View.UpdateCreatureVisuals(creature);
-    }
-
-    private void HandleCreatureRemoved(Creature creature) {
-        View.UpdateCreatureVisuals(null);
     }
 
     private void HandleFieldRemoved(Field field) {
