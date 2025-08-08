@@ -14,12 +14,13 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
     [SerializeField] public CardAnimator DoTweenAnimator;
     public CardDescription Description;
 
-    private void Awake() {
+    protected override void Awake() {
+        base.Awake();
         RectTransform ??= GetComponent<RectTransform>();
         CardInfo.OnDataChanged += InvokeCardChangedEvent;
     }
 
-    private void OnDestroy() {
+    protected override void OnDestroy() {
         if (CardInfo)
             CardInfo.OnDataChanged -= InvokeCardChangedEvent;
     }

@@ -2,14 +2,14 @@
 using UnityEngine;
 
 public class CardPresenter : MonoBehaviour {
-    public Card Model;
+    public Card Card;
     public CardView View;
     public CardPresenter(Card card, CardView cardView) {
         
     }
 
     public void Initialize(Card card, CardView cardView) {
-        Model = card;
+        Card = card;
         View = cardView;
 
         CardUIInfo cardInfo = cardView.CardInfo;

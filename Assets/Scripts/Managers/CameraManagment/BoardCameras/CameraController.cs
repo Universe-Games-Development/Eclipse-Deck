@@ -92,7 +92,7 @@ public class CameraController : MonoBehaviour {
         currentCamera = newCamera;
         currentCamera.Priority = 1;
 
-        Debug.Log($"Switched to camera: {currentCamera.name}");
+        //Debug.Log($"Switched to camera: {currentCamera.name}");
     }
 
     public Vector2 GetCurrentCameraPosition() {

@@ -50,7 +50,7 @@ public class CardHandUIView : CardHandView {
         UpdateCardsPositionsAsync().Forget();
     }
 
-    protected override void HandleCardHover(CardView changedCardView, bool isHovered) {
+    protected override void OnCardHover(CardView changedCardView, bool isHovered) {
         CardUIView changedCard3D = changedCardView as CardUIView;
     }
 

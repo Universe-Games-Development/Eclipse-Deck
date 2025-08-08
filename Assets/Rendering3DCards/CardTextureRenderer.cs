@@ -29,7 +29,7 @@ public class CardTextureRenderer : MonoBehaviour {
             : staticRenderingRoom.CreateCardUI();
 
         // ≤н≥ц≥ал≥зуЇмо 3D-карту з UI-представленн€м
-        card3D.Initialize(cardUIView);
+        card3D.SyncWithUICopy(cardUIView);
 
         // «бер≥гаЇмо зв'€зок м≥ж 3D та UI картами
         cardMappings[card3D] = cardUIView;

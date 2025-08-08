@@ -92,7 +92,7 @@ public class CardsHandleSystem : MonoBehaviour {
                 return drawnCards;
             }
 
-            if (!HandPresenter.CardHand.Add(card)) {
+            if (!HandPresenter.Hand.Add(card)) {
                 
                 _discardeckPresenter.Deck.Add(card);
                 _eventBus.Raise(new DiscardCardEvent(card, BoardPlayer));

@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class CardHandView : MonoBehaviour {
-    public event Action<string> OnCardClicked;
+    public event Action<CardView> OnCardClicked;
+    public event Action<CardView, bool> OnCardHovered;
 
     protected Dictionary<string, CardView> _cardViews = new();
     protected bool isInteractable = true;
@@ -23,8 +24,8 @@ public abstract class CardHandView : MonoBehaviour {
 
         CardView cardView = BuildCardView(id);
         cardView.Id = id;
-        cardView.OnCardClicked += OnCardViewClicked;
-        cardView.OnHoverChanged += HandleCardHover;
+        cardView.OnCardClicked += OnCardClickDown;
+        cardView.OnHoverChanged += OnCardHover;
 
         cardView.SetInteractable(isInteractable);
         _cardViews.Add(id, cardView);
@@ -35,8 +36,6 @@ public abstract class CardHandView : MonoBehaviour {
 
         return cardView;
     }
-
-    protected abstract void HandleCardHover(CardView changedCardView, bool isHovered);
 
     protected void RefreshCardIndexCache() {
         _cardIndexCache.Clear();
@@ -50,7 +49,8 @@ public abstract class CardHandView : MonoBehaviour {
 
     public virtual void RemoveCardView(string id) {
         if (_cardViews.TryGetValue(id, out var cardView)) {
-            cardView.OnCardClicked -= OnCardViewClicked;
+            cardView.OnCardClicked -= OnCardClickDown;
+            cardView.OnHoverChanged -= OnCardHover;
             _cardViews.Remove(id);
             HandleCardViewRemoval(cardView);
         }
@@ -61,8 +61,12 @@ public abstract class CardHandView : MonoBehaviour {
         UpdateCardPositions();
     }
 
-    protected virtual void OnCardViewClicked(CardView cardView) {
-        OnCardClicked?.Invoke(cardView.Id);
+    protected virtual void OnCardClickDown(CardView cardView) {
+        OnCardClicked?.Invoke(cardView);
+    }
+
+    protected virtual void OnCardHover(CardView view, bool isHovered) {
+        OnCardHovered?.Invoke(view, isHovered);
     }
 
     public abstract void UpdateCardPositions();
@@ -88,9 +92,14 @@ public abstract class CardHandView : MonoBehaviour {
 
     protected virtual void OnDestroy() {
         foreach (var cardView in _cardViews.Values) {
-            cardView.OnCardClicked -= OnCardViewClicked;
+            cardView.OnCardClicked -= OnCardClickDown;
+            cardView.OnHoverChanged -= OnCardHover;
         }
         _cardViews.Clear();
+    }
+
+    public virtual void SetCardHover(CardView changedCardView, bool isHovered) {
+        throw new NotImplementedException();
     }
 }
 

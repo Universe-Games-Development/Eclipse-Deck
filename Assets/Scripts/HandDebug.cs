@@ -28,6 +28,6 @@ public class HandDebug : MonoBehaviour
     private void AddCard() {
         EffectManager effectManager = new EffectManager(eventBus);
         Card card = new CreatureCard(cardData);
-        handPresenter.CardHand.Add(card);
+        handPresenter.Hand.Add(card);
     }
 }

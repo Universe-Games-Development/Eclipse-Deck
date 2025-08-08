@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b2015e0d7e3f4846bb0cf7fe6dec4ac, type: 3}
   m_Name: Linear3DHandLayoutSettings
   m_EditorClassIdentifier: 
-  MaxHandWidth: 25.2
+  MaxHandWidth: 2.5
   CardThickness: 0.1
   DefaultYPosition: 0
   VerticalOffset: 0.01

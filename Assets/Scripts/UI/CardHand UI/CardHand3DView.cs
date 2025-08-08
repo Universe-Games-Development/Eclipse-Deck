@@ -14,6 +14,11 @@ public class CardHand3DView : CardHandView {
     [SerializeField] private int baseRenderQueueValue = 3000;
     [SerializeField] private int hoverRenderQueueBoost = 100;
 
+    [Header("Card Orientation")]
+    [SerializeField] private Vector3 defaultCardRotation = Vector3.zero; // Поворот "лицом вверх"
+    [SerializeField] private bool inheritContainerRotation = true;
+
+
     [Header("Performance")]
     [SerializeField] private int initialPoolSize = 10;
 
@@ -66,7 +71,6 @@ public class CardHand3DView : CardHandView {
         // Отписываем все обработчики событий
         foreach (var cardView in _cardViews.Values) {
             if (cardView is Card3DView card3D) {
-                card3D.OnHoverChanged -= HandleCardHover;
                 _cardTextureRenderer.UnRegister3DCard(card3D);
             }
         }
@@ -90,7 +94,7 @@ public class CardHand3DView : CardHandView {
                     card.gameObject.SetActive(false);
                     card.transform.SetParent(cardsContainer);
                 },
-                actionOnDestroy: card => Destroy(card.gameObject),
+                actionOnDestroy: card => { if (card && card.gameObject) Destroy(card.gameObject); },
                 collectionCheck: false,
                 defaultCapacity: initialPoolSize,
                 maxSize: 100
@@ -171,7 +175,11 @@ public class CardHand3DView : CardHandView {
 
     #region Hover and Rendering
 
-    protected override void HandleCardHover(CardView changedCardView, bool isHovered) {
+    protected override void OnCardHover(CardView changedCardView, bool isHovered) {
+        base.OnCardHover(changedCardView, isHovered);
+    }
+
+    public override void SetCardHover(CardView changedCardView, bool isHovered) {
         Card3DView changedCard3D = changedCardView as Card3DView;
         if (changedCard3D == null) return;
 
@@ -251,12 +259,34 @@ public class CardHand3DView : CardHandView {
         // Обновляем порядок рендеринга всех карт
         UpdateAllCardsRenderOrder();
 
+        var cardList = new List<CardView>(_cardViews.Values);
+
+        // Устанавливаем правильную ориентацию для всех карт ПЕРЕД layout
+        SetupCardsOrientation(cardList);
+
         // Обновляем позиции через стратегию размещения
         _layoutStrategy.UpdateLayout(new List<CardView>(_cardViews.Values), cardsContainer).Forget();
     }
 
     #endregion
 
+    private void SetupCardsOrientation(List<CardView> cards) {
+        foreach (var cardView in cards) {
+            if (cardView is Card3DView card3D) {
+                SetCardOrientation(card3D);
+            }
+        }
+    }
+
+    private void SetCardOrientation(Card3DView card3D) {
+        if (inheritContainerRotation) {
+            // Наследуем поворот от контейнера (обычно для рук игрока)
+            card3D.transform.rotation = cardsContainer.rotation;
+        } else {
+            // Используем фиксированный поворот (для особых случаев)
+            card3D.transform.rotation = Quaternion.Euler(defaultCardRotation);
+        }
+    }
     #region Public API для настройки границ
 
     /// <summary>

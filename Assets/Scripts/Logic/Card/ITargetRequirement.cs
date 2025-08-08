@@ -3,19 +3,23 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-public interface IRequirement {
-    ValidationResult Check(object selected, BoardPlayer initiator);
+public interface ITargetRequirement {
+    OpponentType RequiredSelector { get; }
+
+    ValidationResult IsValid(object selected, BoardPlayer initiator);
     string GetInstruction();
 }
 
-public abstract class TargetRequirement<T> : IRequirement where T : class {
+public abstract class TargetRequirement<T> : ITargetRequirement where T : GameUnit {
     public IEnumerable<Condition<T>> Conditions { get; private set; }
+
+    public OpponentType RequiredSelector => throw new NotImplementedException();
 
     protected TargetRequirement(params Condition<T>[] conditions) {
         Conditions = conditions ?? throw new ArgumentNullException(nameof(conditions));
     }
 
-    public ValidationResult Check(object selected, BoardPlayer initiator) {
+    public ValidationResult IsValid(object selected, BoardPlayer initiator) {
         if (!TryConvertToRequired(selected, out T defined)) {
             Debug.Log($"Wrong type selected: {selected}");
             return ValidationResult.Fail();
@@ -79,7 +83,7 @@ public struct ValidationResult {
     public static ValidationResult Fail(string message = default) => new ValidationResult { IsValid = false, ErrorMessage = message };
 }
 
-public abstract class Condition<T> where T : class {
+public abstract class Condition<T> where T : GameUnit {
     protected BoardPlayer Initiator;
 
     public void SetInitiator(BoardPlayer opponent) {
@@ -96,12 +100,29 @@ public abstract class Condition<T> where T : class {
     protected abstract ValidationResult CheckCondition(T model);
 }
 
-public class FriendlyUnitCondition : Condition<GameUnit> {
+public enum OwnershipType {
+    Friendly,
+    Enemy,
+    Any
+}
 
-    protected override ValidationResult CheckCondition(GameUnit model) {
-        if (model.ControlledBy != Initiator)
-            return ValidationResult.Fail("Wrong item selected");
-        return ValidationResult.Success;
+public class OwnershipCondition<T> : Condition<T> where T : GameUnit {
+    private readonly OwnershipType ownershipType;
+
+    public OwnershipCondition(OwnershipType ownershipType) {
+        this.ownershipType = ownershipType;
+    }
+
+    protected override ValidationResult CheckCondition(T model) {
+        bool isFriendly = model.ControlledBy == Initiator;
+
+        return ownershipType switch {
+            OwnershipType.Friendly when !isFriendly =>
+                ValidationResult.Fail("You can only select your own units"),
+            OwnershipType.Enemy when isFriendly =>
+                ValidationResult.Fail("You cannot select your own units"),
+            _ => ValidationResult.Success
+        };
     }
 }
 

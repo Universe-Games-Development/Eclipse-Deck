@@ -1,62 +1,68 @@
-﻿using System;
-using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
-
 
 public class CardPlayModule : MonoBehaviour {
     [SerializeField] HandPresenter handPresenter;
-    [SerializeField] OperationPlayModule operationPlayModule;
+    [SerializeField] OperationManager operationManager;
 
-    [Inject] InputManager inputManager;
-    InputSystem_Actions.BoardPlayerActions boardInputs;
-    private Vector2 cursorPosition;
+    [SerializeField] BoardInputManager boardInputManager;
+    [SerializeField] private Transform _testObject;
+
     private bool isPlaying = false;
     private CardPlayData playData;
 
     private void Start() {
-        boardInputs = inputManager.inputAsset.BoardPlayer;
         handPresenter.OnCardClicked += OnCardClicked;
 
-        operationPlayModule.OnActionCompleted += HandleOperationCompeted;
-        operationPlayModule.OnActionCancelled += HandleOperationCacnceled;
+        operationManager.OnOperationEnd += HandleOperationEnd;
     }
 
-    private void HandleOperationCacnceled(GameOperation operation) {
+    private void Update() {
+        if (isPlaying) {
+            if (boardInputManager.TryGetBoardCursorPosition(out Vector3 cursorPosition))
+            if (playData.View != null) {
+                    _testObject.transform.position = cursorPosition;
+                    Vector3 cardOffset = new Vector3(0, 1.3f, 0);
+                    playData.View.transform.position = cursorPosition + cardOffset;
+            }
+            //Debug.Log(cursorPosition);
+        }
+    }
+
+    private void HandleOperationEnd(GameOperation operation, OperationStatus status) {
         // if we not active
         if (!isPlaying || playData == null) return;
 
         // if its not ours
-        if (!playData.operationSucess.ContainsKey(operation)) {
+        if (!playData.Card.Operations.Contains(operation)) {
             return;
         }
 
-        // If thats first canceled operation return card
-        if (!playData.IsStarted()) {
-            handPresenter.RetrieveCard(playData.Presenter);
-            EndCardPlay();
+        switch (status) {
+            case OperationStatus.Success:
+                playData.IsStarted = true;
+                break;
+            case OperationStatus.Canceled:
+                HandleOperationCanceled(operation);
+                break;
+            case OperationStatus.Failed:
+                Debug.Log("Failed operation: " + operation);
+                break;
         }
 
-        // try get next operation or end
-        if (!TryContinueOperations()) {
-            EndCardPlay();
+        if (operation == playData.EndOperation) {
+            FinishCardPlay();
+            // soon add card played event
         }
-
     }
 
-    private bool TryContinueOperations() {
-        if (playData.TryGetNextOperation(out GameOperation operation)) {
-            operationPlayModule.ProcessOperation(operation);
-            return true;
-        }
-        return false;
-    }
-
-    private void HandleOperationCompeted(GameOperation operation) {
-        if (playData == null) return;
-        if (playData.operationSucess.ContainsKey(operation)) {
-            playData.operationSucess[operation] = true;
+    private void HandleOperationCanceled(GameOperation operation) {
+        if (!playData.IsStarted) {
+            var presenter = playData.Presenter; // зберігаємо перед очищенням
+            operationManager.PopDefinedRange(playData.Card.Operations);
+            isPlaying = false;
+            playData = null;
+            handPresenter.RetrieveCard(presenter); // використовуємо збережене значення
         }
     }
 
@@ -65,34 +71,17 @@ public class CardPlayModule : MonoBehaviour {
             return;
         }
 
-        StartCardPlay(cardPresenter);
-    }
+        handPresenter.Hand.Remove(cardPresenter.Card);
 
-    private void StartCardPlay(CardPresenter presenter) {
-        playData = new(presenter);
+        playData = new(cardPresenter);
         isPlaying = true;
-        TryContinueOperations();
+        playData.EndOperation = playData.Card.Operations[0];
+        operationManager.PushRange(playData.Card.Operations);
     }
 
-    private void EndCardPlay() {
-        isPlaying = false;
+    private void FinishCardPlay() {
         playData = null;
-    }
-
-
-    private void Update() {
-        if (isPlaying) {
-            cursorPosition = boardInputs.CursorPosition.ReadValue<Vector2>();
-            if (playData.View != null) {
-                CardView cardView = playData.View;
-                if (cardView is Card3DView card3DView) {
-                    card3DView.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(cursorPosition.x, cursorPosition.y, 10f));
-                } else {
-                    cardView.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(cursorPosition.x, cursorPosition.y, 10f));
-                }
-            }
-            //Debug.Log(cursorPosition);
-        }
+        isPlaying = false;
     }
 }
 
@@ -100,30 +89,14 @@ public class CardPlayData {
     public Card Card;
     public CardPresenter Presenter;
     public Card3DView View;
-    public Dictionary<GameOperation, bool> operationSucess = new();
+    public bool IsStarted = false;
     public CardPlayData(CardPresenter presenter) {
-        Card = presenter.Model; ;
+        Card = presenter.Card; ;
         View = presenter.View as Card3DView;
         Presenter = presenter;
-        foreach (var operation in Card.Operations) {
-            operationSucess.Add(operation, false);
-        }
     }
 
-    public bool IsStarted() {
-        return operationSucess.ContainsValue(true);
-    }
-
-    public bool TryGetNextOperation(out GameOperation nextOperation) {
-        nextOperation = null;
-        foreach (var pair in operationSucess) {
-            if (pair.Value == false) {
-                nextOperation = pair.Key;
-                return true;
-            }
-        }
-        return false;
-    }
+    public GameOperation EndOperation { get; internal set; }
 }
 
 public struct CardPlayedEvent : IEvent {

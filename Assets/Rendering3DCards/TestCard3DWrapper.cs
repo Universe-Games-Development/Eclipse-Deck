@@ -17,13 +17,15 @@ public class TestCard3DWrapper : MonoBehaviour {
     }
 
     private void Test() {
-        //TestUpdateHealth().Forget();
+        TestUpdateHealth().Forget();
     }
 
     private async UniTask TestUpdateHealth() {
         for (int i = 0; i < updateTimes; i++) {
             int randomHealth = random.Next(1, 100); // Генеруємо випадкове значення в діапазоні 1-100
             card3DView.CardInfo.UpdateHealth(randomHealth);
+            int randomAttack = random.Next(1, 100); // Генеруємо випадкове значення в діапазоні 1-100
+            card3DView.CardInfo.UpdateAttack(randomAttack);
             Debug.Log($"Update! Iteration {i}, Health: {randomHealth}");
             await UniTask.Delay(TimeSpan.FromSeconds(2));
         }

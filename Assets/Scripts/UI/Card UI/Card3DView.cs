@@ -4,26 +4,43 @@ using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
 public class Card3DView : CardView {
-    // События
-    public event Action<Card3DView, bool> OnCardHoverChanged;
-    public event Action OnInitialized;
-
     // Компоненты рендеринга
     [SerializeField] private SkinnedMeshRenderer cardRenderer;
     [SerializeField] private Card3DAnimator animator;
+    public Action OnInitialized;
 
     // Кэширование шейдера и материалов
     private static readonly int CardFrontTextureId = Shader.PropertyToID("_CardFrontTexture");
     private MaterialPropertyBlock _propertyBlock;
-    private CardUIView _uiReference;
     private Material _instancedMaterial;
     private int _defaultRenderQueue;
 
+
     #region Unity Lifecycle
 
-    private void Awake() {
+    protected override void Awake() {
+        base.Awake();
+
         // Создаем MaterialPropertyBlock для эффективного изменения свойств материала
         _propertyBlock = new MaterialPropertyBlock();
+    }
+
+    protected override void OnDestroy() {
+        base.OnDestroy();
+    }
+
+    #endregion
+
+    #region Initialization
+
+    public void SyncWithUICopy(CardUIView cardUIView) {
+        CardInfo = cardUIView.CardInfo;
+        InitializeMaterials();
+        OnInitialized.Invoke();
+    }
+
+    protected override void ValidateComponents() {
+        base.ValidateComponents();
 
         // Проверяем наличие компонентов рендеринга
         if (cardRenderer == null) {
@@ -38,26 +55,14 @@ public class Card3DView : CardView {
         }
     }
 
-    private void OnDestroy() {
+    protected override void CleanupResources() {
+        base.CleanupResources();
+
         // Очищаем экземпляр материала для предотвращения утечек памяти
         if (_instancedMaterial != null) {
             Destroy(_instancedMaterial);
             _instancedMaterial = null;
         }
-    }
-
-    #endregion
-
-    #region Initialization
-
-    public void Initialize(CardUIView cardUIView) {
-        _uiReference = cardUIView;
-        CardInfo = _uiReference.CardInfo;
-
-        // Инициализируем материалы
-        InitializeMaterials();
-
-        OnInitialized?.Invoke();
     }
 
     private void InitializeMaterials() {
@@ -69,41 +74,36 @@ public class Card3DView : CardView {
         }
     }
 
-    public override void Reset() {
-        // Сбрасываем все состояния и анимации карты
+    #endregion
+
+    #region State Management
+
+    protected override void ResetVisualState() {
+        base.ResetVisualState();
+
+        // Сбрасываем анимации
         if (animator != null) {
             animator.Reset();
         }
 
         // Сбрасываем порядок рендеринга
         ResetRenderingOrder();
-
-        base.Reset();
     }
 
-    #endregion
+    protected override void OnSelectInternal() {
+        base.OnSelectInternal();
 
-    #region Card State Management
-
-    public override void Select() {
         if (animator != null) {
             animator.Select();
         }
     }
 
-    public override void Deselect() {
+    protected override void OnDeselectInternal() {
+        base.OnDeselectInternal();
+
         if (animator != null) {
             animator.Deselect();
         }
-    }
-
-    public override void SetInteractable(bool value) {
-        if (!value) {
-            // Если карта становится неинтерактивной, а на ней было наведение - сбрасываем
-            OnHoverChanged?.Invoke(this, false);
-        }
-
-        base.SetInteractable(value);
     }
 
     #endregion
@@ -111,33 +111,33 @@ public class Card3DView : CardView {
     #region Mouse Interaction
 
     private void OnMouseEnter() {
-        if (!isInteractable) return;
+        HandleMouseEnter();
+    }
 
-        OnHoverChanged?.Invoke(this, true);
-        OnCardHoverChanged?.Invoke(this, true);
+    private void OnMouseExit() {
+        HandleMouseExit();
+    }
+
+    private void OnMouseDown() {
+        HandleMouseDown();
+    }
+
+    protected override void OnHoverStartInternal() {
+        base.OnHoverStartInternal();
 
         if (animator != null) {
             animator.Hover(true);
         }
     }
 
-    private void OnMouseExit() {
-        if (!isInteractable) return;
-
-        OnHoverChanged?.Invoke(this, false);
-        OnCardHoverChanged?.Invoke(this, false);
+    protected override void OnHoverEndInternal() {
+        base.OnHoverEndInternal();
 
         if (animator != null) {
             animator.Hover(false);
         }
     }
 
-    private void OnMouseDown() {
-        if (!isInteractable) return;
-
-        // Вызываем клик по карте
-        RaiseCardClickedEvent();
-    }
     #endregion
 
     #region Rendering and Visuals
@@ -149,7 +149,7 @@ public class Card3DView : CardView {
         // Получаем текущие свойства
         cardRenderer.GetPropertyBlock(_propertyBlock);
 
-        // Устанавливаем новую текстуру
+        // Устанавливаем новую тектуру
         _propertyBlock.SetTexture(CardFrontTextureId, texture);
 
         // Применяем изменения к рендереру
@@ -157,7 +157,9 @@ public class Card3DView : CardView {
     }
 
     public void SetSortingOrder(int order) {
-        _instancedMaterial.renderQueue = order;
+        if (_instancedMaterial != null) {
+            _instancedMaterial.renderQueue = order;
+        }
     }
 
     public void ResetRenderingOrder() {
@@ -168,17 +170,11 @@ public class Card3DView : CardView {
 
     #region Card Removal
 
-    public override async UniTask RemoveCardView() {
-        // Делаем карту неинтерактивной при удалении
-        isInteractable = false;
-
+    protected override async UniTask PlayRemovalAnimation() {
         // Проигрываем анимацию удаления, если есть
         if (animator != null) {
             await animator.PlayRemovalAnimation();
         }
-
-        // Вызываем базовый метод для завершения удаления
-        await base.RemoveCardView();
     }
 
     #endregion
