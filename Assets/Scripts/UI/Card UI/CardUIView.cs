@@ -27,45 +27,27 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
 
     private void InvokeCardChangedEvent() => OnChanged?.Invoke();
 
-    public override void SetInteractable(bool value) {
-        base.SetInteractable(value);
-    }
 
     public override async UniTask RemoveCardView() {
-        isInteractable = false;
         if (OnCardRemoval != null)
             await OnCardRemoval.Invoke(this);
         await base.RemoveCardView();
     }
 
     public void OnPointerEnter(PointerEventData eventData) {
-        if (!isInteractable) return;
-        DoTweenAnimator.ToggleHover(true);
-        OnCardHovered?.Invoke(true);
+        HandleMouseEnter();
     }
 
     public void OnPointerExit(PointerEventData eventData) {
-        if (!isInteractable) return;
-        DoTweenAnimator.ToggleHover(false);
-        OnCardHovered?.Invoke(false);
+        HandleMouseExit();
     }
 
     public void OnPointerClick(PointerEventData eventData) {
-        if (!isInteractable) return;
-        DoTweenAnimator.ShrinkClick();
-        RaiseCardClickedEvent();
+        HandleMouseDown();
     }
 
     public override void Reset() {
         DoTweenAnimator?.Reset();
         base.Reset();
-    }
-
-    public override void Select() {
-        DoTweenAnimator?.ToggleHover(true);
-    }
-
-    public override void Deselect() {
-        DoTweenAnimator?.ToggleHover(false);
     }
 }

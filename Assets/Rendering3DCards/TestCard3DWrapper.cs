@@ -17,7 +17,7 @@ public class TestCard3DWrapper : MonoBehaviour {
     }
 
     private void Test() {
-        TestUpdateHealth().Forget();
+        //TestUpdateHealth().Forget();
     }
 
     private async UniTask TestUpdateHealth() {

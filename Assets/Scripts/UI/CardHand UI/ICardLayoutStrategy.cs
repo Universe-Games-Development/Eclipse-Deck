@@ -22,20 +22,27 @@ public class LinearHandLayoutStrategy {
 
         if (cards == null || cards.Count == 0) return;
 
-        CalculateLayoutParameters(cards.Count, out float totalWidth, out float spacing, out float startX);
+        // Робимо копію списку карт на випадок, якщо він зміниться
+        var cardsCopy = new List<CardView>(cards);
+
+        CalculateLayoutParameters(cardsCopy.Count, out float totalWidth, out float spacing, out float startX);
 
         _animationTasks.Clear();
 
-        float speedFactor = Mathf.Clamp01(10f / Mathf.Max(1f, cards.Count));
+        float speedFactor = Mathf.Clamp01(10f / Mathf.Max(1f, cardsCopy.Count));
         float moveDuration = _settings.MoveDuration * speedFactor;
 
-        for (int i = 0; i < cards.Count; i++) {
+        for (int i = 0; i < cardsCopy.Count; i++) {
             if (token.IsCancellationRequested) return;
 
-            CardView card = cards[i];
+            CardView card = cardsCopy[i];
+
+            // Перевірка, чи карта ще існує
+            if (card == null || card.transform == null)
+                continue;
 
             (Vector3 targetPosition, Quaternion targetRotation) = CalculateCardTransform(
-                handTransform, i, cards.Count, startX, spacing);
+                handTransform, i, cardsCopy.Count, startX, spacing);
 
             _animationTasks.Add(AnimateCard(card, targetPosition, targetRotation, moveDuration, token));
         }
@@ -45,7 +52,7 @@ public class LinearHandLayoutStrategy {
                 await UniTask.WhenAll(_animationTasks);
             }
         } catch (OperationCanceledException) {
-            // Optional cancellation handling
+            // Ігноруємо скасування
         }
     }
 

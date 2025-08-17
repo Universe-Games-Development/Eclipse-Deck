@@ -49,11 +49,11 @@ public class IdleState : PlayerState {
     }
 
     private void OnCardClicked(CardPresenter presenter) {
-        Debug.Log($"Card clicked: {presenter.Card.Data.Name}");
+        //Debug.Log($"Card clicked: {presenter.Card.Data.Name}");
     }
 
     private void OnCardHovered(CardPresenter presenter, bool isHovered) {
-        Debug.Log($"Card hovered: {presenter.Card.Data.Name}");
+        //Debug.Log($"Card hovered: {presenter.Card.Data.Name}");
     }
 
     public override void Exit() {

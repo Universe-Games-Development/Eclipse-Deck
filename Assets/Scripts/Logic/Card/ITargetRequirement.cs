@@ -4,16 +4,15 @@ using System.Linq;
 using UnityEngine;
 
 public interface ITargetRequirement {
-    OpponentType RequiredSelector { get; }
-
     ValidationResult IsValid(object selected, BoardPlayer initiator);
     string GetInstruction();
+    TargetSelector GetTargetSelector();
 }
 
 public abstract class TargetRequirement<T> : ITargetRequirement where T : GameUnit {
     public IEnumerable<Condition<T>> Conditions { get; private set; }
 
-    public OpponentType RequiredSelector => throw new NotImplementedException();
+    public TargetSelector requiredSelector = TargetSelector.Initiator;
 
     protected TargetRequirement(params Condition<T>[] conditions) {
         Conditions = conditions ?? throw new ArgumentNullException(nameof(conditions));
@@ -65,6 +64,10 @@ public abstract class TargetRequirement<T> : ITargetRequirement where T : GameUn
     public virtual string GetInstruction() {
         return "Select a target for the card.";
     }
+
+    public TargetSelector GetTargetSelector() {
+        return requiredSelector;
+    }
 }
 
 public class ZoneRequirement : TargetRequirement<Zone> {
@@ -114,7 +117,7 @@ public class OwnershipCondition<T> : Condition<T> where T : GameUnit {
     }
 
     protected override ValidationResult CheckCondition(T model) {
-        bool isFriendly = model.ControlledBy == Initiator;
+        bool isFriendly = model.Owner == Initiator;
 
         return ownershipType switch {
             OwnershipType.Friendly when !isFriendly =>

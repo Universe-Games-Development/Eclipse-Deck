@@ -46,7 +46,7 @@ public class OnSelfSummonTrigger : AbilityTrigger {
     }
 
     private void HandleSummon(GameEnterEvent eventData) {
-        OnTriggerActivation?.Invoke(eventData.Summoned.ControlledBy, eventData.Summoned, eventData);
+        OnTriggerActivation?.Invoke(eventData.Summoned.Owner, eventData.Summoned, eventData);
     }
 }
 
@@ -64,7 +64,7 @@ public class OnAnotherSummonTrigger : AbilityTrigger {
     }
 
     private void HandleSummon(ref GameEnterEvent eventData) {
-        OnTriggerActivation?.Invoke(eventData.Summoned.ControlledBy, eventData.Summoned, eventData);
+        OnTriggerActivation?.Invoke(eventData.Summoned.Owner, eventData.Summoned, eventData);
     }
 }
 

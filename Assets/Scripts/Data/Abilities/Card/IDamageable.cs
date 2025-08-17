@@ -13,5 +13,5 @@ public interface IDamageDealer {
 
 public class GameUnit {
     public Action<GameEnterEvent> OnUnitDeployed;
-    public BoardPlayer ControlledBy { get; }
+    public BoardPlayer Owner { get; set;  }
 }

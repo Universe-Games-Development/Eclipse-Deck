@@ -38,7 +38,7 @@ public class CreatureCard : Card, IDamageable {
         
         Health = new(cardData.Health, this);
         Attack = new(cardData.Attack, this);
-        Operations.Add(new SpawnCreatureOperation(CreatureCardData));
+        Operations.Add(new SpawnCreatureOperation(this));
     }
 
     public override string ToString() {

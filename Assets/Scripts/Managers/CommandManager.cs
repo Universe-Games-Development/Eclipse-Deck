@@ -148,7 +148,7 @@ public class PriorityQueue<TKey, TValue> {
     private readonly SortedDictionary<TKey, Queue<TValue>> _queue = new();
     private readonly IComparer<TKey> _keyComparer;
 
-    public int Count { 
+    public int Count {
         get {
             int count = 0;
             foreach (var queue in _queue.Values) {
@@ -161,11 +161,10 @@ public class PriorityQueue<TKey, TValue> {
     public PriorityQueue(IComparer<TKey> keyComparer = null) {
         _keyComparer = keyComparer ?? Comparer<TKey>.Default;
         _queue = new SortedDictionary<TKey, Queue<TValue>>(
-            Comparer<TKey>.Create((x, y) => _keyComparer.Compare(y, x))
+            Comparer<TKey>.Create((x, y) => _keyComparer.Compare(y, x)) // Reverse for highest priority first
         );
     }
 
-    // Enqueue an element with priority
     public void Enqueue(TKey priority, TValue value) {
         if (!_queue.ContainsKey(priority)) {
             _queue[priority] = new Queue<TValue>();
@@ -173,16 +172,14 @@ public class PriorityQueue<TKey, TValue> {
         _queue[priority].Enqueue(value);
     }
 
-    // Dequeue element with highest priority
     public TValue Dequeue() {
         if (_queue.Count == 0) {
             throw new InvalidOperationException("The queue is empty.");
         }
 
-        var maxPriority = GetMaxKey();
+        var maxPriority = _queue.Keys.First(); // Already sorted in descending order
         var dequeuedValue = _queue[maxPriority].Dequeue();
 
-        // Remove the key if the queue is empty for that priority
         if (_queue[maxPriority].Count == 0) {
             _queue.Remove(maxPriority);
         }
@@ -190,30 +187,75 @@ public class PriorityQueue<TKey, TValue> {
         return dequeuedValue;
     }
 
-    // View the element with highest priority without dequeuing
     public TValue Peek() {
         if (_queue.Count == 0) {
             throw new InvalidOperationException("The queue is empty.");
         }
 
-        var maxPriority = GetMaxKey();
+        var maxPriority = _queue.Keys.First();
         return _queue[maxPriority].Peek();
     }
-
-    private TKey GetMaxKey() => _queue.Keys.Max();
-
 
     public void Clear() {
         _queue.Clear();
     }
 
     public bool IsEmpty() {
-        return _queue.IsEmpty();
+        return _queue.Count == 0;
     }
-}
 
-public static class CommandPriority {
-    public const int High = 100;
-    public const int Medium = 50;
-    public const int Low = 10;
+    public bool TryDequeue(out TValue value) {
+        if (IsEmpty()) {
+            value = default(TValue);
+            return false;
+        }
+
+        value = Dequeue();
+        return true;
+    }
+
+    public IEnumerable<TValue> GetAllItems() {
+        foreach (var kvp in _queue) {
+            foreach (var item in kvp.Value) {
+                yield return item;
+            }
+        }
+    }
+
+    public List<TValue> RemoveItems(Func<TValue, bool> predicate) {
+        var removedItems = new List<TValue>();
+        var keysToRemove = new List<TKey>();
+
+        foreach (var kvp in _queue.ToList()) {
+            var priority = kvp.Key;
+            var queue = kvp.Value;
+            var tempItems = new List<TValue>();
+
+            while (queue.Count > 0) {
+                var item = queue.Dequeue();
+                if (predicate(item)) {
+                    removedItems.Add(item);
+                } else {
+                    tempItems.Add(item);
+                }
+            }
+
+            // Re-enqueue items that weren't removed
+            foreach (var item in tempItems) {
+                queue.Enqueue(item);
+            }
+
+            // Mark empty queues for removal
+            if (queue.Count == 0) {
+                keysToRemove.Add(priority);
+            }
+        }
+
+        // Remove empty priority queues
+        foreach (var key in keysToRemove) {
+            _queue.Remove(key);
+        }
+
+        return removedItems;
+    }
 }

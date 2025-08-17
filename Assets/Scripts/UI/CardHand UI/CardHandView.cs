@@ -27,7 +27,6 @@ public abstract class CardHandView : MonoBehaviour {
         cardView.OnCardClicked += OnCardClickDown;
         cardView.OnHoverChanged += OnCardHover;
 
-        cardView.SetInteractable(isInteractable);
         _cardViews.Add(id, cardView);
 
         // Обновляем кэш индексов
@@ -71,24 +70,6 @@ public abstract class CardHandView : MonoBehaviour {
 
     public abstract void UpdateCardPositions();
 
-    public virtual void SetInteractable(bool value) {
-        isInteractable = value;
-        foreach (var cardView in _cardViews.Values) {
-            cardView.SetInteractable(value);
-        }
-    }
-
-    public virtual void SelectCardView(string id) {
-        if (_cardViews.TryGetValue(id, out var cardView)) {
-            cardView.Select();
-        }
-    }
-
-    public virtual void DeselectCardView(string id) {
-        if (_cardViews.TryGetValue(id, out var cardView)) {
-            cardView.Deselect();
-        }
-    }
 
     protected virtual void OnDestroy() {
         foreach (var cardView in _cardViews.Values) {

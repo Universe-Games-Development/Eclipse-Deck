@@ -287,6 +287,7 @@ public class CardHand3DView : CardHandView {
             card3D.transform.rotation = Quaternion.Euler(defaultCardRotation);
         }
     }
+
     #region Public API для настройки границ
 
     /// <summary>

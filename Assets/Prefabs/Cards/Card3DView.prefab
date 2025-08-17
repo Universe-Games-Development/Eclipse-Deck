@@ -48,7 +48,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CardInfo: {fileID: 0}
-  isInteractable: 0
   cardRenderer: {fileID: 5829461222346977053}
   animator: {fileID: 5084182697400251800}
 --- !u!114 &532159351100941374

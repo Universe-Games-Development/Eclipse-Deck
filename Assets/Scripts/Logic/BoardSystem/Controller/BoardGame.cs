@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Zenject;
 
@@ -50,6 +51,10 @@ public class BoardGame : MonoBehaviour {
 
     public void TookSeat(CharacterPresenter opponentPresenter) {
         OpponentsRepresentation.RegisterOpponent(opponentPresenter);
+    }
+
+    public BoardPlayer GetOpponent(BoardPlayer initiator) {
+        return OpponentsRepresentation.GetOpponent(initiator);
     }
 }
 

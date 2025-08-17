@@ -12,6 +12,7 @@ public class BoardPlayer : MonoBehaviour, IDamageable, IMannable {
     public Health Health { get; private set; }
     public Mana Mana { get; private set; }
     public EffectManager EffectManager { get; private set; }
+    public HumanTargetSelector Selector;
 
     /// <summary>
     /// Прив'язує об'єкт опонента до цього представлення на дошці

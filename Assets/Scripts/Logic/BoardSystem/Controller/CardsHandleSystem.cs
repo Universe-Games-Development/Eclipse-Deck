@@ -13,7 +13,7 @@ public class CardsHandleSystem : MonoBehaviour {
 
     private DeckPresenter _deckPresenter;
     private DeckPresenter _discardeckPresenter; // not used now
-    public BoardPlayer BoardPlayer { get; private set; }
+    [SerializeField] public BoardPlayer BoardPlayer;
     public CardSpendable CardSpendable { get; private set; }
 
     [Inject] GameEventBus _eventBus;

@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ using UnityEngine;
 public class Card3DView : CardView {
     // Компоненты рендеринга
     [SerializeField] private SkinnedMeshRenderer cardRenderer;
-    [SerializeField] private Card3DAnimator animator;
+    //[SerializeField] private Card3DAnimator animator;
     public Action OnInitialized;
 
     // Кэширование шейдера и материалов
@@ -82,30 +83,13 @@ public class Card3DView : CardView {
         base.ResetVisualState();
 
         // Сбрасываем анимации
-        if (animator != null) {
-            animator.Reset();
-        }
+        //if (animator != null) {
+        //    animator.Reset();
+        //}
 
         // Сбрасываем порядок рендеринга
         ResetRenderingOrder();
     }
-
-    protected override void OnSelectInternal() {
-        base.OnSelectInternal();
-
-        if (animator != null) {
-            animator.Select();
-        }
-    }
-
-    protected override void OnDeselectInternal() {
-        base.OnDeselectInternal();
-
-        if (animator != null) {
-            animator.Deselect();
-        }
-    }
-
     #endregion
 
     #region Mouse Interaction
@@ -120,22 +104,6 @@ public class Card3DView : CardView {
 
     private void OnMouseDown() {
         HandleMouseDown();
-    }
-
-    protected override void OnHoverStartInternal() {
-        base.OnHoverStartInternal();
-
-        if (animator != null) {
-            animator.Hover(true);
-        }
-    }
-
-    protected override void OnHoverEndInternal() {
-        base.OnHoverEndInternal();
-
-        if (animator != null) {
-            animator.Hover(false);
-        }
     }
 
     #endregion
@@ -172,9 +140,10 @@ public class Card3DView : CardView {
 
     protected override async UniTask PlayRemovalAnimation() {
         // Проигрываем анимацию удаления, если есть
-        if (animator != null) {
-            await animator.PlayRemovalAnimation();
-        }
+        //if (animator != null) {
+        //    await animator.PlayRemovalAnimation();
+        //}
+        await UniTask.Yield();
     }
 
     #endregion

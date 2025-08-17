@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -13,28 +14,29 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     private TaskCompletionSource<GameUnit> currentSelection;
 
     private void Start() {
-        gameCamera ??= Camera.main;
+        if (gameCamera == null)
+        gameCamera = Camera.main;
         boardInputs = inputManager.inputAsset.BoardPlayer;
     }
 
-    public async UniTask<GameUnit> SelectTargetAsync(ITargetRequirement requirement, string targetName) {
+    public async UniTask<GameUnit> SelectTargetAsync(ITargetRequirement requirement, string targetName, CancellationToken cancellationToken) {
         currentSelection = new TaskCompletionSource<GameUnit>();
 
         // Показуємо UI підказки
         ShowSelectionPrompt(requirement.GetInstruction(), targetName);
 
         // Підписуємося на input
-        boardInputs.LeftClick.canceled += OnLeftClick;
+        boardInputs.LeftClick.canceled += OnLeftClickUp;
 
         try {
             return await currentSelection.Task;
         } finally {
-            boardInputs.LeftClick.canceled -= OnLeftClick;
+            boardInputs.LeftClick.canceled -= OnLeftClickUp;
             HideSelectionPrompt();
         }
     }
 
-    private void OnLeftClick(InputAction.CallbackContext context) {
+    private void OnLeftClickUp(InputAction.CallbackContext context) {
         if (currentSelection == null) return;
 
         var ray = gameCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
@@ -45,6 +47,9 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
                     currentSelection.TrySetResult(unit);
                 }
             }
+
+            // null will means Failed to get target
+            currentSelection.TrySetResult(null);
         }
     }
 
