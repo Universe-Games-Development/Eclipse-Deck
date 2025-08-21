@@ -1,31 +1,44 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using UnityEngine;
-using Zenject;
 
 public class CardPlayModule : MonoBehaviour {
-    [SerializeField] HandPresenter handPresenter;
-    [SerializeField] OperationManager operationManager;
-    [SerializeField] LayerMask layerMask;
-    [SerializeField] BoardInputManager boardInputManager;
-    [SerializeField] private Transform _testObject;
+    [Header("Dependencies")]
+    [SerializeField] private HandPresenter _handPresenter;
+    [SerializeField] private OperationManager _operationManager;
+    [SerializeField] private BoardInputManager _boardInputManager;
+    [SerializeField] private BoardPlayer _player;
+
+    [Header("Visual Settings")]
+    [SerializeField] private LayerMask _layerMask;
+    [SerializeField] private Transform _cursorIndicator;
     [SerializeField] private float _movementSpeed = 1f;
     [SerializeField] private Vector3 _cardOffset = new Vector3(0f, 1.2f, 0f);
-    [SerializeField] BoardPlayer player;
 
-    private bool isPlaying = false;
-    private CardPlayData playData;
+    private bool _isPlaying = false;
+    private CardPlayData _playData;
 
     private void Start() {
-        handPresenter.OnCardClicked += OnCardClicked;
+        _handPresenter.OnCardClicked += OnCardClicked;
+        _operationManager.OnOperationStatus += HandleOperationStatus;
+    }
 
-        operationManager.OnOperationStatus += HandleOperationStatus;
+    private void OnCardClicked(CardPresenter cardPresenter) {
+        if (_isPlaying || cardPresenter == null) {
+            GameLogger.LogWarning("Card click ignored - already playing or null card");
+            return;
+        }
+
+        _playData = new(cardPresenter);
+        _isPlaying = true;
+
+        // Подаем только первую операцию
+        SubmitNextOperation();
     }
 
     private void Update() {
-        if (isPlaying) {
-            if (boardInputManager.TryGetCursorPosition(layerMask, out Vector3 cursorPosition)) {
+        if (_isPlaying) {
+            if (_boardInputManager.TryGetCursorPosition(_layerMask, out Vector3 cursorPosition)) {
                 UpdateCardPosition(cursorPosition);
             }
            
@@ -34,97 +47,70 @@ public class CardPlayModule : MonoBehaviour {
     }
 
     private void UpdateCardPosition(Vector3 cursorPosition) {
-        if (playData?.View == null) return;
+        if (_playData?.View == null) return;
 
-        _testObject.transform.position = cursorPosition;
+        _cursorIndicator.transform.position = cursorPosition;
         var targetPosition = cursorPosition + _cardOffset;
-        playData.View.transform.position = Vector3.Lerp(
-            playData.View.transform.position,
+        _playData.View.transform.position = Vector3.Lerp(
+            _playData.View.transform.position,
             targetPosition,
             Time.deltaTime * _movementSpeed);
     }
 
     private void HandleOperationStatus(GameOperation operation, OperationStatus status) {
-        if (!isPlaying || playData == null) return;
-        if (!playData.Card.Operations.Contains(operation)) return;
+        if (!_isPlaying || _playData == null) return;
+        if (!_playData.Card.Operations.Contains(operation)) return;
 
         switch (status) {
             case OperationStatus.Success:
-                playData.IsStarted = true;
-                if (playData.IsLastOperation(operation)) {
-                    FinishCardPlay();
-                } else {
-                    // Ждем освобождения менеджера и подаем следующую операцию
-                    StartCoroutine(WaitAndSubmitNext());
-                }
+                _playData.IsStarted = true;
+                StartCoroutine(WaitAndSubmitNextOperation());
                 break;
             case OperationStatus.Canceled:
+            case OperationStatus.Failed:
                 HandleOperationCanceled(operation);
                 break;
-            case OperationStatus.Failed:
-                HandleOperationFailed(operation);
-                break;
         }
-    }
-
-    private IEnumerator WaitAndSubmitNext() {
-        // Ждем пока текущая операция завершится и менеджер освободится
-        yield return new WaitUntil(() => !operationManager.IsRunning && operationManager.QueueCount == 0);
-
-        // Небольшая задержка для отработки реакций
-        yield return new WaitForSeconds(0.1f);
-
-        yield return new WaitUntil(() => !operationManager.IsRunning && operationManager.QueueCount == 0);
-
-        SubmitNextOperation();
     }
 
     private void HandleOperationCanceled(GameOperation operation) {
-        if (playData != null && !playData.IsStarted) {
+        if (_playData != null && !_playData.IsStarted) {
             RollbackCardPlay();
+        } else {
+            StartCoroutine(WaitAndSubmitNextOperation());
         }
     }
 
-    private void HandleOperationFailed(GameOperation operation) {
-        if (playData != null && !playData.IsStarted) {
-            RollbackCardPlay();
-        }
-    }
+    private IEnumerator WaitAndSubmitNextOperation() {
+        // Чекаємо завершення поточної операції
+        yield return new WaitUntil(() => !_operationManager.IsRunning);
 
-    private void RollbackCardPlay() {
-        if (!isPlaying || playData == null) return;
-        
-        handPresenter.RetrieveCard(playData.Presenter);
+        // Додаткова затримка для стабільності
+        yield return new WaitForSeconds(0.05f);
 
-        GameLogger.LogDebug($"Card {playData.Card.Data.Name} returned to hand");
-        isPlaying = false;
-        playData = null;
-    }
-
-    private void OnCardClicked(CardPresenter cardPresenter) {
-        if (isPlaying || cardPresenter == null) {
-            GameLogger.LogWarning("Card click ignored - already playing or null card");
-            return;
-        }
-
-        playData = new(cardPresenter);
-        isPlaying = true;
-
-        // Подаем только первую операцию
         SubmitNextOperation();
     }
 
+    private void RollbackCardPlay() {
+        _handPresenter.RetrieveCard(_playData.Presenter);
+
+        GameLogger.LogDebug($"Card {_playData.Card.Data.Name} returned to hand");
+        FinishCardPlay();
+    }
+
     private void SubmitNextOperation() {
-        if (playData?.HasNextOperation() == true) {
-            var nextOperation = playData.GetNextOperation();
-            nextOperation.Initiator = player;
-            operationManager.Push(nextOperation);
+        if (_playData?.HasNextOperation() == true) {
+            var nextOperation = _playData.GetNextOperation();
+            nextOperation.Initiator = _player;
+            _operationManager.Push(nextOperation);
+        } else {
+            FinishCardPlay();
         }
     }
 
     private void FinishCardPlay() {
-        playData = null;
-        isPlaying = false;
+        _playData = null;
+        _isPlaying = false;
     }
 }
 
@@ -157,6 +143,13 @@ public class CardPlayData {
 }
 
 public struct CardPlayedEvent : IEvent {
-    public Card playedCard;
-    // think how to collect data "by who played"
+    public Card PlayedCard { get; }
+    public BoardPlayer PlayedBy { get; }
+    public bool WasSuccessful { get; }
+
+    public CardPlayedEvent(Card playedCard, BoardPlayer playedBy, bool wasSuccessful) {
+        PlayedCard = playedCard;
+        PlayedBy = playedBy;
+        WasSuccessful = wasSuccessful;
+    }
 }

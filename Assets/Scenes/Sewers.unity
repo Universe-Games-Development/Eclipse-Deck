@@ -351,7 +351,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _camera: {fileID: 0}
-  _testObject: {fileID: 1194023702}
+  _testObject: {fileID: 0}
   layerMask:
     serializedVersion: 2
     m_Bits: 1024
@@ -2342,7 +2342,7 @@ MonoBehaviour:
     enableFileLogging: 0
     enableTimestamps: 1
     enableStackTrace: 1
-    enabledCategories: -1
+    enabledCategories: 508
     debugColor: {r: 1, g: 1, b: 1, a: 1}
     infoColor: {r: 0, g: 1, b: 1, a: 1}
     warningColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
@@ -3554,7 +3554,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ab90ca00426f80499de66b8809b3e49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  operationManager: {fileID: 455995501}
+  player: {fileID: 1238370451}
   handPresenter: {fileID: 1844863615}
+  boardInputManager: {fileID: 68664857}
+  boardMask:
+    serializedVersion: 2
+    m_Bits: 1024
+  cursorIndicator: {fileID: 1794535941}
+  movementSpeed: 1
+  cardOffset: {x: 0, y: 1.2, z: 0}
 --- !u!114 &1238370451 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 36787110777578674, guid: 50b782f30c512794c85422110fb8869e, type: 3}
@@ -4068,7 +4077,7 @@ PrefabInstance:
       addedObject: {fileID: 1228783153}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5901221799105879248, guid: 50b782f30c512794c85422110fb8869e, type: 3}
-      insertIndex: -1
+      insertIndex: 2
       addedObject: {fileID: 1238370448}
     - targetCorrespondingSourceObject: {fileID: 5901221799105879248, guid: 50b782f30c512794c85422110fb8869e, type: 3}
       insertIndex: -1
@@ -5632,21 +5641,21 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1844863607}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e6e2b4ca0ffa1f4dbfd13a2ad9dee02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  handPresenter: {fileID: 1844863615}
-  operationManager: {fileID: 455995501}
-  layerMask:
+  _handPresenter: {fileID: 1844863615}
+  _operationManager: {fileID: 455995501}
+  _boardInputManager: {fileID: 68664857}
+  _player: {fileID: 1238370451}
+  _layerMask:
     serializedVersion: 2
     m_Bits: 1024
-  boardInputManager: {fileID: 68664857}
-  _testObject: {fileID: 1794535941}
+  _cursorIndicator: {fileID: 1794535941}
   _movementSpeed: 1
   _cardOffset: {x: 0, y: 1.2, z: 0}
-  player: {fileID: 1238370451}
 --- !u!1001 &1891268861
 PrefabInstance:
   m_ObjectHideFlags: 0
