@@ -36,6 +36,6 @@ public class CardPresenter : MonoBehaviour {
     }
 
     internal void HandleRemoval() {
-        View.RemoveCardView().Forget();
+        View.PlayRemovalAnimation().Forget();
     }
 }

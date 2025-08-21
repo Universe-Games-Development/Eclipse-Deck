@@ -20,3 +20,4 @@ MonoBehaviour:
   collection: {fileID: 0}
   isFlying: 0
   speechData: {fileID: 0}
+  Color: {r: 0.31706125, g: 0.7075472, b: 0.44157457, a: 0}

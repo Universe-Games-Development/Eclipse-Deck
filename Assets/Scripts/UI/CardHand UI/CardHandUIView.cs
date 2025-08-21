@@ -41,7 +41,7 @@ public class CardHandUIView : CardHandView {
                 layoutMap.Remove(uiView);
             }
 
-            uiView.RemoveCardView().Forget();
+            uiView.PlayRemovalAnimation().Forget();
             UpdateCardPositions();
         }
     }

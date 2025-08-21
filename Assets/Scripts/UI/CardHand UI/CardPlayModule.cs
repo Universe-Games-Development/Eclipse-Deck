@@ -1,116 +1,111 @@
-﻿using System.Collections;
+﻿using Cysharp.Threading.Tasks;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 
 public class CardPlayModule : MonoBehaviour {
     [Header("Dependencies")]
-    [SerializeField] private HandPresenter _handPresenter;
     [SerializeField] private OperationManager _operationManager;
-    [SerializeField] private BoardInputManager _boardInputManager;
-    [SerializeField] private BoardPlayer _player;
-
-    [Header("Visual Settings")]
-    [SerializeField] private LayerMask _layerMask;
-    [SerializeField] private Transform _cursorIndicator;
-    [SerializeField] private float _movementSpeed = 1f;
-    [SerializeField] private Vector3 _cardOffset = new Vector3(0f, 1.2f, 0f);
 
     private bool _isPlaying = false;
     private CardPlayData _playData;
+    private CancellationToken _currentCancellationToken;
 
-    private void Start() {
-        _handPresenter.OnCardClicked += OnCardClicked;
-        _operationManager.OnOperationStatus += HandleOperationStatus;
+    public event System.Action<CardPresenter, bool> OnCardPlayCompleted;
+    public bool IsPlaying => _isPlaying;
+    private CancellationTokenSource _internalTokenSource;
+
+    private void Awake() {
+        if (_operationManager == null) {
+            _operationManager = FindFirstObjectByType<OperationManager>();
+        }
     }
 
-    private void OnCardClicked(CardPresenter cardPresenter) {
+    public void StartCardPlay(CardPresenter cardPresenter, BoardPlayer initiator, CancellationToken externalToken = default) {
         if (_isPlaying || cardPresenter == null) {
-            GameLogger.LogWarning("Card click ignored - already playing or null card");
+            OnCardPlayCompleted?.Invoke(cardPresenter, false);
             return;
         }
 
-        _playData = new(cardPresenter);
+        _playData = new CardPlayData(cardPresenter, initiator);
         _isPlaying = true;
 
-        // Подаем только первую операцию
-        SubmitNextOperation();
+        _internalTokenSource = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
+        _currentCancellationToken = _internalTokenSource.Token;
+
+        _operationManager.OnOperationStatus += HandleOperationStatus;
+        WaitAndSubmitNextOperation(_currentCancellationToken).Forget();
     }
 
-    private void Update() {
-        if (_isPlaying) {
-            if (_boardInputManager.TryGetCursorPosition(_layerMask, out Vector3 cursorPosition)) {
-                UpdateCardPosition(cursorPosition);
-            }
-           
-            //Debug.Log(cursorPosition);
-        }
-    }
-
-    private void UpdateCardPosition(Vector3 cursorPosition) {
-        if (_playData?.View == null) return;
-
-        _cursorIndicator.transform.position = cursorPosition;
-        var targetPosition = cursorPosition + _cardOffset;
-        _playData.View.transform.position = Vector3.Lerp(
-            _playData.View.transform.position,
-            targetPosition,
-            Time.deltaTime * _movementSpeed);
-    }
-
-    private void HandleOperationStatus(GameOperation operation, OperationStatus status) {
-        if (!_isPlaying || _playData == null) return;
-        if (!_playData.Card.Operations.Contains(operation)) return;
-
-        switch (status) {
-            case OperationStatus.Success:
-                _playData.IsStarted = true;
-                StartCoroutine(WaitAndSubmitNextOperation());
-                break;
-            case OperationStatus.Canceled:
-            case OperationStatus.Failed:
-                HandleOperationCanceled(operation);
-                break;
-        }
-    }
-
-    private void HandleOperationCanceled(GameOperation operation) {
-        if (_playData != null && !_playData.IsStarted) {
-            RollbackCardPlay();
-        } else {
-            StartCoroutine(WaitAndSubmitNextOperation());
-        }
-    }
-
-    private IEnumerator WaitAndSubmitNextOperation() {
-        // Чекаємо завершення поточної операції
-        yield return new WaitUntil(() => !_operationManager.IsRunning);
-
-        // Додаткова затримка для стабільності
-        yield return new WaitForSeconds(0.05f);
-
-        SubmitNextOperation();
-    }
-
-    private void RollbackCardPlay() {
-        _handPresenter.RetrieveCard(_playData.Presenter);
-
-        GameLogger.LogDebug($"Card {_playData.Card.Data.Name} returned to hand");
+    public void CancelCardPlay() {
+        if (!_isPlaying) return;
         FinishCardPlay();
     }
 
-    private void SubmitNextOperation() {
-        if (_playData?.HasNextOperation() == true) {
-            var nextOperation = _playData.GetNextOperation();
-            nextOperation.Initiator = _player;
-            _operationManager.Push(nextOperation);
-        } else {
+    private async UniTask WaitAndSubmitNextOperation(CancellationToken cancellationToken) {
+        try {
+            await UniTask.WaitUntil(() => !_operationManager.IsRunning,
+                cancellationToken: cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested) {
+                FinishCardPlay();
+                return;
+            }
+
+            if (_playData?.HasNextOperation() == true) {
+                var nextOperation = _playData.GetNextOperation();
+                nextOperation.Initiator = _playData.Initiator;
+
+                if (!cancellationToken.IsCancellationRequested) {
+                    _operationManager.Push(nextOperation);
+                }
+            } else {
+                FinishCardPlay();
+            }
+        } catch (System.OperationCanceledException) {
             FinishCardPlay();
         }
     }
 
+    private void HandleOperationStatus(GameOperation operation, OperationStatus status) {
+        if (!_isPlaying || !_playData.Card.Operations.Contains(operation)) return;
+
+        switch (status) {
+            case OperationStatus.Success:
+                _playData.IsStarted = true;
+                _playData.CompletedOperations++;
+                WaitAndSubmitNextOperation(_currentCancellationToken).Forget();
+                break;
+
+            case OperationStatus.Canceled:
+            case OperationStatus.Failed:
+                if (!_playData.IsStarted) {
+                    // Перша операція не вдалася - карта не зіграна
+                    FinishCardPlay();
+                } else {
+                    WaitAndSubmitNextOperation(_currentCancellationToken).Forget();
+                }
+                break;
+        }
+    }
+
     private void FinishCardPlay() {
-        _playData = null;
+        if (!_isPlaying) return;
+
         _isPlaying = false;
+        _internalTokenSource?.Cancel();
+        _internalTokenSource?.Dispose();
+        _internalTokenSource = null;
+
+        if (_operationManager != null) {
+            _operationManager.OnOperationStatus -= HandleOperationStatus;
+        }
+        _operationManager.OnOperationStatus -= HandleOperationStatus;
+
+        GameLogger.Log($"Card play finished. Success: {_playData.IsStarted}, Completed: {_playData.CompletedOperations} / {_playData.Card.Operations.Count}");
+        
+        OnCardPlayCompleted?.Invoke(_playData.Presenter, _playData.IsStarted);
+        _playData = null;
     }
 }
 
@@ -121,24 +116,26 @@ public class CardPlayData {
     public bool IsStarted = false;
     public int CurrentOperationIndex = 0;
     public int CompletedOperations = 0;
+    public BoardPlayer Initiator;
 
-    public CardPlayData(CardPresenter presenter) {
+    public CardPlayData(CardPresenter presenter, BoardPlayer initiator) {
         Card = presenter.Card;
         View = presenter.View as Card3DView;
         Presenter = presenter;
+        Initiator = initiator;
     }
 
     public bool HasNextOperation() => CurrentOperationIndex < Card.Operations.Count;
 
     public GameOperation GetNextOperation() {
-        if (HasNextOperation()) {
+        if (HasNextOperation() && Card != null && Card.Operations != null) {
             return Card.Operations[CurrentOperationIndex++];
         }
         return null;
     }
 
     public bool IsLastOperation(GameOperation operation) {
-        return Card.Operations.LastOrDefault() == operation;
+        return Card?.Operations?.LastOrDefault() == operation;
     }
 }
 

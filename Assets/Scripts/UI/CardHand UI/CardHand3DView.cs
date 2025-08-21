@@ -290,9 +290,6 @@ public class CardHand3DView : CardHandView {
 
     #region Public API для настройки границ
 
-    /// <summary>
-    /// Подгоняет ширину руки под размер экрана
-    /// </summary>
     public void FitHandToScreen() {
         if (boundsVisualizer != null && layoutSettings != null) {
             float recommendedWidth = boundsVisualizer.GetRecommendedWidth();
@@ -302,9 +299,6 @@ public class CardHand3DView : CardHandView {
         }
     }
 
-    /// <summary>
-    /// Устанавливает ширину руки
-    /// </summary>
     public void SetHandWidth(float width) {
         if (layoutSettings != null) {
             layoutSettings.MaxHandWidth = Mathf.Max(0.1f, width);
@@ -312,16 +306,10 @@ public class CardHand3DView : CardHandView {
         }
     }
 
-    /// <summary>
-    /// Получает рекомендуемую ширину руки для текущего экрана
-    /// </summary>
     public float GetRecommendedHandWidth() {
         return boundsVisualizer != null ? boundsVisualizer.GetRecommendedWidth() : 3f;
     }
 
-    /// <summary>
-    /// Включает/выключает визуализацию границ
-    /// </summary>
     public void SetBoundsVisualization(bool enable) {
         showBoundsInRuntime = enable;
         if (boundsVisualizer != null) {

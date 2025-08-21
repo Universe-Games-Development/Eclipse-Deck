@@ -3,11 +3,11 @@
 public class ZonePresenter : MonoBehaviour, IGameUnitProvider {
     public Zone Zone;
     public Zone3DView Zone3DView;
-    [SerializeField] BoardPlayer owner;
+    [SerializeField] public BoardPlayer Owner;
 
     private void Start() {
         Zone = new Zone();
-        Zone.Owner = owner;
+        Zone.Owner = Owner;
     }
 
     public void Initialize(Zone3DView zone3DView, Zone zone) {

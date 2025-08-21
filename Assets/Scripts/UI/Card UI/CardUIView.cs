@@ -5,9 +5,6 @@ using UnityEngine.EventSystems;
 using DG.Tweening;
 
 public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
-    public Action<bool> OnCardHovered;
-    public Action<bool, UniTask> OnCardSelection;
-    public Func<CardUIView, UniTask> OnCardRemoval;
     public Action OnChanged;
 
     public RectTransform RectTransform;
@@ -27,12 +24,6 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
 
     private void InvokeCardChangedEvent() => OnChanged?.Invoke();
 
-
-    public override async UniTask RemoveCardView() {
-        if (OnCardRemoval != null)
-            await OnCardRemoval.Invoke(this);
-        await base.RemoveCardView();
-    }
 
     public void OnPointerEnter(PointerEventData eventData) {
         HandleMouseEnter();

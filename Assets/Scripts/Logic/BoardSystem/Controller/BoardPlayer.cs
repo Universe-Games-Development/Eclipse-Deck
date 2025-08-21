@@ -9,11 +9,18 @@ public class BoardPlayer : MonoBehaviour, IDamageable, IMannable {
     [SerializeField] private HealthCellView _healthDisplay;
     [SerializeField] private CardsHandleSystem _cardsSystem;
     public Character Character { get; private set; }
+    [Header("Debug")]
+    [SerializeField] public CharacterData Data;
     public Health Health { get; private set; }
     public Mana Mana { get; private set; }
     public EffectManager EffectManager { get; private set; }
     public HumanTargetSelector Selector;
 
+    private void Awake() {
+        if (Data != null) {
+            Character = new Character(Data);
+        }
+    }
     /// <summary>
     /// Прив'язує об'єкт опонента до цього представлення на дошці
     /// </summary>

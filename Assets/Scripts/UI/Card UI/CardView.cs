@@ -4,12 +4,13 @@ using System;
 using UnityEngine;
 
 public abstract class CardView : MonoBehaviour {
-    // События
+    
     public Action<CardView> OnCardClicked;
     public Action<CardView, bool> OnHoverChanged;
 
     public CardUIInfo CardInfo;
     public string Id { get; set; }
+    private bool _isInteractive = true;
 
     #region Unity Lifecycle
 
@@ -38,6 +39,10 @@ public abstract class CardView : MonoBehaviour {
 
     #region State Management
 
+    public void SetInteractivity(bool enabled) {
+        _isInteractive = enabled;
+    }
+
     public virtual void Reset() {
         // Сбрасываем визуальные состояния
         ResetVisualState();
@@ -52,14 +57,17 @@ public abstract class CardView : MonoBehaviour {
     #region Mouse Interaction (базовая реализация)
 
     protected virtual void HandleMouseEnter() {
+        if (!_isInteractive) return;
         OnHoverChanged?.Invoke(this, true);
     }
 
     protected virtual void HandleMouseExit() {
+        if (!_isInteractive) return;
         OnHoverChanged?.Invoke(this, false);
     }
 
     protected virtual void HandleMouseDown() {
+        if (!_isInteractive) return;
         OnCardClicked?.Invoke(this);
     }
 
@@ -67,15 +75,7 @@ public abstract class CardView : MonoBehaviour {
 
     #region Card Removal
 
-    public virtual async UniTask RemoveCardView() {
-        // Проигрываем анимацию удаления
-        await PlayRemovalAnimation();
-
-        // Уничтожаем объект
-        Destroy(gameObject);
-    }
-
-    protected virtual async UniTask PlayRemovalAnimation() {
+    public virtual async UniTask PlayRemovalAnimation() {
         // Переопределяется в наследниках для анимации удаления
         await UniTask.CompletedTask;
     }

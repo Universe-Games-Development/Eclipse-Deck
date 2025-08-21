@@ -1,20 +1,19 @@
-﻿using Cysharp.Threading.Tasks;
-using System.Collections;
-using System.Linq;
-using System.Threading;
-using UnityEngine;
+﻿using System.Threading;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour{
     [SerializeField] public OperationManager operationManager;
+    [SerializeField] public CardPlayModule cardPlayModule;
+    
     [SerializeField] public BoardPlayer player;
 
     public HandPresenter handPresenter;
 
     private PlayerState currentState;
 
+    [Header("Playing State Settings")]
     [SerializeField] public BoardInputManager boardInputManager;
-    [Header("Visual Settings")]
+    
     [SerializeField] public LayerMask boardMask;
     [SerializeField] public Transform cursorIndicator;
     [SerializeField] public float movementSpeed = 1f;
@@ -37,12 +36,19 @@ public class PlayerController : MonoBehaviour{
         if (currentState != null && currentState.GetType() == newState.GetType()) {
             return; // Не менять состояние, если оно уже такое же
         }
+
         currentState?.Exit();
-        
         currentState = newState;
         currentState.controller = this;
         currentState.Enter();
+
         Debug.Log($"State changed to: {currentState.GetType().Name}");
+    }
+
+
+    public void RetrieveCard(CardPresenter presenter) {
+        Debug.Log("Need return card");
+        handPresenter.UpdateCardPositions();
     }
 }
 
@@ -88,93 +94,63 @@ public class IdleState : PlayerState {
 }
 
 public class PlayingState : PlayerState {
-    private CardPlayData _playData;
-    private CardPresenter cardPresenter;
+    private CardPresenter _cardPresenter;
     private CancellationTokenSource _cancellationTokenSource;
+    private Vector3 lastBoardPosition;
 
     public PlayingState(CardPresenter presenter) {
-        this.cardPresenter = presenter;
+        _cardPresenter = presenter;
     }
 
     public override void Enter() {
         base.Enter();
-        _playData = new(cardPresenter);
-        _cancellationTokenSource = new CancellationTokenSource();
-        controller.operationManager.OnOperationStatus += HandleOperationStatus;
 
-        WaitAndSubmitNextOperation(_cancellationTokenSource.Token).Forget();
+        _cancellationTokenSource = new CancellationTokenSource();
+        controller.cardPlayModule.OnCardPlayCompleted += OnCardPlayCompleted;
+        controller.cardPlayModule.StartCardPlay(_cardPresenter, controller.player, _cancellationTokenSource.Token);
     }
 
     public override void UpdateState() {
         base.UpdateState();
+        if (controller.boardInputManager.TryGetCursorPosition(controller.boardMask, out Vector3 cursorPosition)) {
+            lastBoardPosition = cursorPosition;
+            controller.cursorIndicator.transform.position = lastBoardPosition;
+        }
         HandleCardMovement();
     }
 
     private void HandleCardMovement() {
-        if (controller.boardInputManager.TryGetCursorPosition(controller.boardMask, out Vector3 cursorPosition)) {
-            controller.cursorIndicator.transform.position = cursorPosition;
-            var targetPosition = cursorPosition + controller.cardOffset;
-            _playData.View.transform.position = Vector3.Lerp(
-                _playData.View.transform.position,
-                targetPosition,
-                Time.deltaTime * controller.movementSpeed);
-        }
+        
+        var targetPosition = lastBoardPosition + controller.cardOffset;
+
+        _cardPresenter.transform.position = Vector3.Lerp(
+            _cardPresenter.transform.position,
+            targetPosition,
+            Time.deltaTime * controller.movementSpeed);
     }
 
     public override void Exit() {
         base.Exit();
 
-        // Скасовуємо всі поточні задачі
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = null;
-        controller.operationManager.OnOperationStatus -= HandleOperationStatus;
 
-        if (_playData.IsStarted) {
-            // Spend card 
-        } else {
-            // Return card
-        }
-
-        _playData = null;
+        controller.cardPlayModule.OnCardPlayCompleted -= OnCardPlayCompleted;
     }
 
-    private async UniTask WaitAndSubmitNextOperation(CancellationToken cancellationToken) {
-        await UniTask.WaitUntil(() => !controller.operationManager.IsRunning,
-            cancellationToken: cancellationToken);
+    private void OnCardPlayCompleted(CardPresenter presenter, bool success) {
+        if (presenter != _cardPresenter) return;
 
-        if (cancellationToken.IsCancellationRequested) return;
-
-        if (_playData?.HasNextOperation() == true) {
-            var nextOperation = _playData.GetNextOperation();
-            nextOperation.Initiator = controller.player;
-
-            if (!cancellationToken.IsCancellationRequested)
-            controller.operationManager.Push(nextOperation);
+        if (success) {
+            // Spend card - карта була успішно зіграна
+            controller.handPresenter.Hand.Remove(_cardPresenter.Card);
+            GameLogger.Log("Card successfully played and spent");
         } else {
-            controller.ChangeState(new IdleState());
+            // Return card - карта не була зіграна, повертаємо в руку
+            GameLogger.Log("Card play failed, returning to hand");
+            controller.RetrieveCard(_cardPresenter);
         }
-    }
-
-
-    private void HandleOperationStatus(GameOperation operation, OperationStatus status) {
-        if (_cancellationTokenSource == null) return;
-
-        if (!_playData.Card.Operations.Contains(operation)) return;
-
-        switch (status) {
-            case OperationStatus.Success:
-                _playData.IsStarted = true;
-                WaitAndSubmitNextOperation(_cancellationTokenSource.Token).Forget();
-                break;
-            case OperationStatus.Canceled:
-            case OperationStatus.Failed:
-                if (!_playData.IsStarted) {
-                    controller.ChangeState(new IdleState());
-                } else {
-                    WaitAndSubmitNextOperation(_cancellationTokenSource.Token).Forget();
-                }
-                break;
-        }
+        controller.ChangeState(new IdleState());
     }
 }

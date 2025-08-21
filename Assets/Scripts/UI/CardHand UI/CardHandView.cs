@@ -56,7 +56,7 @@ public abstract class CardHandView : MonoBehaviour {
     }
 
     public virtual void HandleCardViewRemoval(CardView cardView) {
-        cardView.RemoveCardView().Forget(); // если RemoveCardView возвращает UniTask
+        cardView.PlayRemovalAnimation().Forget(); 
         UpdateCardPositions();
     }
 

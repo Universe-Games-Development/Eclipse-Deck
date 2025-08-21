@@ -138,11 +138,8 @@ public class Card3DView : CardView {
 
     #region Card Removal
 
-    protected override async UniTask PlayRemovalAnimation() {
+    public override async UniTask PlayRemovalAnimation() {
         // Проигрываем анимацию удаления, если есть
-        //if (animator != null) {
-        //    await animator.PlayRemovalAnimation();
-        //}
         await UniTask.Yield();
     }
 
