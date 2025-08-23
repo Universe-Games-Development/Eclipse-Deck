@@ -226,19 +226,22 @@ public class OperationManager : MonoBehaviour {
 
             GameLogger.LogInfo($"Beginning operation: {operation.OperationName}", LogCategory.OperationManager);
 
-            var targets = await operationFiller.FillTargetsAsync(
+            TargetOperationRequest request = new TargetOperationRequest(
                 operation.NamedTargets,
                 operation.IsMandatory,
-                operation.Initiator,
+                operation.Initiator);
+
+            var targets = await operationFiller.FillTargetsAsync(
+                request,
                 cancellationToken);
 
             if (targets == null) {
-                status = OperationStatus.Canceled;
+                status = OperationStatus.Cancelled;
                 GameLogger.LogInfo($"Operation {operation.OperationName} was cancelled during target filling", LogCategory.OperationManager);
                 return;
             }
 
-            operation.SetTargets(targets);
+            operation.SetTargets(targets.FilledTargets);
 
             if (operation.IsReady()) {
                 GameLogger.LogDebug($"Operation {operation.OperationName} is ready, executing...", LogCategory.OperationManager);
@@ -252,7 +255,7 @@ public class OperationManager : MonoBehaviour {
                 status = OperationStatus.Failed;
             }
         } catch (OperationCanceledException) {
-            status = OperationStatus.Canceled;
+            status = OperationStatus.Cancelled;
             GameLogger.LogInfo($"Operation {operation.OperationName} was cancelled", LogCategory.OperationManager);
             throw;
         } catch (Exception ex) {
@@ -268,7 +271,7 @@ public class OperationManager : MonoBehaviour {
     }
 
     private bool ValidateOperation(GameOperation operation) {
-        if (operation.NamedTargets.Count > 0 && !operationFiller.CanBeFilled(operation.NamedTargets)) {
+        if (operation.NamedTargets.Count > 0 && !operationFiller.CanFillTargets(operation.NamedTargets)) {
             GameLogger.LogWarning($"{operation.OperationName} cannot be executed - targets cannot be filled", LogCategory.OperationManager);
             return false;
         }
@@ -352,6 +355,10 @@ public class OperationManager : MonoBehaviour {
         }
     }
 
+    public bool IsQueueEmpty() {
+        return QueueCount == 0;
+    }
+
     #region Helper Disposable Structs for Lock Management
     private readonly struct ReadLock : IDisposable {
         private readonly ReaderWriterLockSlim _lock;
@@ -383,8 +390,9 @@ public class OperationManager : MonoBehaviour {
 
 public enum OperationStatus {
     Success,
-    Canceled,
-    Failed
+    PartialSuccess,
+    Failed,
+    Cancelled
 }
 
 public enum Priority {

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class ZonePresenter : MonoBehaviour, IGameUnitProvider {
     public Zone Zone;
@@ -8,6 +9,11 @@ public class ZonePresenter : MonoBehaviour, IGameUnitProvider {
     private void Start() {
         Zone = new Zone();
         Zone.Owner = Owner;
+        Zone.OnCreatureSpawned += HandleCreatureSpawned;
+    }
+
+    private void HandleCreatureSpawned() {
+        Zone3DView.UpdateSummonedCount(Zone.GetCreaturesCount());
     }
 
     public void Initialize(Zone3DView zone3DView, Zone zone) {

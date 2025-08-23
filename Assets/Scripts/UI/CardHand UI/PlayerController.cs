@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using Cysharp.Threading.Tasks;
+using System;
+using System.Threading;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour{
@@ -8,16 +10,9 @@ public class PlayerController : MonoBehaviour{
     [SerializeField] public BoardPlayer player;
 
     public HandPresenter handPresenter;
+    [SerializeField] private CardPlayVizualizer vizualizer;
 
     private PlayerState currentState;
-
-    [Header("Playing State Settings")]
-    [SerializeField] public BoardInputManager boardInputManager;
-    
-    [SerializeField] public LayerMask boardMask;
-    [SerializeField] public Transform cursorIndicator;
-    [SerializeField] public float movementSpeed = 1f;
-    [SerializeField] public Vector3 cardOffset = new Vector3(0f, 1.2f, 0f);
 
     private void Start() {
         handPresenter ??= GetComponent<HandPresenter>();
@@ -25,16 +20,29 @@ public class PlayerController : MonoBehaviour{
             Debug.LogError("HandPresenter is not assigned to PlayerController.");
             return;
         }
+
+        cardPlayModule.OnCardPlayCompleted += OnCardPlayCompleted;
+        cardPlayModule.OnCardPlayStarted += OnCardPlay;
+        player.Selector.OnSelectionStarted += HandleSelectionStart;
+
         ChangeState(new IdleState());
+    }
+
+    private void HandleSelectionStart(ITargetRequirement requirement) {
+        ChangeState(new PlayingState());
     }
 
     private void Update() {
         currentState.UpdateState();
     }
 
+    private void OnDestroy() {
+        cardPlayModule.OnCardPlayCompleted -= OnCardPlayCompleted;
+    }
+
     public void ChangeState(PlayerState newState) {
         if (currentState != null && currentState.GetType() == newState.GetType()) {
-            return; // Не менять состояние, если оно уже такое же
+            return;
         }
 
         currentState?.Exit();
@@ -47,10 +55,30 @@ public class PlayerController : MonoBehaviour{
 
 
     public void RetrieveCard(CardPresenter presenter) {
-        Debug.Log("Need return card");
         handPresenter.UpdateCardPositions();
     }
+
+    private void OnCardPlay(CardPresenter presenter) {
+        vizualizer.SetCardPresenter(presenter);
+    }
+
+    private void OnCardPlayCompleted(CardPresenter presenter, bool success) {
+        if (!handPresenter.Contains(presenter)) return;
+
+        vizualizer.Stop();
+        if (success) {
+            // Spend card - карта була успішно зіграна
+            handPresenter.Hand.Remove(presenter.Card);
+            GameLogger.Log("Card successfully played and spent");
+        } else {
+            // Return card - карта не була зіграна, повертаємо в руку
+            GameLogger.Log("Card play failed, returning to hand");
+            RetrieveCard(presenter);
+        }
+        ChangeState(new IdleState());
+    }
 }
+
 
 public abstract class State {
     public virtual void Enter() { }
@@ -73,12 +101,11 @@ public class IdleState : PlayerState {
         handPresenter = controller.handPresenter;
         handPresenter.OnCardClicked += OnCardClicked;
         handPresenter.OnCardHovered += OnCardHovered;
-        // Здесь можно добавить логику, которая выполняется при входе в состояние Playing
     }
 
     private void OnCardClicked(CardPresenter presenter) {
         Debug.Log($"Card clicked: {presenter.Card.Data.Name}");
-        controller.ChangeState(new PlayingState(presenter));
+        controller.cardPlayModule.StartCardPlay(presenter, controller.player, CancellationToken.None);
     }
 
     private void OnCardHovered(CardPresenter presenter, bool isHovered) {
@@ -89,68 +116,41 @@ public class IdleState : PlayerState {
         base.Exit();
         handPresenter.OnCardClicked -= OnCardClicked;
         handPresenter.OnCardHovered -= OnCardHovered;
-        // Здесь можно добавить логику, которая выполняется при выходе из состояния Playing
     }
 }
 
 public class PlayingState : PlayerState {
-    private CardPresenter _cardPresenter;
-    private CancellationTokenSource _cancellationTokenSource;
-    private Vector3 lastBoardPosition;
-
-    public PlayingState(CardPresenter presenter) {
-        _cardPresenter = presenter;
-    }
+    private CancellationTokenSource _debounceCts;
+    private readonly TimeSpan _debounceTime = TimeSpan.FromMilliseconds(500);
 
     public override void Enter() {
         base.Enter();
-
-        _cancellationTokenSource = new CancellationTokenSource();
-        controller.cardPlayModule.OnCardPlayCompleted += OnCardPlayCompleted;
-        controller.cardPlayModule.StartCardPlay(_cardPresenter, controller.player, _cancellationTokenSource.Token);
+        controller.operationManager.OnQueueEmpty += HandleQueueEmpty;
+        _debounceCts = new CancellationTokenSource();
     }
 
-    public override void UpdateState() {
-        base.UpdateState();
-        if (controller.boardInputManager.TryGetCursorPosition(controller.boardMask, out Vector3 cursorPosition)) {
-            lastBoardPosition = cursorPosition;
-            controller.cursorIndicator.transform.position = lastBoardPosition;
+    private async void HandleQueueEmpty() {
+        // Скасовуємо попередню debounce операцію
+        _debounceCts.Cancel();
+        _debounceCts.Dispose();
+        _debounceCts = new CancellationTokenSource();
+
+        try {
+            await UniTask.Delay(_debounceTime, cancellationToken: _debounceCts.Token);
+
+            if (controller.operationManager.IsQueueEmpty()) {
+                controller.ChangeState(new IdleState());
+            }
+        } catch (OperationCanceledException) {
+            // Ігноруємо скасування - це нормально для debounce
         }
-        HandleCardMovement();
-    }
-
-    private void HandleCardMovement() {
-        
-        var targetPosition = lastBoardPosition + controller.cardOffset;
-
-        _cardPresenter.transform.position = Vector3.Lerp(
-            _cardPresenter.transform.position,
-            targetPosition,
-            Time.deltaTime * controller.movementSpeed);
     }
 
     public override void Exit() {
         base.Exit();
-
-        _cancellationTokenSource?.Cancel();
-        _cancellationTokenSource?.Dispose();
-        _cancellationTokenSource = null;
-
-        controller.cardPlayModule.OnCardPlayCompleted -= OnCardPlayCompleted;
-    }
-
-    private void OnCardPlayCompleted(CardPresenter presenter, bool success) {
-        if (presenter != _cardPresenter) return;
-
-        if (success) {
-            // Spend card - карта була успішно зіграна
-            controller.handPresenter.Hand.Remove(_cardPresenter.Card);
-            GameLogger.Log("Card successfully played and spent");
-        } else {
-            // Return card - карта не була зіграна, повертаємо в руку
-            GameLogger.Log("Card play failed, returning to hand");
-            controller.RetrieveCard(_cardPresenter);
-        }
-        controller.ChangeState(new IdleState());
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = null;
+        controller.operationManager.OnQueueEmpty -= HandleQueueEmpty;
     }
 }

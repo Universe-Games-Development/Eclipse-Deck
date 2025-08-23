@@ -21,7 +21,7 @@ public abstract class TargetRequirement<T> : ITargetRequirement where T : GameUn
     public ValidationResult IsValid(object selected, BoardPlayer initiator) {
         if (!TryConvertToRequired(selected, out T defined)) {
             Debug.Log($"Wrong type selected: {selected}");
-            return ValidationResult.Fail();
+            return ValidationResult.InValid();
         }
         foreach (var item in Conditions) {
             item.SetInitiator(initiator);
@@ -83,7 +83,7 @@ public struct ValidationResult {
     public string ErrorMessage;
 
     public static ValidationResult Success => new ValidationResult { IsValid = true };
-    public static ValidationResult Fail(string message = default) => new ValidationResult { IsValid = false, ErrorMessage = message };
+    public static ValidationResult InValid(string message = default) => new ValidationResult { IsValid = false, ErrorMessage = message };
 }
 
 public abstract class Condition<T> where T : GameUnit {
@@ -95,7 +95,7 @@ public abstract class Condition<T> where T : GameUnit {
 
     public ValidationResult Validate(T model) {
         if (model == null)
-            return ValidationResult.Fail("Wrong item selected");
+            return ValidationResult.InValid("Wrong item selected");
 
         return CheckCondition(model);
     }
@@ -121,9 +121,9 @@ public class OwnershipCondition<T> : Condition<T> where T : GameUnit {
 
         return ownershipType switch {
             OwnershipType.Friendly when !isFriendly =>
-                ValidationResult.Fail("You can only select your own units"),
+                ValidationResult.InValid("You can only select your own units"),
             OwnershipType.Enemy when isFriendly =>
-                ValidationResult.Fail("You cannot select your own units"),
+                ValidationResult.InValid("You cannot select your own units"),
             _ => ValidationResult.Success
         };
     }

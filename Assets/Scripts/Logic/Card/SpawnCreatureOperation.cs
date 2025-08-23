@@ -1,14 +1,24 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
 
 public class Zone : GameUnit {
+    public Action OnCreatureSpawned;
+
     List<CreatureCard> creatures = new();
     public void AddCreature(CreatureCard creatureCard) {
-        creatures.Add(creatureCard);
         Debug.Log($"Spawning craeture at zone: {this}");
+
+        creatures.Add(creatureCard);
+       
+        OnCreatureSpawned?.Invoke();
+    }
+
+    public int GetCreaturesCount() {
+        return creatures.Count;
     }
 }
 

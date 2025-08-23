@@ -7,12 +7,12 @@ public class CardPlayModule : MonoBehaviour {
     [Header("Dependencies")]
     [SerializeField] private OperationManager _operationManager;
 
-    private bool _isPlaying = false;
     private CardPlayData _playData;
     private CancellationToken _currentCancellationToken;
 
     public event System.Action<CardPresenter, bool> OnCardPlayCompleted;
-    public bool IsPlaying => _isPlaying;
+    public event System.Action<CardPresenter> OnCardPlayStarted;
+
     private CancellationTokenSource _internalTokenSource;
 
     private void Awake() {
@@ -22,13 +22,13 @@ public class CardPlayModule : MonoBehaviour {
     }
 
     public void StartCardPlay(CardPresenter cardPresenter, BoardPlayer initiator, CancellationToken externalToken = default) {
-        if (_isPlaying || cardPresenter == null) {
+        if (IsPlaying() || cardPresenter == null) {
             OnCardPlayCompleted?.Invoke(cardPresenter, false);
             return;
         }
 
         _playData = new CardPlayData(cardPresenter, initiator);
-        _isPlaying = true;
+        OnCardPlayStarted?.Invoke(cardPresenter);
 
         _internalTokenSource = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
         _currentCancellationToken = _internalTokenSource.Token;
@@ -38,7 +38,7 @@ public class CardPlayModule : MonoBehaviour {
     }
 
     public void CancelCardPlay() {
-        if (!_isPlaying) return;
+        if (!IsPlaying()) return;
         FinishCardPlay();
     }
 
@@ -68,7 +68,7 @@ public class CardPlayModule : MonoBehaviour {
     }
 
     private void HandleOperationStatus(GameOperation operation, OperationStatus status) {
-        if (!_isPlaying || !_playData.Card.Operations.Contains(operation)) return;
+        if (!IsPlaying() || !_playData.Card.Operations.Contains(operation)) return;
 
         switch (status) {
             case OperationStatus.Success:
@@ -77,7 +77,7 @@ public class CardPlayModule : MonoBehaviour {
                 WaitAndSubmitNextOperation(_currentCancellationToken).Forget();
                 break;
 
-            case OperationStatus.Canceled:
+            case OperationStatus.Cancelled:
             case OperationStatus.Failed:
                 if (!_playData.IsStarted) {
                     // Перша операція не вдалася - карта не зіграна
@@ -90,9 +90,8 @@ public class CardPlayModule : MonoBehaviour {
     }
 
     private void FinishCardPlay() {
-        if (!_isPlaying) return;
+        if (!IsPlaying()) return;
 
-        _isPlaying = false;
         _internalTokenSource?.Cancel();
         _internalTokenSource?.Dispose();
         _internalTokenSource = null;
@@ -102,10 +101,18 @@ public class CardPlayModule : MonoBehaviour {
         }
         _operationManager.OnOperationStatus -= HandleOperationStatus;
 
-        GameLogger.Log($"Card play finished. Success: {_playData.IsStarted}, Completed: {_playData.CompletedOperations} / {_playData.Card.Operations.Count}");
+        GameLogger.Log($"Card play finished: {_playData.IsStarted}, Completed: {_playData.CompletedOperations} / {_playData.Card.Operations.Count}");
         
         OnCardPlayCompleted?.Invoke(_playData.Presenter, _playData.IsStarted);
         _playData = null;
+    }
+
+    public bool IsPlaying() {
+        return _playData != null;
+    }
+
+    public CardPlayData GetCurrentPlayData() {
+        return _playData;
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -12,6 +13,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     InputSystem_Actions.BoardPlayerActions boardInputs;
 
     private TaskCompletionSource<GameUnit> currentSelection;
+    public event Action<ITargetRequirement> OnSelectionStarted;
 
     private void Start() {
         if (gameCamera == null)
@@ -22,6 +24,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     public async UniTask<GameUnit> SelectTargetAsync(ITargetRequirement requirement, string targetName, CancellationToken cancellationToken) {
         currentSelection = new TaskCompletionSource<GameUnit>();
 
+        OnSelectionStarted?.Invoke(requirement);
         // Показуємо UI підказки
         ShowSelectionPrompt(requirement.GetInstruction(), targetName);
 
@@ -39,18 +42,17 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     private void OnLeftClickUp(InputAction.CallbackContext context) {
         if (currentSelection == null) return;
 
+        GameUnit result = null;
+
         var ray = gameCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
         if (Physics.Raycast(ray, out var hit, 10f, targetLayerMask)) {
             if (hit.collider.TryGetComponent<IGameUnitProvider>(out var provider)) {
-                var unit = provider.GetUnit();
-                if (unit != null) {
-                    currentSelection.TrySetResult(unit);
-                }
+                result = provider.GetUnit();
             }
-
-            // null will means Failed to get target
-            currentSelection.TrySetResult(null);
         }
+
+        Debug.Log($"Result: {result}");
+        currentSelection.TrySetResult(result);
     }
 
     private void ShowSelectionPrompt(string description, string targetName) {
