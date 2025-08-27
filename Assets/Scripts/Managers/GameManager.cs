@@ -6,9 +6,10 @@ using Zenject;
 public class GameManager : MonoBehaviour
 {
     [Inject] LocationTransitionManager locationManager;
+    [SerializeField]
 
     public void StartNewGame() {
-        locationManager.TransitionToLocation(LocationType.Sewers).Forget();
+        locationManager.LocationTransition(0);
     }
 
     public void SetPause(bool pause) {

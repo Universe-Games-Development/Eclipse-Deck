@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b2015e0d7e3f4846bb0cf7fe6dec4ac, type: 3}
+  m_Name: Linear3DHandLayoutSettings
+  m_EditorClassIdentifier: 
+  MaxHandWidth: 2.5
+  CardThickness: 0.1
+  DefaultYPosition: 0
+  VerticalOffset: 0.01
+  PositionVariation: 0.02
+  HoverHeight: 0.3
+  MaxRotationAngle: 0
+  RotationOffset: 0
+  MoveDuration: 0.3
+  HoverMoveDuration: 0.2
+  RotationDuration: 0.3
+  MoveEase: 6
+  RotationEase: 6
+  MaxCardsAtFullWidth: 7
+  ScaleCardsWhenCrowded: 1
+  MinCardScale: 0.8

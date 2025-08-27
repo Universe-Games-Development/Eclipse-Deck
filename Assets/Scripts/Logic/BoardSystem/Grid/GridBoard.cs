@@ -202,8 +202,8 @@ public class GridBoard {
         List<Field> fields = new List<Field>();
 
         for (int i = 1; i <= searchDistance; i++) {
-            int row = currentField.GetRow() + offset.rowOffset * i;
-            int column = currentField.GetColumn() + offset.colOffset * i;
+            int row = currentField.Row + offset.rowOffset * i;
+            int column = currentField.Column + offset.colOffset * i;
 
             // Пропускаємо координату (0,0)
             if (row == 0) row += Math.Sign(offset.rowOffset);
@@ -223,8 +223,8 @@ public class GridBoard {
         List<(int rowOffset, int colOffset)> offsets = CompassUtil.GetOffsets();
 
         foreach (var (rowOffset, colOffset) in offsets) {
-            int newRow = currentField.GetRow() + rowOffset;
-            int newCol = currentField.GetColumn() + colOffset;
+            int newRow = currentField.Row + rowOffset;
+            int newCol = currentField.Column + colOffset;
             // Ïåðåâ³ðêà, ÷è çíàõîäèòüñÿ íîâå ïîëå â ìåæàõ îñíîâíî¿ ñ³òêè
             Field field = GetFieldAt(newRow, newCol);
             if (field != null) {
@@ -250,7 +250,7 @@ public class GridBoard {
     #region Field Validators
     public bool FieldExists(Field field) {
         if (field == null) return false;
-        Field fieldInGrids = GetFieldAt(field.GetRow(), field.GetColumn());
+        Field fieldInGrids = GetFieldAt(field.Row, field.Column);
         return field != null && field == fieldInGrids;
     }
 
@@ -260,8 +260,8 @@ public class GridBoard {
     }
 
     public Direction GetFieldCompasDirection(Field currentField) {
-        int meridian = currentField.GetRow() > 0 ? 1 : -1;
-        int zonal = currentField.GetColumn() > 0 ? 1 : -1;
+        int meridian = currentField.Row > 0 ? 1 : -1;
+        int zonal = currentField.Column > 0 ? 1 : -1;
 
         return CompassUtil.GetDirectionFromOffset(meridian, zonal);
     }

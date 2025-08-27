@@ -5,12 +5,12 @@ using Zenject;
 
 
 public class TurnManager : IDisposable {
-    public Action<Opponent> OnOpponentChanged;
-    public Action<Opponent> OnTurnEnd;
-    public Action<Opponent> OnTurnStart;
+    public Action<BoardPlayer> OnOpponentChanged;
+    public Action<TurnEndEvent> OnTurnEnd;
+    public Action<TurnStartEvent> OnTurnStart;
 
-    private List<Opponent> currentOpponents = new(2);
-    public Opponent ActiveOpponent { get; private set; }
+    private List<BoardPlayer> currentOpponents = new(2);
+    public BoardPlayer ActiveOpponent { get; private set; }
     public int TurnCounter { get; private set; }
 
     private GameEventBus eventBus;
@@ -22,45 +22,44 @@ public class TurnManager : IDisposable {
     [Inject]
     public void Construct(GameEventBus eventBus) {
         this.eventBus = eventBus;
-        eventBus.SubscribeTo<EndActionsExecutedEvent>(OnEndTurnActionsPerformed);
     }
 
-    public void InitTurns(List<Opponent> registeredOpponents) {
+    public void InitTurns(List<BoardPlayer> registeredOpponents) {
         RoundCounter = 0;
         TurnCounter = 0;
         completedTurnsInRound = 0;
-        currentOpponents = new List<Opponent>(registeredOpponents);
-        SwitchToNextOpponent(currentOpponents.GetRandomElement());
+        currentOpponents = new List<BoardPlayer>(registeredOpponents);
+        currentOpponents.TryGetRandomElement(out var player);
+        SwitchToNextOpponent(player);
         isDisabled = false;
     }
 
-    public bool EndTurnRequest(bool isPlayer = false) {
+    public bool EndTurnRequest(BoardPlayer requester) {
         if (inTransition || isDisabled) {
             Debug.LogWarning($"Turn cannot be ended right now. Transition: {inTransition}, Disabled: {isDisabled}");
             return false;
         }
 
-        if (!(isPlayer && ActiveOpponent is Player)) {
+        if (!(requester == ActiveOpponent)) {
             Debug.LogWarning($"Player is not the active opponent and cannot end the turn.");
             return false;
         }
 
         inTransition = true;
-        OnTurnEnd?.Invoke(ActiveOpponent);
-        eventBus.Raise(new TurnEndStartedEvent(ActiveOpponent));
+        TurnEndEvent turnEndEvent = new TurnEndEvent(ActiveOpponent);
+        OnTurnEnd?.Invoke(turnEndEvent);
+        eventBus.Raise(turnEndEvent);
         return true;
     }
 
-    private void OnEndTurnActionsPerformed(ref EndActionsExecutedEvent eventData) {
-        bool isRoundFinalTurn = UpdateRoundCounter();
-        if (isRoundFinalTurn) {
-            eventBus.Raise(new OnRoundStart(RoundCounter, ActiveOpponent));
-        }
+    private void PerformEndTurn() {
+        inTransition = true;
+        UpdateRoundCounter();
         SwitchToNextOpponent();
         inTransition = false;
     }
 
-    private bool UpdateRoundCounter() {
+    private void UpdateRoundCounter() {
         completedTurnsInRound++;
         bool isRoundFinalTurn = completedTurnsInRound >= currentOpponents.Count;
 
@@ -68,26 +67,29 @@ public class TurnManager : IDisposable {
             RoundCounter++;
             Debug.Log($"Round {RoundCounter} started!");
             completedTurnsInRound = 0;
-            return true;
+            if (isRoundFinalTurn) {
+                eventBus.Raise(new RoundStartEvent(RoundCounter, ActiveOpponent));
+            }
         }
-        return isRoundFinalTurn;
+
+        TurnStartEvent turnStartEvent = new TurnStartEvent(TurnCounter, ActiveOpponent);
+        TurnCounter++;
+        OnTurnStart?.Invoke(turnStartEvent);
+        eventBus.Raise(turnStartEvent);
     }
 
-    private void SwitchToNextOpponent(Opponent starterOpponent = null) {
+    private void SwitchToNextOpponent(BoardPlayer starterOpponent = null) {
         var previous = ActiveOpponent;
         ActiveOpponent = (starterOpponent != null && currentOpponents.Contains(starterOpponent))
             ? starterOpponent
             : GetNextOpponent();
 
-        Debug.Log($"Turn started for {ActiveOpponent.Name}");
+        Debug.Log($"Turn started for {ActiveOpponent}");
         OnOpponentChanged?.Invoke(ActiveOpponent);
-        OnTurnStart?.Invoke(ActiveOpponent);
-        TurnCounter++;
-        eventBus.Raise(new OnTurnStart(TurnCounter, ActiveOpponent));
-        eventBus.Raise(new TurnChangedEvent(previous, ActiveOpponent));
+        eventBus.Raise(new OpponentTurnChangedEvent(previous, ActiveOpponent));
     }
 
-    private Opponent GetNextOpponent() {
+    private BoardPlayer GetNextOpponent() {
         if (currentOpponents.Count == 0) return null;
         int index = (currentOpponents.IndexOf(ActiveOpponent) + 1) % currentOpponents.Count;
         return currentOpponents[index];
@@ -101,41 +103,40 @@ public class TurnManager : IDisposable {
 
     public void Dispose() {
         ResetTurnManager();
-        eventBus.UnsubscribeFrom<EndActionsExecutedEvent>(OnEndTurnActionsPerformed);
     }
 }
 
 
 
-public struct TurnEndStartedEvent : IEvent {
-    public Opponent endTurnOpponent;
+public struct TurnEndEvent : IEvent {
+    public BoardPlayer endTurnOpponent;
 
-    public TurnEndStartedEvent(Opponent endTurnOpponent) {
+    public TurnEndEvent(BoardPlayer endTurnOpponent) {
         this.endTurnOpponent = endTurnOpponent;
     }
 }
-public struct TurnChangedEvent : IEvent {
-    public Opponent activeOpponent;
-    public Opponent endTurnOpponent;
+public struct OpponentTurnChangedEvent : IEvent {
+    public BoardPlayer activeOpponent;
+    public BoardPlayer endTurnOpponent;
 
-    public TurnChangedEvent(Opponent previous, Opponent next) {
+    public OpponentTurnChangedEvent(BoardPlayer previous, BoardPlayer next) {
         this.activeOpponent = previous;
         this.endTurnOpponent = next;
     }
 }
-public struct OnTurnStart : IEvent {
-    public Opponent StartingOpponent { get; private set; }
+public struct TurnStartEvent : IEvent {
+    public BoardPlayer StartingOpponent { get; private set; }
     public int TurnNumber { get; private set; }
-    public OnTurnStart(int turnCount, Opponent startTurnOpponent) {
+    public TurnStartEvent(int turnCount, BoardPlayer startTurnOpponent) {
         StartingOpponent = startTurnOpponent;
         TurnNumber = turnCount;
     }
 }
 
-public struct OnRoundStart : IEvent {
-    public Opponent StartingOpponent { get; private set; }
+public struct RoundStartEvent : IEvent {
+    public BoardPlayer StartingOpponent { get; private set; }
     public int RoundNumber { get; private set; }
-    public OnRoundStart(int roundCount, Opponent startingOpponent) {
+    public RoundStartEvent(int roundCount, BoardPlayer startingOpponent) {
         RoundNumber = roundCount;
         StartingOpponent = startingOpponent;
     }

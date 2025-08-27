@@ -4,77 +4,130 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
-public class TravelManager {
-    public Action<Room> OnRoomChanged;
+public class PlayerHeroFactory {
+    [InjectOptional] private PlayerPresenter playerPresenter;
+    [Inject] PlayerManager playerManager;
+    [Inject] private DiContainer _container;
 
+    public bool SpawnPlayer(out PlayerPresenter presenter) {
+        presenter = null;
+        if (!playerManager.GetPlayer(out Player player)) {
+            Debug.LogError("Failed to create player");
+            return false;
+        }
+
+        // Create presenter to connect model and view
+        if (playerPresenter == null) {
+            CharacterPresenter presenterPrefab = player.Data.presenterPrefab;
+            playerPresenter = (PlayerPresenter)_container.InstantiatePrefabForComponent<CharacterPresenter>(presenterPrefab);
+        }
+
+        presenter = playerPresenter;
+        playerPresenter.Initialize(player);
+        return true;
+    }
+}
+
+public class TravelManager : MonoBehaviour {
+    public Action<Room> OnRoomChanged;
     public DungeonGraph CurrentDungeon { get; private set; }
-    public Room CurrentRoom;
+
     private LocationData _currentLocationData;
 
-    [Inject] private PlayerPresenter _playerPresenter;
-    
-    [Inject] private RoomPresenter _roomPresenter;
+    [SerializeField] private RoomSystem _roomSystem;
+
+
     [Inject] private IDungeonGenerator _dungeonGenerator;
-    [Inject] private VisitedLocationsService visitedLocationService;
-    [Inject] GameEventBus _eventBus;
+    [Inject] private VisitedLocationsService _visitedLocationService;
+    [Inject] private GameEventBus _eventBus;
+    [Inject] private OpponentRegistrator _opponentRegistrator;
+    [Inject] private PlayerHeroFactory _playerHeroFactory;
+    
+    
 
-    private LocationTransitionManager _locationManager;
-    [Inject]
-    public void Construct(LocationTransitionManager locationManager) {
-        _locationManager = locationManager;
-    }
+    private PlayerPresenter _playerPresenter;
+    [Inject] BoardGame boardGame;
+    [Inject] private LocationTransitionManager _locationManager;
+    [Inject] ResourceLoadingManager loadingManager;
 
-    public void BeginRun() {
-        _locationManager.RegisterListener(LoadingPhase.PreLoad, ClearDungeon);
+    private void Start() {
+        if (_playerHeroFactory == null) return;
+        BeginPlayerRun().Forget();
         _locationManager.RegisterListener(LoadingPhase.Complete, EnterLocationAsync);
     }
 
-    private async UniTask ClearDungeon(LocationData data) {
-        if (CurrentDungeon != null) {
-            CurrentDungeon.Clear();
+    public async UniTask BeginPlayerRun() {
+        if (!_playerHeroFactory.SpawnPlayer(out _playerPresenter)) {
+            Debug.LogError("Failed to spawn player");
+            return;
         }
-        await UniTask.CompletedTask;
+
+        LocationData locationData = _locationManager.GetSceneLocation();
+        if (!loadingManager.IsLocationLoaded(locationData)) {
+            await loadingManager.LoadResourcesForLocation(locationData);
+        }
+
+        boardGame.TookSeat(_playerPresenter);
+    }
+
+    private void ClearDungeon(LocationData data) {
+        try {
+            if (CurrentDungeon != null) {
+                CurrentDungeon.Clear();
+            }
+        } catch (Exception ex) {
+            Debug.LogError($"Error clearing dungeon: {ex.Message}");
+        }
     }
 
     private async UniTask EnterLocationAsync(LocationData locationData) {
-        // Genereting next location
-        if (!_dungeonGenerator.GenerateDungeon(locationData, out DungeonGraph dungeon)) {
-            Debug.LogError("Failed to generate dungeon");
-            return;
-        }
-        CurrentDungeon = dungeon;
-        visitedLocationService.AddVisitedLocation(locationData);
-        // Entering start room
-        var entranceRoom = CurrentDungeon.GetEntranceNode().Room;
+        try {
+            // Generate next location
+            if (!_dungeonGenerator.GenerateDungeon(locationData, out DungeonGraph dungeon)) {
+                Debug.LogError("Failed to generate dungeon");
+                return;
+            }
 
-        _eventBus.Raise(new LocationChangedEvent(locationData, _currentLocationData));
-        _currentLocationData = locationData;
-        await GoToRoom(entranceRoom);
+            CurrentDungeon = dungeon;
+            _visitedLocationService.AddVisitedLocation(locationData);
+
+            // Enter start room
+            var entranceNode = CurrentDungeon.GetEntranceNode();
+            if (entranceNode == null) {
+                Debug.LogError("Entrance node is null");
+                return;
+            }
+
+            var entranceRoom = entranceNode.Room;
+            if (_eventBus != null) {
+                _eventBus.Raise(new LocationChangedEvent(locationData, _currentLocationData));
+            }
+
+            _currentLocationData = locationData;
+            await GoToRoom(entranceRoom);
+        } catch (Exception ex) {
+            Debug.LogError($"Error entering location: {ex.Message}");
+        }
     }
 
     public async UniTask GoToRoom(Room chosenRoom) {
         if (chosenRoom == null)
             throw new ArgumentNullException(nameof(chosenRoom));
 
-        // Exiting from current room
-        if (CurrentRoom != null) {
-        _eventBus.Raise(new RoomExitingEvent(CurrentRoom));
-            await _playerPresenter.ExitRoom();
+        if (_roomSystem.CurrentRoom != null) {
+            await _playerPresenter.OnRoomExited(chosenRoom);
         }
 
-        // Set new currentRoom
-        CurrentRoom = chosenRoom;
-
-        // Moving player to next room
-        _roomPresenter.InitializeRoom(chosenRoom);
-
-        _eventBus.Raise(new RoomEnteringEvent(chosenRoom));
-        await _playerPresenter.EnterRoom(chosenRoom);
-
-        OnRoomChanged?.Invoke(chosenRoom);
+        try {
+            _roomSystem.InitializeRoom(chosenRoom);
+            await _playerPresenter.EnterRoom(chosenRoom);
+            OnRoomChanged?.Invoke(chosenRoom);
+        } catch (Exception ex) {
+            Debug.LogError($"Error going to room: {ex.Message}");
+            throw;
+        }
     }
 }
-
 public class VisitedLocationsService {
     private List<LocationData> _visitedLocations = new();
 

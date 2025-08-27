@@ -1,143 +1,107 @@
 using System;
-using System.Collections.Generic;
 using TMPro;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CardUIInfo : MonoBehaviour
-{
-    protected Card card;
-    public string Id => id;
-    [Header("Params")]
-    [SerializeField] private string id;
+public class CardUIInfo : MonoBehaviour {
+    [Header("UI Components")]
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI costTMP;
     [SerializeField] private TextMeshProUGUI healthText;
     [SerializeField] private TextMeshProUGUI attackText;
-    [SerializeField] private Image rarity;
-
-    [Header("Visuals")]
     [SerializeField] private TextMeshProUGUI authorTMP;
-    [SerializeField] private TextMeshProUGUI descriptionText;
+    [SerializeField] private Image rarity;
     [SerializeField] private Image cardBackground;
     [SerializeField] private Image characterImage;
 
-    [SerializeField] private RectTransform abilityFiller;
-    List<CardAbilityUI> abilityUIs = new();
+    public Action OnDataChanged;
 
-    private CardAbilityPool cardAbilityPool;
-    public void FillData(Card card) {
-        if (card == null) {
-            Debug.LogError("Card is null during initialization!");
-            return;
-        }
+    private bool _isBatchUpdating = false;
+    private bool _wasUpdated = false;
 
-        this.card = card;
-
-        // Visuals
-        rarity.color = card.Data.GetRarityColor();
-        authorTMP.text = card.Data.AuthorName;
-        characterImage.sprite = card.Data.CharacterSprite;
-
-        // Logic
-        AttachmentToCard(card);
-        UpdateDescriptionContent(card);
-    }
-
-    private void UpdateDescriptionContent(Card card) {
-        List<Ability<CardAbilityData, Card>> cardAbilities = card._abilityManager.GetAbilities();
-
-        if (cardAbilities == null || cardAbilities.Count == 0) {
-            EnableCardDescription();
+    // Общий метод для уведомления об изменениях
+    private void NotifyDataChanged() {
+        if (!_isBatchUpdating) {
+            OnDataChanged?.Invoke();
         } else {
-            // Hide description if abilities exist
-            if (descriptionText != null) {
-                descriptionText.gameObject.SetActive(false);
-            }
-
-            UpdateAbilities(cardAbilities);
+            _wasUpdated = true;
         }
-
     }
 
-    protected virtual void AttachmentToCard(Card card) {
-        if (card == null) return;
-
-        if (card is CreatureCard creatureCard) {
-            UpdateHealth(creatureCard.Health.CurrentValue, creatureCard.Health.CurrentValue);
-            UpdateAttack(creatureCard.Attack.CurrentValue, creatureCard.Attack.CurrentValue);
-            
-
-            creatureCard.Health.OnValueChanged += UpdateHealth;
-            creatureCard.Attack.OnValueChanged += UpdateAttack;
-        }
-
-        UpdateCost(card.Cost.CurrentValue, card.Cost.CurrentValue);
-
-        card.Cost.OnValueChanged += UpdateCost;
-    }
-
-    #region Updaters
-    protected virtual void UpdateName(string newName) {
+    public void UpdateName(string newName) {
         if (nameText != null && !string.IsNullOrEmpty(newName)) {
             nameText.text = newName;
+            NotifyDataChanged();
         } else {
             Debug.LogWarning("Attempted to set name to an empty or null value.");
         }
     }
 
-    protected virtual void UpdateHealth(int beforeAmount, int currentAmount) {
-        UpdateStat(healthText, beforeAmount, currentAmount);
-    }
-
-    protected virtual void UpdateAttack(int beforeAmount, int currentAmount) {
-        UpdateStat(attackText, beforeAmount, currentAmount);
-    }
-
-    protected void UpdateCost(int beforeAmount, int currentAmount) {
-        UpdateStat(costTMP, beforeAmount, currentAmount);
-    }
-
-
-    protected void UpdateStat(TMP_Text textComponent, int beforeAmount, int currentAmount) {
-        if (textComponent != null) {
-            textComponent.text = $"{currentAmount}";
+    public void UpdateCost(int currentAmount) {
+        if (costTMP != null) {
+            costTMP.text = $"{currentAmount}";
+            NotifyDataChanged();
         }
     }
 
-    protected void UpdateAbilities(List<Ability<CardAbilityData, Card>> abilities) {
-        foreach (var ability in abilities) {
-            if (ability == null || ability.Data == null) continue;
-
-            CardAbilityUI abilityUI = cardAbilityPool.Get();
-            abilityUI.transform.SetParent(abilityFiller);
-
-            abilityUI.FillAbilityUI(ability, true);
-            abilityUIs.Add(abilityUI);
-        }
-    }
-    #endregion
-
-    private void EnableCardDescription() {
-        if (descriptionText != null && card != null) {
-            descriptionText.text = card.Data.Description;
-            descriptionText.gameObject.SetActive(true);
+    public void UpdateHealth(int currentAmount) {
+        if (healthText != null) {
+            healthText.text = $"{currentAmount}";
+            NotifyDataChanged();
         }
     }
 
-    public void CleanAbilities() {
-
-    }
-
-    public void Reset() {
-        CleanAbilities();
-        card = null;
-    }
-
-    public void SetAbilityFactory(CardAbilityPool abilityUIPool) {
-        if (cardAbilityPool == null) {
-            cardAbilityPool = abilityUIPool;
+    public void UpdateAttack(int currentAmount) {
+        if (attackText != null) {
+            attackText.text = $"{currentAmount}";
+            NotifyDataChanged();
         }
+    }
+
+    public void UpdateRarity(Color color) {
+        rarity.color = color;
+        NotifyDataChanged();
+    }
+
+    public void UpdateAuthor(string author) {
+        authorTMP.text = author;
+        NotifyDataChanged();
+    }
+
+    public void UpdateCharacterImage(Sprite characterSprite) {
+        characterImage.sprite = characterSprite;
+        NotifyDataChanged();
+    }
+
+    // Метод для группового обновления свойств карты
+    public void BatchUpdate(Action<CardUIInfo> updateActions) {
+        if (updateActions == null) return;
+
+        _isBatchUpdating = true;
+        _wasUpdated = false;
+
+        updateActions.Invoke(this);
+
+        _isBatchUpdating = false;
+
+        // Вызываем событие только если действительно что-то изменилось
+        if (_wasUpdated) {
+            OnDataChanged?.Invoke();
+        }
+    }
+
+    // Удобный метод для обновления нескольких свойств
+    public void UpdateCard(string name = null, int? cost = null, int? health = null,
+                          int? attack = null, Color? rarityColor = null,
+                          string author = null, Sprite characterSprite = null) {
+        BatchUpdate(card => {
+            if (name != null) card.UpdateName(name);
+            if (cost.HasValue) card.UpdateCost(cost.Value);
+            if (health.HasValue) card.UpdateHealth(health.Value);
+            if (attack.HasValue) card.UpdateAttack(attack.Value);
+            if (rarityColor.HasValue) card.UpdateRarity(rarityColor.Value);
+            if (author != null) card.UpdateAuthor(author);
+            if (characterSprite != null) card.UpdateCharacterImage(characterSprite);
+        });
     }
 }

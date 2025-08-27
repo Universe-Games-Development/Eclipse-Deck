@@ -5,28 +5,59 @@ using UnityEngine;
 using Zenject;
 
 public class EnemySpawner : MonoBehaviour {
+    
+    [SerializeField] private Transform spawnPoint;
     [Inject] private DiContainer _container;
     [Inject] private EnemyResourceProvider _enemyResourceProvider;
-    [Inject] EnemyPresenter _enemyPresenter;
+    [Inject] private OpponentRegistrator _opponentRegistrator;
 
-    private Enemy InitializeEnemy(OpponentData enemyData) {
-        Enemy enemy = _container.Instantiate<Enemy>();
-        enemy.SetData(enemyData);
+    private Enemy CreateEnemy(EnemyData enemyData) {
+        Enemy enemy = _container.Instantiate<Enemy>(new object[] { enemyData});
         return enemy;
     }
 
     public async UniTask<bool> SpawnEnemy(EnemyType enemyType) {
-        List<OpponentData> enemiesData = await _enemyResourceProvider.GetEnemies(enemyType);
+        // Завантажуємо дані ворогів асинхронно
+        List<EnemyData> enemiesData = await _enemyResourceProvider.GetEnemies(enemyType);
 
-        if (enemiesData == null || enemiesData.IsEmpty()) {
+        // Перевірка на порожній список
+        if (enemiesData == null || enemiesData.Count == 0) {
+            Debug.LogWarning($"Enemy type {enemyType} not found to spawn");
             return false;
         }
-        var enemyData = enemiesData.GetRandomElement();
-        Enemy enemy = InitializeEnemy(enemyData);
-        _enemyPresenter.InitializeEnemy(enemy);
-        await _enemyPresenter.StartEnemyActivity();
+
+        if (enemiesData.TryGetRandomElement(out var enemyData)) {
+            return false;
+        }
+
+        
+
+        // Створюємо ворога на основі даних
+        Enemy enemy = CreateEnemy(enemyData);
+
+        // Створюємо презентер ворога через DI контейнер
+        CharacterPresenter enemyPresenter = _container.InstantiatePrefabForComponent<CharacterPresenter>(
+            enemyData.presenterPrefab,
+            spawnPoint.position,
+            Quaternion.identity,
+            spawnPoint
+        );
+
+        // Перевірка успішності створення презентера
+        if (enemyPresenter == null) {
+            Debug.LogError("Failed to instantiate enemy presenter prefab");
+            return false;
+        }
+
+
+        // Ініціалізація презентера з ворогом
+        enemyPresenter.Initialize(enemy);
+
+        _opponentRegistrator.RegisterOpponent(enemyPresenter);
+
         return true;
     }
+
 }
 
 public enum EnemyType {

@@ -82,7 +82,7 @@ public static class GameEventMapper {
         var eventType = typeof(TEvent);
         return TypeToEnumMap.TryGetValue(eventType, out var enumType)
             ? enumType
-            : EventEnum.OnManaSpent;
+            : EventEnum.OnManaEmpty;
     }
 
     // Получить тип события по enum

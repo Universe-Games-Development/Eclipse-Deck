@@ -58,8 +58,8 @@ public class EnemyRoomActivity : RoomActivity {
 }
 
 public struct EnemyDefeatedEvent : IEvent {
-    public Opponent Opponent { get; }
-    public EnemyDefeatedEvent(Opponent opponent) {
+    public Character Opponent { get; }
+    public EnemyDefeatedEvent(Character opponent) {
         Opponent = opponent;
     }
 }

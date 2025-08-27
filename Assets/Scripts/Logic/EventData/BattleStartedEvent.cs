@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
 public struct BattleStartedEvent : IEvent {
-    public List<Opponent> Opponents { get; }
-    public BattleStartedEvent(List<Opponent> opponents) => Opponents = opponents;
+    public List<Character> Opponents { get; }
+    public BattleStartedEvent(List<Character> opponents) => Opponents = opponents;
 }
 public struct BattleEndEventData : IEvent {
-    public Opponent Looser;
+    public Character Looser;
 
-    public BattleEndEventData(Opponent testLooser) {
+    public BattleEndEventData(Character testLooser) {
         this.Looser = testLooser;
     }
 }

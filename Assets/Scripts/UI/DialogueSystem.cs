@@ -21,6 +21,8 @@ public class DialogueSystem : MonoBehaviour {
     [SerializeField] private Button skipButton;
     [SerializeField] private GameObject continueIndicator;
 
+    [SerializeField] private bool dialoguesEnabled = false;
+
     [Header("Settings")]
     [SerializeField] private float letterDelay = 0.05f;
 
@@ -53,6 +55,11 @@ public class DialogueSystem : MonoBehaviour {
     }
 
     public async UniTask StartDialogue(Speaker speaker, Queue<string> messages, CancellationToken dialogueToken = default) {
+        if (!dialoguesEnabled) {
+            await UniTask.CompletedTask;
+            return;
+        }
+
         dialogueCts?.Cancel();
         dialogueCts = new CancellationTokenSource();
 
@@ -152,7 +159,7 @@ public class DialogueSystem : MonoBehaviour {
         }
     }
 
-    public void UpdateCharacterInfo(OpponentData opponentData) {
+    public void UpdateCharacterInfo(CharacterData opponentData) {
         characterName.text = opponentData.Name;
         characterSprite.sprite = opponentData.Sprite;
     }

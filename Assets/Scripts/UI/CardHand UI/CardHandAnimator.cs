@@ -4,8 +4,8 @@ using DG.Tweening;
 public class CardHandAnimator : MonoBehaviour {
     [SerializeField] private CardHandUIAnimationData animationData;
     [SerializeField] private RectTransform innerBody;
+
     private void Awake() {
-        StartShakeAnimation();
         StartLiftUpAnimation();
     }
 
@@ -22,7 +22,7 @@ public class CardHandAnimator : MonoBehaviour {
         }
     }
 
-    private void StartShakeAnimation() {
+    public void StartShakeAnimation() {
         transform.DOShakePosition(animationData.shakeDuration, animationData.shakeStrength, animationData.shakeVibration, animationData.shakeRandomness)
              .SetLoops(-1, LoopType.Restart);
     }

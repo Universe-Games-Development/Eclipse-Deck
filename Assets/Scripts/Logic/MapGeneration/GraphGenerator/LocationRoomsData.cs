@@ -22,7 +22,7 @@ public class LocationRoomsData : ScriptableObject {
     public List<AltarRoomData> altarDatas = new();
 
     [Header("Enemies")]
-    public List<OpponentData> enemyPool = new();
+    public List<CharacterData> enemyPool = new();
 }
 
 [Serializable]

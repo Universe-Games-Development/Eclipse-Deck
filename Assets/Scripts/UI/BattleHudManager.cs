@@ -41,8 +41,8 @@ public class CardBattleInfo : MonoBehaviour {
         if (eventBus != null) {
             eventBus.SubscribeTo<BattleStartedEvent>(OnBattleStarted);
             eventBus.SubscribeTo<BattleEndEventData>(OnBattleEnded);
-            eventBus.SubscribeTo<OnTurnStart>(OnTurnStarted);
-            eventBus.SubscribeTo<OnRoundStart>(OnRoundStarted);
+            eventBus.SubscribeTo<TurnStartEvent>(OnTurnStarted);
+            eventBus.SubscribeTo<RoundStartEvent>(OnRoundStarted);
         }
 
         // Підписуємося на події TurnManager, якщо він існує
@@ -56,8 +56,8 @@ public class CardBattleInfo : MonoBehaviour {
         if (eventBus != null) {
             eventBus.UnsubscribeFrom<BattleStartedEvent>(OnBattleStarted);
             eventBus.UnsubscribeFrom<BattleEndEventData>(OnBattleEnded);
-            eventBus.UnsubscribeFrom<OnTurnStart>(OnTurnStarted);
-            eventBus.UnsubscribeFrom<OnRoundStart>(OnRoundStarted);
+            eventBus.UnsubscribeFrom<TurnStartEvent>(OnTurnStarted);
+            eventBus.UnsubscribeFrom<RoundStartEvent>(OnRoundStarted);
         }
 
         // Відписуємося від подій TurnManager, якщо він існує
@@ -77,18 +77,18 @@ public class CardBattleInfo : MonoBehaviour {
         SetHUDVisible(false);
     }
 
-    private void OnTurnStarted(ref OnTurnStart eventData) {
+    private void OnTurnStarted(ref TurnStartEvent eventData) {
         UpdateTurnInfo(eventData.TurnNumber, eventData.StartingOpponent);
     }
 
-    private void OnRoundStarted(ref OnRoundStart eventData) {
+    private void OnRoundStarted(ref RoundStartEvent eventData) {
         UpdateRoundInfo(eventData.RoundNumber);
     }
 
-    private void OnOpponentChanged(Opponent newOpponent) {
+    private void OnOpponentChanged(BoardPlayer boardPlayer) {
         // Оновлюємо інформацію про активного гравця
         if (activeOpponentText != null) {
-            activeOpponentText.text = string.Format(activeOpponentFormat, newOpponent.Name);
+            activeOpponentText.text = string.Format(activeOpponentFormat, boardPlayer);
         }
     }
 
@@ -101,13 +101,13 @@ public class CardBattleInfo : MonoBehaviour {
         isInitialized = true;
     }
 
-    private void UpdateTurnInfo(int turnNumber, Opponent opponent) {
+    private void UpdateTurnInfo(int turnNumber, BoardPlayer boardPlayer) {
         if (turnCounterText != null) {
             turnCounterText.text = string.Format(turnTextFormat, turnNumber);
         }
 
-        if (activeOpponentText != null && opponent != null) {
-            activeOpponentText.text = string.Format(activeOpponentFormat, opponent.Name);
+        if (activeOpponentText != null && boardPlayer != null) {
+            activeOpponentText.text = string.Format(activeOpponentFormat, boardPlayer);
         }
     }
 

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class FieldMaterializer : MonoBehaviour {
@@ -7,14 +8,14 @@ public class FieldMaterializer : MonoBehaviour {
     [SerializeField] private Color emptyColor = Color.gray;
     [SerializeField] private Color hoverEmissionColor;
 
-    [Header ("Type colors")]
+    [Header("Type colors")]
     [SerializeField] private Color attackColor = Color.red;
     [SerializeField] private Color supportColor = Color.green;
-    
+
     [Header("Opponents privacy colors")]
     [SerializeField] private Color enemyColor = Color.red;
     [SerializeField] private Color playerColor = Color.green;
-    
+
 
     [SerializeField] private string emissiveColorName = "_EmissionColor";
     [SerializeField] private float defaultHighlightIntensity = 1f;
@@ -58,9 +59,8 @@ public class FieldMaterializer : MonoBehaviour {
     }
 
 
-    public void UpdateColorBasedOnOwner(Opponent opponent) {
-        Color ownerColor = opponent is Player ? playerColor : enemyColor;
-        propBlock.SetColor("_BaseColor", ownerColor); // color of middle ground
+    public void UpdateColor(Color color) {
+        propBlock.SetColor("_BaseColor", color); // color of middle ground
         meshRenderer.SetPropertyBlock(propBlock);
 
     }
@@ -69,20 +69,13 @@ public class FieldMaterializer : MonoBehaviour {
         propBlock.SetFloat("_EmissionIntensity", isOn ? hoverHighlightIntensity : 0);
         meshRenderer.SetPropertyBlock(propBlock);
     }
-    
 
-    public void UpdateOccupyEmission(Creature creature = null) {
-        bool isOccupied = creature != null;
+
+    public void UpdateOccupyEmission(bool isOccupied) {
 
         Color hoverEmissionColor = isOccupied ? occupyColor : freeColor;
         propBlock.SetColor(emissiveColorName, hoverEmissionColor);
-
-        if (creature != null) {
-            int attackValue = creature.GetAttack().CurrentValue;
-            hoverHighlightIntensity = defaultHighlightIntensity * attackValue;
-        } else {
-            hoverHighlightIntensity = defaultHighlightIntensity;
-        }
+        hoverHighlightIntensity = defaultHighlightIntensity;
 
         // Check if we highlight now
         float currentIntensity = propBlock.GetFloat("_EmissionIntensity");
@@ -98,5 +91,9 @@ public class FieldMaterializer : MonoBehaviour {
         if (meshRenderer != null) {
             meshRenderer.SetPropertyBlock(propBlock);
         }
+    }
+
+    internal void UpdateColor(object color) {
+        throw new NotImplementedException();
     }
 }

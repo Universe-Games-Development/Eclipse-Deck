@@ -7,22 +7,22 @@ public class BoardView : MonoBehaviour {
     [Range(0, 10)]
     public float yInteractionRange = 1f;
 
-    private FieldPool pool;
+    private FieldPool fieldPool;
     [Header("Field Data")]
-    [SerializeField] private FieldPresenter fieldPrefab;
+    [SerializeField] private FieldView fieldPrefab;
     [Header("Board Adjuster")]
     [SerializeField] private Transform origin;
     [SerializeField] private Transform globalCenter;
 
     public void Initialize() {
         if (fieldPrefab == null) throw new ArgumentNullException("field prefab is null");
-        pool = new FieldPool(fieldPrefab, origin);
+        fieldPool = new FieldPool(fieldPrefab, origin);
     }
 
-    public FieldPresenter SpawnFieldAt(Vector3 spawnPosition) {
-        FieldPresenter fieldPresenter = pool.Get();
-        fieldPresenter.transform.localPosition = spawnPosition;
-        return fieldPresenter;
+    public FieldView SpawnFieldAt(Vector3 spawnPosition) {
+        FieldView fiedlView = fieldPool.Get();
+        fiedlView.transform.localPosition = spawnPosition;
+        return fiedlView;
     }
 
     public void MoveTo(Vector3 moveToPosition) {
@@ -42,7 +42,11 @@ public class BoardView : MonoBehaviour {
         return origin;
     }
 
-    internal bool IsWithinYInteractionRange(Vector3 worldPosition) {
-        throw new NotImplementedException();
+    public bool IsWithinYInteractionRange(Vector3 worldPosition) {
+        float boardY = origin.position.y; // The Y position of the board
+        float y = worldPosition.y; // The Y position of where the player is pointing
+
+        // Check if the Y position is within the interaction range
+        return Math.Abs(y - boardY) <= yInteractionRange;
     }
 }

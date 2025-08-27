@@ -105,9 +105,10 @@ public class GraphGenerator {
     }
 
     private DungeonNode ConnectOneRandomNode(DungeonNode currentNode, List<DungeonNode> connections) {
+       if (connections.TryGetRandomElement(out DungeonNode targetNode)) {
+            currentNode.ConnectTo(targetNode);
+        }
         
-        DungeonNode targetNode = connections.GetRandomElement();
-        currentNode.ConnectTo(targetNode);
         return targetNode;
     }
 

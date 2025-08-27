@@ -209,7 +209,7 @@ public class CardResourceLoader : GenericResourceLoader<CardData> {
     public override int LoadPriority => 1;
 }
 
-public class EnemyResourceLoader : GenericResourceLoader<OpponentData> {
+public class EnemyResourceLoader : GenericResourceLoader<EnemyData> {
     public EnemyResourceLoader(ResourceLoadingManager resourceLoadingManager) : base(resourceLoadingManager) { }
 
     public override int LoadPriority => 2;
@@ -239,16 +239,12 @@ public abstract class GenericResourceProvider<T> : IResourceProvider<T> where T 
 }
 
 public class CardProvider : GenericResourceProvider<CardData> {
-    private readonly Dictionary<AssetLabelReference, List<CardData>> _cardCache = new();
-    private readonly Dictionary<System.Type, List<CardData>> _cardsByType = new();
+    private readonly Dictionary<Type, List<CardData>> _cardsByType = new();
     private readonly List<CardData> _unlockedCards = new();
-    private readonly VisitedLocationsService _visitedLocationsService;
 
     public CardProvider(
-        VisitedLocationsService visitedLocationsService,
         CardResourceLoader loader
     ) : base(loader) {
-        _visitedLocationsService = visitedLocationsService;
     }
 
     public void UpdateAvailableCards(List<CardData> rewardSets) {
@@ -271,87 +267,23 @@ public class CardProvider : GenericResourceProvider<CardData> {
     }
 
     // Завантаження карт із локації з кешуванням
-    private async UniTask<List<CardData>> LoadCardsFromLocation(LocationData locationData) {
-        if (_cardCache.TryGetValue(locationData.assetLabel, out var cachedCards)) {
-            return cachedCards;
-        }
-
-        var locationCards = await _loader.GetResourcesForLocationAsync(locationData.assetLabel);
-        if (locationCards != null && locationCards.Count > 0) {
-            _cardCache[locationData.assetLabel] = locationCards;
-            return locationCards;
-        }
-
-        return new List<CardData>();
+    public List<CardData> GetCardsForLocation(LocationData locationData) {
+        return _loader.GetResourcesForLocation(locationData.assetLabel);
     }
 
-    public async UniTask<List<CardData>> GetUnlockedCards() {
-        List<LocationData> visitedLocationDatas = _visitedLocationsService.GetVisitedLocations();
-        List<CardData> unlockedCards = new();
-
-        // Використовуємо WhenAll для паралельного завантаження
-        var loadTasks = visitedLocationDatas.Select(LoadCardsFromLocation).ToArray();
-        var allLocationCards = await UniTask.WhenAll(loadTasks);
-
-        foreach (var locationCards in allLocationCards) {
-            unlockedCards.AddRange(locationCards);
-        }
-
-        // Додаємо карти з винагород, якщо вони не є дублікатами
-        foreach (var card in _unlockedCards) {
-            if (!unlockedCards.Any(c => c.resourseId == card.resourseId)) {
-                unlockedCards.Add(card);
-            }
-        }
-
-        return unlockedCards;
+    public List<CardData> GetUnlockedCards() {
+        return _loader.GetAllResources();
     }
 
-    public async UniTask<List<CardData>> GetRandomUnlockedCards(int count) {
+    public List<CardData> GetRandomUnlockedCards(int count) {
         if (count <= 0) return new List<CardData>();
 
-        List<CardData> cardDatas = await GetUnlockedCards();
+        List<CardData> cardDatas = GetUnlockedCards();
         return cardDatas.OrderBy(_ => UnityEngine.Random.value).Take(count).ToList();
-    }
-
-    // Отримання карт за типом
-    public async UniTask<List<T>> GetCardsByType<T>() where T : CardData {
-        var allCards = await GetUnlockedCards();
-
-        // Оновлюємо кеш за типами, якщо потрібно
-        if (_cardsByType.Count == 0) {
-            RefreshCardTypeCache(allCards);
-        }
-
-        var requestedType = typeof(T);
-        if (_cardsByType.TryGetValue(requestedType, out var typedCards)) {
-            return typedCards.Cast<T>().ToList();
-        }
-
-        // Якщо в кеші немає, фільтруємо вручну
-        return allCards.OfType<T>().ToList();
-    }
-
-    // Отримання випадкових карт певного типу
-    public async UniTask<List<T>> GetRandomCardsByType<T>(int count) where T : CardData {
-        if (count <= 0) return new List<T>();
-
-        var typedCards = await GetCardsByType<T>();
-        return typedCards.OrderBy(_ => UnityEngine.Random.value).Take(count).ToList();
-    }
-
-    // Очищення кешу локацій
-    public void ClearLocationCache() {
-        _cardCache.Clear();
-    }
-
-    // Очищення кешу для конкретної локації
-    public void ClearLocationCache(AssetLabelReference locationLabel) {
-        _cardCache.Remove(locationLabel);
     }
 }
 
-public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
+public class EnemyResourceProvider : GenericResourceProvider<EnemyData> {
     private EnemiesLocationCache enemiesLocationCache = new();
 
     private LocationTransitionManager _transitionManager;
@@ -361,29 +293,29 @@ public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
         _transitionManager = transitionManager;
     }
 
-    public async UniTask<List<OpponentData>> GetEnemies(EnemyType requestEnemyType) {
+    public async UniTask<List<EnemyData>> GetEnemies(EnemyType requestEnemyType) {
         if (_transitionManager.GetSceneLocation() == null) {
             Debug.LogWarning("Current location data is null");
-            return new List<OpponentData>();
+            return new List<EnemyData>();
         }
         AssetLabelReference assetLabel = _transitionManager.GetSceneLocation().assetLabel;
         if (enemiesLocationCache.TryGetFromCache(requestEnemyType, assetLabel, out var cachedEnemies)) {
             return cachedEnemies;
         }
 
-        List<OpponentData> allEnemies = await _loader.GetResourcesForLocationAsync(assetLabel);
+        List<EnemyData> allEnemies = await _loader.GetResourcesForLocationAsync(assetLabel);
         enemiesLocationCache.Store(assetLabel, allEnemies);
 
         return enemiesLocationCache.TryGetFromCache(requestEnemyType, assetLabel, out var newlyCachedEnemies)
             ? newlyCachedEnemies
-            : new List<OpponentData>();
+            : new List<EnemyData>();
     }
 
-    public List<OpponentData> GetEnemies(AssetLabelReference assetLabel) {
+    public List<EnemyData> GetEnemies(AssetLabelReference assetLabel) {
         if (enemiesLocationCache.TryGetFromCache(assetLabel, out var enemies)) {
             return enemies;
         }
-        return new List<OpponentData>();
+        return new List<EnemyData>();
     }
 
 
@@ -392,9 +324,9 @@ public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
     }
 
     public class EnemiesLocationCache {
-        private readonly Dictionary<AssetLabelReference, Dictionary<EnemyType, List<OpponentData>>> _cacheByLabel = new();
+        private readonly Dictionary<AssetLabelReference, Dictionary<EnemyType, List<EnemyData>>> _cacheByLabel = new();
 
-        public bool TryGetFromCache(EnemyType type, AssetLabelReference label, out List<OpponentData> enemies) {
+        public bool TryGetFromCache(EnemyType type, AssetLabelReference label, out List<EnemyData> enemies) {
             enemies = null;
             if (_cacheByLabel.TryGetValue(label, out var byType)) {
                 return byType.TryGetValue(type, out enemies);
@@ -402,9 +334,9 @@ public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
             return false;
         }
 
-        public void Store(AssetLabelReference label, List<OpponentData> allEnemiesForLocation) {
+        public void Store(AssetLabelReference label, List<EnemyData> allEnemiesForLocation) {
             if (!_cacheByLabel.ContainsKey(label)) {
-                _cacheByLabel[label] = new Dictionary<EnemyType, List<OpponentData>>();
+                _cacheByLabel[label] = new Dictionary<EnemyType, List<EnemyData>>();
             }
 
             var typeDict = _cacheByLabel[label];
@@ -415,7 +347,7 @@ public class EnemyResourceProvider : GenericResourceProvider<OpponentData> {
             }
         }
 
-        public bool TryGetFromCache(AssetLabelReference label, out List<OpponentData> enemies) {
+        public bool TryGetFromCache(AssetLabelReference label, out List<EnemyData> enemies) {
             enemies = null;
             if (_cacheByLabel.TryGetValue(label, out var byType)) {
                 enemies = byType.Values.SelectMany(list => list).ToList();

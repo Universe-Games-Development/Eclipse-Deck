@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8443c77fbbc309749b5e4454e2b234e9, type: 3}
+  m_Name: SimpleEnemy
+  m_EditorClassIdentifier: 
+  presenterPrefab: {fileID: 51170939575711222, guid: d8999df6fe6955846ace2094bc69c47d, type: 3}
+  Name: Dog
+  Sprite: {fileID: 0}
+  Health: 30
+  Mana: 0
+  collection: {fileID: 0}
+  isFlying: 0
+  speechData: {fileID: 0}
+  enemyType: 0

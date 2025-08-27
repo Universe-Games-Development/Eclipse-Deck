@@ -23,7 +23,7 @@ public class BoardViews : MonoBehaviour {
     private float lowerEnterThreshold;  // Абсолютне значення порогу у пікселях
     private float lowerExitThreshold;   // Абсолютне значення порогу у пікселях
 
-    private CameraManager cameraManager;
+    [SerializeField] private CameraManager cameraManager;
     private bool isApplicationFocused = true;
 
     [SerializeField] private bool isDebugMode = false;  // Змінна для перемикання режимів демонстрації
@@ -31,7 +31,6 @@ public class BoardViews : MonoBehaviour {
     private Vector3 _lastMousePosition;
 
     private void Awake() {
-        cameraManager = GetComponent<CameraManager>();
         _cameras = _cameraMappings.ToDictionary(m => m.State, m => m.Camera);
 
         

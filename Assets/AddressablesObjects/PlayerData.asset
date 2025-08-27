@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c96c658be1cc5b9418d1a2fd1794f0d7, type: 3}
+  m_Name: PlayerData
+  m_EditorClassIdentifier: 
+  presenterPrefab: {fileID: 3693629151821050016, guid: bb809395e649c3d45aad49b0143ce45d, type: 3}
+  Name: Player
+  Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  Health: 35
+  Mana: 0
+  collection: {fileID: 0}
+  isFlying: 0
+  speechData: {fileID: 0}
+  Color: {r: 0.31706125, g: 0.7075472, b: 0.44157457, a: 0}

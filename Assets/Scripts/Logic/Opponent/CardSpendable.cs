@@ -1,24 +1,33 @@
 ﻿using System;
+using Unity.VisualScripting;
+
+
 
 public class CardSpendable {
     private readonly Mana mana;
     private readonly Health health;
 
     public bool IsManaEnabled { get; private set; } = false;
+    private GameEventBus _eventBus;
 
-    public CardSpendable(Mana mana, Health health) {
+    public CardSpendable(Mana mana, Health health, GameEventBus eventBus) {
         this.mana = mana;
         this.health = health;
+        _eventBus = eventBus;
     }
 
     public void EnableMana() {
         IsManaEnabled = true;
-        mana.EnableManaRestoreation();
+        _eventBus.SubscribeTo<TurnStartEvent>(RestoreMana);
     }
 
     public void DisableMana() {
         IsManaEnabled = false;
-        mana.DisableManaRestoreation();
+        _eventBus.UnsubscribeFrom<TurnStartEvent>(RestoreMana);
+    }
+
+    private void RestoreMana(ref TurnStartEvent eventData) {
+        throw new NotImplementedException();
     }
 
     // Try to spend mana, if not enough mana - spend health
@@ -34,14 +43,14 @@ public class CardSpendable {
     }
 
     private int TrySpendMana(int amount) {
-        if (IsManaEnabled && mana.Current > 0) {
+        if (IsManaEnabled && mana.CurrentValue > 0) {
             return mana.Spend(amount);
         }
         return 0;
     }
 
     private int SpendHealth(int amount) {
-        if (health.Current > 0) {
+        if (health.CurrentValue > 0) {
             health.TakeDamage(amount);
             return amount;
         }
@@ -50,7 +59,17 @@ public class CardSpendable {
 
     private void HealHealth(int amount) {
         if (amount > 0) {
-            health.Heal(amount);
+            health.Heal(amount, out int excess);
+        }
+    }
+
+    internal void TryRefund(ResourceData resourceData) {
+        throw new NotImplementedException();
+    }
+
+    public void Dispose() {
+        if (_eventBus != null) {
+            _eventBus.UnsubscribeFrom<TurnStartEvent>(RestoreMana);
         }
     }
 }

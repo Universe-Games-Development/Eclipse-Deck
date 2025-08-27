@@ -17,7 +17,7 @@ public class SpeechData : ScriptableObject {
 }
 
 public class Speaker : IDisposable {
-    public Opponent Opponent { get; private set; }
+    public Character Opponent { get; private set; }
 
     private readonly DialogueSystem dialogueSystem;
     private readonly GameEventBus eventBus;
@@ -27,7 +27,7 @@ public class Speaker : IDisposable {
 
     public SpeechData SpeechData { get; }
 
-    public Speaker(SpeechData speechData, Opponent opponent, DialogueSystem dialogueSystem, GameEventBus eventBus) {
+    public Speaker(SpeechData speechData, Character opponent, DialogueSystem dialogueSystem, GameEventBus eventBus) {
         SpeechData = speechData;
         Opponent = opponent;
         this.dialogueSystem = dialogueSystem;
@@ -35,7 +35,7 @@ public class Speaker : IDisposable {
     }
 
     public void Initialize() {
-        eventBus.SubscribeTo<OnRoundStart>(UpdateStoryDialogs);
+        eventBus.SubscribeTo<RoundStartEvent>(UpdateStoryDialogs);
 
         SetupStoryDialogues();
         SetupEventDialogues();
@@ -63,7 +63,7 @@ public class Speaker : IDisposable {
         }
     }
 
-    private void UpdateStoryDialogs(ref OnRoundStart eventData) {
+    private void UpdateStoryDialogs(ref RoundStartEvent eventData) {
         if (storyDialogues.TryGetValue(eventData.RoundNumber, out List<IDialogue> dialogues)) {
             foreach (var dialog in dialogues) {
                 dialog.Subscribe();
@@ -85,7 +85,7 @@ public class Speaker : IDisposable {
                 dialogue.Dispose();
             }
         }
-        eventBus.UnsubscribeFrom<OnRoundStart>(UpdateStoryDialogs);
+        eventBus.UnsubscribeFrom<RoundStartEvent>(UpdateStoryDialogs);
     }
 
     public async UniTask StartDialogue() {

@@ -20,9 +20,6 @@ public abstract class CardData : ScriptableObject {
     public int cost;
     public float spawnChance;
 
-    public List<CardAbilityData> abilities;
-
-
     private static readonly Dictionary<Rarity, Color> rarityColors = new Dictionary<Rarity, Color> {
         { Rarity.Common, Color.gray },
         { Rarity.Uncommon, Color.green },
