@@ -5,32 +5,35 @@ using UnityEngine.Pool;
 using Zenject;
 
 public class CardHand3DView : CardHandView {
-    [SerializeField] private Card3DView cardPrefab;
-    [SerializeField] private Transform cardsContainer;
-    [SerializeField] private Linear3DHandLayoutSettings layoutSettings;
+    
     [SerializeField] private bool debugMode = false;
     
-    [Header("Hover Settings")]
-    [SerializeField] private int baseRenderQueueValue = 3000;
-    [SerializeField] private int hoverRenderQueueBoost = 100;
-
     [Header("Card Orientation")]
-    [SerializeField] private Vector3 defaultCardRotation = Vector3.zero; // Поворот "лицом вверх"
+    [SerializeField] private Vector3 defaultCardRotation = Vector3.zero;
     [SerializeField] private bool inheritContainerRotation = true;
 
-
-    [Header("Performance")]
+    [Header("Pool")]
+    [SerializeField] private Card3DView cardPrefab;
+    [SerializeField] private Transform cardsContainer;
+    private ObjectPool<Card3DView> _cardPool;
     [SerializeField] private int initialPoolSize = 10;
+    
 
     [Header("Bounds Visualization")]
     [SerializeField] private bool showBoundsInRuntime = true;
     [SerializeField] private HandBoundsVisualizer boundsVisualizer;
 
     private LinearHandLayoutStrategy _layoutStrategy;
+    [SerializeField] private Linear3DHandLayoutSettings layoutSettings;
+
+    [Header("Hover Settings")]
+    [SerializeField] private int baseRenderQueueValue = 3000;
+    [SerializeField] private int hoverRenderQueueBoost = 100;
+
     [Inject] private CardTextureRenderer _cardTextureRenderer;
 
     private Card3DView _hoveredCard = null;
-    private ObjectPool<Card3DView> _cardPool;
+    
 
     #region Unity Lifecycle
 
@@ -259,13 +262,56 @@ public class CardHand3DView : CardHandView {
         // Обновляем порядок рендеринга всех карт
         UpdateAllCardsRenderOrder();
 
-        var cardList = new List<CardView>(_cardViews.Values);
+        var cardsViews = new List<CardView>(_cardViews.Values);
 
         // Устанавливаем правильную ориентацию для всех карт ПЕРЕД layout
-        SetupCardsOrientation(cardList);
+        SetupCardsOrientation(cardsViews);
 
         // Обновляем позиции через стратегию размещения
-        _layoutStrategy.UpdateLayout(new List<CardView>(_cardViews.Values), cardsContainer).Forget();
+        //_layoutStrategy.UpdateLayout(new List<CardView>(_cardViews.Values), cardsContainer).Forget();
+
+        CalculateLayoutParameters(cardsViews.Count, out float totalWidth, out float spacing, out float startX);
+        for (int i = 0; i < cardsViews.Count; i++) {
+            CardView cardView = cardsViews[i];
+            if (cardView == null || cardView.transform == null) continue;
+            (Vector3 targetPosition, Quaternion targetRotation) = CalculateCardTransform(
+                cardsContainer, i, cardsViews.Count, startX, spacing);
+            float speedFactor = Mathf.Clamp01(10f / Mathf.Max(1f, cardsViews.Count));
+            float moveDuration = layoutSettings.MoveDuration * speedFactor;
+            cardView.MoveTo(targetPosition, targetRotation, moveDuration);
+        }
+    }
+
+    private void CalculateLayoutParameters(int cardCount, out float totalWidth, out float spacing, out float startX) {
+        totalWidth = Mathf.Max(layoutSettings.MaxHandWidth, (cardCount - 1) * layoutSettings.CardThickness);
+        spacing = cardCount > 1 ? totalWidth / (cardCount - 1) : 0f;
+        startX = -totalWidth / 2f;
+    }
+
+    private (Vector3, Quaternion) CalculateCardTransform(Transform handTransform, int index, int totalCards, float startX, float spacing) {
+        float xPos = startX + index * spacing;
+        float yPos = layoutSettings.DefaultYPosition;
+        float zPos = -index * layoutSettings.VerticalOffset;
+
+        float randomOffset = (index % 3 - 1) * layoutSettings.PositionVariation;
+        xPos += randomOffset;
+
+        Vector3 targetPosition = handTransform.TransformPoint(new Vector3(xPos, yPos, zPos));
+        float rotationAngle = CalculateRotationAngle(index, totalCards);
+        Quaternion targetRotation = handTransform.rotation * Quaternion.Euler(0f, rotationAngle, 0f);
+
+        return (targetPosition, targetRotation);
+    }
+
+    private float CalculateRotationAngle(int index, int totalCards) {
+        if (totalCards == 1) return 0f;
+
+        float t = (float)index / (totalCards - 1);
+        float angle = Mathf.Lerp(-layoutSettings.MaxRotationAngle, layoutSettings.MaxRotationAngle, t);
+        float randomOffset = (index % 2 == 0 ? 1 : -1) * layoutSettings.RotationOffset;
+        angle += randomOffset;
+
+        return angle;
     }
 
     #endregion

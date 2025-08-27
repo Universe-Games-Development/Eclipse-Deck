@@ -21,7 +21,7 @@ public class ZoneColor : MonoBehaviour
             return;
         }
         if (zonePresenter.Owner == null) {
-            Debug.LogWarning("ZonePresenter owner is not assigned.");
+            //Debug.LogWarning("ZonePresenter owner is not assigned.");
             return;
         }
         BoardPlayer owner = zonePresenter.Owner;

@@ -10,7 +10,7 @@ public class PlayerController : MonoBehaviour{
     [SerializeField] public BoardPlayer player;
 
     public HandPresenter handPresenter;
-    [SerializeField] private CardPlayVizualizer vizualizer;
+    
 
     private PlayerState currentState;
 
@@ -22,7 +22,6 @@ public class PlayerController : MonoBehaviour{
         }
 
         cardPlayModule.OnCardPlayCompleted += OnCardPlayCompleted;
-        cardPlayModule.OnCardPlayStarted += OnCardPlay;
         player.Selector.OnSelectionStarted += HandleSelectionStart;
 
         ChangeState(new IdleState());
@@ -58,17 +57,12 @@ public class PlayerController : MonoBehaviour{
         handPresenter.UpdateCardPositions();
     }
 
-    private void OnCardPlay(CardPresenter presenter) {
-        vizualizer.SetCardPresenter(presenter);
-    }
-
     private void OnCardPlayCompleted(CardPresenter presenter, bool success) {
         if (!handPresenter.Contains(presenter)) return;
 
-        vizualizer.Stop();
         if (success) {
             // Spend card - карта була успішно зіграна
-            handPresenter.Hand.Remove(presenter.Card);
+            handPresenter.RemoveCard(presenter);
             GameLogger.Log("Card successfully played and spent");
         } else {
             // Return card - карта не була зіграна, повертаємо в руку

@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
@@ -68,7 +69,8 @@ public class CardPlayModule : MonoBehaviour {
     }
 
     private void HandleOperationStatus(GameOperation operation, OperationStatus status) {
-        if (!IsPlaying() || !_playData.Card.Operations.Contains(operation)) return;
+        List<GameOperation> operations = _playData.Presenter.Card.Operations;
+        if (!IsPlaying() || !operations.Contains(operation)) return;
 
         switch (status) {
             case OperationStatus.Success:
@@ -101,7 +103,7 @@ public class CardPlayModule : MonoBehaviour {
         }
         _operationManager.OnOperationStatus -= HandleOperationStatus;
 
-        GameLogger.Log($"Card play finished: {_playData.IsStarted}, Completed: {_playData.CompletedOperations} / {_playData.Card.Operations.Count}");
+        GameLogger.Log($"Card play finished: {_playData.IsStarted}, Completed: {_playData.CompletedOperations} / {_playData.Operations.Count}");
         
         OnCardPlayCompleted?.Invoke(_playData.Presenter, _playData.IsStarted);
         _playData = null;
@@ -117,32 +119,30 @@ public class CardPlayModule : MonoBehaviour {
 }
 
 public class CardPlayData {
-    public Card Card;
     public CardPresenter Presenter;
-    public Card3DView View;
     public bool IsStarted = false;
     public int CurrentOperationIndex = 0;
     public int CompletedOperations = 0;
     public BoardPlayer Initiator;
+    public List<GameOperation> Operations;
 
     public CardPlayData(CardPresenter presenter, BoardPlayer initiator) {
-        Card = presenter.Card;
-        View = presenter.View as Card3DView;
         Presenter = presenter;
         Initiator = initiator;
+        Operations = presenter.Card.Operations;
     }
 
-    public bool HasNextOperation() => CurrentOperationIndex < Card.Operations.Count;
+    public bool HasNextOperation() => CurrentOperationIndex < Operations.Count;
 
     public GameOperation GetNextOperation() {
-        if (HasNextOperation() && Card != null && Card.Operations != null) {
-            return Card.Operations[CurrentOperationIndex++];
+        if (HasNextOperation() && Presenter != null && Operations != null) {
+            return Operations[CurrentOperationIndex++];
         }
         return null;
     }
 
     public bool IsLastOperation(GameOperation operation) {
-        return Card?.Operations?.LastOrDefault() == operation;
+        return Operations?.LastOrDefault() == operation;
     }
 }
 

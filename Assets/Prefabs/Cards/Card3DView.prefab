@@ -9,9 +9,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7859237401865184929}
+  - component: {fileID: -2197595103105294208}
   - component: {fileID: 2702028589246237682}
   - component: {fileID: 532159351100941374}
   - component: {fileID: 8477983814407276124}
+  - component: {fileID: 2115535885023754684}
+  - component: {fileID: 2333401136652638662}
   m_Layer: 0
   m_Name: Card3DView
   m_TagString: Untagged
@@ -35,6 +38,18 @@ Transform:
   - {fileID: 2117009175830728932}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-2197595103105294208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5338056334011292779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a9bac6470fa3e54abfbf8158a1f043c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &2702028589246237682
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48,8 +63,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CardInfo: {fileID: 0}
+  movementComponent: {fileID: 2115535885023754684}
   cardRenderer: {fileID: 5829461222346977053}
-  animator: {fileID: 5084182697400251800}
 --- !u!114 &532159351100941374
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -85,6 +100,98 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 6.4, y: 8.8, z: 0.54}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2115535885023754684
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5338056334011292779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86da4d081fb0c2a41889a6960359ac46, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 10
+  rotationSpeed: 8
+  moveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7105875
+      value: 0.7476088
+      inSlope: 1.4214689
+      outSlope: 1.4214689
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  scaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  usePhysicsMovement: 0
+  springForce: 300
+  damping: 3
+--- !u!114 &2333401136652638662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5338056334011292779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3dba1f171f1e1438ac82c4367689b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  forwardTiltSensitivity: 20
+  sideTiltSensitivity: 5
+  verticalTiltSensitivity: 40
+  maxTiltAngle: 25
+  tiltSmoothing: 8
+  rotationDamping: 0.8
 --- !u!1001 &1939813236717090575
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -12,6 +12,8 @@ public abstract class CardView : MonoBehaviour {
     public string Id { get; set; }
     private bool _isInteractive = true;
 
+
+    [SerializeField] CardMovementComponent movementComponent;
     #region Unity Lifecycle
 
     protected virtual void Awake() {
@@ -31,7 +33,6 @@ public abstract class CardView : MonoBehaviour {
     }
 
     protected virtual void CleanupResources() {
-
         DOTween.Kill(this); // Очищаем все анимации, связанные с этим объектом
     }
 
@@ -79,6 +80,60 @@ public abstract class CardView : MonoBehaviour {
         // Переопределяется в наследниках для анимации удаления
         await UniTask.CompletedTask;
     }
+
+    #endregion
+
+    #region Movement API - основне для інших модулів
+
+    /// <summary>
+    /// Плавний рух до позиції (для руки, реорганізації)
+    /// </summary>
+    public void MoveTo(Vector3 position, Quaternion rotation, Vector3 scale, float duration, System.Action onComplete = null) {
+        movementComponent?.MoveTo(position, rotation, scale, duration, onComplete);
+    }
+
+    /// <summary>
+    /// Плавний рух до позиції (для руки, реорганізації)
+    /// </summary>
+    public void MoveTo(Vector3 position, Quaternion rotation, float duration, System.Action onComplete = null) {
+        movementComponent?.MoveTo(position, rotation, duration, onComplete);
+    }
+
+    /// <summary>
+    /// Простий рух до позиції
+    /// </summary>
+    public void MoveTo(Vector3 position, float duration, System.Action onComplete = null) {
+        MoveTo(position, transform.rotation, transform.localScale, duration, onComplete);
+    }
+
+    /// <summary>
+    /// Миттєве переміщення
+    /// </summary>
+    public void SetPosition(Vector3 position, Quaternion rotation, Vector3 scale) {
+        movementComponent?.SetPosition(position, rotation, scale);
+    }
+
+    /// <summary>
+    /// Почати фізичний рух (для драгу, таргетингу)
+    /// </summary>
+    public void StartPhysicsMovement(Vector3 initialPosition) {
+        movementComponent?.StartPhysicsMovement(initialPosition);
+    }
+
+    /// <summary>
+    /// Оновлення цільової позиції в real-time
+    /// </summary>
+    public void UpdateTargetPosition(Vector3 position) {
+        movementComponent?.UpdateTargetPosition(position);
+    }
+
+    /// <summary>
+    /// Зупинити всі рухи
+    /// </summary>
+    public void StopMovement() {
+        movementComponent?.StopMovement();
+    }
+
 
     #endregion
 }
