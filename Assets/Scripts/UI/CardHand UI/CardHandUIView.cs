@@ -15,7 +15,7 @@ public class CardHandUIView : CardHandView {
 
     private Dictionary<CardUIView, CardLayoutGhost> layoutMap = new();
 
-    public override CardView BuildCardView(string id) {
+    public override CardView BuildCardView() {
         if (cardPrefab == null || ghostPrefab == null) {
             Debug.LogError("CardPrefab or GhostPrefab not set!", this);
             return null;
@@ -25,7 +25,6 @@ public class CardHandUIView : CardHandView {
         CardLayoutGhost ghost = Instantiate(ghostPrefab, ghostLayoutParent);
 
         AddCardViewToLayout(cardView, ghost);
-        UpdateCardPositions();
 
         return cardView;
     }
@@ -34,25 +33,6 @@ public class CardHandUIView : CardHandView {
         layoutMap[cardView] = ghost;
     }
 
-    public override void HandleCardViewRemoval(CardView cardView) {
-        if (cardView is CardUIView uiView) {
-            if (layoutMap.TryGetValue(uiView, out var ghost)) {
-                Destroy(ghost.gameObject);
-                layoutMap.Remove(uiView);
-            }
-
-            uiView.PlayRemovalAnimation().Forget();
-            UpdateCardPositions();
-        }
-    }
-
-    public override void UpdateCardPositions() {
-        UpdateCardsPositionsAsync().Forget();
-    }
-
-    protected override void OnCardHover(CardView changedCardView, bool isHovered) {
-        CardUIView changedCard3D = changedCardView as CardUIView;
-    }
 
     private async UniTask UpdateCardsPositionsAsync(int delayFrames = 3) {
         updatePositionCts?.Cancel();
@@ -86,7 +66,7 @@ public class CardHandUIView : CardHandView {
         }
     }
 
-    protected override void OnDestroy() {
+    protected void OnDestroy() {
         updatePositionCts?.Cancel();
         updatePositionCts?.Dispose();
 

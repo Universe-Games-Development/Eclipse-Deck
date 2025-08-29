@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-public abstract class Card : GameUnit {
+public abstract class Card : UnitInfo {
     public Action<CardContainer> OnContainerChanged { get; internal set; }
     public CardContainer CurrentContainer { get; protected set; }
     public CardData Data { get; protected set; }
@@ -43,6 +43,11 @@ public class CreatureCard : Card, IDamageable {
 
     public override string ToString() {
         return $"{CreatureCardData.Name} Hp: {Health}";
+    }
+}
+
+public class SpellCard : Card {
+    public SpellCard(SpellCardData cardData) : base(cardData) {
     }
 }
 

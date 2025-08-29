@@ -1,8 +1,9 @@
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using DG.Tweening;
 
 public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
     public Action OnChanged;
@@ -14,12 +15,13 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
     protected override void Awake() {
         base.Awake();
         RectTransform ??= GetComponent<RectTransform>();
-        CardInfo.OnDataChanged += InvokeCardChangedEvent;
+        if (uiInfo == null) uiInfo = GetComponent<CardUIInfo>();
+        uiInfo.OnDataChanged += InvokeCardChangedEvent;
     }
 
     protected override void OnDestroy() {
-        if (CardInfo)
-            CardInfo.OnDataChanged -= InvokeCardChangedEvent;
+        if (uiInfo)
+            uiInfo.OnDataChanged -= InvokeCardChangedEvent;
     }
 
     private void InvokeCardChangedEvent() => OnChanged?.Invoke();
@@ -40,5 +42,21 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
     public override void Reset() {
         DoTweenAnimator?.Reset();
         base.Reset();
+    }
+
+    public override void SetRenderOrder(int sortingOrder) {
+        throw new NotImplementedException();
+    }
+
+    public override void ModifyRenderOrder(int modifyValue) {
+        throw new NotImplementedException();
+    }
+
+    public override void ResetRenderOrder() {
+        throw new NotImplementedException();
+    }
+
+    public override void SetHoverState(bool isHovered) {
+        throw new NotImplementedException();
     }
 }

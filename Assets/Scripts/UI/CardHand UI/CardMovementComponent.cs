@@ -55,19 +55,6 @@ public class CardMovementComponent : MonoBehaviour {
         currentMovement = StartCoroutine(SmoothMovement(duration, onComplete));
     }
 
-    /// <summary>
-    /// Плавний рух до позиції з додатковими параметрами
-    /// </summary>
-    public void MoveTo(Vector3 position, Quaternion rotation, float duration = defaultMoveDuration, System.Action onComplete = null) {
-        MoveTo(position, rotation, transform.localScale, duration);
-    }
-
-    /// <summary>
-    /// Простий рух до позиції
-    /// </summary>
-    public void MoveTo(Vector3 position, float duration = defaultMoveDuration, System.Action onComplete = null) {
-        MoveTo(position, transform.rotation, transform.localScale, duration, onComplete);
-    }
 
     /// <summary>
     /// Миттєве переміщення (без анімації)

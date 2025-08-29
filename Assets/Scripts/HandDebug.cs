@@ -12,10 +12,17 @@ public class HandDebug : MonoBehaviour
     [SerializeField] int initialCards = 0;
     [SerializeField] TextMeshProUGUI selectedCard;
 
-    [SerializeField] CreatureCardData cardData;
+    [SerializeField] CreatureCardData creatureCardData;
+    [SerializeField] SpellCardData spellCardData;
+
     [Inject] GameEventBus eventBus;
 
+    private CardFactory cardFactory;
+    [Inject] DiContainer diContainer;
+
     private void Start() {
+        cardFactory = new CardFactory(diContainer);
+
         addCardButton.onClick.AddListener(() => {
             AddCard();
         });
@@ -26,8 +33,12 @@ public class HandDebug : MonoBehaviour
     }
 
     private void AddCard() {
+        float value = UnityEngine.Random.Range(0f, 1f);
+        CardData dataToChoose = creatureCardData;
+        if (value > 0.5f) dataToChoose = spellCardData;
+
         EffectManager effectManager = new EffectManager(eventBus);
-        Card card = new CreatureCard(cardData);
-        handPresenter.Hand.Add(card);
+        Card card = cardFactory.CreateCard(dataToChoose);
+        handPresenter.AddCard(card);
     }
 }

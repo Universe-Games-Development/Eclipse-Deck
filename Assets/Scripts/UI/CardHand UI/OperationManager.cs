@@ -404,18 +404,18 @@ public enum Priority {
 
 public abstract class GameOperation {
     public List<NamedTarget> NamedTargets = new();
-    protected Dictionary<string, GameUnit> targets;
+    protected Dictionary<string, UnitInfo> targets;
     public string OperationName = "defaultOperationName";
     public bool IsMandatory { get; set; } = false;
-    public BoardPlayer Initiator { get; set; }
+    public BoardUnit Initiator { get; set; }
 
     public abstract UniTask<bool> ExecuteAsync(CancellationToken cancellationToken);
 
-    public void SetTargets(Dictionary<string, GameUnit> filledTargets) {
+    public void SetTargets(Dictionary<string, UnitInfo> filledTargets) {
         targets = filledTargets;
     }
 
-    protected bool TryGetTarget<T>(string key, out T result) where T : GameUnit {
+    protected bool TryGetTarget<T>(string key, out T result) where T : UnitInfo {
         if (targets.TryGetValue(key, out var obj) && obj is T cast) {
             result = cast;
             return true;
@@ -442,7 +442,7 @@ public abstract class GameOperation {
 public class NamedTarget {
     public string Name;
     public ITargetRequirement Requirement;
-    public GameUnit Unit;
+    public UnitInfo Unit;
 
     public NamedTarget(string name, ITargetRequirement requirement) {
         Name = name;

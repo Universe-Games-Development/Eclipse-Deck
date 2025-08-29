@@ -11,12 +11,12 @@ public abstract class CardData : ScriptableObject {
     public string Name;
     public string Description;
     public string AuthorName;
-    public Sprite CharacterSprite;
-    public Sprite biomeIamge;
+    public Sprite Portait;
+    public Sprite BgImage;
 
     [Header("Logic")]
     public string resourseId;
-    public Rarity rarity;
+    public Rarity Rarity;
     public int cost;
     public float spawnChance;
 
@@ -50,7 +50,7 @@ public abstract class CardData : ScriptableObject {
     }
 
     private void UpdateSpawnChance() {
-        if (raritySpawnChances.TryGetValue(rarity, out var chance)) {
+        if (raritySpawnChances.TryGetValue(Rarity, out var chance)) {
             spawnChance = chance;
         } else {
             spawnChance = 0f; // Default if rarity doesn't match
@@ -58,7 +58,7 @@ public abstract class CardData : ScriptableObject {
     }
 
     public Color GetRarityColor() {
-        if (rarityColors.TryGetValue(rarity, out var color)) {
+        if (rarityColors.TryGetValue(Rarity, out var color)) {
             return color;
         }
         return Color.white;

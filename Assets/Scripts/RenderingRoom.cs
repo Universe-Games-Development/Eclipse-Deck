@@ -12,24 +12,16 @@ public class RenderingRoom : MonoBehaviour {
 
     [SerializeField] RectTransform uiContainer;
 
-    [SerializeField] RenderTexture renderTextureTemplate;
-    private RenderTexture renderTexture;
+    [SerializeField] RenderTexture renderTexture;
 
     private List<CardUIView> activeCards = new List<CardUIView>();
     private Dictionary<CardUIView, Texture2D> cardTextures = new Dictionary<CardUIView, Texture2D>();
 
     private void Awake() {
-        // Ініціалізуємо RenderTexture для камери
-        renderTexture = new RenderTexture(renderTextureTemplate);
         renderCamera.targetTexture = renderTexture;
-
-        // Встановлюємо Canvas для відображення в нашій камері
         renderCanvas.worldCamera = renderCamera;
-
-        // Приховуємо об'єкти від гравця
-        renderCamera.gameObject.SetActive(false);
-        renderCanvas.gameObject.SetActive(false);
     }
+
 
     /// <summary>
     /// Створює нову UI-карту в цій кімнаті рендерингу
@@ -37,10 +29,11 @@ public class RenderingRoom : MonoBehaviour {
     public CardUIView CreateCardUI() {
         CardUIView newCardUI = Instantiate(cardUIPrefab, renderCanvas.transform);
         RectTransform rectTransform = newCardUI.RectTransform;
-        rectTransform.anchorMin = Vector2.zero; // Нижній лівий кут (0,0)
-        rectTransform.anchorMax = Vector2.one;  // Верхній правий кут (1,1)
-        rectTransform.offsetMin = Vector2.zero; // Виправлення нижнього краю
-        rectTransform.offsetMax = Vector2.zero; // Виправлення верхнього краю
+        rectTransform.anchorMin = Vector2.zero;
+        rectTransform.anchorMax = Vector2.one;
+        rectTransform.offsetMin = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+
         activeCards.Add(newCardUI);
         return newCardUI;
     }
@@ -50,6 +43,8 @@ public class RenderingRoom : MonoBehaviour {
     /// </summary>
     public void AddCardUI(CardUIView cardUI) {
         cardUI.transform.SetParent(renderCanvas.transform);
+
+        cardUI.gameObject.layer = renderCanvas.gameObject.layer;
         activeCards.Add(cardUI);
     }
 
@@ -66,28 +61,19 @@ public class RenderingRoom : MonoBehaviour {
     /// Рендерить текстуру для вказаної UI-карти
     /// </summary>
     public Texture2D RenderCardTexture(CardUIView cardUI) {
-        // Перевіряємо, чи карта в нашій кімнаті
         if (!activeCards.Contains(cardUI))
             return null;
 
-        // Приховуємо всі карти
         foreach (var card in activeCards) {
             card.gameObject.SetActive(false);
         }
 
-        // Показуємо тільки потрібну картку і позиціонуємо її по центру
         cardUI.gameObject.SetActive(true);
         cardUI.RectTransform.anchoredPosition = Vector2.zero;
 
-        
-        // Активуємо камеру і канвас для рендеру
-        renderCamera.gameObject.SetActive(true);
-        renderCanvas.gameObject.SetActive(true);
-
-        // Рендеримо сцену
+        // Більше не потрібно активувати/деактивувати камеру!
         renderCamera.Render();
 
-        // Створюємо або отримуємо Texture2D для цієї карти
         Texture2D resultTexture;
         if (!cardTextures.TryGetValue(cardUI, out resultTexture)) {
             resultTexture = CreateTextureFromTemplate();
@@ -95,17 +81,10 @@ public class RenderingRoom : MonoBehaviour {
             cardTextures[cardUI] = resultTexture;
         }
 
-        
-        // Копіюємо пікселі з RenderTexture в Texture2D
         RenderTexture.active = renderTexture;
-        Texture2D texture = resultTexture;
-        texture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-        texture.Apply();
+        resultTexture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+        resultTexture.Apply();
         RenderTexture.active = null;
-
-        // Деактивуємо камеру і канвас після рендерингу
-        renderCamera.gameObject.SetActive(false);
-        renderCanvas.gameObject.SetActive(false);
 
         return resultTexture;
     }
@@ -123,8 +102,8 @@ public class RenderingRoom : MonoBehaviour {
 
     private Texture2D CreateTextureFromTemplate() {
         return new Texture2D(
-            renderTextureTemplate.width,
-            renderTextureTemplate.height,
+            renderTexture.width,
+            renderTexture.height,
             TextureFormat.RGBA32,
             false
         );

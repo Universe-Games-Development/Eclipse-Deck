@@ -202,7 +202,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: fec5dd7359041ff43b6c4465087d1e7f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b1d6ecd53ac67e041bff10eb7bf8cb06, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -277,7 +277,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 5
+  m_text: 100
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b0d4e2b1472850b4982eb4fbe3f96c89, type: 2}
   m_sharedMaterial: {fileID: -1127246180901019797, guid: b0d4e2b1472850b4982eb4fbe3f96c89, type: 2}
@@ -304,7 +304,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 72
+  m_fontSize: 61.05
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1376,8 +1376,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfd605474d27f2c4f8feb059e14e2666, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CardInfo: {fileID: 7997040698821701614}
-  isInteractable: 0
+  uiInfo: {fileID: 7997040698821701614}
+  movementComponent: {fileID: 0}
   RectTransform: {fileID: 5635097528816772106}
   DoTweenAnimator: {fileID: 9047682594767481327}
   Description: {fileID: 4807984363282290462}

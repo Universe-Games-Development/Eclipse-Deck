@@ -4,12 +4,12 @@ using UnityEngine;
 public class BoardInputManager : MonoBehaviour {
     [SerializeField] private Camera _camera;
     [SerializeField] private Transform _testObject;
-    [SerializeField] LayerMask layerMask;
+    [SerializeField] LayerMask defaultLayerMask;
     [SerializeField] private float _raycastDistance = 10f;
     [SerializeField] private bool _isDebug = false;
 
     public GameObject lastHitObject;
-    public GameObject hitObject;
+    public GameObject hoveredObject;
 
     private void Awake() {
         if (!_camera) _camera = Camera.main;
@@ -22,14 +22,32 @@ public class BoardInputManager : MonoBehaviour {
     private void Update() {
         if (!_isDebug) return;
 
-        if (TryGetCursorData(layerMask, out Vector3 position, out var hitObject)) {
+        if (TryGetCursorData(defaultLayerMask, out Vector3 position, out var hitObject)) {
             if (_testObject) _testObject.position = position;
-
-            if (lastHitObject != hitObject) {
-                lastHitObject = hitObject;
-                //Debug.Log($"Курсор попал по новому объекту: {hitObject.name} на позицию: {position}");
-            }
+            //Debug.Log($"Курсор попал по новому объекту: {hitObject.name} на позицию: {position}");
+            
         }
+
+        HandleObjectHover(hitObject);
+    }
+
+    private void HandleObjectHover(GameObject newObject) {
+        if (newObject == lastHitObject) return;
+
+        if (newObject == null) {
+            ClearHoveredObject();
+        } else {
+            StoreHoveredObject(newObject);
+        }
+    }
+    private void StoreHoveredObject(GameObject gameObject) {
+        if (lastHitObject != gameObject) {
+            lastHitObject = hoveredObject = gameObject;
+        }
+    }
+
+    private void ClearHoveredObject() {
+        hoveredObject = null;
     }
 
     public bool TryGetCursorData(LayerMask layerMask, out Vector3 position, out GameObject hitObject) {
@@ -48,6 +66,10 @@ public class BoardInputManager : MonoBehaviour {
     }
 
     public bool TryGetCursorPosition(LayerMask layerMask, out Vector3 cursorPositiont) {
-         return TryGetCursorData(layerMask, out cursorPositiont, out GameObject hitObject);
+         return TryGetCursorData(layerMask, out cursorPositiont, out _);
+    }
+
+    public bool TryGetCursorObject(LayerMask layerMask, out GameObject hitObject) {
+        return TryGetCursorData(layerMask, out _, out hitObject);
     }
 }

@@ -1,14 +1,14 @@
 ﻿using System;
 using UnityEngine;
 
-public class ZonePresenter : MonoBehaviour, IGameUnitProvider {
+public class ZonePresenter : BoardUnit {
     public Zone Zone;
     public Zone3DView Zone3DView;
     [SerializeField] public BoardPlayer Owner;
 
     private void Start() {
         Zone = new Zone();
-        Zone.Owner = Owner;
+        Zone.ChangeOwner(Owner);
         Zone.OnCreatureSpawned += HandleCreatureSpawned;
     }
 
@@ -21,7 +21,11 @@ public class ZonePresenter : MonoBehaviour, IGameUnitProvider {
         Zone = zone;
     }
 
-    public GameUnit GetUnit() {
+    public override UnitInfo GetInfo() {
         return Zone;
+    }
+
+    public override BoardPlayer GetPlayer() {
+        return Owner;
     }
 }

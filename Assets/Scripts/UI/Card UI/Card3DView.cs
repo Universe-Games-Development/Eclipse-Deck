@@ -2,12 +2,14 @@
 using DG.Tweening;
 using System;
 using UnityEngine;
+using Zenject;
 
 [RequireComponent(typeof(Collider))]
 public class Card3DView : CardView {
-    // Компоненты рендеринга
+    [Inject] private CardTextureRenderer textureRenderer;
+    [SerializeField] private int hoverRenderOrderBoost = 80;
     [SerializeField] private SkinnedMeshRenderer cardRenderer;
-    //[SerializeField] private Card3DAnimator animator;
+    [SerializeField] private Card3DAnimator animator;
     public Action OnInitialized;
 
     // Кэширование шейдера и материалов
@@ -16,6 +18,9 @@ public class Card3DView : CardView {
     private Material _instancedMaterial;
     private int _defaultRenderQueue;
 
+    public CardUIView card2DView;
+
+    public bool IsInitialized { get; private set; }
 
     #region Unity Lifecycle
 
@@ -24,20 +29,31 @@ public class Card3DView : CardView {
 
         // Создаем MaterialPropertyBlock для эффективного изменения свойств материала
         _propertyBlock = new MaterialPropertyBlock();
+        card2DView = textureRenderer.Register3DCard(this);
+        SyncWithUICopy(card2DView);
+    }
+
+    private void Start() {
+        
     }
 
     protected override void OnDestroy() {
         base.OnDestroy();
+
+        textureRenderer.UnRegister3DCard(this);
     }
 
     #endregion
 
     #region Initialization
 
-    public void SyncWithUICopy(CardUIView cardUIView) {
-        CardInfo = cardUIView.CardInfo;
+    private void SyncWithUICopy(CardUIView cardUIView) {
+        card2DView = cardUIView;
+        uiInfo = card2DView.uiInfo;
+
         InitializeMaterials();
-        OnInitialized.Invoke();
+        IsInitialized = true;
+        OnInitialized?.Invoke();
     }
 
     protected override void ValidateComponents() {
@@ -88,7 +104,7 @@ public class Card3DView : CardView {
         //}
 
         // Сбрасываем порядок рендеринга
-        ResetRenderingOrder();
+        ResetRenderOrder();
     }
     #endregion
 
@@ -124,24 +140,33 @@ public class Card3DView : CardView {
         cardRenderer.SetPropertyBlock(_propertyBlock);
     }
 
-    public void SetSortingOrder(int order) {
+    #endregion
+
+    public override void SetRenderOrder(int order) {
         if (_instancedMaterial != null) {
             _instancedMaterial.renderQueue = order;
+            Debug.Log($"{gameObject.name}: Render queue: {order}");
         }
     }
 
-    public void ResetRenderingOrder() {
-        SetSortingOrder(_defaultRenderQueue);
+    public override void ModifyRenderOrder(int modifyValue) {
+        if (TryGetCurrentRenderOrder(out int currentOrder)) {
+            SetRenderOrder(currentOrder + modifyValue);
+        }
     }
 
-    #endregion
-
-    #region Card Removal
-
-    public override async UniTask PlayRemovalAnimation() {
-        // Проигрываем анимацию удаления, если есть
-        await UniTask.Yield();
+    public override void ResetRenderOrder() {
+        SetRenderOrder(_defaultRenderQueue);
     }
 
-    #endregion
+    private bool TryGetCurrentRenderOrder(out int order) {
+        order = _instancedMaterial?.renderQueue ?? 0;
+        return _instancedMaterial != null;
+    }
+
+    public override void SetHoverState(bool isHovered) {
+        ModifyRenderOrder(isHovered ? hoverRenderOrderBoost : -hoverRenderOrderBoost);
+
+        animator?.Hover(isHovered);
+    }
 }

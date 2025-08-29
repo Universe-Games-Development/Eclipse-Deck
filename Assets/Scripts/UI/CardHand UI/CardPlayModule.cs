@@ -22,13 +22,13 @@ public class CardPlayModule : MonoBehaviour {
         }
     }
 
-    public void StartCardPlay(CardPresenter cardPresenter, BoardPlayer initiator, CancellationToken externalToken = default) {
+    public void StartCardPlay(CardPresenter cardPresenter, CancellationToken externalToken = default) {
         if (IsPlaying() || cardPresenter == null) {
             OnCardPlayCompleted?.Invoke(cardPresenter, false);
             return;
         }
 
-        _playData = new CardPlayData(cardPresenter, initiator);
+        _playData = new CardPlayData(cardPresenter);
         OnCardPlayStarted?.Invoke(cardPresenter);
 
         _internalTokenSource = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
@@ -55,7 +55,7 @@ public class CardPlayModule : MonoBehaviour {
 
             if (_playData?.HasNextOperation() == true) {
                 var nextOperation = _playData.GetNextOperation();
-                nextOperation.Initiator = _playData.Initiator;
+                nextOperation.Initiator = _playData.CardPresenter;
 
                 if (!cancellationToken.IsCancellationRequested) {
                     _operationManager.Push(nextOperation);
@@ -69,7 +69,7 @@ public class CardPlayModule : MonoBehaviour {
     }
 
     private void HandleOperationStatus(GameOperation operation, OperationStatus status) {
-        List<GameOperation> operations = _playData.Presenter.Card.Operations;
+        List<GameOperation> operations = _playData.CardPresenter.Card.Operations;
         if (!IsPlaying() || !operations.Contains(operation)) return;
 
         switch (status) {
@@ -105,7 +105,7 @@ public class CardPlayModule : MonoBehaviour {
 
         GameLogger.Log($"Card play finished: {_playData.IsStarted}, Completed: {_playData.CompletedOperations} / {_playData.Operations.Count}");
         
-        OnCardPlayCompleted?.Invoke(_playData.Presenter, _playData.IsStarted);
+        OnCardPlayCompleted?.Invoke(_playData.CardPresenter, _playData.IsStarted);
         _playData = null;
     }
 
@@ -119,23 +119,21 @@ public class CardPlayModule : MonoBehaviour {
 }
 
 public class CardPlayData {
-    public CardPresenter Presenter;
+    public CardPresenter CardPresenter;
     public bool IsStarted = false;
     public int CurrentOperationIndex = 0;
     public int CompletedOperations = 0;
-    public BoardPlayer Initiator;
     public List<GameOperation> Operations;
 
-    public CardPlayData(CardPresenter presenter, BoardPlayer initiator) {
-        Presenter = presenter;
-        Initiator = initiator;
+    public CardPlayData(CardPresenter presenter) {
+        CardPresenter = presenter;
         Operations = presenter.Card.Operations;
     }
 
     public bool HasNextOperation() => CurrentOperationIndex < Operations.Count;
 
     public GameOperation GetNextOperation() {
-        if (HasNextOperation() && Presenter != null && Operations != null) {
+        if (HasNextOperation() && CardPresenter != null && Operations != null) {
             return Operations[CurrentOperationIndex++];
         }
         return null;

@@ -5,7 +5,7 @@ using System.Threading;
 using UnityEngine;
 
 
-public class Zone : GameUnit {
+public class Zone : UnitInfo {
     public Action OnCreatureSpawned;
 
     List<CreatureCard> creatures = new();

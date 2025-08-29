@@ -9,7 +9,7 @@ public interface ITargetRequirement {
     TargetSelector GetTargetSelector();
 }
 
-public abstract class TargetRequirement<T> : ITargetRequirement where T : GameUnit {
+public abstract class TargetRequirement<T> : ITargetRequirement where T : UnitInfo {
     public IEnumerable<Condition<T>> Conditions { get; private set; }
 
     public TargetSelector requiredSelector = TargetSelector.Initiator;
@@ -86,7 +86,7 @@ public struct ValidationResult {
     public static ValidationResult InValid(string message = default) => new ValidationResult { IsValid = false, ErrorMessage = message };
 }
 
-public abstract class Condition<T> where T : GameUnit {
+public abstract class Condition<T> where T : UnitInfo {
     protected BoardPlayer Initiator;
 
     public void SetInitiator(BoardPlayer opponent) {
@@ -109,7 +109,7 @@ public enum OwnershipType {
     Any
 }
 
-public class OwnershipCondition<T> : Condition<T> where T : GameUnit {
+public class OwnershipCondition<T> : Condition<T> where T : UnitInfo {
     private readonly OwnershipType ownershipType;
 
     public OwnershipCondition(OwnershipType ownershipType) {

@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 7859237401865184929}
   - component: {fileID: -2197595103105294208}
   - component: {fileID: 2702028589246237682}
-  - component: {fileID: 532159351100941374}
   - component: {fileID: 8477983814407276124}
   - component: {fileID: 2115535885023754684}
   - component: {fileID: 2333401136652638662}
@@ -50,6 +49,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a9bac6470fa3e54abfbf8158a1f043c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DoTestRandomUpdate: 0
+  updateTimes: 15
+  updateRate: 1
 --- !u!114 &2702028589246237682
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62,23 +64,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33328c3e0efbe9b4980ec5395c49923a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CardInfo: {fileID: 0}
+  uiInfo: {fileID: 0}
   movementComponent: {fileID: 2115535885023754684}
+  hoverRenderOrderBoost: 80
   cardRenderer: {fileID: 5829461222346977053}
---- !u!114 &532159351100941374
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5338056334011292779}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c5da048aa57d65e4e967d033cd219c81, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  card3DView: {fileID: 2702028589246237682}
-  updateTimes: 5
+  animator: {fileID: 5084182697400251800}
+  card2DView: {fileID: 0}
 --- !u!65 &8477983814407276124
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -1,20 +1,34 @@
 ﻿using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 public class HandBoundsVisualizer : MonoBehaviour {
-    [SerializeField] private Linear3DHandLayoutSettings layoutSettings;
     [SerializeField] private HandBoundsSettings boundsSettings = new HandBoundsSettings();
-    [SerializeField] private Camera targetCamera;
-    [SerializeField] private Transform cardsContainer;
 
-    // Для настройки в реальном времени
-    [Header("Runtime Adjustment")]
-    [Tooltip("Настройка ширины руки в реальном времени")]
+    // Зовнішні залежності
+    private Linear3DHandLayoutSettings layoutSettings;
+    private Camera targetCamera;
+    private Transform cardsContainer;
+
+    // Runtime контроли
+    [Header("Runtime Controls")]
     public bool EnableRuntimeAdjustment = true;
-
     [SerializeField] private KeyCode increaseWidthKey = KeyCode.Plus;
     [SerializeField] private KeyCode decreaseWidthKey = KeyCode.Minus;
     [SerializeField] private float adjustmentStep = 0.1f;
+
+    private bool isVisible = true;
+
+    #region Initialization
+
+    public void Initialize(Linear3DHandLayoutSettings settings, Transform container, Camera camera) {
+        layoutSettings = settings;
+        cardsContainer = container;
+        targetCamera = camera ?? Camera.main;
+
+        isVisible = boundsSettings.ShowBounds;
+    }
 
     private void Start() {
         if (targetCamera == null)
@@ -23,6 +37,10 @@ public class HandBoundsVisualizer : MonoBehaviour {
         if (cardsContainer == null)
             cardsContainer = transform;
     }
+
+    #endregion
+
+    #region Unity Lifecycle
 
     private void Update() {
         if (EnableRuntimeAdjustment && layoutSettings != null) {
@@ -43,14 +61,21 @@ public class HandBoundsVisualizer : MonoBehaviour {
 
         if (changed) {
             Debug.Log($"Hand Width adjusted to: {layoutSettings.MaxHandWidth:F2}");
+            // Повідомляємо layout про зміни
+            var layout = GetComponentInParent<Linear3DHandLayout>();
+            layout?.ForceRecalculation();
         }
     }
 
-    private void OnDrawGizmos() {
-        if (layoutSettings == null || !boundsSettings.ShowBounds)
-            return;
+    #endregion
 
-        DrawHandBounds();
+    #region Gizmos Drawing
+
+    private void OnDrawGizmos() {
+        if (layoutSettings == null || !isVisible) return;
+
+        if (boundsSettings.ShowBounds)
+            DrawHandBounds();
 
         if (boundsSettings.ShowGrid)
             DrawGrid();
@@ -64,14 +89,12 @@ public class HandBoundsVisualizer : MonoBehaviour {
 
     private void DrawHandBounds() {
         Gizmos.color = boundsSettings.BoundsColor;
+        Vector3 center = GetContainerPosition();
+        Vector3 size = new Vector3(layoutSettings.MaxHandWidth, 0.1f, 0.5f);
 
-        Vector3 center = cardsContainer != null ? cardsContainer.position : transform.position;
-        Vector3 size = new Vector3(layoutSettings.MaxHandWidth, 0.1f, layoutSettings.CardThickness * 2f);
-
-        // Рисуем основную границу руки
         Gizmos.DrawWireCube(center, size);
 
-        // Рисуем дополнительные линии для лучшей видимости
+        // Додаткові візуальні маркери
         Vector3 leftEdge = center + Vector3.left * layoutSettings.MaxHandWidth * 0.5f;
         Vector3 rightEdge = center + Vector3.right * layoutSettings.MaxHandWidth * 0.5f;
 
@@ -79,21 +102,19 @@ public class HandBoundsVisualizer : MonoBehaviour {
         Gizmos.DrawLine(leftEdge + Vector3.up * 0.2f, leftEdge - Vector3.up * 0.2f);
         Gizmos.DrawLine(rightEdge + Vector3.up * 0.2f, rightEdge - Vector3.up * 0.2f);
 
-        // Подпись с размерами
-        Vector3 labelPos = center + Vector3.up * 0.3f;
 #if UNITY_EDITOR
-        UnityEditor.Handles.Label(labelPos, $"Width: {layoutSettings.MaxHandWidth:F2}");
+        Vector3 labelPos = center + Vector3.up * 0.3f;
+        Handles.Label(labelPos, $"Width: {layoutSettings.MaxHandWidth:F2}");
 #endif
     }
 
     private void DrawGrid() {
         Gizmos.color = boundsSettings.GridColor;
-
-        Vector3 center = cardsContainer != null ? cardsContainer.position : transform.position;
+        Vector3 center = GetContainerPosition();
         float halfWidth = layoutSettings.MaxHandWidth * 0.5f;
 
-        // Вертикальные линии сетки
-        float gridLines = Mathf.Floor(layoutSettings.MaxHandWidth / boundsSettings.GridCellSize);
+        // Вертикальні лінії
+        int gridLines = Mathf.FloorToInt(layoutSettings.MaxHandWidth / boundsSettings.GridCellSize);
         for (int i = 0; i <= gridLines; i++) {
             float x = -halfWidth + (i * boundsSettings.GridCellSize);
             Vector3 start = center + new Vector3(x, -0.1f, 0);
@@ -101,7 +122,7 @@ public class HandBoundsVisualizer : MonoBehaviour {
             Gizmos.DrawLine(start, end);
         }
 
-        // Горизонтальные линии сетки (меньше)
+        // Горизонтальні лінії
         for (int i = -1; i <= 1; i++) {
             float y = i * boundsSettings.GridCellSize * 0.5f;
             Vector3 start = center + new Vector3(-halfWidth, y, 0);
@@ -112,70 +133,89 @@ public class HandBoundsVisualizer : MonoBehaviour {
 
     private void DrawCardPreview() {
         Gizmos.color = boundsSettings.CardPreviewColor;
-
-        Vector3 center = cardsContainer != null ? cardsContainer.position : transform.position;
+        Vector3 center = GetContainerPosition();
         int cardCount = boundsSettings.PreviewCardCount;
 
         if (cardCount <= 1) {
-            // Одна карта в центре
-            Vector3 cardPos = center + Vector3.up * layoutSettings.DefaultYPosition;
-            Gizmos.DrawWireCube(cardPos, new Vector3(0.2f, 0.01f, 0.3f));
+            DrawSingleCardPreview(center);
         } else {
-            // Множество карт
-            float spacing = layoutSettings.MaxHandWidth / (cardCount - 1);
-            float startX = -layoutSettings.MaxHandWidth * 0.5f;
+            DrawMultipleCardsPreview(center, cardCount);
+        }
+    }
 
-            for (int i = 0; i < cardCount; i++) {
-                float x = startX + (i * spacing);
-                float rotationAngle = Mathf.Lerp(-layoutSettings.MaxRotationAngle, layoutSettings.MaxRotationAngle,
-                    cardCount > 1 ? (float)i / (cardCount - 1) : 0f);
+    private void DrawSingleCardPreview(Vector3 center) {
+        Vector3 cardPos = center + Vector3.up * layoutSettings.DefaultYPosition;
+        Gizmos.DrawWireCube(cardPos, new Vector3(0.2f, 0.01f, 0.3f));
+    }
 
-                Vector3 cardPos = center + new Vector3(x, layoutSettings.DefaultYPosition, 0);
+    private void DrawMultipleCardsPreview(Vector3 center, int cardCount) {
+        float scale = layoutSettings.GetScaleForCardCount(cardCount);
+        float spacing = layoutSettings.GetSpacingForCardCount(cardCount);
+        float startX = -((cardCount - 1) * spacing) * 0.5f;
 
-                // Рисуем карту с поворотом
-                Matrix4x4 oldMatrix = Gizmos.matrix;
-                Gizmos.matrix = Matrix4x4.TRS(cardPos, Quaternion.Euler(0, rotationAngle, 0), Vector3.one);
-                Gizmos.DrawWireCube(Vector3.zero, new Vector3(0.2f, 0.01f, 0.3f));
-                Gizmos.matrix = oldMatrix;
+        for (int i = 0; i < cardCount; i++) {
+            float x = startX + (i * spacing);
+            float rotationAngle = Mathf.Lerp(-layoutSettings.MaxRotationAngle,
+                layoutSettings.MaxRotationAngle, (float)i / (cardCount - 1));
 
-                // Номер карты
+            Vector3 cardPos = center + new Vector3(x, layoutSettings.DefaultYPosition, 0);
+            Vector3 cardSize = new Vector3(0.2f, 0.01f, 0.3f) * scale;
+
+            // Малюємо карту з обертанням
+            Matrix4x4 oldMatrix = Gizmos.matrix;
+            Gizmos.matrix = Matrix4x4.TRS(cardPos, Quaternion.Euler(0, rotationAngle, 0), Vector3.one);
+            Gizmos.DrawWireCube(Vector3.zero, cardSize);
+            Gizmos.matrix = oldMatrix;
+
 #if UNITY_EDITOR
-                UnityEditor.Handles.Label(cardPos + Vector3.up * 0.2f, $"{i + 1}");
-#endif
+            if (scale < 1f) {
+                Handles.Label(cardPos + Vector3.up * 0.15f, $"{scale:F1}x");
             }
+#endif
         }
     }
 
     private void DrawSafetyZones() {
         if (targetCamera == null) return;
 
-        Gizmos.color = boundsSettings.SafetyZoneColor;
-
-        Vector3 center = cardsContainer != null ? cardsContainer.position : transform.position;
-
-        // Получаем границы экрана в world space
+        Vector3 center = GetContainerPosition();
         Vector3 screenBounds = GetScreenBoundsInWorldSpace();
 
-        // Рисуем безопасные зоны
         float safeWidth = screenBounds.x - boundsSettings.SafetyMargin * 2f;
-        Vector3 safeZoneSize = new Vector3(safeWidth, 0.05f, 0.1f);
 
-        Gizmos.DrawWireCube(center, safeZoneSize);
+        float safeHeight = screenBounds.y - boundsSettings.SafetyMargin * 2f;
 
-        // Предупреждение если рука выходит за безопасную зону
+        Gizmos.color = boundsSettings.SafetyZoneColor;
+        Gizmos.DrawWireCube(center, new Vector3(safeWidth, 0.05f, safeHeight));
+
+        // Попередження про перевищення меж
         if (layoutSettings.MaxHandWidth > safeWidth) {
             Gizmos.color = Color.red;
 #if UNITY_EDITOR
             Vector3 warningPos = center + Vector3.up * 0.5f;
-            UnityEditor.Handles.Label(warningPos, "?? HAND TOO WIDE!");
+            Handles.Label(warningPos, "⚠ HAND TOO WIDE!");
 #endif
         }
+
+#if UNITY_EDITOR
+        // Показуємо рекомендовану ширину
+        Vector3 infoPos = center - Vector3.up * 0.3f;
+        Handles.Label(infoPos, $"Recommended: {safeWidth:F1}");
+#endif
+    }
+
+    #endregion
+
+    #region Utility Methods
+
+    private Vector3 GetContainerPosition() {
+        return cardsContainer != null ? cardsContainer.position : transform.position;
     }
 
     private Vector3 GetScreenBoundsInWorldSpace() {
         if (targetCamera == null) return Vector3.zero;
 
-        Vector3 center = cardsContainer != null ? cardsContainer.position : transform.position;
+        Vector3 center = GetContainerPosition();
         float distance = Vector3.Distance(targetCamera.transform.position, center);
 
         float height = 2f * distance * Mathf.Tan(targetCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
@@ -184,25 +224,40 @@ public class HandBoundsVisualizer : MonoBehaviour {
         return new Vector3(width, height, distance);
     }
 
-    // Методы для программного управления
+    #endregion
+
+    #region Public API
+
+    public float GetRecommendedWidth() {
+        if (targetCamera == null) return 3f;
+
+        Vector3 screenBounds = GetScreenBoundsInWorldSpace();
+        return Mathf.Max(0.1f, screenBounds.x - boundsSettings.SafetyMargin * 2f);
+    }
+
+    public void SetVisible(bool enable) {
+        if (enable == isVisible) return;
+        isVisible = enable;
+        boundsSettings.ShowBounds = enable;
+    }
+
     public void AdjustHandWidth(float delta) {
         if (layoutSettings != null) {
             layoutSettings.MaxHandWidth = Mathf.Max(0.1f, layoutSettings.MaxHandWidth + delta);
+            var layout = GetComponentInParent<Linear3DHandLayout>();
+            layout?.ForceRecalculation();
         }
     }
 
     public void SetHandWidth(float width) {
         if (layoutSettings != null) {
             layoutSettings.MaxHandWidth = Mathf.Max(0.1f, width);
+            var layout = GetComponentInParent<Linear3DHandLayout>();
+            layout?.ForceRecalculation();
         }
     }
 
-    public float GetRecommendedWidth() {
-        if (targetCamera == null) return 3f;
-
-        Vector3 screenBounds = GetScreenBoundsInWorldSpace();
-        return screenBounds.x - boundsSettings.SafetyMargin * 2f;
-    }
+    #endregion
 
 #if UNITY_EDITOR
     [CustomEditor(typeof(HandBoundsVisualizer))]
@@ -212,41 +267,65 @@ public class HandBoundsVisualizer : MonoBehaviour {
 
             HandBoundsVisualizer visualizer = (HandBoundsVisualizer)target;
 
+            if (visualizer.layoutSettings == null) {
+                EditorGUILayout.HelpBox("Layout Settings not initialized. Call Initialize() first.", MessageType.Warning);
+                return;
+            }
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Quick Actions", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Fit to Screen")) {
+                Undo.RecordObject(visualizer.layoutSettings, "Fit Hand to Screen");
                 float recommendedWidth = visualizer.GetRecommendedWidth();
                 visualizer.SetHandWidth(recommendedWidth);
-                Debug.Log($"Hand width set to recommended: {recommendedWidth:F2}");
+                EditorUtility.SetDirty(visualizer.layoutSettings);
             }
 
-            if (GUILayout.Button("Reset Width")) {
+            if (GUILayout.Button("Reset to Default")) {
+                Undo.RecordObject(visualizer.layoutSettings, "Reset Hand Width");
                 visualizer.SetHandWidth(3f);
+                EditorUtility.SetDirty(visualizer.layoutSettings);
             }
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Wider (+0.5)")) {
+                Undo.RecordObject(visualizer.layoutSettings, "Increase Hand Width");
                 visualizer.AdjustHandWidth(0.5f);
+                EditorUtility.SetDirty(visualizer.layoutSettings);
             }
 
             if (GUILayout.Button("Narrower (-0.5)")) {
+                Undo.RecordObject(visualizer.layoutSettings, "Decrease Hand Width");
                 visualizer.AdjustHandWidth(-0.5f);
+                EditorUtility.SetDirty(visualizer.layoutSettings);
             }
             EditorGUILayout.EndHorizontal();
 
-            if (visualizer.layoutSettings != null) {
-                EditorGUILayout.Space();
-                EditorGUILayout.LabelField($"Current Width: {visualizer.layoutSettings.MaxHandWidth:F2}", EditorStyles.helpBox);
+            // Інформаційна панель
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Information", EditorStyles.boldLabel);
 
-                float recommended = visualizer.GetRecommendedWidth();
-                EditorGUILayout.LabelField($"Recommended Width: {recommended:F2}", EditorStyles.helpBox);
+            float current = visualizer.layoutSettings.MaxHandWidth;
+            float recommended = visualizer.GetRecommendedWidth();
 
-                if (visualizer.layoutSettings.MaxHandWidth > recommended) {
-                    EditorGUILayout.HelpBox("Hand width exceeds safe screen bounds!", MessageType.Warning);
-                }
+            EditorGUILayout.LabelField($"Current Width: {current:F2}", EditorStyles.helpBox);
+            EditorGUILayout.LabelField($"Recommended Width: {recommended:F2}", EditorStyles.helpBox);
+
+            if (current > recommended) {
+                EditorGUILayout.HelpBox("Hand width exceeds safe screen bounds!", MessageType.Warning);
+            } else {
+                EditorGUILayout.HelpBox("Hand width is within safe bounds.", MessageType.Info);
+            }
+
+            // Тестування різної кількості карт
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Card Scale Testing", EditorStyles.boldLabel);
+            for (int i = 3; i <= 12; i += 3) {
+                float scale = visualizer.layoutSettings.GetScaleForCardCount(i);
+                EditorGUILayout.LabelField($"{i} cards: scale {scale:F2}x");
             }
         }
     }

@@ -8,12 +8,12 @@ public abstract class CardView : MonoBehaviour {
     public Action<CardView> OnCardClicked;
     public Action<CardView, bool> OnHoverChanged;
 
-    public CardUIInfo CardInfo;
+    public CardUIInfo uiInfo;
     public string Id { get; set; }
     private bool _isInteractive = true;
 
-
     [SerializeField] CardMovementComponent movementComponent;
+
     #region Unity Lifecycle
 
     protected virtual void Awake() {
@@ -74,15 +74,6 @@ public abstract class CardView : MonoBehaviour {
 
     #endregion
 
-    #region Card Removal
-
-    public virtual async UniTask PlayRemovalAnimation() {
-        // Переопределяется в наследниках для анимации удаления
-        await UniTask.CompletedTask;
-    }
-
-    #endregion
-
     #region Movement API - основне для інших модулів
 
     /// <summary>
@@ -95,15 +86,8 @@ public abstract class CardView : MonoBehaviour {
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void MoveTo(Vector3 position, Quaternion rotation, float duration, System.Action onComplete = null) {
-        movementComponent?.MoveTo(position, rotation, duration, onComplete);
-    }
-
-    /// <summary>
-    /// Простий рух до позиції
-    /// </summary>
-    public void MoveTo(Vector3 position, float duration, System.Action onComplete = null) {
-        MoveTo(position, transform.rotation, transform.localScale, duration, onComplete);
+    public void MoveTo(Vector3 position, Quaternion rotation, float duration) {
+        movementComponent?.MoveTo(position, rotation, transform.localScale, duration);
     }
 
     /// <summary>
@@ -133,7 +117,51 @@ public abstract class CardView : MonoBehaviour {
     public void StopMovement() {
         movementComponent?.StopMovement();
     }
+    #endregion
 
+    #region UI Info Update
+    public void UpdateCost(int cost) {
+        uiInfo.UpdateCost(cost);
+    }
+
+    public void UpdateName(string name) {
+        uiInfo.UpdateName(name);
+    }
+
+    public void UpdateAttack(int attack) {
+        uiInfo.UpdateAttack(attack);
+    }
+
+    public void UpdateHealth(int health) {
+        uiInfo.UpdateHealth(health);
+    }
+
+    public void ToggleCreatureStats(bool isEnabled) {
+        uiInfo.ToggleAttackText(isEnabled);
+        uiInfo.TogglHealthText(isEnabled);
+    }
+
+    public void UpdatePortait(Sprite portait) {
+        uiInfo.UpdatePortait(portait);
+    }
+
+    internal void UpdateBackground(Sprite bgImage) {
+        uiInfo.UpdateBackground(bgImage);
+    }
+
+    public void UpdateRarity(Color rarity) {
+        uiInfo.UpdateRarity(rarity);
+    }
+    #endregion
+
+    #region Render Order Management
+    public abstract void SetRenderOrder(int sortingOrder);
+
+    public abstract void ModifyRenderOrder(int modifyValue);
+
+    public abstract void ResetRenderOrder();
 
     #endregion
+
+    public abstract void SetHoverState(bool isHovered);
 }

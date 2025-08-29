@@ -13,21 +13,22 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     [SerializeField] private BoardInputManager boardInputManager;
     [SerializeField] private LayerMask boardMask;
     [SerializeField] private Transform cursorIndicator;
+    [SerializeField] private Transform playerPortrait; // Додати посилання на портрет гравця
 
     [Header("Visualization")]
-    [SerializeField] private ArrowVisualizationController arrowVisualizer;
-    [SerializeField] private CardMovementController cardMovement;
+    [SerializeField] private TargetingVisualizationFactory visualizationFactory;
     [SerializeField] private CardPlayModule cardPlayModule;
 
     [Inject] private InputManager inputManager;
 
     // State
     public CardPresenter CurrentCard { get; private set; }
-    private TaskCompletionSource<GameUnit> currentSelection;
+    private TaskCompletionSource<UnitInfo> currentSelection;
     private InputSystem_Actions.BoardPlayerActions boardInputs;
+    private ITargetingVisualization currentVisualization;
 
     public Vector3 LastBoardPosition { get; private set; }
-    public event Action<ITargetRequirement> OnSelectionStarted;
+    public event Action<TargetSelectionRequest> OnSelectionStarted;
 
     private void Start() {
         InitializeComponents();
@@ -47,6 +48,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
 
     private void Update() {
         UpdateCursorPosition();
+        currentVisualization?.UpdateTargeting();
     }
 
     private void UpdateCursorPosition() {
@@ -57,77 +59,84 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     }
 
     // ITargetSelector implementation
-    public async UniTask<GameUnit> SelectTargetAsync(ITargetRequirement requirement, string targetName, CancellationToken cancellationToken) {
-        currentSelection = new TaskCompletionSource<GameUnit>();
+    public async UniTask<UnitInfo> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken) {
+        currentSelection = new TaskCompletionSource<UnitInfo>();
 
-        // Запускаємо візуалізацію
-        StartTargetingVisualization(requirement);
+        // Створюємо відповідну візуалізацію
+        StartTargetingVisualization(selectionRequst);
 
-        // Показуємо UI підказки
-        ShowSelectionPrompt(requirement.GetInstruction(), targetName);
-
+        ShowSelectionPrompt(selectionRequst.Requirement.GetInstruction());
         boardInputs.LeftClick.canceled += OnLeftClickUp;
 
         try {
             return await currentSelection.Task;
         } finally {
-            // Cleanup
             StopTargetingVisualization();
             boardInputs.LeftClick.canceled -= OnLeftClickUp;
             HideSelectionPrompt();
         }
     }
 
-    private void StartTargetingVisualization(ITargetRequirement requirement) {
-        OnSelectionStarted?.Invoke(requirement);
+    private void StartTargetingVisualization(TargetSelectionRequest selectionRequst) {
+        OnSelectionStarted?.Invoke(selectionRequst);
 
-        if (CurrentCard == null) {
-            Vector3 playerPortraitPos = Vector3.zero;
-            arrowVisualizer.ShowArrow(playerPortraitPos, () => LastBoardPosition);
-        }
+        currentVisualization = visualizationFactory.CreateVisualization(selectionRequst, CurrentCard);
 
-        // Якщо є карта, вибираємо стратегію на основі типу requirement
-        if (requirement is ZoneRequirement) {
-            cardMovement.StartMovement(CurrentCard, () => LastBoardPosition);
-        } else {
-            Vector3 startPos = CurrentCard.transform.position;
-            arrowVisualizer.ShowArrow(startPos, () => LastBoardPosition);
-        }
+        currentVisualization.StartTargeting(
+            () => LastBoardPosition,
+            selectionRequst
+        );
     }
 
     private void StopTargetingVisualization() {
-        arrowVisualizer.Hide();
-        cardMovement.ForceStop();
+        currentVisualization?.StopTargeting();
+        currentVisualization = null;
     }
 
     private void OnLeftClickUp(InputAction.CallbackContext context) {
         if (currentSelection == null) return;
 
-        GameUnit result = GetTargetUnderCursor();
+        UnitInfo result = GetTargetUnderCursor();
         currentSelection.TrySetResult(result);
     }
 
-    private GameUnit GetTargetUnderCursor() {
-        var ray = gameCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
+    private UnitInfo GetTargetUnderCursor() {
+        UnitInfo gameUnit = null;
 
-        if (Physics.Raycast(ray, out var hit, 10f, targetLayerMask)) {
-            if (hit.collider.TryGetComponent<IGameUnitProvider>(out var provider)) {
-                return provider.GetUnit();
+        if (boardInputManager.TryGetCursorObject(boardMask, out GameObject hitObject)) {
+            if (hitObject.TryGetComponent<BoardUnit>(out var provider)) {
+                gameUnit = provider.GetInfo();
             }
         }
 
-        return null;
+        return gameUnit;
     }
 
     public void SetCurrentCard(CardPresenter cardPresenter) {
         CurrentCard = cardPresenter;
     }
 
-    private void ShowSelectionPrompt(string description, string targetName) {
-        Debug.Log($"Select target: {targetName} - {description}");
+    private void ShowSelectionPrompt(string description) {
+        Debug.Log($"Select target: {description}");
     }
 
     private void HideSelectionPrompt() {
         // TODO: Hide UI prompt
+    }
+}
+
+public interface ITargetingVisualization {
+    void StartTargeting(Func<Vector3> targetPositionProvider, TargetSelectionRequest targetSelectionRequest);
+    void StopTargeting();
+    void UpdateTargeting();
+}
+
+public class TargetSelectionRequest {
+    public BoardUnit Initiator { get; } // Карта, істота, гравець
+    public ITargetRequirement Requirement { get; }
+
+    public TargetSelectionRequest(BoardUnit initiator, ITargetRequirement requirement) {
+        Initiator = initiator;
+        Requirement = requirement;
     }
 }

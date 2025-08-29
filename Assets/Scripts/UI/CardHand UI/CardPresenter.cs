@@ -1,57 +1,91 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class CardPresenter : MonoBehaviour {
+public class CardPresenter : BoardUnit {
+    public Action<CardPresenter> OnCardClicked;
+    public Action<CardPresenter, bool> OnCardHovered;
+    private const float defaultMoveDuration = 1f;
+
+    
+
     public Card Card { get; private set; }
     public CardView View { get; private set; }
 
+    [Header ("Debug")]
+    [SerializeField] private bool DoTestRandomUpdate = true;
+    [SerializeField] private int updateTimes = 15;
+    [SerializeField] private float updateRate = 1.0f;
+
+    private void OnDestroy() {
+        UnSubscribeEvents();
+    }
     public void Initialize(Card card, CardView cardView) {
         this.Card = card;
         View = cardView;
 
-        CardUIInfo cardInfo = cardView.CardInfo;
-        cardInfo.BatchUpdate( cardInfo => {
-            cardInfo.UpdateCost(card.Cost.CurrentValue);
-            cardInfo.UpdateName(card.Data.Name);
-        });
+        SubscribeEvents();
+        UpdateUIInfo();
+
+        if (DoTestRandomUpdate) {
+            LaunchTestUpdate().Forget();
+        }
     }
 
-    private void UpdateCost(int value) {
-        View.CardInfo.UpdateCost(value);
+    private void SubscribeEvents() {
+        if (View == null) return;
+        View.OnCardClicked += (view) => OnCardClicked?.Invoke(this);
+        View.OnHoverChanged += (view, isHovered) => OnCardHovered?.Invoke(this, isHovered);
+    }
+    private void UnSubscribeEvents() {
+        if (View == null) return;
+        View.OnCardClicked -= (view) => OnCardClicked?.Invoke(this);
+        View.OnHoverChanged -= (view, isHovered) => OnCardHovered?.Invoke(this, isHovered);
     }
 
-    private void UpdateAttack(int value) {
-        View.CardInfo.UpdateAttack(value);
+    #region UI Info Update
+    private void UpdateUIInfo() {
+        UpdateViewAppear();
+        UpdateViewStats();
     }
 
-    private void UpdateHealth(int value) {
-        View.CardInfo.UpdateHealth(value);
+    private void UpdateViewStats() {
+        View.UpdateCost(Card.Cost.CurrentValue);
+
+        var creatureCard = Card as CreatureCard;
+        bool isCreatureCard = creatureCard != null;
+
+        if (isCreatureCard) {
+            View.UpdateAttack(creatureCard.Attack.CurrentValue);
+            View.UpdateHealth(creatureCard.Health.CurrentValue);
+        }
+
+        View.ToggleCreatureStats(isCreatureCard);
     }
 
-    private void UpdateDescriptionContent(Card card) {
-
+    private void UpdateViewAppear() {
+        View.UpdateName(Card.Data.Name);
+        View.UpdatePortait(Card.Data.Portait);
+        View.UpdateBackground(Card.Data.BgImage);
+        View.UpdateRarity(Card.Data.GetRarityColor());
     }
 
-    public void HandleRemoval() {
-        View.PlayRemovalAnimation().Forget();
-    }
+    #endregion
 
     #region Movement API - основне для інших модулів
 
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void MoveTo(Vector3 position, Quaternion rotation, Vector3 scale, float duration = 1f, System.Action onComplete = null) {
-        View?.MoveTo(position, rotation, scale, duration, onComplete);
+    public void MoveTo(Vector3 position, Quaternion rotation, Vector3 scale, float duration = defaultMoveDuration) {
+        View?.MoveTo(position, rotation, scale, duration);
     }
 
     /// <summary>
-    /// Простий рух до позиції
+    /// Простий рух до позиції з поворотом за час
     /// </summary>
-    public void MoveTo(Vector3 position, float duration = 1f, System.Action onComplete = null) {
-        MoveTo(position, transform.rotation, transform.localScale, duration, onComplete);
+    public void MoveTo(Vector3 position, Quaternion rotation, float duration = defaultMoveDuration) {
+        MoveTo(position, rotation, transform.localScale, duration);
     }
 
     /// <summary>
@@ -64,7 +98,7 @@ public class CardPresenter : MonoBehaviour {
     /// <summary>
     /// Почати фізичний рух (для драгу, таргетингу)
     /// </summary>
-    public void StartPhysicsMovement(Vector3 initialPosition) {
+    public void DoPhysicsMovement(Vector3 initialPosition) {
         View?.StartPhysicsMovement(initialPosition);
     }
 
@@ -81,12 +115,50 @@ public class CardPresenter : MonoBehaviour {
     public void StopMovement() {
         View?.StopMovement();
     }
-
-    public void Reset() {
-        View.Reset();
-    }
-
     #endregion
 
+    #region Render Order
+    public void SetSortingOrder(int sortingOrder) {
+        View.SetRenderOrder(sortingOrder);
+    }
+
+    public void ModifyRenderOrder(int value) {
+        View.ModifyRenderOrder(value);
+    }
+
+    public void ResetRenderOrder() {
+        View.ResetRenderOrder();
+    }
+    #endregion
+
+    #region BoardUnit API
+    public override UnitInfo GetInfo() {
+        return Card;
+    }
+
+    public override BoardPlayer GetPlayer() {
+        return Card.Owner;
+    }
+    #endregion
+
+
+    public void HandleRemoval() {
+        Debug.Log($"Card {Card.Data.Name} is being removed from hand and destroyed.");
+    }
+
+    public async UniTask LaunchTestUpdate() {
+        for (int i = 0; i < updateTimes; i++) {
+            int randomHealth = UnityEngine.Random.Range(1, 100);  
+            View.UpdateHealth(randomHealth);
+            int randomAttack = UnityEngine.Random.Range(1, 100);
+            View.UpdateAttack(randomAttack);
+            Debug.Log($"Iteration {i}, {randomAttack}/{randomHealth}");
+            await UniTask.Delay(TimeSpan.FromSeconds(updateRate));
+        }
+    }
+
+    public void SetHandHoverState(bool isHovered) {
+        View.SetHoverState(isHovered);
+    }
 }
 

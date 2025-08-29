@@ -7,7 +7,7 @@ using Zenject;
  */
 public class TriggerManager {
     private List<AbilityTrigger> _triggers = new();
-    public Action<BoardPlayer, GameUnit, IEvent> OnTriggerActivation;
+    public Action<BoardPlayer, UnitInfo, IEvent> OnTriggerActivation;
 
     public void AddTrigger(AbilityTrigger trigger) {
         if (!_triggers.Contains(trigger)) {
@@ -25,10 +25,10 @@ public class TriggerManager {
 
 public abstract class AbilityTrigger {
     [Inject] protected GameEventBus _eventBus;
-    public Action<BoardPlayer, GameUnit, IEvent> OnTriggerActivation;
+    public Action<BoardPlayer, UnitInfo, IEvent> OnTriggerActivation;
     public string TriggerName { get; protected set; }
-    public abstract void ActivateTrigger(GameUnit gameUnit);
-    public abstract void DeactivateTrigger(GameUnit gameUnit);
+    public abstract void ActivateTrigger(UnitInfo gameUnit);
+    public abstract void DeactivateTrigger(UnitInfo gameUnit);
 }
 
 public class OnSelfSummonTrigger : AbilityTrigger {
@@ -38,10 +38,10 @@ public class OnSelfSummonTrigger : AbilityTrigger {
 
     // Logic for activating the trigger
 
-    public override void ActivateTrigger(GameUnit gameUnit) {
+    public override void ActivateTrigger(UnitInfo gameUnit) {
         gameUnit.OnUnitDeployed += HandleSummon;
     }
-    public override void DeactivateTrigger(GameUnit gameUnit) {
+    public override void DeactivateTrigger(UnitInfo gameUnit) {
         gameUnit.OnUnitDeployed -= HandleSummon;
     }
 
@@ -55,11 +55,11 @@ public class OnAnotherSummonTrigger : AbilityTrigger {
         TriggerName = "When another creature sommons";
     }
 
-    public override void ActivateTrigger(GameUnit gameUnit) {
+    public override void ActivateTrigger(UnitInfo gameUnit) {
         _eventBus.SubscribeTo<GameEnterEvent>(HandleSummon);
     }
 
-    public override void DeactivateTrigger(GameUnit gameUnit) {
+    public override void DeactivateTrigger(UnitInfo gameUnit) {
         _eventBus.UnsubscribeFrom<GameEnterEvent>(HandleSummon);
     }
 

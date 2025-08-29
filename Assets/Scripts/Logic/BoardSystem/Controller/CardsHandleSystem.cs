@@ -9,7 +9,7 @@ public class CardsHandleSystem : MonoBehaviour {
     [SerializeField] private CardHandView handView;
     [SerializeField] private DeckView deckView;
     [SerializeField] private DeckView discardDeckView;
-    public HandPresenter HandPresenter;
+    public HandPresenter handPresenter;
 
     private DeckPresenter _deckPresenter;
     private DeckPresenter _discardeckPresenter; // not used now
@@ -30,7 +30,8 @@ public class CardsHandleSystem : MonoBehaviour {
 
         _deckPresenter = new(deckModel, deckView);
 
-        HandPresenter.Initialize(handModel, handView);
+        handModel.ChangeOwner(BoardPlayer);
+        handPresenter.Initialize(handModel, handView);
     }
 
     public void Initialize(BoardPlayer boardPlayer) { 
@@ -63,7 +64,7 @@ public class CardsHandleSystem : MonoBehaviour {
     private void EndBattleActions(ref BattleEndEventData eventData) {
         _eventBus.UnsubscribeFrom<TurnStartEvent>(TurnStartActions);
         _deckPresenter.Deck.Clear();
-        HandPresenter.ClearHand();
+        handPresenter.ClearHand();
     }
     
 
@@ -92,7 +93,7 @@ public class CardsHandleSystem : MonoBehaviour {
                 return drawnCards;
             }
 
-            if (!HandPresenter.Hand.Add(card)) {
+            if (!handPresenter.AddCard(card)) {
                 
                 _discardeckPresenter.Deck.Add(card);
                 _eventBus.Raise(new DiscardCardEvent(card, BoardPlayer));

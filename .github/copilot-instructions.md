@@ -2,7 +2,7 @@
 - Project name: Inscription
 - Unity version: Unity 6000.0.49f1
 - Active game object:
-  - Name: 3DHand
+  - Name: Creature Presenter
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

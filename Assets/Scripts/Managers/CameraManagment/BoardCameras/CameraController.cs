@@ -47,11 +47,13 @@ public class CameraController : MonoBehaviour {
     }
 
     private void RegisterInputEvents() {
+        if (inputManager == null) return;
         bPActions = inputManager.inputAsset.BoardPlayer;
         bPActions.Look.performed += OnLookPerformed;
     }
 
     private void UnRegisterInputEvents() {
+        if (inputManager == null) return;
         bPActions.Look.performed -= OnLookPerformed;
     }
 

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public abstract class CardContainer {
+public class CardContainer {
     protected readonly List<Card> cards = new List<Card>();
     private readonly int maxSize;
     protected const int DefaultSize = 127;
 
-    protected CardContainer(int maxSize = DefaultSize) {
+    public CardContainer(int maxSize = DefaultSize) {
         this.maxSize = maxSize;
     }
 

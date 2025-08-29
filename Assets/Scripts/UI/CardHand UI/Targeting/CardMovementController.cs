@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-public class CardMovementController : MonoBehaviour {
+public class CardMovementController : MonoBehaviour, ITargetingVisualization {
     [Header("Movement Settings")]
     [SerializeField] private Vector3 cardOffset = new Vector3(0f, 1.2f, 0f);
 
@@ -12,31 +12,50 @@ public class CardMovementController : MonoBehaviour {
     private Func<Vector3> getTargetPosition;
     private bool isMoving = false;
 
-    private void Update() {
+    [SerializeField] private int playRenderOrderBoost = 50;
+
+    #region ITargetingVisualization
+    public void StartTargeting(Func<Vector3> targetPositionProvider, TargetSelectionRequest targetSelectionRequest) {
+        if (targetPositionProvider == null) {
+            Debug.LogError("Target position provider is null!");
+            return;
+        }
+
+        if (targetSelectionRequest?.Initiator is not CardPresenter card) {
+            Debug.LogError("Invalid initiator - must be CardPresenter");
+            StopTargeting();
+            return;
+        }
+
+        currentCard = card;
+        currentCard.ModifyRenderOrder(playRenderOrderBoost);
+        getTargetPosition = targetPositionProvider;
+        isMoving = true;
+    }
+
+    public void UpdateTargeting() {
         if (isMoving && currentCard != null && getTargetPosition != null) {
             UpdateCardMovement();
         }
     }
 
-    public void StartMovement(CardPresenter card, System.Func<Vector3> targetPositionGetter) {
-        currentCard = card;
-        getTargetPosition = targetPositionGetter;
-        isMoving = true;
-    }
-
-
-    public void ForceStop() {
-        currentCard.StopMovement();
+    public void StopTargeting() {
+        if (currentCard != null) {
+            currentCard.ModifyRenderOrder(-playRenderOrderBoost);
+            currentCard.StopMovement();
+        }
         isMoving = false;
         currentCard = null;
         getTargetPosition = null;
     }
+    #endregion
+
 
     private void UpdateCardMovement() {
         Vector3 currentPosition = currentCard.transform.position;
         Vector3 targetPosition = CalculateCardPosition();
 
-        currentCard.StartPhysicsMovement(targetPosition);
+        currentCard.DoPhysicsMovement(targetPosition);
     }
 
     private Vector3 CalculateCardPosition() {
@@ -46,7 +65,7 @@ public class CardMovementController : MonoBehaviour {
             return boardPosition + cardOffset;
         }
 
-        Camera mainCamera = Camera.main;
+        Camera mainCamera = GetMainCamera();
         if (mainCamera == null) {
             return boardPosition + cardOffset;
         }
@@ -63,5 +82,15 @@ public class CardMovementController : MonoBehaviour {
         }
 
         return new Vector3(boardPosition.x, targetCardHeight, boardPosition.z);
+    }
+
+
+    private Camera GetMainCamera() {
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null) {
+            Debug.LogError("Main camera not found!");
+            return null;
+        }
+        return mainCamera;
     }
 }

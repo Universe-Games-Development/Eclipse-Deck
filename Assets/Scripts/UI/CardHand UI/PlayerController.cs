@@ -24,11 +24,11 @@ public class PlayerController : MonoBehaviour{
         cardPlayModule.OnCardPlayCompleted += OnCardPlayCompleted;
         player.Selector.OnSelectionStarted += HandleSelectionStart;
 
-        ChangeState(new IdleState());
+        SwitchState(new IdleState());
     }
 
-    private void HandleSelectionStart(ITargetRequirement requirement) {
-        ChangeState(new PlayingState());
+    private void HandleSelectionStart(TargetSelectionRequest request) {
+        SwitchState(new PlayingState());
     }
 
     private void Update() {
@@ -39,7 +39,7 @@ public class PlayerController : MonoBehaviour{
         cardPlayModule.OnCardPlayCompleted -= OnCardPlayCompleted;
     }
 
-    public void ChangeState(PlayerState newState) {
+    public void SwitchState(PlayerState newState) {
         if (currentState != null && currentState.GetType() == newState.GetType()) {
             return;
         }
@@ -54,22 +54,22 @@ public class PlayerController : MonoBehaviour{
 
 
     public void RetrieveCard(CardPresenter presenter) {
-        handPresenter.UpdateCardPositions();
+        handPresenter.UpdateCardsOrder();
     }
 
     private void OnCardPlayCompleted(CardPresenter presenter, bool success) {
-        if (!handPresenter.Contains(presenter)) return;
+        if (!handPresenter.Contains(presenter.Card)) return;
 
         if (success) {
             // Spend card - карта була успішно зіграна
-            handPresenter.RemoveCard(presenter);
+            handPresenter.RemoveCard(presenter.Card);
             GameLogger.Log("Card successfully played and spent");
         } else {
             // Return card - карта не була зіграна, повертаємо в руку
             GameLogger.Log("Card play failed, returning to hand");
             RetrieveCard(presenter);
         }
-        ChangeState(new IdleState());
+        SwitchState(new IdleState());
     }
 }
 
@@ -92,18 +92,29 @@ public class IdleState : PlayerState {
     private HandPresenter handPresenter;
     public override void Enter() {
         base.Enter();
+        if (controller?.handPresenter == null) {
+            Debug.LogError("HandPresenter is not available");
+            return;
+        }
+
         handPresenter = controller.handPresenter;
         handPresenter.OnCardClicked += OnCardClicked;
         handPresenter.OnCardHovered += OnCardHovered;
+        handPresenter.SetInteractable(true);
     }
 
     private void OnCardClicked(CardPresenter presenter) {
         Debug.Log($"Card clicked: {presenter.Card.Data.Name}");
-        controller.cardPlayModule.StartCardPlay(presenter, controller.player, CancellationToken.None);
+        handPresenter.SetInteractable(false);
+        controller.SwitchState(new PlayingState(presenter));
     }
 
     private void OnCardHovered(CardPresenter presenter, bool isHovered) {
-        //Debug.Log($"Card hovered: {presenter.Card.Data.Name}");
+        if (isHovered) {
+            handPresenter.SetHoveredCard(presenter);
+        } else {
+            handPresenter.ClearHoveredCard();
+        }
     }
 
     public override void Exit() {
@@ -115,12 +126,24 @@ public class IdleState : PlayerState {
 
 public class PlayingState : PlayerState {
     private CancellationTokenSource _debounceCts;
+    private CardPresenter presenter;
     private readonly TimeSpan _debounceTime = TimeSpan.FromMilliseconds(500);
+
+    public PlayingState() {
+    }
+
+    public PlayingState(CardPresenter presenter) {
+        this.presenter = presenter;
+    }
 
     public override void Enter() {
         base.Enter();
         controller.operationManager.OnQueueEmpty += HandleQueueEmpty;
         _debounceCts = new CancellationTokenSource();
+        controller.handPresenter.SetInteractable(false);
+        if (presenter != null) {
+            controller.cardPlayModule.StartCardPlay(presenter, CancellationToken.None);
+        }
     }
 
     private async void HandleQueueEmpty() {
@@ -133,7 +156,7 @@ public class PlayingState : PlayerState {
             await UniTask.Delay(_debounceTime, cancellationToken: _debounceCts.Token);
 
             if (controller.operationManager.IsQueueEmpty()) {
-                controller.ChangeState(new IdleState());
+                controller.SwitchState(new IdleState());
             }
         } catch (OperationCanceledException) {
             // Ігноруємо скасування - це нормально для debounce

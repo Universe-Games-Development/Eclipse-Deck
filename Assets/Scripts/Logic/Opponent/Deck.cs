@@ -43,6 +43,7 @@ public class CardFactory {
     public Card CreateCard(CardData cardData) {
         return cardData switch {
             CreatureCardData creatureData => diContainer.Instantiate<CreatureCard>(new object[] { creatureData }),
+            SpellCardData spellData => diContainer.Instantiate<SpellCard>(new object[] { spellData }),
             _ => null
         };
     }
