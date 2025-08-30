@@ -16,7 +16,7 @@ public class BoardView : MonoBehaviour {
 
     public void Initialize() {
         if (fieldPrefab == null) throw new ArgumentNullException("field prefab is null");
-        fieldPool = new FieldPool(fieldPrefab, origin);
+        fieldPool = new FieldPool();
     }
 
     public FieldView SpawnFieldAt(Vector3 spawnPosition) {

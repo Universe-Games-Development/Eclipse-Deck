@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MAX_CARDS_COST: 30
   cardType: 0
-  Name: 
+  Name: FireWall
   Description: 
   AuthorName: 
   Portait: {fileID: 21300000, guid: 2b7d2a616cc83db44a9bd278b17c3c14, type: 3}

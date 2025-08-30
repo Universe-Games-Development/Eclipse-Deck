@@ -15,7 +15,7 @@ public class CardHandUIView : CardHandView {
 
     private Dictionary<CardUIView, CardLayoutGhost> layoutMap = new();
 
-    public override CardView BuildCardView() {
+    public override CardView CreateCardView(Card card) {
         if (cardPrefab == null || ghostPrefab == null) {
             Debug.LogError("CardPrefab or GhostPrefab not set!", this);
             return null;
@@ -75,6 +75,10 @@ public class CardHandUIView : CardHandView {
         }
 
         layoutMap.Clear();
+    }
+
+    public override void DestroyCardView(CardView cardView) {
+        throw new NotImplementedException();
     }
 }
 

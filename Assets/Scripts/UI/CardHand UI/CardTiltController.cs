@@ -7,7 +7,6 @@ public class CardTiltController : MonoBehaviour {
     [SerializeField] private float verticalTiltSensitivity = 0.8f;
     [SerializeField] private float maxTiltAngle = 25f;
     [SerializeField] private float tiltSmoothing = 8f;
-    [SerializeField] private float rotationDamping = 0.95f;
 
     private Vector3 smoothedVelocity;
     private Quaternion baseRotation;

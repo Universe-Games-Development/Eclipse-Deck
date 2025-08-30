@@ -160,5 +160,9 @@ public class CardPresenter : BoardUnit {
     public void SetHandHoverState(bool isHovered) {
         View.SetHoverState(isHovered);
     }
+
+    internal void SetPool(Card3DPool cardPool) {
+        throw new NotImplementedException();
+    }
 }
 

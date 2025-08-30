@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class CardMovementComponent : MonoBehaviour {
     [Header("Movement Settings")]
-    [SerializeField] private float moveSpeed = 10f;
-    [SerializeField] private float rotationSpeed = 8f;
     [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     [SerializeField] private AnimationCurve scaleCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 1f);
 

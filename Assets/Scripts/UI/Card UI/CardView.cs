@@ -98,6 +98,13 @@ public abstract class CardView : MonoBehaviour {
     }
 
     /// <summary>
+    /// Миттєве переміщення
+    /// </summary>
+    public void SetPosition(Vector3 position, Quaternion rotation) {
+        movementComponent?.SetPosition(position, rotation, transform.localScale);
+    }
+
+    /// <summary>
     /// Почати фізичний рух (для драгу, таргетингу)
     /// </summary>
     public void StartPhysicsMovement(Vector3 initialPosition) {

@@ -145,7 +145,7 @@ public class Card3DView : CardView {
     public override void SetRenderOrder(int order) {
         if (_instancedMaterial != null) {
             _instancedMaterial.renderQueue = order;
-            Debug.Log($"{gameObject.name}: Render queue: {order}");
+            //Debug.Log($"{gameObject.name}: Render queue: {order}");
         }
     }
 
