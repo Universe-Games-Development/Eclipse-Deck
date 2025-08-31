@@ -104,7 +104,7 @@ public class IdleState : PlayerState {
     }
 
     private void OnCardClicked(CardPresenter presenter) {
-        Debug.Log($"Card clicked: {presenter.Card.Data.Name}");
+        //Debug.Log($"Card clicked: {presenter.Card.Data.Name}");
         handPresenter.SetInteractable(false);
         controller.SwitchState(new PlayingState(presenter));
     }

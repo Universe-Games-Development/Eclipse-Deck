@@ -29,7 +29,7 @@ public class HealthCellView : MonoBehaviour {
         liquidRenderer.SetPropertyBlock(propertyBlock);
     }
 
-    public void AssignOwner(IDamageable healthable) {
+    public void AssignOwner(IHealthable healthable) {
         if (healthable?.Health == null) {
             Debug.LogError("Invalid opponent or health component!");
             return;

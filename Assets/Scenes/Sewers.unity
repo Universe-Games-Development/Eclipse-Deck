@@ -271,7 +271,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &39505060
 Transform:
   m_ObjectHideFlags: 0
@@ -305,7 +305,7 @@ MonoBehaviour:
   renderCanvas: {fileID: 2023860755}
   cardUIPrefab: {fileID: 5551150626542711930, guid: f5d88699ec964134d942221e9fc84d1e, type: 3}
   uiContainer: {fileID: 2023860752}
-  renderTexture: {fileID: 0}
+  renderTexture: {fileID: 8400000, guid: 3197e854087cc5a4e88826cb21175d56, type: 2}
 --- !u!1 &68664855
 GameObject:
   m_ObjectHideFlags: 0
@@ -419,7 +419,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 128
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 8400000, guid: 35d2d1dedba49344c99538a264acbb36, type: 2}
+  m_TargetTexture: {fileID: 8400000, guid: 3197e854087cc5a4e88826cb21175d56, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -2528,7 +2528,7 @@ MonoBehaviour:
     enableFileLogging: 0
     enableTimestamps: 1
     enableStackTrace: 1
-    enabledCategories: 0
+    enabledCategories: -1
     debugColor: {r: 1, g: 1, b: 1, a: 1}
     infoColor: {r: 0, g: 1, b: 1, a: 1}
     warningColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}

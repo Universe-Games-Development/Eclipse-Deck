@@ -5,7 +5,7 @@ using Zenject;
 
 
 
-public class Character : UnitInfo, IDisposable {
+public class Character : UnitModel, IDisposable {
     public Action<Character> OnDefeat { get; internal set; }
 
     

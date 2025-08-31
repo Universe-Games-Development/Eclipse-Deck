@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec241025db2dd944984634c9f724531b, type: 3}
   m_Name: Rose
   m_EditorClassIdentifier: 
-  MAX_CARDS_COST: 30
+  cost: 2
   cardType: 0
   Name: Rose
   Description: Simple
@@ -21,8 +21,9 @@ MonoBehaviour:
   BgImage: {fileID: 21300000, guid: 7888acd02a647e94eab785656df8d04c, type: 3}
   resourseId: a58871c5-f682-4238-87ba-9873e5af83b5
   Rarity: 0
-  cost: 2
   spawnChance: 0.5
+  rarityColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  rarityDisplayName: "\u0417\u0432\u0438\u0447\u0430\u0439\u043D\u0430"
   MAX_CARD_ATTACK: 100
   MAX_CARD_HEALTH: 100
   Attack: 2

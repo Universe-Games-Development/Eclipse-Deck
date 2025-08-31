@@ -88,7 +88,7 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
             return noTargetMaterial; // Синій - немає об'єкта
         }
 
-        UnitInfo gameUnit = GetGameUnitFromObject(hoveredObject);
+        UnitModel gameUnit = GetGameUnitFromObject(hoveredObject);
         if (gameUnit == null) {
             return noTargetMaterial; // Синій - не ігровий об'єкт
         }
@@ -97,8 +97,8 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
         return validation.IsValid ? validTargetMaterial : invalidTargetMaterial; // Зелений/Червоний
     }
 
-    private UnitInfo GetGameUnitFromObject(GameObject obj) {
-        if (obj.TryGetComponent<BoardUnit>(out var provider)) {
+    private UnitModel GetGameUnitFromObject(GameObject obj) {
+        if (obj.TryGetComponent<UnitPresenter>(out var provider)) {
             return provider.GetInfo();
         }
         return null;

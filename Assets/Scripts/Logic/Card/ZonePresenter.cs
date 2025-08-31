@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-public class ZonePresenter : BoardUnit {
+public class ZonePresenter : UnitPresenter {
     public Zone Zone;
     public Zone3DView Zone3DView;
     [SerializeField] public BoardPlayer Owner;
@@ -21,11 +21,15 @@ public class ZonePresenter : BoardUnit {
         Zone = zone;
     }
 
-    public override UnitInfo GetInfo() {
+    public override UnitModel GetInfo() {
         return Zone;
     }
 
     public override BoardPlayer GetPlayer() {
         return Owner;
+    }
+
+    public void SpawnCreture(CreatureCard creatureCard) {
+        Zone.SpawnCreture(creatureCard);
     }
 }

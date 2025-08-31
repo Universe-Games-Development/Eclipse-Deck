@@ -1396,7 +1396,9 @@ MonoBehaviour:
   nameText: {fileID: 3452941877714409755}
   costTMP: {fileID: 3119583634898093248}
   healthText: {fileID: 7096259305998617789}
+  healthImage: {fileID: 8960231959632458227}
   attackText: {fileID: 653443174712715830}
+  attackImage: {fileID: 704266244397376514}
   authorTMP: {fileID: 5513347134750802712}
   rarity: {fileID: 4496195531667848943}
   cardBackground: {fileID: 6738664946296341004}

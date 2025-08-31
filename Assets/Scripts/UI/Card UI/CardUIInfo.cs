@@ -8,7 +8,9 @@ public class CardUIInfo : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI costTMP;
     [SerializeField] private TextMeshProUGUI healthText;
+    [SerializeField] private Image healthImage;
     [SerializeField] private TextMeshProUGUI attackText;
+    [SerializeField] private Image attackImage;
     [SerializeField] private TextMeshProUGUI authorTMP;
     [SerializeField] private Image rarity;
     [SerializeField] private Image cardBackground;
@@ -67,10 +69,14 @@ public class CardUIInfo : MonoBehaviour {
     }
 
     public void TogglHealthText(bool isEnabled) {
-        healthText.gameObject.SetActive(isEnabled);
+        healthText?.gameObject.SetActive(isEnabled);
+        healthImage?.gameObject.SetActive(isEnabled);
+        OnDataChanged?.Invoke();
     }
 
     public void ToggleAttackText(bool isEnabled) {
-        healthText.gameObject.SetActive(isEnabled);
+        attackText?.gameObject.SetActive(isEnabled);
+        attackImage?.gameObject.SetActive(isEnabled);
+        OnDataChanged?.Invoke();
     }
 }

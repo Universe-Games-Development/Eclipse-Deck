@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CardHand : UnitInfo {
+public class CardHand : UnitModel {
     private CardContainer cardContainer;
 
     public CardHand() {

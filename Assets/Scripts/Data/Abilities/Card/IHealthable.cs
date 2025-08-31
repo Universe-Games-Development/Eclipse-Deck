@@ -3,7 +3,7 @@
 public interface IMannable {
     public Mana Mana { get; }
 }
-public interface IDamageable {
+public interface IHealthable {
     public Health Health { get; }
 }
 
@@ -11,7 +11,7 @@ public interface IDamageDealer {
     public Attack Attack { get; }
 }
 
-public class UnitInfo {
+public class UnitModel {
     public Action<BoardPlayer> OnChangedOwner;
     public Action<GameEnterEvent> OnUnitDeployed;
     public BoardPlayer Owner { get; private set; }

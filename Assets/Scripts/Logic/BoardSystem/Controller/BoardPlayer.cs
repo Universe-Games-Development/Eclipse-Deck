@@ -3,7 +3,7 @@ using System;
 using UnityEngine;
 using Zenject;
 
-public class BoardPlayer : BoardUnit, IDamageable, IMannable {
+public class BoardPlayer : UnitPresenter, IHealthable, IMannable {
     [Inject] protected GameEventBus _eventBus;
     public Direction FacingDirection;
     [SerializeField] private HealthCellView _healthDisplay;
@@ -78,7 +78,7 @@ public class BoardPlayer : BoardUnit, IDamageable, IMannable {
         return $"{GetType().Name} {Character.Data.Name} ({Health.CurrentValue}/{Health.TotalValue})";
     }
 
-    public override UnitInfo GetInfo() {
+    public override UnitModel GetInfo() {
         return Character;
     }
 

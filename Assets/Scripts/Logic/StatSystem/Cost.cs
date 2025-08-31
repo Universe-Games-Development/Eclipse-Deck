@@ -3,13 +3,14 @@ using System;
 public class Cost : Attribute {
     public event Action OnCostIncreased; // Подія для збільшення витрат
     public event Action OnCostDecreased; // Подія для зменшення витрат
+    private const int max_Cost = 100; // Максимальна вартість за замовчуванням
 
     /// <summary>
     /// Створює новий екземпляр класу Cost з максимальною та початковою вартістю.
     /// </summary>
     /// <param name="maxCost">Максимальна вартість (базове значення)</param>
     /// <param name="initialCost">Початкова поточна вартість</param>
-    public Cost(int maxCost, int initialCost = 0) : base(maxCost) {
+    public Cost(int initialCost = 0, int maxCost = max_Cost) : base(maxCost) {
         // Якщо вказано початкову вартість, встановлюємо її
         if (initialCost > 0) {
             // Віднімаємо від максимального, оскільки в новій системі MainValue починається з BaseValue

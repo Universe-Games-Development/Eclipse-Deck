@@ -3,29 +3,59 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-public interface ITargetRequirement {
-    ValidationResult IsValid(object selected, BoardPlayer initiator);
-    string GetInstruction();
-    TargetSelector GetTargetSelector();
+public enum OwnershipType {
+    Ally,
+    Enemy,
+    Any
 }
 
-public abstract class TargetRequirement<T> : ITargetRequirement where T : UnitInfo {
-    public IEnumerable<Condition<T>> Conditions { get; private set; }
+public struct ValidationResult {
+    public bool IsValid;
+    public string ErrorMessage;
 
+    public static ValidationResult Success => new ValidationResult { IsValid = true };
+    public static ValidationResult Error(string message = default) => new ValidationResult { IsValid = false, ErrorMessage = message };
+}
+
+public interface ITargetRequirement {
+    ValidationResult IsValid(object selected, BoardPlayer initiator = null);
+    string GetInstruction();
+    TargetSelector GetTargetSelector();
+    bool AllowSameTargetMultipleTimes { get; } // Чи можна вибирати ту саму ціль кілька разів
+}
+
+public class TargetRequirement<T> : ITargetRequirement where T : UnitPresenter {
+    public IEnumerable<Condition<T>> Conditions { get; private set; }
     public TargetSelector requiredSelector = TargetSelector.Initiator;
 
-    protected TargetRequirement(params Condition<T>[] conditions) {
+    public bool AllowSameTargetMultipleTimes { get; set; } = false;
+
+    public TargetRequirement(params Condition<T>[] conditions) {
         Conditions = conditions ?? throw new ArgumentNullException(nameof(conditions));
     }
 
-    public ValidationResult IsValid(object selected, BoardPlayer initiator) {
+    public static TargetRequirement<T> Single(params Condition<T>[] conditions) {
+        return new TargetRequirement<T>(conditions);
+    }
+
+    public static TargetRequirement<T> Optional(params Condition<T>[] conditions) {
+        return new TargetRequirement<T>(conditions);
+    }
+
+    public static TargetRequirement<T> AnyAmount(params Condition<T>[] conditions) {
+        return new TargetRequirement<T>(conditions);
+    }
+
+    public ValidationResult IsValid(object selected, BoardPlayer initiator = null) {
         if (!TryConvertToRequired(selected, out T defined)) {
             Debug.Log($"Wrong type selected: {selected}");
-            return ValidationResult.InValid();
+            return ValidationResult.Error($"Expected {typeof(T).Name}, got {selected?.GetType().Name}");
         }
-        foreach (var item in Conditions) {
-            item.SetInitiator(initiator);
+
+        foreach (var condition in Conditions) {
+            condition.SetInitiator(initiator);
         }
+
         return ValidateConditions(defined);
     }
 
@@ -58,35 +88,26 @@ public abstract class TargetRequirement<T> : ITargetRequirement where T : UnitIn
         if (condition == null) {
             throw new ArgumentNullException(nameof(condition));
         }
-        // Додаємо нову умову до списку
         Conditions = Conditions.Append(condition);
     }
+
     public virtual string GetInstruction() {
-        return "Select a target for the card.";
+        return "Select target(s)";
     }
 
     public TargetSelector GetTargetSelector() {
         return requiredSelector;
     }
-}
 
-public class ZoneRequirement : TargetRequirement<Zone> {
-    public ZoneRequirement(params Condition<Zone>[] conditions) : base(conditions) {
+    public TargetRequirement<T> Clone() {
+        return new TargetRequirement<T>(Conditions.ToArray()) {
+            requiredSelector = this.requiredSelector,
+            AllowSameTargetMultipleTimes = this.AllowSameTargetMultipleTimes
+        };
     }
-    public override string GetInstruction() {
-        return "Select a zone to place the card.";
-    }
 }
 
-public struct ValidationResult {
-    public bool IsValid;
-    public string ErrorMessage;
-
-    public static ValidationResult Success => new ValidationResult { IsValid = true };
-    public static ValidationResult InValid(string message = default) => new ValidationResult { IsValid = false, ErrorMessage = message };
-}
-
-public abstract class Condition<T> where T : UnitInfo {
+public abstract class Condition<T> where T : UnitPresenter {
     protected BoardPlayer Initiator;
 
     public void SetInitiator(BoardPlayer opponent) {
@@ -95,7 +116,7 @@ public abstract class Condition<T> where T : UnitInfo {
 
     public ValidationResult Validate(T model) {
         if (model == null)
-            return ValidationResult.InValid("Wrong item selected");
+            return ValidationResult.Error("Wrong item selected");
 
         return CheckCondition(model);
     }
@@ -103,29 +124,101 @@ public abstract class Condition<T> where T : UnitInfo {
     protected abstract ValidationResult CheckCondition(T model);
 }
 
-public enum OwnershipType {
-    Friendly,
-    Enemy,
-    Any
+public class ZoneRequirement : TargetRequirement<ZonePresenter> {
+    public ZoneRequirement(params Condition<ZonePresenter>[] conditions) : base(conditions) {
+    }
+    public override string GetInstruction() {
+        return "Select a zone";
+    }
 }
 
-public class OwnershipCondition<T> : Condition<T> where T : UnitInfo {
+public class CreatureRequirement : TargetRequirement<CreaturePresenter> {
+    public CreatureRequirement(params Condition<CreaturePresenter>[] conditions) : base(conditions) {
+    }
+    public override string GetInstruction() {
+        return "Select a creature";
+    }
+}
+
+public class OwnershipCondition<T> : Condition<T> where T : UnitPresenter {
     private readonly OwnershipType ownershipType;
 
     public OwnershipCondition(OwnershipType ownershipType) {
         this.ownershipType = ownershipType;
     }
 
-    protected override ValidationResult CheckCondition(T model) {
-        bool isFriendly = model.Owner == Initiator;
+    protected override ValidationResult CheckCondition(T presenter) {
+        bool isFriendly = presenter.GetPlayer() == Initiator;
 
         return ownershipType switch {
-            OwnershipType.Friendly when !isFriendly =>
-                ValidationResult.InValid("You can only select your own units"),
+            OwnershipType.Ally when !isFriendly =>
+                ValidationResult.Error("You can only select your own units"),
             OwnershipType.Enemy when isFriendly =>
-                ValidationResult.InValid("You cannot select your own units"),
+                ValidationResult.Error("You cannot select your own units"),
             _ => ValidationResult.Success
         };
+    }
+}
+
+public class IsDamageableCondition<T> : Condition<T> where T : UnitPresenter {
+    protected override ValidationResult CheckCondition(T presenter) {
+        if (presenter is IHealthable) {
+            return ValidationResult.Error("Target without health");
+        }
+        return ValidationResult.Success;
+    }
+}
+
+public static class TargetRequirements {
+    public static TargetRequirement<UnitPresenter> AllyUnit =>
+        new TargetRequirement<UnitPresenter>(new OwnershipCondition<UnitPresenter>(OwnershipType.Ally));
+
+    public static CreatureRequirement EnemyCreature =>
+        new CreatureRequirement(new OwnershipCondition<CreaturePresenter>(OwnershipType.Enemy));
+
+    public static CreatureRequirement AllyCreature =>
+        new CreatureRequirement(new OwnershipCondition<CreaturePresenter>(OwnershipType.Ally));
+
+    public static CreatureRequirement AnyCreature =>
+        new CreatureRequirement();
+
+    public static CreatureRequirement DamageableCreature =>
+        new CreatureRequirement(new IsDamageableCondition<CreaturePresenter>());
+
+    public static CreatureRequirement EnemyDamageable =>
+        new CreatureRequirement(
+            new OwnershipCondition<CreaturePresenter>(OwnershipType.Enemy),
+            new IsDamageableCondition<CreaturePresenter>()
+        );
+
+    public static CreatureRequirement AllyDamageable =>
+        new CreatureRequirement(
+            new OwnershipCondition<CreaturePresenter>(OwnershipType.Ally),
+            new IsDamageableCondition<CreaturePresenter>()
+        );
+
+
+    public static ZoneRequirement AllyZone =>
+        new ZoneRequirement(new OwnershipCondition<ZonePresenter>(OwnershipType.Ally));
+
+    public static ZoneRequirement EnemyZone =>
+        new ZoneRequirement(new OwnershipCondition<ZonePresenter>(OwnershipType.Enemy));
+}
+
+public static class TargetRequirementExtensions {
+    public static T WithCondition<T>(this T requirement, Condition<UnitPresenter> condition)
+        where T : TargetRequirement<UnitPresenter> {
+        var cloned = requirement.Clone() as T;
+        cloned.AddCondition(condition);
+        return cloned;
+    }
+
+    public static T AsOptional<T>(this T requirement) where T : ITargetRequirement {
+        if (requirement is TargetRequirement<UnitPresenter> generic) {
+            var cloned = generic.Clone();
+            return (T)(object)cloned;
+        }
+        return requirement;
     }
 }
 

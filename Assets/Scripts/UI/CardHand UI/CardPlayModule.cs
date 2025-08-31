@@ -103,7 +103,7 @@ public class CardPlayModule : MonoBehaviour {
         }
         _operationManager.OnOperationStatus -= HandleOperationStatus;
 
-        GameLogger.Log($"Card play finished: {_playData.IsStarted}, Completed: {_playData.CompletedOperations} / {_playData.Operations.Count}");
+        GameLogger.Log($"Card play finished: {_playData.IsStarted}, Completed: {_playData.CompletedOperations} / {_playData.Operations.Count}", LogLevel.Debug, LogCategory.CardModule);
         
         OnCardPlayCompleted?.Invoke(_playData.CardPresenter, _playData.IsStarted);
         _playData = null;

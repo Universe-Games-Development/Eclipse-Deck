@@ -21,6 +21,7 @@ public enum LogCategory {
     Animation = 1 << 6,
     AI = 1 << 7,
     Physics = 1 << 8,
+    CardModule = 1 << 9,
     All = ~0
 }
 

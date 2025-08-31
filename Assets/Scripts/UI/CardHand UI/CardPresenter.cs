@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-public class CardPresenter : BoardUnit {
+public class CardPresenter : UnitPresenter {
     public Action<CardPresenter> OnCardClicked;
     public Action<CardPresenter, bool> OnCardHovered;
     private const float defaultMoveDuration = 1f;
@@ -67,7 +67,8 @@ public class CardPresenter : BoardUnit {
         View.UpdateName(Card.Data.Name);
         View.UpdatePortait(Card.Data.Portait);
         View.UpdateBackground(Card.Data.BgImage);
-        View.UpdateRarity(Card.Data.GetRarityColor());
+        Color color = RarityUtility.GetRarityColor( Card.Data.Rarity);
+        View.UpdateRarity(color);
     }
 
     #endregion
@@ -132,7 +133,7 @@ public class CardPresenter : BoardUnit {
     #endregion
 
     #region BoardUnit API
-    public override UnitInfo GetInfo() {
+    public override UnitModel GetInfo() {
         return Card;
     }
 
@@ -143,7 +144,7 @@ public class CardPresenter : BoardUnit {
 
 
     public void HandleRemoval() {
-        Debug.Log($"Card {Card.Data.Name} is being removed from hand and destroyed.");
+        //Debug.Log($"Card {Card.Data.Name} is being removed from hand and destroyed.");
     }
 
     public async UniTask LaunchTestUpdate() {

@@ -23,7 +23,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
 
     // State
     public CardPresenter CurrentCard { get; private set; }
-    private TaskCompletionSource<UnitInfo> currentSelection;
+    private TaskCompletionSource<UnitPresenter> currentSelection;
     private InputSystem_Actions.BoardPlayerActions boardInputs;
     private ITargetingVisualization currentVisualization;
 
@@ -59,8 +59,8 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     }
 
     // ITargetSelector implementation
-    public async UniTask<UnitInfo> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken) {
-        currentSelection = new TaskCompletionSource<UnitInfo>();
+    public async UniTask<UnitPresenter> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken) {
+        currentSelection = new TaskCompletionSource<UnitPresenter>();
 
         // Створюємо відповідну візуалізацію
         StartTargetingVisualization(selectionRequst);
@@ -96,20 +96,18 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     private void OnLeftClickUp(InputAction.CallbackContext context) {
         if (currentSelection == null) return;
 
-        UnitInfo result = GetTargetUnderCursor();
+        UnitPresenter result = GetTargetUnderCursor();
         currentSelection.TrySetResult(result);
     }
 
-    private UnitInfo GetTargetUnderCursor() {
-        UnitInfo gameUnit = null;
+    private UnitPresenter GetTargetUnderCursor() {
+        UnitPresenter presenter = null;
 
         if (boardInputManager.TryGetCursorObject(boardMask, out GameObject hitObject)) {
-            if (hitObject.TryGetComponent<BoardUnit>(out var provider)) {
-                gameUnit = provider.GetInfo();
-            }
+            hitObject.TryGetComponent<UnitPresenter>(out presenter);
         }
 
-        return gameUnit;
+        return presenter;
     }
 
     public void SetCurrentCard(CardPresenter cardPresenter) {
@@ -132,10 +130,10 @@ public interface ITargetingVisualization {
 }
 
 public class TargetSelectionRequest {
-    public BoardUnit Initiator { get; } // Карта, істота, гравець
+    public UnitPresenter Initiator { get; } // Карта, істота, гравець
     public ITargetRequirement Requirement { get; }
 
-    public TargetSelectionRequest(BoardUnit initiator, ITargetRequirement requirement) {
+    public TargetSelectionRequest(UnitPresenter initiator, ITargetRequirement requirement) {
         Initiator = initiator;
         Requirement = requirement;
     }

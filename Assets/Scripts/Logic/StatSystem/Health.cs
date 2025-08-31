@@ -6,9 +6,9 @@ public class Health : Attribute {
     public event Action<DeathEvent> OnDeath;
     
     public bool IsDead = false;
-    private readonly IDamageable _owner;
+    private readonly IHealthable _owner;
 
-    public Health(int initialValue, IDamageable owner) : base(initialValue) {
+    public Health(int initialValue, IHealthable owner) : base(initialValue) {
         _owner = owner;
     }
 
@@ -53,10 +53,10 @@ public class Health : Attribute {
 
 public struct OnDamageTaken : IEvent {
     public IDamageDealer Source { get; }
-    public IDamageable Target { get; }
+    public IHealthable Target { get; }
     public int Amount { get; }
 
-    public OnDamageTaken(IDamageable target, IDamageDealer source, int amount) {
+    public OnDamageTaken(IHealthable target, IDamageDealer source, int amount) {
         Source = source;
         Target = target;
         Amount = amount;
@@ -64,9 +64,9 @@ public struct OnDamageTaken : IEvent {
 }
 
 public struct DeathEvent : IEvent {
-    public IDamageable DeadEntity { get; }
+    public IHealthable DeadEntity { get; }
 
-    public DeathEvent(IDamageable deadEntity) {
+    public DeathEvent(IHealthable deadEntity) {
         DeadEntity = deadEntity;
     }
 }
