@@ -36,6 +36,12 @@ public class OperationFactory : IOperationFactory {
             .Where(t => t.IsClass && !t.IsAbstract && typeof(GameOperation).IsAssignableFrom(t))
             .Where(t => t.GetCustomAttribute<OperationForAttribute>() != null);
 
+
+        // Internal Debug 
+        List<Type> types = assembly.GetTypes().ToList();
+
+        List<Type> typesFilter1 = types.Where(t => t.IsClass && !t.IsAbstract && typeof(GameOperation).IsAssignableFrom(t)).ToList();
+
         foreach (var operationType in operationTypes) {
             var attribute = operationType.GetCustomAttribute<OperationForAttribute>();
             if (attribute.DataType != null && typeof(OperationData).IsAssignableFrom(attribute.DataType)) {
@@ -73,7 +79,7 @@ public class CardPlayModule : MonoBehaviour {
     public event System.Action<CardPresenter> OnCardPlayStarted;
 
     private CancellationTokenSource _internalTokenSource;
-    private IOperationFactory _operationFactory;
+    [Inject] private IOperationFactory _operationFactory;
 
     public void StartCardPlay(CardPresenter cardPresenter, CancellationToken externalToken = default) {
         if (IsPlaying() || cardPresenter == null) {

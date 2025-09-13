@@ -1,26 +1,22 @@
-using System;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using Zenject;
 
 // used for runtime creation of operation
+
 public class SpawnCreatureOperationData : OperationData {
     public CreatureCard creatureCard;
     public Vector3 spawnPosition;
-
-    public override GameOperation CreateOperation() {
-        return null;
-    }
+    internal CardPresenter presenter;
 }
 
+[OperationFor(typeof(SpawnCreatureOperationData))]
 public class SpawnCreatureOperation : GameOperation {
     private const string SpawnZoneKey = "spawnZone";
-    private readonly CreatureCard _creatureCard;
+    private readonly SpawnCreatureOperationData _data;
     private readonly ICreatureSpawnService _spawnService;
     private readonly Vector3 _spawnPosition;
 
-    public SpawnCreatureOperation(CreatureCard creatureCard, ICreatureSpawnService spawnService) {
-        _creatureCard = creatureCard;
+    public SpawnCreatureOperation(SpawnCreatureOperationData data, ICreatureSpawnService spawnService) {
+        _data = data;
         _spawnService = spawnService;
 
         ZoneRequirement allyZone = TargetRequirements.AllyZone;
@@ -34,7 +30,7 @@ public class SpawnCreatureOperation : GameOperation {
         }
 
         // Делегуємо створення сервісу
-        CreaturePresenter creaturePresenter = _spawnService.SpawnCreatureFromCard(_creatureCard);
+        CreaturePresenter creaturePresenter = _spawnService.SpawnCreatureFromCard(_data.creatureCard);
         return zone.PlaceCreature(creaturePresenter, _spawnPosition);
     }
 }

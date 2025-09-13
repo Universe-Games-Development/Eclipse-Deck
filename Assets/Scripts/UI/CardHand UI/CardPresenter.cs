@@ -79,6 +79,7 @@ public class CardPresenter : UnitPresenter {
     private SpawnCreatureOperationData CreateSpawnOperationData(CreatureCard creatureCard) {
         var spawnOp = ScriptableObject.CreateInstance<SpawnCreatureOperationData>();
         spawnOp.creatureCard = creatureCard;
+        spawnOp.presenter = this;
         spawnOp.spawnPosition = View.transform.position;
         return spawnOp;
     }

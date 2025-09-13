@@ -5,31 +5,27 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 
 public abstract class OperationData : ScriptableObject {
-    public abstract GameOperation CreateOperation();
 }
 
 public class DamageOperationData : OperationData {
     public int damage = 6;
     [SerializeField] private Fireball fireballPrefab;
-
-    public override GameOperation CreateOperation() {
-        return new DamageOperation(damage);
-    }
 }
 
+[OperationFor(typeof(DamageOperationData))]
 public class DamageOperation : GameOperation {
     private const string TargetCreatureKey = "targetCreature";
-    private readonly int _damage;
+    private readonly DamageOperationData _data;
 
-    public DamageOperation(int damage) {
-        _damage = damage;
+    public DamageOperation(DamageOperationData data) {
+        _data = data;
 
         var anyDamagableEnemyTarget = TargetRequirements.EnemyDamageable;
 
-        // Додаємо вимогу до цілі - ворожа істота
         RequestTargets.Add(new Target(TargetCreatureKey, anyDamagableEnemyTarget)
         );
     }
+
     public override bool Execute() {
         if (!TryGetTarget(TargetCreatureKey, out UnitPresenter damagablePresenter)) {
             Debug.LogError($"Valid {TargetCreatureKey} not found for damage operation");
@@ -38,13 +34,7 @@ public class DamageOperation : GameOperation {
 
         IHealthable target = damagablePresenter as IHealthable;
 
-        //Restrict creature view Update
-
-        // Deal damage to the model
-        target.Health.TakeDamage(_damage);
-
-        // Create animation or effect here if needed + add final method to allow View update animation will use it to define whne view update should happen
-
+        target.Health.TakeDamage(_data.damage);
         return true;
     }
 }
