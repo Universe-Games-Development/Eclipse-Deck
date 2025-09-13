@@ -12,6 +12,7 @@ public abstract class CardData : ScriptableObject {
     public string AuthorName;
     public Sprite Portait;
     public Sprite BgImage;
+    public Texture2D PortaitTX;
 
     [Header("Logic")]
     public string resourseId;

@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using UnityEngine.UIElements;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -144,8 +146,9 @@ public class HandBoundsVisualizer : MonoBehaviour {
     }
 
     private void DrawSingleCardPreview(Vector3 center) {
-        Vector3 cardPos = center + Vector3.up * layoutSettings.DefaultYPosition;
-        Gizmos.DrawWireCube(cardPos, new Vector3(0.2f, 0.01f, 0.3f));
+        Vector3 cardPos = center + Vector3.up * layoutSettings.HeightOffset;
+        Vector3 cardSize = new Vector3(layoutSettings.CardWidth, 0.01f, layoutSettings.CardHeight);
+        Gizmos.DrawWireCube(cardPos, cardSize);
     }
 
     private void DrawMultipleCardsPreview(Vector3 center, int cardCount) {
@@ -158,8 +161,8 @@ public class HandBoundsVisualizer : MonoBehaviour {
             float rotationAngle = Mathf.Lerp(-layoutSettings.MaxRotationAngle,
                 layoutSettings.MaxRotationAngle, (float)i / (cardCount - 1));
 
-            Vector3 cardPos = center + new Vector3(x, layoutSettings.DefaultYPosition, 0);
-            Vector3 cardSize = new Vector3(0.2f, 0.01f, 0.3f) * scale;
+            Vector3 cardPos = center + new Vector3(x, layoutSettings.HeightOffset, 0);
+            Vector3 cardSize = new Vector3(layoutSettings.CardWidth, 0.01f, layoutSettings.CardHeight) * scale;
 
             // Малюємо карту з обертанням
             Matrix4x4 oldMatrix = Gizmos.matrix;

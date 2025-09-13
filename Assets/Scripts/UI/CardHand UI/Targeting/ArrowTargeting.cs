@@ -1,67 +1,48 @@
-using System;
-using TMPro;
 using UnityEngine;
-using Zenject;
 
 public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
     [Header("Arrow Components")]
     [SerializeField] private LineRenderer arrowLine;
     [SerializeField] private Transform arrowHead;
+
+    [Header("Materials")]
     [SerializeField] private Material validTargetMaterial;
     [SerializeField] private Material invalidTargetMaterial;
     [SerializeField] private Material noTargetMaterial;
 
     [Header("Dependencies")]
-    [SerializeField] private LayerMask boardMask;
     [SerializeField] private BoardInputManager boardInputManager;
+    [SerializeField] private LayerMask boardMask;
 
-    [Inject] private InputManager inputManager;
-
-    // State
-    private bool isActive;
     private Vector3 startPosition;
-    private Func<Vector3> targetPositionProvider;
-
     private TargetSelectionRequest currentRequest;
-
     private GameObject lastHoveredObject;
 
-
-    public void StartTargeting(Func<Vector3> targetPositionProvider, TargetSelectionRequest targetSelectionRequest) {
-        this.targetPositionProvider = targetPositionProvider;
-        currentRequest = targetSelectionRequest;
-        isActive = true;
-
-        SetupArrowVisuals(true);
+    public void Initialize(Vector3 startPos, TargetSelectionRequest request) {
+        startPosition = startPos;
+        currentRequest = request;
     }
 
-    public void StopTargeting() {
-        isActive = false;
-        SetupArrowVisuals(false);
+    public void StartTargeting() {
+        SetArrowActive(true);
         ResetArrowColor();
     }
 
-    public void UpdateTargeting() {
-        if (!isActive) return;
-
-        Vector3 targetPosition = targetPositionProvider();
-        UpdateArrowPosition(startPosition, targetPosition);
-        UpdateArrowColor(targetPosition);
+    public void UpdateTargeting(Vector3 cursorPosition) {
+        UpdateArrowPosition(startPosition, cursorPosition);
+        UpdateArrowColor(cursorPosition);
     }
 
-    private void Update() {
-        if (isActive) {
-            UpdateTargeting();
-        }
+    public void StopTargeting() {
+        SetArrowActive(false);
+        ResetArrowColor();
     }
 
     private void UpdateArrowPosition(Vector3 start, Vector3 end) {
-        // Оновлюємо позицію лінії стрілки
         arrowLine.positionCount = 2;
         arrowLine.SetPosition(0, start);
         arrowLine.SetPosition(1, end);
 
-        // Позиціонуємо голівку стрілки
         arrowHead.position = end;
         arrowHead.LookAt(start);
     }
@@ -77,41 +58,34 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
     }
 
     private GameObject GetObjectUnderPosition(Vector3 position) {
-        if (boardInputManager.TryGetCursorObject(boardMask, out GameObject hitObject)) {
-            return hitObject;
-        }
-        return null;
+        return boardInputManager.TryGetCursorObject(boardMask, out GameObject hitObject)
+            ? hitObject : null;
     }
 
     private Material DetermineArrowMaterial(GameObject hoveredObject) {
-        if (hoveredObject == null) {
-            return noTargetMaterial; // Синій - немає об'єкта
-        }
+        if (hoveredObject == null)
+            return noTargetMaterial;
 
         UnitModel gameUnit = GetGameUnitFromObject(hoveredObject);
-        if (gameUnit == null) {
-            return noTargetMaterial; // Синій - не ігровий об'єкт
-        }
+        if (gameUnit == null)
+            return noTargetMaterial;
 
         ValidationResult validation = currentRequest.Requirement.IsValid(gameUnit, currentRequest.Initiator.GetPlayer());
-        return validation.IsValid ? validTargetMaterial : invalidTargetMaterial; // Зелений/Червоний
+        return validation.IsValid ? validTargetMaterial : invalidTargetMaterial;
     }
 
     private UnitModel GetGameUnitFromObject(GameObject obj) {
-        if (obj.TryGetComponent<UnitPresenter>(out var provider)) {
-            return provider.GetInfo();
-        }
-        return null;
+        return obj.TryGetComponent<UnitPresenter>(out var presenter)
+            ? presenter.GetInfo() : null;
     }
 
     private void ApplyArrowMaterial(Material material) {
         arrowLine.material = material;
-        if (arrowHead.TryGetComponent<Renderer>(out var renderer)) {
+        if (arrowHead.TryGetComponent<Renderer>(out var renderer))
             renderer.material = material;
-        }
     }
 
-    private void SetupArrowVisuals(bool active) {
+    private void SetArrowActive(bool active) {
         arrowLine.enabled = active;
         arrowHead.gameObject.SetActive(active);
     }
@@ -120,6 +94,5 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
         ApplyArrowMaterial(noTargetMaterial);
         lastHoveredObject = null;
     }
-
 }
 

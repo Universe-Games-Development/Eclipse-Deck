@@ -9,12 +9,23 @@ public enum OwnershipType {
     Any
 }
 
-public struct ValidationResult {
-    public bool IsValid;
-    public string ErrorMessage;
+public readonly struct ValidationResult {
+    public bool IsValid { get; }
+    public string ErrorMessage { get; }
 
-    public static ValidationResult Success => new ValidationResult { IsValid = true };
-    public static ValidationResult Error(string message = default) => new ValidationResult { IsValid = false, ErrorMessage = message };
+    private ValidationResult(bool isValid, string errorMessage = null) {
+        IsValid = isValid;
+        ErrorMessage = errorMessage;
+    }
+
+    public static implicit operator bool(ValidationResult result) => result.IsValid;
+
+    public static implicit operator ValidationResult(bool isValid) =>
+        new ValidationResult(isValid);
+
+    public static ValidationResult Success => true;
+    public static ValidationResult Error(string message) =>
+        new ValidationResult(false, message);
 }
 
 public interface ITargetRequirement {
@@ -48,7 +59,6 @@ public class TargetRequirement<T> : ITargetRequirement where T : UnitPresenter {
 
     public ValidationResult IsValid(object selected, BoardPlayer initiator = null) {
         if (!TryConvertToRequired(selected, out T defined)) {
-            Debug.Log($"Wrong type selected: {selected}");
             return ValidationResult.Error($"Expected {typeof(T).Name}, got {selected?.GetType().Name}");
         }
 
@@ -221,4 +231,3 @@ public static class TargetRequirementExtensions {
         return requirement;
     }
 }
-

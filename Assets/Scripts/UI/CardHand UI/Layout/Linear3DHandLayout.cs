@@ -14,7 +14,7 @@ public class Linear3DHandLayout : HandLayoutStrategy {
 
     // Кеш для оптимізації
     private int _lastCardCount = -1;
-    private CardTransform[] _cachedTransforms;
+    private CardPoint[] _cachedTransforms;
     private bool _needsRecalculation = true;
 
     #region Initialization
@@ -33,10 +33,10 @@ public class Linear3DHandLayout : HandLayoutStrategy {
 
     #region Layout Calculation
 
-    public override CardTransform[] CalculateCardTransforms(int cardCount) {
+    public override CardPoint[] CalculateCardTransforms(int cardCount) {
         if (cardsContainer == null) {
             Debug.LogError("Cards container not initialized! Call Initialize() first.");
-            return new CardTransform[0];
+            return new CardPoint[0];
         }
 
         // Використовуємо кеш
@@ -45,12 +45,12 @@ public class Linear3DHandLayout : HandLayoutStrategy {
         }
 
         if (cardCount == 0) {
-            _cachedTransforms = new CardTransform[0];
+            _cachedTransforms = new CardPoint[0];
             _lastCardCount = 0;
             return _cachedTransforms;
         }
 
-        var transforms = new CardTransform[cardCount];
+        var transforms = new CardPoint[cardCount];
         CalculateLayout(cardCount, transforms);
 
         _cachedTransforms = transforms;
@@ -60,7 +60,7 @@ public class Linear3DHandLayout : HandLayoutStrategy {
         return transforms;
     }
 
-    private void CalculateLayout(int cardCount, CardTransform[] transforms) {
+    private void CalculateLayout(int cardCount, CardPoint[] transforms) {
         var layoutParams = CalculateLayoutParameters(cardCount);
 
         for (int i = 0; i < cardCount; i++) {
@@ -96,7 +96,7 @@ public class Linear3DHandLayout : HandLayoutStrategy {
         return parameters;
     }
 
-    private CardTransform CalculateSingleCardTransform(int index, int totalCards, LayoutParameters layoutParams) {
+    private CardPoint CalculateSingleCardTransform(int index, int totalCards, LayoutParameters layoutParams) {
         // Локальна позиція
         Vector3 localPosition = CalculateLocalPosition(index, totalCards, layoutParams);
 
@@ -107,15 +107,13 @@ public class Linear3DHandLayout : HandLayoutStrategy {
         Vector3 worldPosition = cardsContainer.TransformPoint(localPosition);
         Quaternion worldRotation = cardsContainer.rotation * localRotation;
 
-        return new CardTransform(worldPosition, worldRotation, Vector3.one, index);
+        return new CardPoint(worldPosition, worldRotation, Vector3.one, index);
     }
 
     private Vector3 CalculateLocalPosition(int index, int totalCards, LayoutParameters layoutParams) {
         float xPos = layoutParams.startX + index * layoutParams.spacing;
-        float yPos = settings.DefaultYPosition;
-
-        // ВИПРАВЛЕНО: Видалено VerticalOffset для Z-позиції, щоб карти не росли вгору
-        float zPos = 0f; // Всі карти на одному рівні по Z
+        float yPos = -index * settings.HeightOffset;
+        float zPos = -index * settings.VerticalOffset;
 
         // Додаємо варіацію тільки по X та невелику по Y для природнього вигляду
         if (settings.PositionVariation > 0f && totalCards > 1) {
@@ -210,7 +208,6 @@ public class Linear3DHandLayout : HandLayoutStrategy {
 
     #endregion
 
-    // Допоміжна структура для параметрів layout
     private struct LayoutParameters {
         public float totalWidth;
         public float spacing;

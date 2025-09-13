@@ -19,21 +19,21 @@ public class Mana : Attribute {
     public void RestoreMana() {
         if (RestoreAmount <= 0) return;
 
-        int previousMana = CurrentValue;
+        int previousMana = Current;
         int restored = Add(RestoreAmount);
 
-        if (CurrentValue == TotalValue) {
+        if (Current == TotalValue) {
             //_eventBus.Raise(new OnManaRestored(Owner));
             //OnManaRestored?.Invoke(Owner);
         } else {
-            Console.WriteLine($"Restored {restored} mana. Current mana: {CurrentValue}/{TotalValue}");
+            Console.WriteLine($"Restored {restored} mana. Current mana: {Current}/{TotalValue}");
         }
     }
 
     public int Spend(int amount) {
         if (amount <= 0) return 0;
 
-        int previousMana = CurrentValue;
+        int previousMana = Current;
 
         int amountSpent = Subtract(amount);
 
@@ -43,7 +43,7 @@ public class Mana : Attribute {
         if (amountSpent > 0) {
             OnManaSpent?.Invoke(new ManaSpentEvent(_owner, amountSpent));
         } else {
-            Console.WriteLine($"Spent {amountSpent} mana. Current mana: {CurrentValue}/{TotalValue}");
+            Console.WriteLine($"Spent {amountSpent} mana. Current mana: {Current}/{TotalValue}");
         }
 
         return amountSpent;
@@ -66,7 +66,7 @@ public class Mana : Attribute {
     }
 
     public override string ToString() {
-        return $"Mana: {CurrentValue}/{TotalValue}";
+        return $"Mana: {Current}/{TotalValue}";
     }
 
     public void Dispose() {

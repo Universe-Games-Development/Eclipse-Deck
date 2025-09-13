@@ -19,14 +19,11 @@ public class CardsHandleSystem : MonoBehaviour {
     [Inject] GameEventBus _eventBus;
     [Inject] CommandManager _commandManager;
     [Inject] CardProvider _cardProvider;
-    [Inject] DiContainer diContainer;
-    CardFactory _cardFactory;
+    [Inject] ICardFactory _cardFactory;
 
     private void Awake() {
-        CardFactory cardFactory = new(diContainer);
         Deck deckModel = new();
         CardHand handModel = new();
-        _cardFactory = new(diContainer);
 
         _deckPresenter = new(deckModel, deckView);
 

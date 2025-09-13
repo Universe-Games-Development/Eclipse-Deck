@@ -1,5 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
+[RequireComponent(typeof(MovementComponent))]
 public class CardTiltController : MonoBehaviour {
     [Header("Tilt Settings")]
     [SerializeField] private float forwardTiltSensitivity = 2f;
@@ -7,19 +9,39 @@ public class CardTiltController : MonoBehaviour {
     [SerializeField] private float verticalTiltSensitivity = 0.8f;
     [SerializeField] private float maxTiltAngle = 25f;
     [SerializeField] private float tiltSmoothing = 8f;
+    [SerializeField] private float velocityThreshold = 0.1f; // Нова змінна
 
     private Vector3 smoothedVelocity;
     private Quaternion baseRotation;
+    private MovementComponent movementComponent;
 
     private void Awake() {
+        movementComponent = GetComponent<MovementComponent>();
+
         baseRotation = transform.rotation;
         smoothedVelocity = Vector3.zero;
     }
 
-    public void UpdateTilt(Vector3 velocity) {
+    private void Update() {
+        if (movementComponent != null) {
+            UpdateTilt(movementComponent.CurrentVelocity);
+        }
+    }
 
+    public void UpdateTilt(Vector3 velocity) {
         // Згладжування швидкості
         smoothedVelocity = Vector3.Lerp(smoothedVelocity, velocity, Time.deltaTime * 10f);
+
+        // Перевірка на мінімальну швидкість
+        if (smoothedVelocity.magnitude < velocityThreshold) {
+            // Плавне повернення до базового повороту
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                baseRotation,
+                Time.deltaTime * tiltSmoothing
+            );
+            return;
+        }
 
         // Обчислення нахилів
         float pitchFromVelocity = -smoothedVelocity.z * forwardTiltSensitivity;
@@ -38,22 +60,5 @@ public class CardTiltController : MonoBehaviour {
             targetRotation,
             Time.deltaTime * tiltSmoothing
         );
-    }
-
-    public void ResetToBase() {
-        StartCoroutine(SmoothResetRotation());
-    }
-
-    private System.Collections.IEnumerator SmoothResetRotation() {
-        Quaternion startRotation = transform.rotation;
-        float duration = 0.3f;
-        float elapsed = 0f;
-
-        while (elapsed < duration) {
-            float t = elapsed / duration;
-            transform.rotation = Quaternion.Slerp(startRotation, baseRotation, t);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
     }
 }

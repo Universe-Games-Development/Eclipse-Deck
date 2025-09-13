@@ -11,11 +11,12 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
     public RectTransform RectTransform;
     [SerializeField] public CardAnimator DoTweenAnimator;
     public CardDescription Description;
+    public CardViewInfo uiInfo;
 
     protected override void Awake() {
         base.Awake();
         RectTransform ??= GetComponent<RectTransform>();
-        if (uiInfo == null) uiInfo = GetComponent<CardUIInfo>();
+        if (uiInfo == null) uiInfo = GetComponent<CardViewInfo>();
         uiInfo.OnDataChanged += InvokeCardChangedEvent;
     }
 
@@ -39,9 +40,8 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
         HandleMouseDown();
     }
 
-    public override void Reset() {
+    public void Reset() {
         DoTweenAnimator?.Reset();
-        base.Reset();
     }
 
     public override void SetRenderOrder(int sortingOrder) {
@@ -59,4 +59,39 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
     public override void SetHoverState(bool isHovered) {
         throw new NotImplementedException();
     }
+
+    #region UI Info Update
+    public override void UpdateCost(int cost) {
+        uiInfo.UpdateCost(cost);
+    }
+
+    public override void UpdateName(string name) {
+        uiInfo.UpdateName(name);
+    }
+
+    public override void UpdateAttack(int attack) {
+        uiInfo.UpdateAttack(attack);
+    }
+
+    public override void UpdateHealth(int health) {
+        uiInfo.UpdateHealth(health);
+    }
+
+    public override void ToggleCreatureStats(bool isEnabled) {
+        uiInfo.ToggleAttackText(isEnabled);
+        uiInfo.TogglHealthText(isEnabled);
+    }
+
+    public override void UpdatePortait(Sprite portait) {
+        uiInfo.UpdatePortait(portait);
+    }
+
+    public override void UpdateBackground(Sprite bgImage) {
+        uiInfo.UpdateBackground(bgImage);
+    }
+
+    public override void UpdateRarity(Color rarity) {
+        uiInfo.UpdateRarity(rarity);
+    }
+    #endregion
 }

@@ -15,7 +15,7 @@ public class UnitModel {
     public Action<BoardPlayer> OnChangedOwner;
     public Action<GameEnterEvent> OnUnitDeployed;
     public BoardPlayer Owner { get; private set; }
-
+    public string Id { get; protected set; }
     public void ChangeOwner(BoardPlayer newOwner) {
         if (newOwner == Owner) return;
         Owner = newOwner;

@@ -21,33 +21,7 @@ public class DeckPresenter {
     }
 }
 
-public class CardFactory {
-    private DiContainer diContainer;
-    public CardFactory(DiContainer diContainer) {
-        this.diContainer = diContainer;
-    }
 
-    public List<Card> CreateCardsFromCollection(CardCollection collection) {
-        List<Card> cards = new();
-        foreach (var cardEntry in collection.cardEntries) {
-            for (int i = 0; i < cardEntry.Value; i++) {
-                CardData cardData = cardEntry.Key;
-                Card newCard = CreateCard(cardData);
-                if (newCard == null) continue;
-                cards.Add(newCard);
-            }
-        }
-        return cards;
-    }
-
-    public Card CreateCard(CardData cardData) {
-        return cardData switch {
-            CreatureCardData creatureData => diContainer.Instantiate<CreatureCard>(new object[] { creatureData }),
-            SpellCardData spellData => diContainer.Instantiate<SpellCard>(new object[] { spellData }),
-            _ => null
-        };
-    }
-}
 
 public struct OnCardDrawn : IEvent {
     public Card card;

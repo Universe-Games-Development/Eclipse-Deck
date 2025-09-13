@@ -1,7 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Pool;
-using Zenject;
 
 public class CardHand3DView : CardHandView {
     [Header("Pool")]
@@ -14,18 +11,30 @@ public class CardHand3DView : CardHandView {
     }
 
     public override CardView CreateCardView(Card card) {
+        if (cardPool == null) {
+            Debug.LogError("Card pool is not assigned!");
+            return null;
+        }
+
         Card3DView card3DView = cardPool.Get();
-        card3DView.transform.SetParent(cardsContainer);
-        card3DView.SetPosition(cardsContainer.transform.position, cardsContainer.transform.rotation);
+        if (card3DView != null && cardsContainer != null) {
+            card3DView.transform.SetParent(cardsContainer);
+            card3DView.transform.position = cardsContainer.position;
+            card3DView.transform.rotation = cardsContainer.rotation;
+        }
+
         return card3DView;
     }
 
-    public override void DestroyCardView(CardView cardView) {
-        if (cardView is Card3DView card3DView) {            
+    protected override void HandleCardViewRemoval(CardView cardView) {
+        // Soon be as animation task
+        if (cardView is Card3DView card3DView && cardPool != null) {
             cardPool.Release(card3DView);
         } else {
-            Debug.LogWarning("Trying to destroy a CardView that is not a Card3DView.");
-            Destroy(cardView.gameObject);
+            Debug.LogWarning($"Trying to remove a CardView that is not a Card3DView or pool is null. Destroying: {cardView?.name}");
+            if (cardView != null) {
+                Destroy(cardView.gameObject);
+            }
         }
     }
 

@@ -39,7 +39,7 @@ public class HealthCellView : MonoBehaviour {
         health = healthable.Health;
 
         SubscribeToHealthEvents();
-        SmoothUpdateLiquidLevel(health.CurrentValue, health.CurrentValue).Forget(); // Встановлюємо початкове значення
+        SmoothUpdateLiquidLevel(health.Current, health.Current).Forget(); // Встановлюємо початкове значення
     }
 
     private void SubscribeToHealthEvents() {
@@ -118,7 +118,7 @@ public class HealthCellView : MonoBehaviour {
     private float CalculateLiquidLevel() {
         if (health == null || health.TotalValue <= 0) return minLevel;
 
-        float normalizedLevel = (float)health.CurrentValue / health.TotalValue;
+        float normalizedLevel = (float)health.Current / health.TotalValue;
         return Mathf.Lerp(minLevel, maxLevel, normalizedLevel);
     }
 

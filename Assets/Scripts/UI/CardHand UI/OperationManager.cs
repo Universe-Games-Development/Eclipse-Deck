@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+using Zenject;
 
 public class OperationManager : MonoBehaviour {
     [SerializeField] private OperationTargetsFiller operationFiller;
@@ -246,6 +247,7 @@ public class OperationManager : MonoBehaviour {
             if (operation.IsReady()) {
                 GameLogger.LogDebug($"Operation {operation} is ready, executing...", LogCategory.OperationManager);
 
+                OnOperationStatus?.Invoke(operation, OperationStatus.Start);
                 bool success = operation.Execute();
                 status = success ? OperationStatus.Success : OperationStatus.Failed;
 
@@ -390,6 +392,7 @@ public class OperationManager : MonoBehaviour {
 }
 
 public enum OperationStatus {
+    Start,
     Success,
     PartialSuccess,
     Failed,

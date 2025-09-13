@@ -100,6 +100,7 @@ public class OperationTargetsFiller : MonoBehaviour {
                 throw;
             } catch (Exception ex) {
                 GameLogger.LogError($"Error processing target {target.Name}: {ex.Message}", LogCategory.TargetsFiller);
+                GameLogger.LogException(ex);
 
                 if (operation.ShouldAbortOnError()) {
                     break;
@@ -338,6 +339,7 @@ public class TargetSelectionProcessor {
         } catch (OperationCanceledException) {
             throw;
         } catch (Exception ex) {
+            GameLogger.LogException(ex);
             GameLogger.LogError($"Selector error for {target.Name}: {ex.Message}", LogCategory.TargetsFiller);
             return TargetSelectionResult.Retry();
         }
@@ -466,10 +468,5 @@ public enum TargetSelector {
 
 public interface ITargetSelector {
     UniTask<UnitPresenter> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken);
-}
-
-public abstract class UnitPresenter : MonoBehaviour {
-    public abstract UnitModel GetInfo();
-    public abstract BoardPlayer GetPlayer();
 }
 

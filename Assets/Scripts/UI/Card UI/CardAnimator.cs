@@ -15,7 +15,7 @@ public class CardAnimator : MonoBehaviour {
 
     public void ShrinkClick() {
         // Create a sequence for the scaling animation
-        Sequence shrinkSequence = DOTween.Sequence();
+        Sequence shrinkSequence = DOTween.Sequence().SetLink(gameObject);
         shrinkSequence.Append(innerBody.DOScale(0.9f, 0.2f));
         shrinkSequence.Append(innerBody.DOScale(1f, 0.2f));
         // Play the sequence
@@ -24,7 +24,7 @@ public class CardAnimator : MonoBehaviour {
 
 
     public async UniTask RemovalAnimation(CardUIView cardUI) {
-        var sequence = DOTween.Sequence();
+        var sequence = DOTween.Sequence().SetLink(gameObject);
         await sequence.Append(globalBody.transform.DOScale(Vector3.zero, 0.3f));
         await sequence.Join(globalBody.transform.DOLocalMoveY(globalBody.transform.position.y - 2f, 0.8f).SetEase(Ease.InOutSine));
         await sequence.AsyncWaitForCompletion();
@@ -45,7 +45,7 @@ public class CardAnimator : MonoBehaviour {
 
         // Обчислюємо цільову позицію по Y.
         float targetY = value ? 300.5f : 0; // Цільова позиція за умовчанням
-        hoveringTween = innerBody.DOLocalMoveY(targetY, 0.5f).SetEase(Ease.OutQuad);
+        hoveringTween = innerBody.DOLocalMoveY(targetY, 0.5f).SetEase(Ease.OutQuad).SetLink(gameObject);
     }
 
     private int lastSublingIndex;
@@ -65,7 +65,8 @@ public class CardAnimator : MonoBehaviour {
             }
         }
     }
-    internal void Reset() {
+    public void Reset() {
+        transform.DOKill(); // Припиняємо всі анімації, пов'язані з цим об'єктом
         Debug.Log("Reset animator card logic");
     }
 

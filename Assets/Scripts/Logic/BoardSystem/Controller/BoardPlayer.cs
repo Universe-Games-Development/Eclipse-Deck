@@ -73,16 +73,23 @@ public class BoardPlayer : UnitPresenter, IHealthable, IMannable {
         Gizmos.DrawSphere(transform.position, 1f);
     }
 
-
-    public override string ToString() {
-        return $"{GetType().Name} {Character.Data.Name} ({Health.CurrentValue}/{Health.TotalValue})";
-    }
-
+    #region Unit presenter API
     public override UnitModel GetInfo() {
         return Character;
     }
 
     public override BoardPlayer GetPlayer() {
         return this;
+    }
+    #endregion
+
+    public void SpendMana(int currentValue) {
+        int was = Mana.Current;
+        Mana.Subtract(currentValue);
+        DebugLog($"Mana: {Mana.Current} / {Mana.MinValue}");
+    }
+
+    public override string ToString() {
+        return $"{GetType().Name} {Character.Data.Name} ({Health.Current}/{Health.TotalValue})";
     }
 }

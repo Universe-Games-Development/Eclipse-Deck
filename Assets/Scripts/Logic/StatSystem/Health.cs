@@ -18,7 +18,7 @@ public class Health : Attribute {
         Subtract(damage); // «м≥нено з≥ Subtract(-amount) на Subtract(amount)
         OnDamageTaken?.Invoke(new OnDamageTaken(_owner, source, damage));
 
-        if (CurrentValue <= 0 && !IsDead) {
+        if (Current <= 0 && !IsDead) {
             IsDead = true;
             OnDeath?.Invoke(new DeathEvent(_owner));
         }

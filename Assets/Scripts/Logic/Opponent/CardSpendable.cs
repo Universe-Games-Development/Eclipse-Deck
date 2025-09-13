@@ -43,14 +43,14 @@ public class CardSpendable {
     }
 
     private int TrySpendMana(int amount) {
-        if (IsManaEnabled && mana.CurrentValue > 0) {
+        if (IsManaEnabled && mana.Current > 0) {
             return mana.Spend(amount);
         }
         return 0;
     }
 
     private int SpendHealth(int amount) {
-        if (health.CurrentValue > 0) {
+        if (health.Current > 0) {
             health.TakeDamage(amount);
             return amount;
         }

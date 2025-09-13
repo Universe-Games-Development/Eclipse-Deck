@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
+﻿using DG.Tweening;
 using System;
 using UnityEngine;
 
@@ -8,11 +7,10 @@ public abstract class CardView : MonoBehaviour {
     public Action<CardView> OnCardClicked;
     public Action<CardView, bool> OnHoverChanged;
 
-    public CardUIInfo uiInfo;
     public string Id { get; set; }
     private bool _isInteractive = true;
 
-    [SerializeField] CardMovementComponent movementComponent;
+    [SerializeField] protected MovementComponent movementComponent;
 
     #region Unity Lifecycle
 
@@ -44,15 +42,6 @@ public abstract class CardView : MonoBehaviour {
         _isInteractive = enabled;
     }
 
-    public virtual void Reset() {
-        // Сбрасываем визуальные состояния
-        ResetVisualState();
-    }
-
-    protected virtual void ResetVisualState() {
-        // Переопределяется в наследниках для сброса визуального состояния
-    }
-
     #endregion
 
     #region Mouse Interaction (базовая реализация)
@@ -79,43 +68,22 @@ public abstract class CardView : MonoBehaviour {
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void MoveTo(Vector3 position, Quaternion rotation, Vector3 scale, float duration, System.Action onComplete = null) {
-        movementComponent?.MoveTo(position, rotation, scale, duration, onComplete);
+    public void DoTweener(Tweener tweener) {
+        movementComponent?.ExecuteTween(tweener);
     }
 
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void MoveTo(Vector3 position, Quaternion rotation, float duration) {
-        movementComponent?.MoveTo(position, rotation, transform.localScale, duration);
-    }
-
-    /// <summary>
-    /// Миттєве переміщення
-    /// </summary>
-    public void SetPosition(Vector3 position, Quaternion rotation, Vector3 scale) {
-        movementComponent?.SetPosition(position, rotation, scale);
-    }
-
-    /// <summary>
-    /// Миттєве переміщення
-    /// </summary>
-    public void SetPosition(Vector3 position, Quaternion rotation) {
-        movementComponent?.SetPosition(position, rotation, transform.localScale);
+    public void DoSequence(Sequence sequence) {
+        movementComponent?.ExecuteTweenSequence(sequence);
     }
 
     /// <summary>
     /// Почати фізичний рух (для драгу, таргетингу)
     /// </summary>
-    public void StartPhysicsMovement(Vector3 initialPosition) {
-        movementComponent?.StartPhysicsMovement(initialPosition);
-    }
-
-    /// <summary>
-    /// Оновлення цільової позиції в real-time
-    /// </summary>
-    public void UpdateTargetPosition(Vector3 position) {
-        movementComponent?.UpdateTargetPosition(position);
+    public void DoPhysicsMovement(Vector3 initialPosition) {
+        movementComponent?.UpdateContinuousTarget(initialPosition);
     }
 
     /// <summary>
@@ -127,38 +95,21 @@ public abstract class CardView : MonoBehaviour {
     #endregion
 
     #region UI Info Update
-    public void UpdateCost(int cost) {
-        uiInfo.UpdateCost(cost);
-    }
+    public abstract void UpdateCost(int cost);
 
-    public void UpdateName(string name) {
-        uiInfo.UpdateName(name);
-    }
+    public abstract void UpdateName(string name);
 
-    public void UpdateAttack(int attack) {
-        uiInfo.UpdateAttack(attack);
-    }
+    public abstract void UpdateAttack(int attack);
 
-    public void UpdateHealth(int health) {
-        uiInfo.UpdateHealth(health);
-    }
+    public abstract void UpdateHealth(int health);
 
-    public void ToggleCreatureStats(bool isEnabled) {
-        uiInfo.ToggleAttackText(isEnabled);
-        uiInfo.TogglHealthText(isEnabled);
-    }
+    public abstract void ToggleCreatureStats(bool isEnabled);
 
-    public void UpdatePortait(Sprite portait) {
-        uiInfo.UpdatePortait(portait);
-    }
+    public abstract void UpdatePortait(Sprite portait);
 
-    internal void UpdateBackground(Sprite bgImage) {
-        uiInfo.UpdateBackground(bgImage);
-    }
+    public abstract void UpdateBackground(Sprite bgImage);
 
-    public void UpdateRarity(Color rarity) {
-        uiInfo.UpdateRarity(rarity);
-    }
+    public abstract void UpdateRarity(Color rarity);
     #endregion
 
     #region Render Order Management

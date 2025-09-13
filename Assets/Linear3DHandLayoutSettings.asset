@@ -12,19 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b2015e0d7e3f4846bb0cf7fe6dec4ac, type: 3}
   m_Name: Linear3DHandLayoutSettings
   m_EditorClassIdentifier: 
-  MaxHandWidth: 2
-  CardThickness: 0.1
-  DefaultYPosition: 0
-  VerticalOffset: 0.01
+  MaxHandWidth: 5.48
+  HeightOffset: -0.04
+  CardWidth: 1.48
+  CardHeight: 2
+  VerticalOffset: 0
   PositionVariation: 0.02
-  HoverHeight: 0.3
   MaxRotationAngle: 0
   RotationOffset: 0
-  MoveDuration: 0.3
-  HoverMoveDuration: 0.2
-  RotationDuration: 0.3
-  MoveEase: 6
-  RotationEase: 6
   MaxCardsAtFullWidth: 7
   ScaleCardsWhenCrowded: 1
   MinCardScale: 0.8

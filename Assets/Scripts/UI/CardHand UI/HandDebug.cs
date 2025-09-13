@@ -21,11 +21,9 @@ public class HandDebug : MonoBehaviour
 
     [Inject] GameEventBus eventBus;
 
-    private CardFactory cardFactory;
-    [Inject] DiContainer diContainer;
+    [Inject] private ICardFactory cardFactory;
 
     private void Start() {
-        cardFactory = new CardFactory(diContainer);
 
         addCardButton?.onClick.AddListener(() => {
             AddCard();
@@ -68,4 +66,12 @@ public class HandDebug : MonoBehaviour
             hoveredCard.text = "No Card";
         }
     }
+}
+
+
+public class GameController {
+
+    public CreaturePresenter SpawnCreature() {
+        return null;
+    } 
 }

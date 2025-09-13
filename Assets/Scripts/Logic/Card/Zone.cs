@@ -6,11 +6,11 @@ using UnityEngine;
 public class Zone : UnitModel {
     public Action OnCreatureSpawned;
 
-    List<CreatureCard> creatures = new();
-    public void SpawnCreture(CreatureCard creatureCard) {
+    List<Creature> creatures = new();
+    public void PlaceCreature(Creature creature) {
         Debug.Log($"Spawning craeture at zone: {this}");
 
-        creatures.Add(creatureCard);
+        creatures.Add(creature);
        
         OnCreatureSpawned?.Invoke();
     }

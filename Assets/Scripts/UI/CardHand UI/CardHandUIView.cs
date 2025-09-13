@@ -77,7 +77,11 @@ public class CardHandUIView : CardHandView {
         layoutMap.Clear();
     }
 
-    public override void DestroyCardView(CardView cardView) {
+    public override void RemoveCardView(CardView cardView) {
+        throw new NotImplementedException();
+    }
+
+    protected override void HandleCardViewRemoval(CardView cardView) {
         throw new NotImplementedException();
     }
 }

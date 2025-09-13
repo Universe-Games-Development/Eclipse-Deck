@@ -1,16 +1,9 @@
-﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
-using System;
+﻿using TMPro;
 using UnityEngine;
-using Zenject;
 
-[RequireComponent(typeof(Collider))]
 public class Card3DView : CardView {
-    [Inject] private CardTextureRenderer textureRenderer;
-    [SerializeField] private int hoverRenderOrderBoost = 80;
-    [SerializeField] private SkinnedMeshRenderer cardRenderer;
+    [SerializeField] private Renderer cardRenderer;
     [SerializeField] private Card3DAnimator animator;
-    public Action OnInitialized;
 
     // Кэширование шейдера и материалов
     private static readonly int CardFrontTextureId = Shader.PropertyToID("_CardFrontTexture");
@@ -18,64 +11,44 @@ public class Card3DView : CardView {
     private Material _instancedMaterial;
     private int _defaultRenderQueue;
 
-    public CardUIView card2DView;
+    [Header ("3D info")]
+    [SerializeField] TextMeshPro cardName;
 
-    public bool IsInitialized { get; private set; }
+    [SerializeField] TextMeshPro costText;
+    
+    [SerializeField] TextMeshPro healthText;
+    [SerializeField] Transform healthIcon;
+
+    [SerializeField] TextMeshPro attackText;
+    [SerializeField] Transform attack3DIcon;
 
     #region Unity Lifecycle
 
     protected override void Awake() {
         base.Awake();
 
-        // Создаем MaterialPropertyBlock для эффективного изменения свойств материала
         _propertyBlock = new MaterialPropertyBlock();
-        card2DView = textureRenderer.Register3DCard(this);
-        SyncWithUICopy(card2DView);
-    }
-
-    private void Start() {
-        
+        InitializeMaterials();
     }
 
     protected override void OnDestroy() {
         base.OnDestroy();
-
-        textureRenderer.UnRegister3DCard(this);
     }
 
     #endregion
 
     #region Initialization
 
-    private void SyncWithUICopy(CardUIView cardUIView) {
-        card2DView = cardUIView;
-        uiInfo = card2DView.uiInfo;
-
-        InitializeMaterials();
-        IsInitialized = true;
-        OnInitialized?.Invoke();
-    }
-
     protected override void ValidateComponents() {
         base.ValidateComponents();
-
-        // Проверяем наличие компонентов рендеринга
         if (cardRenderer == null) {
-            Debug.LogError("Card3DView: SkinnedMeshRenderer not assigned!", this);
-        }
-
-        // Проверяем наличие коллайдера для взаимодействия
-        Collider col = GetComponent<Collider>();
-        if (col == null) {
-            Debug.LogWarning("Card3DView: No Collider component found! Adding BoxCollider.", this);
-            gameObject.AddComponent<BoxCollider>();
+            Debug.LogError("Card3DView: Renderer not assigned!", this);
         }
     }
 
     protected override void CleanupResources() {
         base.CleanupResources();
 
-        // Очищаем экземпляр материала для предотвращения утечек памяти
         if (_instancedMaterial != null) {
             Destroy(_instancedMaterial);
             _instancedMaterial = null;
@@ -91,21 +64,6 @@ public class Card3DView : CardView {
         }
     }
 
-    #endregion
-
-    #region State Management
-
-    protected override void ResetVisualState() {
-        base.ResetVisualState();
-
-        // Сбрасываем анимации
-        //if (animator != null) {
-        //    animator.Reset();
-        //}
-
-        // Сбрасываем порядок рендеринга
-        ResetRenderOrder();
-    }
     #endregion
 
     #region Mouse Interaction
@@ -165,8 +123,48 @@ public class Card3DView : CardView {
     }
 
     public override void SetHoverState(bool isHovered) {
-        ModifyRenderOrder(isHovered ? hoverRenderOrderBoost : -hoverRenderOrderBoost);
-
-        animator?.Hover(isHovered);
+        if (!movementComponent.IsMoving) {
+            //animator?.Hover(isHovered);
+        }
+        
     }
+
+
+    #region 3d Info Update
+    public override void UpdateCost(int cost) {
+        costText.text = cost.ToString();
+    }
+
+    public override void UpdateName(string name) {
+        cardName.text = name;
+    }
+
+    public override void UpdateAttack(int attack) {
+        attackText.text = attack.ToString();
+    }
+
+    public override void UpdateHealth(int health) {
+        healthText.text = health.ToString();
+    }
+
+    public override void ToggleCreatureStats(bool isEnabled) {
+       healthIcon.gameObject.SetActive(isEnabled);
+        attack3DIcon.gameObject.SetActive(isEnabled);
+    }
+
+    public override void UpdatePortait(Sprite portrait) {
+        if (_instancedMaterial != null && portrait != null) {
+            _instancedMaterial.SetTexture("_Portait", portrait.texture);
+        }
+    }
+
+
+    public override void UpdateBackground(Sprite bgImage) {
+        //throw new NotImplementedException();
+    }
+
+    public override void UpdateRarity(Color rarity) {
+        //throw new NotImplementedException();
+    }
+    #endregion
 }

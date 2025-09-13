@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 public struct ModifierChangedEvent : IEvent {
     public int OldValue { get; }
@@ -146,7 +144,7 @@ public class Attribute {
     }
 
     // Поточне значення атрибуту з урахуванням модифікаторів
-    public int CurrentValue => MainValue + AttributeModifier.CurrentValue;
+    public int Current => MainValue + AttributeModifier.CurrentValue;
 
     // Мінімальне значення атрибуту
     public int MinValue { get; set; } = 0;
@@ -183,13 +181,13 @@ public class Attribute {
     public int Subtract(int amount) {
         if (amount <= 0) return 0;
 
-        int oldTotal = CurrentValue;
+        int oldTotal = Current;
         int remainingValue = ApplyDamage(amount);
 
         int actualDecrease = amount - remainingValue;
         if (actualDecrease > 0) {
             OnTotalValueChanged?.Invoke(this, new AttributeTotalChangedEvent(
-                oldTotal, CurrentValue, -actualDecrease));
+                oldTotal, Current, -actualDecrease));
         }
 
         return actualDecrease;
@@ -226,7 +224,7 @@ public class Attribute {
     public int Add(int amount) {
         if (amount <= 0) return 0;
 
-        int oldTotal = CurrentValue;
+        int oldTotal = Current;
 
         // Спочатку відновлюємо основне значення до максимуму
         int mainDifference = BaseValue - MainValue;
@@ -245,7 +243,7 @@ public class Attribute {
         int totalAdded = addedToMain + addedToModifier;
         if (totalAdded > 0) {
             OnTotalValueChanged?.Invoke(this, new AttributeTotalChangedEvent(
-                oldTotal, CurrentValue, totalAdded));
+                oldTotal, Current, totalAdded));
         }
 
         return totalAdded;
@@ -280,8 +278,8 @@ public class Attribute {
         }
 
         // if effect was possitive
-        if (CurrentValue > BaseValue) {
-            int canDecrease = Math.Min(CurrentValue - BaseValue, amount);
+        if (Current > BaseValue) {
+            int canDecrease = Math.Min(Current - BaseValue, amount);
             ApplyDamage(canDecrease);
             AttributeModifier.Decrease(canDecrease);
         }
@@ -323,6 +321,6 @@ public class Attribute {
     public override string ToString() {
         return $"Base: {BaseValue}, Main: {MainValue}, " +
                $"Modifier (Total/Current): {AttributeModifier.TotalValue}/{AttributeModifier.CurrentValue}, " +
-               $"Total: {TotalValue}, Current: {CurrentValue}";
+               $"Total: {TotalValue}, Current: {Current}";
     }
 }
