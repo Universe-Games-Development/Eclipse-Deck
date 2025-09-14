@@ -2,234 +2,304 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using UnityEngine;
-using Zenject;
 
-public interface IOperationFactory {
-    TOperation Create<TOperation>(OperationData data) where TOperation : GameOperation;
-    GameOperation Create(OperationData data);
+public interface ICardPlayService {
+    UniTask<CardPlayResult> PlayCardAsync(Card card, CancellationToken cancellationToken = default);
+    bool IsPlayingCard(Card card);
+    void CancelCardPlay(Card card);
 }
 
-[System.AttributeUsage(System.AttributeTargets.Class)]
-public class OperationForAttribute : System.Attribute {
-    public System.Type DataType { get; }
-    public OperationForAttribute(System.Type dataType) {
-        DataType = dataType;
-    }
-}
+public class CardPlayService : ICardPlayService {
+    private readonly OperationManager _operationManager;
+    private readonly IOperationFactory _operationFactory;
+    private readonly IEventBus<IEvent> _eventBus;
+    private readonly Dictionary<string, CardPlaySession> _activeSessions = new();
 
-public class OperationFactory : IOperationFactory {
-    private readonly DiContainer _container;
-    private readonly Dictionary<Type, Type> _dataToOperationMap = new();
+    public CardPlayService(
+        OperationManager operationManager,
+        IOperationFactory operationFactory,
+        IEventBus<IEvent> eventBus) {
 
-    public OperationFactory(DiContainer container) {
-        _container = container;
-        Initialize();
-    }
-
-    private void Initialize() {
-        // Скануємо всі типи в поточній збірці
-        var assembly = Assembly.GetExecutingAssembly();
-        var operationTypes = assembly.GetTypes()
-            .Where(t => t.IsClass && !t.IsAbstract && typeof(GameOperation).IsAssignableFrom(t))
-            .Where(t => t.GetCustomAttribute<OperationForAttribute>() != null);
-
-
-        // Internal Debug 
-        List<Type> types = assembly.GetTypes().ToList();
-
-        List<Type> typesFilter1 = types.Where(t => t.IsClass && !t.IsAbstract && typeof(GameOperation).IsAssignableFrom(t)).ToList();
-
-        foreach (var operationType in operationTypes) {
-            var attribute = operationType.GetCustomAttribute<OperationForAttribute>();
-            if (attribute.DataType != null && typeof(OperationData).IsAssignableFrom(attribute.DataType)) {
-                _dataToOperationMap[attribute.DataType] = operationType;
-            }
-        }
+        _operationManager = operationManager ?? throw new ArgumentNullException(nameof(operationManager));
+        _operationFactory = operationFactory ?? throw new ArgumentNullException(nameof(operationFactory));
+        _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
     }
 
-    public GameOperation Create(OperationData data) {
-        if (data == null) throw new ArgumentNullException(nameof(data));
+    public async UniTask<CardPlayResult> PlayCardAsync(Card card, CancellationToken cancellationToken = default) {
+        if (card == null) throw new ArgumentNullException(nameof(card));
 
-        if (_dataToOperationMap.TryGetValue(data.GetType(), out var operationType)) {
-            return (GameOperation)_container.Instantiate(operationType, new object[] { data });
+        if (IsPlayingCard(card)) {
+            return CardPlayResult.Failed("Card is already being played");
         }
 
-        throw new InvalidOperationException($"No operation registered for {data.GetType().Name}");
-    }
+        var session = new CardPlaySession(card, _operationFactory, _operationManager, _eventBus);
+        _activeSessions[card.Id] = session;
 
-    public TOperation Create<TOperation>(OperationData data) where TOperation : GameOperation {
-        return _container.Instantiate<TOperation>(new object[] { data });
-    }
-}
-
-public class CardPlayModule : MonoBehaviour {
-    [Header("Dependencies")]
-    [SerializeField] private OperationManager _operationManager;
-
-    [Header("Settings")]
-    [SerializeField] private bool _useEarlyFinishMode = false; // Новий режим
-
-    private CardPlayData _playData;
-    private CancellationToken _currentCancellationToken;
-
-    public event System.Action<CardPresenter, bool> OnCardPlayCompleted;
-    public event System.Action<CardPresenter> OnCardPlayStarted;
-
-    private CancellationTokenSource _internalTokenSource;
-    [Inject] private IOperationFactory _operationFactory;
-
-    public void StartCardPlay(CardPresenter cardPresenter, CancellationToken externalToken = default) {
-        if (IsPlaying() || cardPresenter == null) {
-            OnCardPlayCompleted?.Invoke(cardPresenter, false);
-            return;
-        }
-
-        _playData = new CardPlayData(cardPresenter);
-        OnCardPlayStarted?.Invoke(cardPresenter);
-
-        _internalTokenSource = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
-        _currentCancellationToken = _internalTokenSource.Token;
-
-        // Підписка на івенти в залежності від режиму
-        _operationManager.OnOperationStatus += HandleOperationStatus;
-
-        WaitAndSubmitNextOperation(_currentCancellationToken).Forget();
-    }
-
-
-    private async UniTask WaitAndSubmitNextOperation(CancellationToken cancellationToken) {
         try {
-            await UniTask.WaitUntil(() => !_operationManager.IsRunning,
-                cancellationToken: cancellationToken);
+            var result = await session.ExecuteAsync(cancellationToken);
+            return result;
+        } finally {
+            _activeSessions.Remove(card.Id);
+        }
+    }
 
-            if (cancellationToken.IsCancellationRequested) {
-                StopOperationSequence();
-                return;
+    public bool IsPlayingCard(Card card) {
+        return card != null && _activeSessions.ContainsKey(card.Id);
+    }
+
+    public void CancelCardPlay(Card card) {
+        if (card != null && _activeSessions.TryGetValue(card.Id, out var session)) {
+            session.Cancel();
+        }
+    }
+}
+
+public class CardPlaySession : IDisposable {
+    private readonly Card _card;
+    private readonly IOperationFactory _operationFactory;
+    private readonly IOperationManager _operationManager;
+    private readonly IEventBus<IEvent> _eventBus;
+    private readonly List<OperationData> _operations;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    private int _currentOperationIndex = 0;
+    private int _completedOperations = 0;
+
+    private bool _isDisposed = false;
+    public CardPlaySession(
+        Card card,
+        IOperationFactory operationFactory,
+        IOperationManager operationManager,
+        IEventBus<IEvent> eventBus) {
+
+        _card = card ?? throw new ArgumentNullException(nameof(card));
+        _operationFactory = operationFactory ?? throw new ArgumentNullException(nameof(operationFactory));
+        _operationManager = operationManager ?? throw new ArgumentNullException(nameof(operationManager));
+        _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+
+        _operations = card.GetOperationData()?.ToList() ?? new List<OperationData>();
+    }
+
+    public async UniTask<CardPlayResult> ExecuteAsync(CancellationToken externalToken) {
+        if (_isDisposed) throw new ObjectDisposedException(nameof(CardPlaySession));
+
+        using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+            externalToken, _cancellationTokenSource.Token);
+
+        var token = linkedTokenSource.Token;
+
+        try {
+            _eventBus.Raise(new CardPlayStartedEvent(_card));
+
+            if (!ValidateOperations()) {
+                var failedResult = CardPlayResult.Failed("Invalid operations for card");
+                _eventBus.Raise(new CardPlayStatusEvent(_card, failedResult));
+                return failedResult;
             }
 
-            if (_playData?.HasNextOperation() == true) {
-                var nextOperationData = _playData.GetNextOperation();
-                GameOperation operation = _operationFactory.Create(nextOperationData);
-                operation.Initiator = _playData.CardPresenter;
+            while (HasNextOperation() && !token.IsCancellationRequested) {
+                var operationResult = await ExecuteNextOperationAsync(token);
 
-                if (!cancellationToken.IsCancellationRequested) {
-                    _operationManager.Push(operation);
+                if (!operationResult.IsSuccess) {
+                    var failedResult = CardPlayResult.Failed(operationResult.ErrorMessage);
+                    _eventBus.Raise(new CardPlayStatusEvent(_card, failedResult));
+                    return failedResult;
                 }
-            } else {
-                StopOperationSequence();
+
+                _completedOperations++;
             }
-        } catch (System.OperationCanceledException) {
-            StopOperationSequence();
+
+            var successResult = CardPlayResult.Success(_completedOperations);
+            _eventBus.Raise(new CardPlayStatusEvent(_card, successResult));
+            return successResult;
+
+        } catch (OperationCanceledException) {
+            var cancelledResult = CardPlayResult.Cancelled();
+            _eventBus.Raise(new CardPlayStatusEvent(_card, cancelledResult));
+            return cancelledResult;
+        } catch (Exception ex) {
+            Debug.LogError($"Card play failed with exception: {ex}");
+            var failedResult = CardPlayResult.Failed(ex.Message);
+            _eventBus.Raise(new CardPlayStatusEvent(_card, failedResult));
+            return failedResult;
         }
     }
 
-    // Стара логіка (резервна)
-    private void HandleOperationStatus(GameOperation operation, OperationStatus status) {
-        if (!IsPlaying()) return;
+    private bool ValidateOperations() {
+        if (_operations.Count == 0) {
+            Debug.LogWarning($"Card {_card.Data?.Name} has no operations");
+            return false;
+        }
 
-        if (!operation.Initiator == _playData.CardPresenter) return;
+        // Перевіряємо чи всі операції можна створити
+        return _operations.All(op => _operationFactory.CanCreate(op.GetType()));
+    }
+
+    private bool HasNextOperation() {
+        return _currentOperationIndex < _operations.Count;
+    }
+
+    private async UniTask<OperationResult> ExecuteNextOperationAsync(CancellationToken token) {
+        var operationData = _operations[_currentOperationIndex];
+        var currentIndex = _currentOperationIndex;
+        _currentOperationIndex++;
+
+        try {
+            await WaitForOperationManager(token);
+
+            var operation = _operationFactory.Create(operationData);
+            operation.SetSource(_card);
+
+            return await ExecuteOperationWithCompletionSource(operation, currentIndex, token);
+        } catch (OperationCanceledException) {
+            return OperationResult.Failed("Operation canceled");
+        } catch (TimeoutException) {
+            return OperationResult.Failed("Operation manager timeout");
+        } catch (Exception ex) {
+            Debug.LogError($"Failed to execute operation: {ex}");
+            return OperationResult.Failed(ex.Message);
+        }
+    }
 
 
-        switch (status) {
-            case OperationStatus.Start:
-                if (_useEarlyFinishMode) {
-                    OnCardPlayCompleted?.Invoke(_playData.CardPresenter, true);
+    private async UniTask WaitForOperationManager(CancellationToken token) {
+        await UniTask.WaitUntil(
+            () => !_operationManager.IsRunning,
+            cancellationToken: token,
+            timing: PlayerLoopTiming.Update
+        ).Timeout(TimeSpan.FromSeconds(5));
+    }
+
+    private async UniTask<OperationResult> ExecuteOperationWithCompletionSource(
+        GameOperation operation, int currentIndex, CancellationToken token) {
+        var tcs = new UniTaskCompletionSource<OperationResult>();
+        using var subscription = new OperationStatusSubscription(_operationManager, operation, tcs);
+
+        _operationManager.Push(operation);
+
+        return await tcs.Task.AttachExternalCancellation(token); ;
+    }
+
+
+    public void Cancel() {
+        _cancellationTokenSource.Cancel();
+    }
+
+    public void Dispose() {
+        _cancellationTokenSource?.Dispose();
+    }
+
+    // Допоміжний клас для управління підпискою
+    private class OperationStatusSubscription : IDisposable {
+        private readonly IOperationManager _manager;
+        private readonly GameOperation _operation;
+        private readonly UniTaskCompletionSource<OperationResult> _tcs;
+        private Action<GameOperation, OperationStatus> _handler;
+
+        public OperationStatusSubscription(
+            IOperationManager manager,
+            GameOperation operation,
+            UniTaskCompletionSource<OperationResult> tcs) {
+            _manager = manager;
+            _operation = operation;
+            _tcs = tcs;
+
+            _handler = (op, status) => {
+                if (op != _operation) return;
+
+                switch (status) {
+                    case OperationStatus.Success:
+                        _tcs.TrySetResult(OperationResult.Success());
+                        break;
+                    case OperationStatus.Failed:
+                        _tcs.TrySetResult(OperationResult.Failed("Operation failed"));
+                        break;
+                    case OperationStatus.Cancelled:
+                        _tcs.TrySetCanceled();
+                        break;
+                    case OperationStatus.ThrownException:
+                        _tcs.TrySetResult(OperationResult.Failed("Operation threw exception"));
+                        break;
                 }
-                break;
-            case OperationStatus.Success:
-                _playData.IsStarted = true;
-                _playData.CompletedOperations++;
-                WaitAndSubmitNextOperation(_currentCancellationToken).Forget();
-                break;
+            };
 
-            case OperationStatus.Cancelled:
-            case OperationStatus.Failed:
-                if (_useEarlyFinishMode) {
-                    OnCardPlayCompleted?.Invoke(_playData.CardPresenter, false);
-                    StopOperationSequence();
-                } else {
-                    if (!_playData.IsStarted) {
-                        // Перша операція не вдалася - карта не зіграна
-                        StopOperationSequence();
-                    } else {
-                        WaitAndSubmitNextOperation(_currentCancellationToken).Forget();
-                    }
-                }
-                
-
-                break;
-        }
-    }
-
-
-    private void StopOperationSequence() {
-        if (!IsPlaying()) return;
-
-        _operationManager.OnOperationStatus -= HandleOperationStatus;
-
-        _internalTokenSource?.Cancel();
-        _internalTokenSource?.Dispose();
-        _internalTokenSource = null;
-
-        if (!_useEarlyFinishMode) {
-            OnCardPlayCompleted?.Invoke(_playData.CardPresenter, _playData.IsStarted);
+            _manager.OnOperationStatus += _handler;
         }
 
-        GameLogger.Log($"Card play Completed operations: {_playData.CompletedOperations} / {_playData.Operations.Count}", LogLevel.Debug, LogCategory.CardModule);
-        _playData = null;
-    }
-
-    public bool IsPlaying() {
-        return _playData != null;
-    }
-
-    public CardPlayData GetCurrentPlayData() {
-        return _playData;
-    }
-
-    // Метод для зміни режиму під час виконання
-    public void SetEarlyFinishMode(bool enabled) {
-        _useEarlyFinishMode = enabled;
+        public void Dispose() {
+            if (_handler != null) {
+                _manager.OnOperationStatus -= _handler;
+                _handler = null;
+            }
+        }
     }
 }
 
-public class CardPlayData {
-    public CardPresenter CardPresenter;
-    public bool IsStarted = false;
-    public int CurrentOperationIndex = 0;
-    public int CompletedOperations = 0;
-    public List<OperationData> Operations;
+#region Results and Events
 
-    public CardPlayData(CardPresenter presenter) {
-        CardPresenter = presenter;
-        Operations = presenter.GetOperationDatas();
+public struct CardPlayResult {
+    public bool IsSuccess { get; }
+    public bool IsCancelled { get; }
+    public string ErrorMessage { get; }
+    public int CompletedOperations { get; }
+
+    private CardPlayResult(bool isSuccess, bool isCancelled, string errorMessage, int completedOperations) {
+        IsSuccess = isSuccess;
+        IsCancelled = isCancelled;
+        ErrorMessage = errorMessage;
+        CompletedOperations = completedOperations;
     }
 
-    public bool HasNextOperation() => CurrentOperationIndex < Operations.Count;
+    public static CardPlayResult Success(int completedOperations) =>
+        new(true, false, null, completedOperations);
 
-    public OperationData GetNextOperation() {
-        if (HasNextOperation() && CardPresenter != null && Operations != null) {
-            return Operations[CurrentOperationIndex++];
-        }
-        return null;
+    public static CardPlayResult Failed(string errorMessage) =>
+        new(false, false, errorMessage, 0);
+
+    public static CardPlayResult Cancelled() =>
+        new(false, true, "Cancelled", 0);
+}
+
+public struct OperationResult {
+    public bool IsSuccess { get; }
+    public string ErrorMessage { get; }
+
+    private OperationResult(bool isSuccess, string errorMessage) {
+        IsSuccess = isSuccess;
+        ErrorMessage = errorMessage;
     }
 
-    public bool IsLastOperation(OperationData operation) {
-        return Operations?.LastOrDefault() == operation;
+    public static OperationResult Success() => new(true, null);
+    public static OperationResult Failed(string errorMessage) => new(false, errorMessage);
+}
+
+// Events
+public struct CardPlayStartedEvent : IEvent {
+    public Card Card { get; }
+    public CardPlayStartedEvent(Card card) => Card = card;
+}
+
+public struct CardPlayStatusEvent : IEvent {
+    public Card Card { get; }
+    public CardPlayResult playResult;
+
+    public CardPlayStatusEvent(Card card, CardPlayResult result) {
+        Card = card;
+        playResult = result;
     }
 }
 
-public struct CardPlayedEvent : IEvent {
-    public Card PlayedCard { get; }
-    public BoardPlayer PlayedBy { get; }
-    public bool WasSuccessful { get; }
+public struct CardOperationCompletedEvent : IEvent {
+    public Card Card { get; }
+    public int OperationIndex { get; }
+    public int TotalOperations { get; }
 
-    public CardPlayedEvent(Card playedCard, BoardPlayer playedBy, bool wasSuccessful) {
-        PlayedCard = playedCard;
-        PlayedBy = playedBy;
-        WasSuccessful = wasSuccessful;
+    public CardOperationCompletedEvent(Card card, int operationIndex, int totalOperations) {
+        Card = card;
+        OperationIndex = operationIndex;
+        TotalOperations = totalOperations;
     }
 }
+#endregion

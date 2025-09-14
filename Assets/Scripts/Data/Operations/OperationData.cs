@@ -1,6 +1,4 @@
 using Cysharp.Threading.Tasks;
-using System.Threading.Tasks;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -27,7 +25,7 @@ public class DamageOperation : GameOperation {
     }
 
     public override bool Execute() {
-        if (!TryGetTarget(TargetCreatureKey, out UnitPresenter damagablePresenter)) {
+        if (!TryGetTarget(TargetCreatureKey, out UnitModel damagablePresenter)) {
             Debug.LogError($"Valid {TargetCreatureKey} not found for damage operation");
             return false;
         }

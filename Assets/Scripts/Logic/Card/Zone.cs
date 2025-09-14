@@ -4,15 +4,25 @@ using UnityEngine;
 
 
 public class Zone : UnitModel {
-    public Action OnCreatureSpawned;
+    public Action<Creature> OnCreaturePlaced;
+    public Action<Creature> OnCreatureRemoved;
 
     List<Creature> creatures = new();
+
     public void PlaceCreature(Creature creature) {
         Debug.Log($"Spawning craeture at zone: {this}");
 
         creatures.Add(creature);
        
-        OnCreatureSpawned?.Invoke();
+        OnCreaturePlaced?.Invoke(creature);
+    }
+
+    public void RemoveCreature(Creature creature) {
+        Debug.Log($"Spawning craeture at zone: {this}");
+
+        creatures.Remove(creature);
+
+        OnCreatureRemoved?.Invoke(creature);
     }
 
     public int GetCreaturesCount() {

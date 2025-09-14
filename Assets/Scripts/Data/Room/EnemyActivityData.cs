@@ -12,7 +12,7 @@ public class EnemyActivityData : ActivityData {
 
 public class EnemyRoomActivity : RoomActivity {
     [Inject] protected EnemySpawner _enemySpawner;
-    [Inject] protected GameEventBus _eventBus;
+    [Inject] protected IEventBus<IEvent> _eventBus;
     private Enemy _currentEnemy;
 
     public EnemyRoomActivity() {

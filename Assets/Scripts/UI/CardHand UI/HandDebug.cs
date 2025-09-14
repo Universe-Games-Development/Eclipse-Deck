@@ -19,7 +19,7 @@ public class HandDebug : MonoBehaviour
     [SerializeField] CreatureCardData creatureCardData;
     [SerializeField] SpellCardData spellCardData;
 
-    [Inject] GameEventBus eventBus;
+    [Inject] IEventBus<IEvent> eventBus;
 
     [Inject] private ICardFactory cardFactory;
 

@@ -12,6 +12,10 @@ public class Health : Attribute {
         _owner = owner;
     }
 
+    public Health(Health health, IHealthable owner) : base(health) {
+        _owner = owner;
+    }
+
     public void TakeDamage(int damage, IDamageDealer source = null) {
         if (IsDead) return;
 

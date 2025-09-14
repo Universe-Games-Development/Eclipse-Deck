@@ -24,7 +24,7 @@ public class TriggerManager {
 }
 
 public abstract class AbilityTrigger {
-    [Inject] protected GameEventBus _eventBus;
+    [Inject] protected IEventBus<IEvent> _eventBus;
     public Action<BoardPlayer, UnitModel, IEvent> OnTriggerActivation;
     public string TriggerName { get; protected set; }
     public abstract void ActivateTrigger(UnitModel gameUnit);
@@ -46,7 +46,7 @@ public class OnSelfSummonTrigger : AbilityTrigger {
     }
 
     private void HandleSummon(GameEnterEvent eventData) {
-        OnTriggerActivation?.Invoke(eventData.Summoned.Owner, eventData.Summoned, eventData);
+        OnTriggerActivation?.Invoke(eventData.Summoned.GetPlayer(), eventData.Summoned, eventData);
     }
 }
 
@@ -64,7 +64,7 @@ public class OnAnotherSummonTrigger : AbilityTrigger {
     }
 
     private void HandleSummon(ref GameEnterEvent eventData) {
-        OnTriggerActivation?.Invoke(eventData.Summoned.Owner, eventData.Summoned, eventData);
+        OnTriggerActivation?.Invoke(eventData.Summoned.GetPlayer(), eventData.Summoned, eventData);
     }
 }
 

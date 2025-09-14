@@ -15,12 +15,12 @@ public abstract class CardHandView : MonoBehaviour {
     [SerializeField] private int hoverRenderOrderBoost = 50;
 
     private CardView hoveredCard;
-    private readonly Dictionary<CardView, CardPoint> cardLayoutData = new();
+    private readonly Dictionary<CardView, TransformPoint> cardLayoutData = new();
 
     public virtual void Toggle(bool value) => gameObject.SetActive(value);
 
-    protected CardPoint[] GetCardPoints(int cardCount) =>
-        layoutStrategy?.CalculateCardTransforms(cardCount) ?? new CardPoint[0];
+    protected TransformPoint[] GetCardPoints(int cardCount) =>
+        layoutStrategy?.CalculateCardTransforms(cardCount) ?? new TransformPoint[0];
 
     public virtual void UpdateCardPositions(List<CardView> cardViews) {
         if (cardViews == null) return;
@@ -39,21 +39,12 @@ public abstract class CardHandView : MonoBehaviour {
             cardLayoutData[cardView] = points[i];
 
             // Анімуємо карту якщо вона не в hover стані
-            AnimateToPosition(cardView, cardPoint, baseRenderOrder + i);
+            cardView.SetRenderOrder(baseRenderOrder + i);
+            AnimateToPosition(cardView, cardPoint);
         }
     }
 
-    public void UpdateSingleCardPosition(CardView cardView) {
-        if (cardView == null || !cardLayoutData.TryGetValue(cardView, out var data)) {
-            Debug.LogWarning($"No layout data found for card {cardView?.name}");
-            return;
-        }
-
-        var cardPoint = new CardPoint { position = data.position, rotation = data.rotation };
-        AnimateToPosition(cardView, cardPoint, data.sortingOrder);
-    }
-
-    private void AnimateToPosition(CardView cardView, CardPoint cardPoint, int renderOrder) {
+    private void AnimateToPosition(CardView cardView, TransformPoint cardPoint) {
         Transform cardTransform = cardView.transform;
 
         Tweener moveTween = cardTransform.DOMove(cardPoint.position, cardsOrganizeDuration)
@@ -61,7 +52,6 @@ public abstract class CardHandView : MonoBehaviour {
                                     .SetLink(cardTransform.gameObject);
 
         cardView.DoTweener(moveTween);
-        cardView.SetRenderOrder(renderOrder);
     }
 
     public virtual void SetCardHover(CardView cardView, bool isHovered) {
@@ -160,17 +150,17 @@ public abstract class CardHandView : MonoBehaviour {
     public abstract CardView CreateCardView(Card card);
 }
 public abstract class HandLayoutStrategy : MonoBehaviour {
-    public abstract CardPoint[] CalculateCardTransforms(int cardCount);
+    public abstract TransformPoint[] CalculateCardTransforms(int cardCount);
 }
 
 [System.Serializable]
-public struct CardPoint {
+public struct TransformPoint {
     public Vector3 position;
     public Quaternion rotation;
     public Vector3 scale;
     public int sortingOrder;
 
-    public CardPoint(Vector3 pos, Quaternion rot, Vector3 scl, int sorting = 0) {
+    public TransformPoint(Vector3 pos, Quaternion rot, Vector3 scl, int sorting = 0) {
         position = pos;
         rotation = rot;
         scale = scl;

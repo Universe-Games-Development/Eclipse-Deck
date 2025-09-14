@@ -39,7 +39,7 @@ public class TravelManager : MonoBehaviour {
 
     [Inject] private IDungeonGenerator _dungeonGenerator;
     [Inject] private VisitedLocationsService _visitedLocationService;
-    [Inject] private GameEventBus _eventBus;
+    [Inject] private IEventBus<IEvent> _eventBus;
     [Inject] private OpponentRegistrator _opponentRegistrator;
     [Inject] private PlayerHeroFactory _playerHeroFactory;
     

@@ -4,16 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
-using Zenject;
 
-public class OperationManager : MonoBehaviour {
+public class OperationManager : MonoBehaviour, IOperationManager {
     [SerializeField] private OperationTargetsFiller operationFiller;
 
     private PriorityQueue<Priority, GameOperation> _operationQueue;
     private GameOperation _currentOperation;
     private bool _isRunning;
     private CancellationTokenSource _globalCancellationSource;
-    private readonly ReaderWriterLockSlim _queueLock = new ReaderWriterLockSlim();
+    private readonly ReaderWriterLockSlim _queueLock = new();
 
     public event Action<GameOperation, OperationStatus> OnOperationStatus;
     public event Action OnQueueEmpty;
@@ -227,10 +226,10 @@ public class OperationManager : MonoBehaviour {
 
             GameLogger.LogInfo($"Beginning operation: {operation}", LogCategory.OperationManager);
 
-            TargetOperationRequest request = new TargetOperationRequest(
+            TargetOperationRequest request = new(
                 operation.RequestTargets,
                 operation.IsMandatory,
-                operation.Initiator);
+                operation.Source);
 
             var targets = await operationFiller.FillTargetsAsync(
                 request,
@@ -254,14 +253,14 @@ public class OperationManager : MonoBehaviour {
                 GameLogger.LogInfo($"Operation {operation} execution result: {status}", LogCategory.OperationManager);
             } else {
                 GameLogger.LogWarning($"Operation {operation} is not ready for execution", LogCategory.OperationManager);
-                status = OperationStatus.Failed;
+                status = OperationStatus.Cancelled;
             }
         } catch (OperationCanceledException) {
             status = OperationStatus.Cancelled;
             GameLogger.LogInfo($"Operation {operation} was cancelled", LogCategory.OperationManager);
             throw;
         } catch (Exception ex) {
-            status = OperationStatus.Failed;
+            status = OperationStatus.ThrownException;
             GameLogger.LogError($"Operation {operation} failed with exception: {ex.Message}", LogCategory.OperationManager);
             GameLogger.LogException(ex, LogCategory.OperationManager);
         } finally {
@@ -396,7 +395,8 @@ public enum OperationStatus {
     Success,
     PartialSuccess,
     Failed,
-    Cancelled
+    Cancelled,
+    ThrownException
 }
 
 public enum Priority {
@@ -409,18 +409,18 @@ public enum Priority {
 public abstract class GameOperation 
 {
     public List<Target> RequestTargets = new();
-    protected Dictionary<string, UnitPresenter> filledTargets;
+    protected Dictionary<string, UnitModel> filledTargets;
     public bool IsMandatory { get; set; } = false;
-    public UnitPresenter Initiator { get; set; }
+    public UnitModel Source { get; set; }
     
     public abstract bool Execute();
     
-    public void SetTargets(Dictionary<string, UnitPresenter> filledTargets) 
+    public void SetTargets(Dictionary<string, UnitModel> filledTargets) 
     {
         this.filledTargets = filledTargets;
     }
     
-    protected bool TryGetTarget<T>(string key, out T result) where T : UnitPresenter {
+    protected bool TryGetTarget<T>(string key, out T result) where T : UnitModel {
         if (filledTargets.TryGetValue(key, out var obj) && obj is T cast) 
         {
             result = cast;
@@ -443,9 +443,8 @@ public abstract class GameOperation
         return isAnyEmpty || isMismatchTargets;
     }
     
-    public void SetInitiator(UnitPresenter initiator) 
-    {
-        Initiator = initiator;
+    public void SetSource(UnitModel source) {
+        Source = source;
     }
 }
 

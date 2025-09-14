@@ -7,21 +7,19 @@ public class CreaturePresenter : UnitPresenter, IHealthable {
 
     public Health Health => throw new NotImplementedException();
 
-    public override UnitModel GetInfo() {
-        return Creature;
-    }
-    public override BoardPlayer GetPlayer() {
-        return Creature.Owner;
-    }
-
-    [Inject]
-    public void Construct(IUnitRegistry unitRegistry) {
-        _unitRegistry ??= unitRegistry;
-        _unitRegistry.Register(this);
-    }
-
     public void Initialize(Creature creature, CreatureView view) {
         Creature = creature;
         View = view;
+    }
+
+    public override UnitModel GetModel() {
+        return Creature;
+    }
+    public override BoardPlayer GetPlayer() {
+        return Creature.GetPlayer();
+    }
+
+    public void Reset() {
+        // Do reset logic here
     }
 }

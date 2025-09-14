@@ -130,7 +130,7 @@ public class Attribute {
     public int TotalValue => BaseValue + AttributeModifier.TotalValue;
 
     // Основне значення атрибуту
-    private int _mainValue;
+    protected int _mainValue;
     public int MainValue {
         get => _mainValue;
         private set {
@@ -150,7 +150,7 @@ public class Attribute {
     public int MinValue { get; set; } = 0;
 
     // Модифікатор атрибуту
-    public AttributeModifier AttributeModifier { get; private set; }
+    public AttributeModifier AttributeModifier { get; protected set; }
 
     // Події
     public event EventHandler<ModifierChangedEvent> OnMainValueChanged;
@@ -160,10 +160,20 @@ public class Attribute {
     public Attribute(int baseValue, int minValue = -999) {
         MinValue = minValue;
         BaseValue = Math.Max(minValue, baseValue);
-        _mainValue = BaseValue; // Встановлюємо напряму, щоб уникнути виклику події
+        _mainValue = BaseValue;
         AttributeModifier = new AttributeModifier();
+        SubscribeToModifierEvents();
+    }
 
-        // Підписуємось на події модифікатора
+    public Attribute(Attribute attribute) {
+        MinValue = attribute.MinValue;
+        BaseValue = attribute.BaseValue;
+        _mainValue = attribute.MainValue;
+        AttributeModifier = attribute.AttributeModifier;
+        SubscribeToModifierEvents();
+    }
+
+    private void SubscribeToModifierEvents() {
         AttributeModifier.OnCurrentValueChanged += (s, e) =>
             OnTotalValueChanged?.Invoke(this, new AttributeTotalChangedEvent(
                 e.OldValue + MainValue,
@@ -176,6 +186,7 @@ public class Attribute {
                 BaseValue + e.NewValue,
                 e.Difference));
     }
+
 
     // Зменшити значення атрибуту (отримання шкоди тощо)
     public int Subtract(int amount) {

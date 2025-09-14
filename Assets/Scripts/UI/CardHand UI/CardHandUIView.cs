@@ -66,7 +66,7 @@ public class CardHandUIView : CardHandView {
         }
     }
 
-    protected void OnDestroy() {
+    protected override void OnDestroy() {
         updatePositionCts?.Cancel();
         updatePositionCts?.Dispose();
 
@@ -75,6 +75,7 @@ public class CardHandUIView : CardHandView {
         }
 
         layoutMap.Clear();
+        base.OnDestroy();
     }
 
     public override void RemoveCardView(CardView cardView) {

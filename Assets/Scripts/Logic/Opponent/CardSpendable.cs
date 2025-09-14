@@ -8,9 +8,9 @@ public class CardSpendable {
     private readonly Health health;
 
     public bool IsManaEnabled { get; private set; } = false;
-    private GameEventBus _eventBus;
+    private IEventBus<IEvent> _eventBus;
 
-    public CardSpendable(Mana mana, Health health, GameEventBus eventBus) {
+    public CardSpendable(Mana mana, Health health, IEventBus<IEvent> eventBus) {
         this.mana = mana;
         this.health = health;
         _eventBus = eventBus;

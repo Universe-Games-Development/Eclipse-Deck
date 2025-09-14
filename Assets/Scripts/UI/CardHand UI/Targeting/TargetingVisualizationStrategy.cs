@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Zenject;
 
 public class TargetingVisualizationStrategy : MonoBehaviour{
     [SerializeField] private Transform playerPortrait;
@@ -7,6 +8,7 @@ public class TargetingVisualizationStrategy : MonoBehaviour{
     // Префаби для створення візуалізації
     [SerializeField] private CardMovementTargeting cardTargeting;
     [SerializeField] private ArrowTargeting arrowTargeting;
+    [Inject] IUnitPresenterRegistry presenterRegistry;
 
     public TargetingVisualizationStrategy(Transform playerPortrait, BoardInputManager boardInputManager) {
         this.playerPortrait = playerPortrait;
@@ -14,10 +16,14 @@ public class TargetingVisualizationStrategy : MonoBehaviour{
     }
 
     public ITargetingVisualization CreateVisualization(TargetSelectionRequest request) {
-        if (request.Initiator is CardPresenter card) {
-            return IsZoneRequirement(request.Requirement)
-                ? CreateCardMovementTargeting(card)
-                : CreateArrowTargeting(card.transform.position, request);
+        if (request.Source is Card card) {
+            CardPresenter cardPresenter = presenterRegistry.GetPresenter<CardPresenter>(card);
+            if (IsZoneRequirement(request.Requirement)) {
+                return CreateCardMovementTargeting(cardPresenter);
+            } else {
+                return CreateArrowTargeting(cardPresenter.transform.position, request);
+            }
+            
         }
 
         return CreateArrowTargeting(playerPortrait.position, request);

@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Zenject;
 
 public abstract class UnitPresenter : MonoBehaviour {
-    [Inject] public IUnitRegistry _unitRegistry;
+    [Inject] public IUnitPresenterRegistry _unitRegistry;
 
     [SerializeField] private bool isDebugEnabled = false;
     public bool IsDebugEnabled => isDebugEnabled;
 
-    public abstract UnitModel GetInfo();
+    public abstract UnitModel GetModel();
     public abstract BoardPlayer GetPlayer();
 
     protected void DebugLog(string message) {
@@ -24,11 +23,11 @@ public abstract class UnitPresenter : MonoBehaviour {
     }
 
     protected virtual void OnEnable() {
-        _unitRegistry?.Register(this);
+        _unitRegistry?.Register(GetModel(), this);
     }
 
-    protected virtual void OnDisable() {
-        _unitRegistry?.Unregister(this);
+    protected virtual void OnDestroy() {
+        _unitRegistry?.Unregister(GetModel());
     }
 }
 

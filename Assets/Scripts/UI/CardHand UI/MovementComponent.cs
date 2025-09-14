@@ -59,6 +59,7 @@ public class MovementComponent : MonoBehaviour {
             // Ждем завершения твина
             await tween
                 .SetLink(gameObject)
+                .Play()
                 .ToUniTask(TweenCancelBehaviour.Kill, _moveCts.Token);
 
             SetMovementState(MovementState.Idle);
@@ -85,6 +86,7 @@ public class MovementComponent : MonoBehaviour {
         try {
             await sequence
                 .SetLink(gameObject)
+                .Play()
                 .ToUniTask(TweenCancelBehaviour.Kill, _moveCts.Token);
 
             SetMovementState(MovementState.Idle);

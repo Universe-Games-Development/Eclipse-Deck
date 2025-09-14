@@ -16,7 +16,7 @@ public class CardsHandleSystem : MonoBehaviour {
     [SerializeField] public BoardPlayer BoardPlayer;
     public CardSpendable CardSpendable { get; private set; }
 
-    [Inject] GameEventBus _eventBus;
+    [Inject] IEventBus<IEvent> _eventBus;
     [Inject] CommandManager _commandManager;
     [Inject] CardProvider _cardProvider;
     [Inject] ICardFactory _cardFactory;

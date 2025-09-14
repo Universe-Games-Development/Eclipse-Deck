@@ -2752,7 +2752,7 @@ MonoBehaviour:
     enableFileLogging: 0
     enableTimestamps: 1
     enableStackTrace: 1
-    enabledCategories: 0
+    enabledCategories: -1
     debugColor: {r: 1, g: 1, b: 1, a: 1}
     infoColor: {r: 0, g: 1, b: 1, a: 1}
     warningColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
@@ -5072,6 +5072,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1531669270}
   - component: {fileID: 1531669271}
+  - component: {fileID: 1531669273}
+  - component: {fileID: 1531669272}
   m_Layer: 0
   m_Name: UniversalPool
   m_TagString: Untagged
@@ -5110,6 +5112,35 @@ MonoBehaviour:
   maxSize: 50
   collectionCheck: 1
   prefab: {fileID: 3178679955655854316, guid: 474e1891b23a7a449bcfa3486d4ba210, type: 3}
+--- !u!114 &1531669272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1531669269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b692d8906c844459dc1d7b9d9cdfd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  creaturePool: {fileID: 1531669273}
+--- !u!114 &1531669273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1531669269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6c909c3be0b78f43a476f418025ef8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultCapacity: 10
+  maxSize: 50
+  collectionCheck: 1
+  prefab: {fileID: -8699964533942601430, guid: a72c9323b29420e42838e928346268a9, type: 3}
 --- !u!1 &1538233760
 GameObject:
   m_ObjectHideFlags: 0
@@ -5759,68 +5790,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1644766371}
   m_CullTransparentMesh: 1
---- !u!1 &1664084047
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1664084048}
-  - component: {fileID: 1664084050}
-  - component: {fileID: 1664084049}
-  m_Layer: 0
-  m_Name: CreatureSpawnService
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1664084048
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1664084047}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.3743556, y: 0.8068143, z: -1.5834953}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1664084049
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1664084047}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d6c909c3be0b78f43a476f418025ef8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultCapacity: 10
-  maxSize: 50
-  collectionCheck: 1
-  prefab: {fileID: 7554266111020686455, guid: ce026cb02dab10a41b44665bc3b63a5a, type: 3}
---- !u!114 &1664084050
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1664084047}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 40b692d8906c844459dc1d7b9d9cdfd0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  creaturePool: {fileID: 1664084049}
 --- !u!1 &1794535937
 GameObject:
   m_ObjectHideFlags: 0
@@ -6828,19 +6797,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2089529219
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9050606715402537018}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e6e2b4ca0ffa1f4dbfd13a2ad9dee02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _operationManager: {fileID: 455995501}
 --- !u!4 &2101689631 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7544186629392564874, guid: a2aa70240a553974fb6787bff9fd789e, type: 3}
@@ -7965,7 +7921,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   operationManager: {fileID: 455995501}
-  cardPlayModule: {fileID: 2089529219}
   player: {fileID: 3109042865987796535}
   handPresenter: {fileID: 8418556749380161856}
 --- !u!33 &2267147059296827528
@@ -11499,7 +11454,6 @@ GameObject:
   - component: {fileID: 3408733074257219298}
   - component: {fileID: 103742893820764631}
   - component: {fileID: 538347713654969556}
-  - component: {fileID: 2089529219}
   m_Layer: 0
   m_Name: GameBoard
   m_TagString: Untagged
@@ -11626,4 +11580,3 @@ SceneRoots:
   - {fileID: 1531669270}
   - {fileID: 1942615722}
   - {fileID: 3847259741787184102}
-  - {fileID: 1664084048}

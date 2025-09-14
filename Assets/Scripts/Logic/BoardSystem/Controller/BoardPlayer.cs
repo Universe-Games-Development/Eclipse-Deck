@@ -4,7 +4,7 @@ using UnityEngine;
 using Zenject;
 
 public class BoardPlayer : UnitPresenter, IHealthable, IMannable {
-    [Inject] protected GameEventBus _eventBus;
+    [Inject] protected IEventBus<IEvent> _eventBus;
     public Direction FacingDirection;
     [SerializeField] private HealthCellView _healthDisplay;
     [SerializeField] private CardsHandleSystem _cardsSystem;
@@ -74,7 +74,7 @@ public class BoardPlayer : UnitPresenter, IHealthable, IMannable {
     }
 
     #region Unit presenter API
-    public override UnitModel GetInfo() {
+    public override UnitModel GetModel() {
         return Character;
     }
 

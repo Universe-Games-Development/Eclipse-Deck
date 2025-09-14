@@ -1,21 +1,17 @@
 using UnityEngine;
 
 // used for runtime creation of operation
-
 public class SpawnCreatureOperationData : OperationData {
     public CreatureCard creatureCard;
-    public Vector3 spawnPosition;
-    internal CardPresenter presenter;
 }
 
 [OperationFor(typeof(SpawnCreatureOperationData))]
 public class SpawnCreatureOperation : GameOperation {
     private const string SpawnZoneKey = "spawnZone";
     private readonly SpawnCreatureOperationData _data;
-    private readonly ICreatureSpawnService _spawnService;
-    private readonly Vector3 _spawnPosition;
+    private readonly ICreatureFactory _spawnService;
 
-    public SpawnCreatureOperation(SpawnCreatureOperationData data, ICreatureSpawnService spawnService) {
+    public SpawnCreatureOperation(SpawnCreatureOperationData data, ICreatureFactory spawnService) {
         _data = data;
         _spawnService = spawnService;
 
@@ -24,14 +20,14 @@ public class SpawnCreatureOperation : GameOperation {
     }
 
     public override bool Execute() {
-        if (!TryGetTarget(SpawnZoneKey, out ZonePresenter zone)) {
+        if (!TryGetTarget(SpawnZoneKey, out Zone zone)) {
             Debug.LogError($"Valid {SpawnZoneKey} not found");
             return false;
         }
+        Creature creature = _spawnService.SpawnCreature(_data.creatureCard);
+        zone.PlaceCreature(creature);
 
-        // Делегуємо створення сервісу
-        CreaturePresenter creaturePresenter = _spawnService.SpawnCreatureFromCard(_data.creatureCard);
-        return zone.PlaceCreature(creaturePresenter, _spawnPosition);
+        return true;
     }
 }
 

@@ -22,7 +22,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
 
     [Inject] private InputManager inputManager;
 
-    private TaskCompletionSource<UnitPresenter> currentSelection;
+    private TaskCompletionSource<UnitModel> currentSelection;
     private InputSystem_Actions.BoardPlayerActions boardInputs;
     
     public CardPresenter CurrentCard { get; private set; }
@@ -64,8 +64,8 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
         }
     }
 
-    public async UniTask<UnitPresenter> SelectTargetAsync(TargetSelectionRequest selectionRequest, CancellationToken cancellationToken) {
-        currentSelection = new TaskCompletionSource<UnitPresenter>();
+    public async UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest selectionRequest, CancellationToken cancellationToken) {
+        currentSelection = new TaskCompletionSource<UnitModel>();
 
         StartTargetingVisualization(selectionRequest);
         ShowSelectionPrompt(selectionRequest.Requirement.GetInstruction());
@@ -97,13 +97,16 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     private void OnLeftClickUp(InputAction.CallbackContext context) {
         if (currentSelection == null) return;
 
-        UnitPresenter result = GetTargetUnderCursor();
+        var presenter = GetTargetUnderCursor();
+        var result = presenter?.GetModel();
+
         currentSelection.TrySetResult(result);
     }
 
+
     private UnitPresenter GetTargetUnderCursor() {
         if (boardInputManager.TryGetCursorObject(boardMask, out GameObject hitObject)) {
-            hitObject.TryGetComponent<UnitPresenter>(out UnitPresenter presenter);
+            hitObject.TryGetComponent(out UnitPresenter presenter);
             return presenter;
         }
         return null;
@@ -129,11 +132,11 @@ public interface ITargetingVisualization {
 }
 
 public class TargetSelectionRequest {
-    public UnitPresenter Initiator { get; } // Карта, істота, гравець
+    public UnitModel Source { get; } // Карта, істота, гравець
     public ITargetRequirement Requirement { get; }
 
-    public TargetSelectionRequest(UnitPresenter initiator, ITargetRequirement requirement) {
-        Initiator = initiator;
+    public TargetSelectionRequest(UnitModel initiator, ITargetRequirement requirement) {
+        Source = initiator;
         Requirement = requirement;
     }
 }

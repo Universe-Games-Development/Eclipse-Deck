@@ -14,11 +14,15 @@ public interface IDamageDealer {
 public class UnitModel {
     public Action<BoardPlayer> OnChangedOwner;
     public Action<GameEnterEvent> OnUnitDeployed;
-    public BoardPlayer Owner { get; private set; }
+    private BoardPlayer _owner;
     public string Id { get; protected set; }
     public void ChangeOwner(BoardPlayer newOwner) {
-        if (newOwner == Owner) return;
-        Owner = newOwner;
+        if (newOwner == _owner) return;
+        _owner = newOwner;
         OnChangedOwner?.Invoke(newOwner);
+    }
+
+    public BoardPlayer GetPlayer() {
+        return _owner;
     }
 }

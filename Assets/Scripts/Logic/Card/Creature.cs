@@ -13,8 +13,8 @@ public class Creature : UnitModel, IHealthable {
 
     public Creature(CreatureCard card) {
         Data = card.CreatureCardData ?? throw new ArgumentNullException(nameof(card.CreatureCardData));
-        Health = new Health(Data.Health, this);
-        Attack = new Attack(Data.Attack, this);
+        Health = new Health(card.Health, this);
+        Attack = new Attack(card.Attack, this);
 
         Id = System.Guid.NewGuid().ToString();
     }

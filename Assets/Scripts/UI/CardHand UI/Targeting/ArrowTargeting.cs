@@ -70,13 +70,13 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
         if (gameUnit == null)
             return noTargetMaterial;
 
-        ValidationResult validation = currentRequest.Requirement.IsValid(gameUnit, currentRequest.Initiator.GetPlayer());
+        ValidationResult validation = currentRequest.Requirement.IsValid(gameUnit, currentRequest.Source.GetPlayer());
         return validation.IsValid ? validTargetMaterial : invalidTargetMaterial;
     }
 
     private UnitModel GetGameUnitFromObject(GameObject obj) {
         return obj.TryGetComponent<UnitPresenter>(out var presenter)
-            ? presenter.GetInfo() : null;
+            ? presenter.GetModel() : null;
     }
 
     private void ApplyArrowMaterial(Material material) {

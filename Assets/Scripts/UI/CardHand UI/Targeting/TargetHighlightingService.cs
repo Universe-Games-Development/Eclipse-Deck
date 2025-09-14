@@ -5,7 +5,7 @@ using Zenject;
 public class TargetHighlightingService : MonoBehaviour {
     [Header("Highlight Settings")]
 
-    [Inject] private IUnitRegistry unitRegistry;
+    [Inject] private IUnitPresenterRegistry unitRegistry;
     [SerializeField] private HumanTargetSelector targetSelector;
 
     private HashSet<UnitPresenter> highlightedUnits = new HashSet<UnitPresenter>();
@@ -22,14 +22,14 @@ public class TargetHighlightingService : MonoBehaviour {
     }
 
     private void OnTargetSelectionStarted(TargetSelectionRequest request) {
-        foreach (var unit in unitRegistry.GetAllUnits()) {
-            if (IsValidTarget(unit, request)) {
-                HighlightUnit(unit, true);
+        foreach (var presenter in unitRegistry.GetAllPresenters()) {
+            if (IsValidTarget(presenter.GetModel(), request)) {
+                HighlightUnit(presenter, true);
             }
         }
     }
 
-    private bool IsValidTarget(UnitPresenter unit, TargetSelectionRequest request) {
+    private bool IsValidTarget(UnitModel unit, TargetSelectionRequest request) {
         var player = unit.GetPlayer();
         if (player == null) {
             Debug.LogWarning($"player is null for {unit}");

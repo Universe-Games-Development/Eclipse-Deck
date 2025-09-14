@@ -35,7 +35,7 @@ public interface ITargetRequirement {
     bool AllowSameTargetMultipleTimes { get; } // Чи можна вибирати ту саму ціль кілька разів
 }
 
-public class TargetRequirement<T> : ITargetRequirement where T : UnitPresenter {
+public class TargetRequirement<T> : ITargetRequirement where T : UnitModel {
     public IEnumerable<Condition<T>> Conditions { get; private set; }
     public TargetSelector requiredSelector = TargetSelector.Initiator;
 
@@ -117,7 +117,7 @@ public class TargetRequirement<T> : ITargetRequirement where T : UnitPresenter {
     }
 }
 
-public abstract class Condition<T> where T : UnitPresenter {
+public abstract class Condition<T> where T : UnitModel {
     protected BoardPlayer Initiator;
 
     public void SetInitiator(BoardPlayer opponent) {
@@ -134,31 +134,31 @@ public abstract class Condition<T> where T : UnitPresenter {
     protected abstract ValidationResult CheckCondition(T model);
 }
 
-public class ZoneRequirement : TargetRequirement<ZonePresenter> {
-    public ZoneRequirement(params Condition<ZonePresenter>[] conditions) : base(conditions) {
+public class ZoneRequirement : TargetRequirement<Zone> {
+    public ZoneRequirement(params Condition<Zone>[] conditions) : base(conditions) {
     }
     public override string GetInstruction() {
         return "Select a zone";
     }
 }
 
-public class CreatureRequirement : TargetRequirement<CreaturePresenter> {
-    public CreatureRequirement(params Condition<CreaturePresenter>[] conditions) : base(conditions) {
+public class CreatureRequirement : TargetRequirement<Creature> {
+    public CreatureRequirement(params Condition<Creature>[] conditions) : base(conditions) {
     }
     public override string GetInstruction() {
         return "Select a creature";
     }
 }
 
-public class OwnershipCondition<T> : Condition<T> where T : UnitPresenter {
+public class OwnershipCondition<T> : Condition<T> where T : UnitModel {
     private readonly OwnershipType ownershipType;
 
     public OwnershipCondition(OwnershipType ownershipType) {
         this.ownershipType = ownershipType;
     }
 
-    protected override ValidationResult CheckCondition(T presenter) {
-        bool isFriendly = presenter.GetPlayer() == Initiator;
+    protected override ValidationResult CheckCondition(T model) {
+        bool isFriendly = model.GetPlayer() == Initiator;
 
         return ownershipType switch {
             OwnershipType.Ally when !isFriendly =>
@@ -170,9 +170,9 @@ public class OwnershipCondition<T> : Condition<T> where T : UnitPresenter {
     }
 }
 
-public class IsDamageableCondition<T> : Condition<T> where T : UnitPresenter {
-    protected override ValidationResult CheckCondition(T presenter) {
-        if (presenter is IHealthable) {
+public class IsDamageableCondition<T> : Condition<T> where T : UnitModel {
+    protected override ValidationResult CheckCondition(T model) {
+        if (model is IHealthable) {
             return ValidationResult.Error("Target without health");
         }
         return ValidationResult.Success;
@@ -180,51 +180,51 @@ public class IsDamageableCondition<T> : Condition<T> where T : UnitPresenter {
 }
 
 public static class TargetRequirements {
-    public static TargetRequirement<UnitPresenter> AllyUnit =>
-        new TargetRequirement<UnitPresenter>(new OwnershipCondition<UnitPresenter>(OwnershipType.Ally));
+    public static TargetRequirement<UnitModel> AllyUnit =>
+        new TargetRequirement<UnitModel>(new OwnershipCondition<UnitModel>(OwnershipType.Ally));
 
     public static CreatureRequirement EnemyCreature =>
-        new CreatureRequirement(new OwnershipCondition<CreaturePresenter>(OwnershipType.Enemy));
+        new CreatureRequirement(new OwnershipCondition<Creature>(OwnershipType.Enemy));
 
     public static CreatureRequirement AllyCreature =>
-        new CreatureRequirement(new OwnershipCondition<CreaturePresenter>(OwnershipType.Ally));
+        new CreatureRequirement(new OwnershipCondition<Creature>(OwnershipType.Ally));
 
     public static CreatureRequirement AnyCreature =>
         new CreatureRequirement();
 
     public static CreatureRequirement DamageableCreature =>
-        new CreatureRequirement(new IsDamageableCondition<CreaturePresenter>());
+        new CreatureRequirement(new IsDamageableCondition<Creature>());
 
     public static CreatureRequirement EnemyDamageable =>
         new CreatureRequirement(
-            new OwnershipCondition<CreaturePresenter>(OwnershipType.Enemy),
-            new IsDamageableCondition<CreaturePresenter>()
+            new OwnershipCondition<Creature>(OwnershipType.Enemy),
+            new IsDamageableCondition<Creature>()
         );
 
     public static CreatureRequirement AllyDamageable =>
         new CreatureRequirement(
-            new OwnershipCondition<CreaturePresenter>(OwnershipType.Ally),
-            new IsDamageableCondition<CreaturePresenter>()
+            new OwnershipCondition<Creature>(OwnershipType.Ally),
+            new IsDamageableCondition<Creature>()
         );
 
 
     public static ZoneRequirement AllyZone =>
-        new ZoneRequirement(new OwnershipCondition<ZonePresenter>(OwnershipType.Ally));
+        new ZoneRequirement(new OwnershipCondition<Zone>(OwnershipType.Ally));
 
     public static ZoneRequirement EnemyZone =>
-        new ZoneRequirement(new OwnershipCondition<ZonePresenter>(OwnershipType.Enemy));
+        new ZoneRequirement(new OwnershipCondition<Zone>(OwnershipType.Enemy));
 }
 
 public static class TargetRequirementExtensions {
-    public static T WithCondition<T>(this T requirement, Condition<UnitPresenter> condition)
-        where T : TargetRequirement<UnitPresenter> {
+    public static T WithCondition<T>(this T requirement, Condition<UnitModel> condition)
+        where T : TargetRequirement<UnitModel> {
         var cloned = requirement.Clone() as T;
         cloned.AddCondition(condition);
         return cloned;
     }
 
     public static T AsOptional<T>(this T requirement) where T : ITargetRequirement {
-        if (requirement is TargetRequirement<UnitPresenter> generic) {
+        if (requirement is TargetRequirement<UnitModel> generic) {
             var cloned = generic.Clone();
             return (T)(object)cloned;
         }

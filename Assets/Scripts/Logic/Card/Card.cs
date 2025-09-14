@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using Zenject;
 using static UnityEngine.Rendering.HDROutputUtils;
 
@@ -8,7 +9,6 @@ public abstract class Card : UnitModel {
     public CardContainer CurrentContainer { get; protected set; }
     public CardData Data { get; protected set; }
     public Cost Cost { get; protected set; }
-    public string Id { get; set; } // Unique identifier for the card
     private List<OperationData> _operationDatas;
     protected IOperationFactory _operationFactory;
     
@@ -52,6 +52,10 @@ public class CreatureCard : Card, IHealthable {
         
         Health = new(cardData.Health, this);
         Attack = new(cardData.Attack, this);
+
+        var spawnOp = ScriptableObject.CreateInstance<SpawnCreatureOperationData>();
+        spawnOp.creatureCard = this;
+        AddOperation(spawnOp);
     }
 
     public override string ToString() {

@@ -1,8 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CardPresenter : UnitPresenter {
@@ -63,27 +61,6 @@ public class CardPresenter : UnitPresenter {
         _isInteractable = isEnabled;
         View.SetHoverState(false);
     }
-
-    public List<OperationData> GetOperationDatas() {
-        var operationDatas = new List<OperationData>(Card?.GetOperationData());
-
-        // Додаємо операцію спавну для істот
-        if (Card is CreatureCard creatureCard) {
-            var spawnOp = CreateSpawnOperationData(creatureCard);
-            operationDatas.Add(spawnOp);
-        }
-
-        return operationDatas;
-    }
-
-    private SpawnCreatureOperationData CreateSpawnOperationData(CreatureCard creatureCard) {
-        var spawnOp = ScriptableObject.CreateInstance<SpawnCreatureOperationData>();
-        spawnOp.creatureCard = creatureCard;
-        spawnOp.presenter = this;
-        spawnOp.spawnPosition = View.transform.position;
-        return spawnOp;
-    }
-
 
     #region UI Info Update
     private void UpdateUIInfo() {
@@ -162,12 +139,12 @@ public class CardPresenter : UnitPresenter {
     #endregion
 
     #region UnitPresenter API
-    public override UnitModel GetInfo() {
+    public override UnitModel GetModel() {
         return Card;
     }
 
     public override BoardPlayer GetPlayer() {
-        return Card?.Owner;
+        return Card?.GetPlayer();
     }
     #endregion
 }

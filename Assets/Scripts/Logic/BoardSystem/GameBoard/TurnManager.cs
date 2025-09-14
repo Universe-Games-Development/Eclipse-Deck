@@ -13,14 +13,14 @@ public class TurnManager : IDisposable {
     public BoardPlayer ActiveOpponent { get; private set; }
     public int TurnCounter { get; private set; }
 
-    private GameEventBus eventBus;
+    private IEventBus<IEvent> eventBus;
     private bool inTransition = false;
     private bool isDisabled = true;
     private int RoundCounter;
     private int completedTurnsInRound = 0; // Лічильник завершених ходів
 
     [Inject]
-    public void Construct(GameEventBus eventBus) {
+    public void Construct(IEventBus<IEvent> eventBus) {
         this.eventBus = eventBus;
     }
 

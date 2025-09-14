@@ -1,13 +1,17 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
+using Unity.VisualScripting;
 using UnityEngine;
+using Zenject;
 
 public class PlayerController : MonoBehaviour {
     [SerializeField] public OperationManager operationManager;
-    [SerializeField] public CardPlayModule cardPlayModule;
     [SerializeField] public BoardPlayer player;
     [SerializeField] public HandPresenter handPresenter;
+
+    [Inject] public ICardPlayService cardPlayService;
+    [Inject] public IEventBus<IEvent> eventBus;
 
     private PlayerState currentState;
 
@@ -31,7 +35,7 @@ public class PlayerController : MonoBehaviour {
             return false;
         }
 
-        if (cardPlayModule == null) {
+        if (cardPlayService == null) {
             Debug.LogError("CardPlayModule is not assigned to PlayerController.");
             return false;
         }
@@ -40,8 +44,35 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void SubscribeToEvents() {
-        cardPlayModule.OnCardPlayCompleted += OnCardPlayCompleted;
+        operationManager.OnOperationStatus += HandleOperationStatus;
         player.Selector.OnSelectionStarted += HandleSelectionStart;
+        eventBus.SubscribeTo<CardPlayStatusEvent>(HandleCardPlayCompleted);
+    }
+
+    private void HandleCardPlayCompleted(ref CardPlayStatusEvent eventData) {
+        Card spentCard = eventData.Card;
+        if (!handPresenter.Contains(spentCard))
+            return;
+
+        if (eventData.playResult.IsSuccess && false) {
+            player.SpendMana(spentCard.Cost.Current);
+            handPresenter.RemoveCard(spentCard);
+            GameLogger.Log("Card successfully played and spent");
+        } else {
+            GameLogger.Log("Card play failed, returning to hand");
+            handPresenter.UpdateCardsOrder();
+        }
+    }
+
+    private void HandleOperationStatus(GameOperation operation, OperationStatus status) {
+        switch (status) {
+            case OperationStatus.Start:
+                if (operation.Source is Card card && cardPlayService.IsPlayingCard(card)) {
+                    player.SpendMana(card.Cost.Current);
+                    handPresenter.RemoveCard(card);
+                }
+                break;
+        }
     }
 
     private void HandleSelectionStart(TargetSelectionRequest request) {
@@ -58,9 +89,6 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void UnsubscribeFromEvents() {
-        if (cardPlayModule != null)
-            cardPlayModule.OnCardPlayCompleted -= OnCardPlayCompleted;
-
         if (player?.Selector != null)
             player.Selector.OnSelectionStarted -= HandleSelectionStart;
     }
@@ -80,25 +108,7 @@ public class PlayerController : MonoBehaviour {
         currentState.controller = this;
         currentState.Enter();
 
-        //Debug.Log($"State changed to: {currentState.GetType().Name}");
-    }
-
-    private void OnCardPlayCompleted(CardPresenter presenter, bool success) {
-        if (presenter?.Card == null || handPresenter == null)
-            return;
-
-        Card spentCard = presenter.Card;
-        if (!handPresenter.Contains(spentCard))
-            return;
-
-        if (success) {
-            handPresenter.RemoveCard(spentCard);
-            player.SpendMana(spentCard.Cost.Current);
-            GameLogger.Log("Card successfully played and spent");
-        } else {
-            GameLogger.Log("Card play failed, returning to hand");
-            handPresenter.UpdateCardOrder(presenter);
-        }
+        Debug.Log($"State changed to: {currentState.GetType().Name}");
     }
 }
 
@@ -135,7 +145,7 @@ public class IdleState : PlayerState {
     private void OnCardClicked(CardPresenter presenter) {
         if (presenter?.Card == null) return;
 
-        controller.SwitchState(new PlayingState(presenter));
+        controller.SwitchState(new PlayingState(presenter.Card));
     }
 
     private void OnCardHovered(CardPresenter presenter, bool isHovered) {
@@ -160,29 +170,28 @@ public class IdleState : PlayerState {
 
 public class PlayingState : PlayerState {
     private CancellationTokenSource _debounceCts;
-    private readonly CardPresenter presenter;
+    private readonly Card _card;
     private readonly TimeSpan _debounceTime = TimeSpan.FromMilliseconds(500);
     private bool _isExiting = false;
 
-    public PlayingState(CardPresenter presenter = null) {
-        this.presenter = presenter;
+    public PlayingState(Card card = null) {
+        _card = card;
     }
 
     public override void Enter() {
         base.Enter();
 
-        if (controller?.operationManager == null || controller?.cardPlayModule == null) {
+        if (controller?.operationManager == null || controller?.cardPlayService == null) {
             Debug.LogError("Required components are missing in PlayingState");
             return;
         }
 
         controller.operationManager.OnQueueEmpty += TryExitPlaying;
-        controller.cardPlayModule.OnCardPlayCompleted += OnCardPlayCompleted;
 
         _debounceCts = new CancellationTokenSource();
 
-        if (presenter != null) {
-            controller.cardPlayModule.StartCardPlay(presenter, CancellationToken.None);
+        if (_card != null) {
+            controller.cardPlayService.PlayCardAsync(_card, CancellationToken.None);
         }
     }
 
@@ -223,8 +232,5 @@ public class PlayingState : PlayerState {
 
         if (controller?.operationManager != null)
             controller.operationManager.OnQueueEmpty -= TryExitPlaying;
-
-        if (controller?.cardPlayModule != null)
-            controller.cardPlayModule.OnCardPlayCompleted -= OnCardPlayCompleted;
     }
 }
