@@ -5,14 +5,14 @@ using System.Linq;
 using System.Threading;
 using UnityEngine;
 
-public class OperationManager : MonoBehaviour {
+public class OperationManager : MonoBehaviour, IOperationManager {
     [SerializeField] private OperationTargetsFiller operationFiller;
 
     private PriorityQueue<Priority, GameOperation> _operationQueue;
     private GameOperation _currentOperation;
     private bool _isRunning;
     private CancellationTokenSource _globalCancellationSource;
-    private readonly ReaderWriterLockSlim _queueLock = new ReaderWriterLockSlim();
+    private readonly ReaderWriterLockSlim _queueLock = new();
 
     public event Action<GameOperation, OperationStatus> OnOperationStatus;
     public event Action OnQueueEmpty;
@@ -46,7 +46,7 @@ public class OperationManager : MonoBehaviour {
             _operationQueue.Enqueue(priority, operation);
         }
 
-        GameLogger.LogDebug($"Operation '{operation.OperationName}' pushed with priority {priority}. Queue size: {QueueCount}",
+        GameLogger.LogDebug($"Operation '{operation}' pushed with priority {priority}. Queue size: {QueueCount}",
             LogCategory.OperationManager);
 
         TryStartProcessing().Forget();
@@ -123,7 +123,7 @@ public class OperationManager : MonoBehaviour {
 
     public void CancelCurrent() {
         if (_currentOperation != null && _globalCancellationSource != null) {
-            GameLogger.LogInfo($"Cancelling current operation: {_currentOperation.OperationName}", LogCategory.OperationManager);
+            GameLogger.LogInfo($"Cancelling current operation: {_currentOperation}", LogCategory.OperationManager);
             ReplaceCancellationTokenSource();
         } else {
             GameLogger.LogDebug("No current operation to cancel", LogCategory.OperationManager);
@@ -168,16 +168,16 @@ public class OperationManager : MonoBehaviour {
                 if (!TryDequeueOperation(out _currentOperation))
                     break;
 
-                GameLogger.LogInfo($"Processing operation [{processedCount + 1}]: {_currentOperation.OperationName}",
+                GameLogger.LogInfo($"Processing operation [{processedCount + 1}]: {_currentOperation}",
                     LogCategory.OperationManager);
 
                 try {
                     await ProcessOperationAsync(_currentOperation, _globalCancellationSource.Token);
                     processedCount++;
                 } catch (OperationCanceledException) {
-                    GameLogger.LogInfo($"Operation cancelled: {_currentOperation.OperationName}", LogCategory.OperationManager);
+                    GameLogger.LogInfo($"Operation cancelled: {_currentOperation}", LogCategory.OperationManager);
                 } catch (Exception ex) {
-                    GameLogger.LogError($"Operation failed: {_currentOperation.OperationName} - {ex.Message}", LogCategory.OperationManager);
+                    GameLogger.LogError($"Operation failed: {_currentOperation} - {ex.Message}", LogCategory.OperationManager);
                     GameLogger.LogDebug($"Operation exception details: {ex}", LogCategory.OperationManager);
                 } finally {
                     _currentOperation = null;
@@ -206,7 +206,7 @@ public class OperationManager : MonoBehaviour {
         using (new WriteLock(_queueLock)) {
             var result = _operationQueue.TryDequeue(out operation);
             if (result) {
-                GameLogger.LogDebug($"Dequeued operation: {operation.OperationName}. Remaining: {_operationQueue.Count}",
+                GameLogger.LogDebug($"Dequeued operation: {operation}. Remaining: {_operationQueue.Count}",
                     LogCategory.OperationManager);
             }
             return result;
@@ -220,16 +220,16 @@ public class OperationManager : MonoBehaviour {
         try {
             if (!ValidateOperation(operation)) {
                 status = OperationStatus.Failed;
-                GameLogger.LogWarning($"Operation validation failed: {operation.OperationName}", LogCategory.OperationManager);
+                GameLogger.LogWarning($"Operation validation failed: {operation}", LogCategory.OperationManager);
                 return;
             }
 
-            GameLogger.LogInfo($"Beginning operation: {operation.OperationName}", LogCategory.OperationManager);
+            GameLogger.LogInfo($"Beginning operation: {operation}", LogCategory.OperationManager);
 
-            TargetOperationRequest request = new TargetOperationRequest(
-                operation.NamedTargets,
+            TargetOperationRequest request = new(
+                operation.RequestTargets,
                 operation.IsMandatory,
-                operation.Initiator);
+                operation.Source);
 
             var targets = await operationFiller.FillTargetsAsync(
                 request,
@@ -237,60 +237,62 @@ public class OperationManager : MonoBehaviour {
 
             if (targets == null) {
                 status = OperationStatus.Cancelled;
-                GameLogger.LogInfo($"Operation {operation.OperationName} was cancelled during target filling", LogCategory.OperationManager);
+                GameLogger.LogInfo($"Operation {operation} was cancelled during target filling", LogCategory.OperationManager);
                 return;
             }
 
             operation.SetTargets(targets.FilledTargets);
 
             if (operation.IsReady()) {
-                GameLogger.LogDebug($"Operation {operation.OperationName} is ready, executing...", LogCategory.OperationManager);
+                GameLogger.LogDebug($"Operation {operation} is ready, executing...", LogCategory.OperationManager);
 
-                bool success = await operation.ExecuteAsync(cancellationToken);
+                OnOperationStatus?.Invoke(operation, OperationStatus.Start);
+                bool success = operation.Execute();
                 status = success ? OperationStatus.Success : OperationStatus.Failed;
 
-                GameLogger.LogInfo($"Operation {operation.OperationName} execution result: {status}", LogCategory.OperationManager);
+                GameLogger.LogInfo($"Operation {operation} execution result: {status}", LogCategory.OperationManager);
             } else {
-                GameLogger.LogWarning($"Operation {operation.OperationName} is not ready for execution", LogCategory.OperationManager);
-                status = OperationStatus.Failed;
+                GameLogger.LogWarning($"Operation {operation} is not ready for execution", LogCategory.OperationManager);
+                status = OperationStatus.Cancelled;
             }
         } catch (OperationCanceledException) {
             status = OperationStatus.Cancelled;
-            GameLogger.LogInfo($"Operation {operation.OperationName} was cancelled", LogCategory.OperationManager);
+            GameLogger.LogInfo($"Operation {operation} was cancelled", LogCategory.OperationManager);
             throw;
         } catch (Exception ex) {
-            status = OperationStatus.Failed;
-            GameLogger.LogError($"Operation {operation.OperationName} failed with exception: {ex.Message}", LogCategory.OperationManager);
+            status = OperationStatus.ThrownException;
+            GameLogger.LogError($"Operation {operation} failed with exception: {ex.Message}", LogCategory.OperationManager);
             GameLogger.LogException(ex, LogCategory.OperationManager);
         } finally {
             var duration = DateTime.UtcNow - startTime;
-            GameLogger.LogInfo($"{operation.OperationName} finished with status: {status} (Duration: {duration.TotalMilliseconds:F1}ms)",
+            GameLogger.LogInfo($"{operation} finished with status: {status} (Duration: {duration.TotalMilliseconds:F1}ms)",
                 LogCategory.OperationManager);
             OnOperationStatus?.Invoke(operation, status);
         }
     }
 
     private bool ValidateOperation(GameOperation operation) {
-        if (operation.NamedTargets.Count > 0 && !operationFiller.CanFillTargets(operation.NamedTargets)) {
-            GameLogger.LogWarning($"{operation.OperationName} cannot be executed - targets cannot be filled", LogCategory.OperationManager);
+        if (operation.RequestTargets.Count > 0 && !operationFiller.CanFillTargets(operation.RequestTargets)) {
+            GameLogger.LogWarning($"{operation} cannot be executed - targets cannot be filled", LogCategory.OperationManager);
             return false;
         }
 
-        GameLogger.LogDebug($"Operation {operation.OperationName} validation passed", LogCategory.OperationManager);
+        GameLogger.LogDebug($"Operation {operation} validation passed", LogCategory.OperationManager);
         return true;
     }
 
     [System.Diagnostics.Conditional("UNITY_EDITOR")]
     public void LogQueueState() {
         using (new ReadLock(_queueLock)) {
-            var message = $"Queue State - Running: {_isRunning}, Current: {_currentOperation?.OperationName ?? "None"}, " +
+            string currentOperationStr = _currentOperation != null ? _currentOperation.ToString() : "None";
+            var message = $"Queue State - Running: {_isRunning}, Current: {currentOperationStr}, " +
                          $"Total Queue Size: {_operationQueue.Count}";
 
             GameLogger.LogInfo(message, LogCategory.OperationManager);
 
             // Log details of queued operations if any
             if (_operationQueue.Count > 0) {
-                var operations = _operationQueue.GetAllItems().Take(5).Select(op => op.OperationName);
+                var operations = _operationQueue.GetAllItems().Take(5).Select(op => op);
                 GameLogger.LogDebug($"Next operations: {string.Join(", ", operations)}{(_operationQueue.Count > 5 ? "..." : "")}",
                     LogCategory.OperationManager);
             }
@@ -299,7 +301,7 @@ public class OperationManager : MonoBehaviour {
 
     public List<string> GetQueuedOperationNames() {
         using (new ReadLock(_queueLock)) {
-            var operations = _operationQueue.GetAllItems().Select(op => op.OperationName).ToList();
+            var operations = _operationQueue.GetAllItems().Select(op => op.ToString()).ToList();
             GameLogger.LogDebug($"Retrieved {operations.Count} queued operation names", LogCategory.OperationManager);
             return operations;
         }
@@ -324,7 +326,7 @@ public class OperationManager : MonoBehaviour {
         }
 
         if (removedOperations.Count > 0) {
-            var operationNames = removedOperations.Select(op => op.OperationName);
+            var operationNames = removedOperations.Select(op => op);
             GameLogger.LogInfo($"Cancelled {removedOperations.Count} operations: {string.Join(", ", operationNames)}",
                 LogCategory.OperationManager);
         } else {
@@ -344,7 +346,7 @@ public class OperationManager : MonoBehaviour {
             var removed = _operationQueue.RemoveItems(predicate);
 
             if (removed.Count > 0) {
-                var operationNames = removed.Select(op => op.OperationName);
+                var operationNames = removed.Select(op => op);
                 GameLogger.LogInfo($"Removed {removed.Count} operations by predicate: {string.Join(", ", operationNames)}",
                     LogCategory.OperationManager);
             } else {
@@ -389,10 +391,12 @@ public class OperationManager : MonoBehaviour {
 }
 
 public enum OperationStatus {
+    Start,
     Success,
     PartialSuccess,
     Failed,
-    Cancelled
+    Cancelled,
+    ThrownException
 }
 
 public enum Priority {
@@ -402,50 +406,64 @@ public enum Priority {
     Critical = 3
 }
 
-public abstract class GameOperation {
-    public List<NamedTarget> NamedTargets = new();
-    protected Dictionary<string, GameUnit> targets;
-    public string OperationName = "defaultOperationName";
+public abstract class GameOperation 
+{
+    public List<Target> RequestTargets = new();
+    protected Dictionary<string, UnitModel> filledTargets;
     public bool IsMandatory { get; set; } = false;
-    public BoardPlayer Initiator { get; set; }
-
-    public abstract UniTask<bool> ExecuteAsync(CancellationToken cancellationToken);
-
-    public void SetTargets(Dictionary<string, GameUnit> filledTargets) {
-        targets = filledTargets;
+    public UnitModel Source { get; set; }
+    
+    public abstract bool Execute();
+    
+    public void SetTargets(Dictionary<string, UnitModel> filledTargets) 
+    {
+        this.filledTargets = filledTargets;
     }
-
-    protected bool TryGetTarget<T>(string key, out T result) where T : GameUnit {
-        if (targets.TryGetValue(key, out var obj) && obj is T cast) {
+    
+    protected bool TryGetTarget<T>(string key, out T result) where T : UnitModel {
+        if (filledTargets.TryGetValue(key, out var obj) && obj is T cast) 
+        {
             result = cast;
             return true;
         }
         result = null;
         return false;
     }
-
-    public bool IsReady() {
+    
+    public bool IsReady() 
+    {
         return !HasUnfilledTargets();
     }
-
-    public bool HasUnfilledTargets() {
-        if (targets == null) return false;
-
-        bool isMismachTargets = targets.Count != NamedTargets.Count;
-
-        bool isAnyEmpty = targets.Values.Any(unit => unit == null);
-
-        return isAnyEmpty || isMismachTargets;
+    
+    public bool HasUnfilledTargets() 
+    {
+        if (filledTargets == null) return false;
+        bool isMismatchTargets = filledTargets.Count != RequestTargets.Count;
+        bool isAnyEmpty = filledTargets.Values.Any(unit => unit == null);
+        return isAnyEmpty || isMismatchTargets;
+    }
+    
+    public void SetSource(UnitModel source) {
+        Source = source;
     }
 }
 
-public class NamedTarget {
-    public string Name;
-    public ITargetRequirement Requirement;
-    public GameUnit Unit;
+public class Target {
+    public string Key { get; }
+    public ITargetRequirement Requirement { get; }
+    public UnitModel Unit { get; set; }
 
-    public NamedTarget(string name, ITargetRequirement requirement) {
-        Name = name;
+    public Target(string key, ITargetRequirement requirement) {
+        Key = key;
         Requirement = requirement;
+    }
+
+    public bool HasTarget => Unit != null;
+    public bool IsValid => Unit != null && Requirement.IsValid(Unit).IsValid;
+
+    public T As<T>() where T : UnitModel => Unit as T;
+    public bool TryGet<T>(out T result) where T : UnitModel {
+        result = Unit as T;
+        return result != null;
     }
 }

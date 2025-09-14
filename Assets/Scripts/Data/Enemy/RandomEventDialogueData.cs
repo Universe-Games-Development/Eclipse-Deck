@@ -10,7 +10,7 @@ public class DialogueSet {
 }
 
 public abstract class BaseDialogueData : ScriptableObject {
-    public abstract IDialogue CreateDialogue(Speaker speaker, DialogueSystem dialogueSystem, GameEventBus eventBus);
+    public abstract IDialogue CreateDialogue(Speaker speaker, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus);
 }
 
 public abstract class EventDialogData<TEvent> : BaseDialogueData where TEvent : IEvent {
@@ -29,7 +29,7 @@ public abstract class RandomEventDialogueData<TEvent> : EventDialogData<TEvent> 
     }
 
     [Range(0, 1f)] public float probability = 0.3f;
-    public override IDialogue CreateDialogue(Speaker speaker, DialogueSystem dialogueSystem, GameEventBus eventBus) {
+    public override IDialogue CreateDialogue(Speaker speaker, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus) {
 
         return new RandomEventDialogue<TEvent>(this, dialogueSystem, eventBus, speaker);
     }
@@ -44,7 +44,7 @@ public interface IDialogue : IDisposable {
 
 public abstract class BaseDialogue : IDialogue {
     protected readonly DialogueSystem dialogueSystem;
-    protected readonly GameEventBus eventBus;
+    protected readonly IEventBus<IEvent> eventBus;
     protected readonly Speaker speaker;
     protected readonly BaseDialogueData baseDialogueData;
     protected bool isActive = false;
@@ -52,7 +52,7 @@ public abstract class BaseDialogue : IDialogue {
     public BaseDialogueData DialogueData => baseDialogueData;
     public bool IsActive => isActive;
 
-    protected BaseDialogue(BaseDialogueData dialogueData, DialogueSystem dialogueSystem, GameEventBus eventBus, Speaker speaker) {
+    protected BaseDialogue(BaseDialogueData dialogueData, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus, Speaker speaker) {
         this.baseDialogueData = dialogueData;
         this.dialogueSystem = dialogueSystem;
         this.eventBus = eventBus;
@@ -70,7 +70,7 @@ public abstract class BaseDialogue : IDialogue {
 public class RandomEventDialogue<TEvent> : BaseDialogue where TEvent : IEvent {
     private readonly RandomEventDialogueData<TEvent> typedDialogueData;
     protected int activationCount = 0;
-    public RandomEventDialogue(RandomEventDialogueData<TEvent> dialogueData, DialogueSystem dialogueSystem, GameEventBus eventBus, Speaker speaker)
+    public RandomEventDialogue(RandomEventDialogueData<TEvent> dialogueData, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus, Speaker speaker)
         : base(dialogueData, dialogueSystem, eventBus, speaker)
         {
         typedDialogueData = dialogueData;

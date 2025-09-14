@@ -22,7 +22,7 @@ public class StoryDialogueData : BaseDialogueData {
         };
     }
 
-    public override IDialogue CreateDialogue(Speaker speaker, DialogueSystem dialogueSystem, GameEventBus eventBus) {
+    public override IDialogue CreateDialogue(Speaker speaker, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus) {
         return new StoryDialogue(this, dialogueSystem, eventBus, speaker);
     }
 
@@ -44,7 +44,7 @@ public class StoryDialogueData : BaseDialogueData {
 public class StoryDialogue : BaseDialogue {
     private readonly StoryDialogueData storyDialogueData;
 
-    public StoryDialogue(StoryDialogueData dialogueData, DialogueSystem dialogueSystem, GameEventBus eventBus, Speaker speaker)
+    public StoryDialogue(StoryDialogueData dialogueData, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus, Speaker speaker)
         : base(dialogueData, dialogueSystem, eventBus, speaker) {
         storyDialogueData = dialogueData;
     }

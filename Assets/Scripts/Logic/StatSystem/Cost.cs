@@ -3,13 +3,14 @@ using System;
 public class Cost : Attribute {
     public event Action OnCostIncreased; // Подія для збільшення витрат
     public event Action OnCostDecreased; // Подія для зменшення витрат
+    private const int max_Cost = 100; // Максимальна вартість за замовчуванням
 
     /// <summary>
     /// Створює новий екземпляр класу Cost з максимальною та початковою вартістю.
     /// </summary>
     /// <param name="maxCost">Максимальна вартість (базове значення)</param>
     /// <param name="initialCost">Початкова поточна вартість</param>
-    public Cost(int maxCost, int initialCost = 0) : base(maxCost) {
+    public Cost(int initialCost = 0, int maxCost = max_Cost) : base(maxCost) {
         // Якщо вказано початкову вартість, встановлюємо її
         if (initialCost > 0) {
             // Віднімаємо від максимального, оскільки в новій системі MainValue починається з BaseValue
@@ -23,12 +24,12 @@ public class Cost : Attribute {
     public void IncreaseCost(int amount) {
         if (amount <= 0) return;
 
-        int previousValue = CurrentValue;
+        int previousValue = Current;
         int added = Add(amount);
 
         if (added > 0) {
             OnCostIncreased?.Invoke();
-            Console.WriteLine($"Cost increased by {added}. Current cost: {CurrentValue}/{TotalValue}");
+            Console.WriteLine($"Cost increased by {added}. Current cost: {Current}/{TotalValue}");
         }
     }
 
@@ -38,12 +39,12 @@ public class Cost : Attribute {
     public void DecreaseCost(int amount) {
         if (amount <= 0) return;
 
-        int previousValue = CurrentValue;
+        int previousValue = Current;
         int subtracted = Subtract(amount);
 
         if (subtracted > 0) {
             OnCostDecreased?.Invoke();
-            Console.WriteLine($"Cost decreased by {subtracted}. Current cost: {CurrentValue}/{TotalValue}");
+            Console.WriteLine($"Cost decreased by {subtracted}. Current cost: {Current}/{TotalValue}");
         }
     }
 
@@ -51,7 +52,7 @@ public class Cost : Attribute {
     /// Перевірка, чи вистачає ресурсів для витрат.
     /// </summary>
     public bool CanAfford(int cost) {
-        return CurrentValue >= cost;
+        return Current >= cost;
     }
 
     /// <summary>
@@ -60,7 +61,7 @@ public class Cost : Attribute {
     public bool UseCost(int cost) {
         if (CanAfford(cost)) {
             Subtract(cost);
-            Console.WriteLine($"Used {cost} resources. Remaining cost: {CurrentValue}/{TotalValue}");
+            Console.WriteLine($"Used {cost} resources. Remaining cost: {Current}/{TotalValue}");
             return true;
         } else {
             Console.WriteLine("Not enough resources to use.");
@@ -100,6 +101,6 @@ public class Cost : Attribute {
     }
 
     public override string ToString() {
-        return $"Cost: {CurrentValue}/{TotalValue}";
+        return $"Cost: {Current}/{TotalValue}";
     }
 }

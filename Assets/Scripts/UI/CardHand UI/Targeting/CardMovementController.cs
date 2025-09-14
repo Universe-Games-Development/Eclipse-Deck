@@ -1,55 +1,46 @@
 ﻿using System;
 using UnityEngine;
 
-public class CardMovementController : MonoBehaviour {
+public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
     [Header("Movement Settings")]
     [SerializeField] private Vector3 cardOffset = new Vector3(0f, 1.2f, 0f);
-
-    [Header("Camera Ray")]
     [SerializeField] private bool useCameraRayPositioning = true;
+    [SerializeField] private int playRenderOrderBoost = 50;
 
-    private CardPresenter currentCard;
-    private Func<Vector3> getTargetPosition;
-    private bool isMoving = false;
+    private CardPresenter card;
 
-    private void Update() {
-        if (isMoving && currentCard != null && getTargetPosition != null) {
-            UpdateCardMovement();
+    public void Initialize(CardPresenter cardPresenter) {
+        card = cardPresenter;
+    }
+
+    public void StartTargeting() {
+        if (card != null) {
+            card.SetInteractable(false);
+            card.ModifyRenderOrder(playRenderOrderBoost);
         }
     }
 
-    public void StartMovement(CardPresenter card, System.Func<Vector3> targetPositionGetter) {
-        currentCard = card;
-        getTargetPosition = targetPositionGetter;
-        isMoving = true;
+    public void UpdateTargeting(Vector3 cursorPosition) {
+        if (card != null) {
+            Vector3 targetPosition = CalculateCardPosition(cursorPosition);
+            card.DoPhysicsMovement(targetPosition);
+        }
     }
 
-
-    public void ForceStop() {
-        currentCard.StopMovement();
-        isMoving = false;
-        currentCard = null;
-        getTargetPosition = null;
+    public void StopTargeting() {
+        if (card != null) {
+            card.SetInteractable(true);
+            card.ModifyRenderOrder(-playRenderOrderBoost);
+        }
     }
 
-    private void UpdateCardMovement() {
-        Vector3 currentPosition = currentCard.transform.position;
-        Vector3 targetPosition = CalculateCardPosition();
-
-        currentCard.StartPhysicsMovement(targetPosition);
-    }
-
-    private Vector3 CalculateCardPosition() {
-        Vector3 boardPosition = getTargetPosition();
-
-        if (!useCameraRayPositioning) {
+    private Vector3 CalculateCardPosition(Vector3 boardPosition) {
+        if (!useCameraRayPositioning)
             return boardPosition + cardOffset;
-        }
 
         Camera mainCamera = Camera.main;
-        if (mainCamera == null) {
+        if (mainCamera == null)
             return boardPosition + cardOffset;
-        }
 
         Vector3 cameraPosition = mainCamera.transform.position;
         Vector3 directionToCursor = (boardPosition - cameraPosition).normalized;
@@ -57,9 +48,8 @@ public class CardMovementController : MonoBehaviour {
 
         if (Mathf.Abs(directionToCursor.y) > 0.001f) {
             float distanceAlongRay = (targetCardHeight - cameraPosition.y) / directionToCursor.y;
-            if (distanceAlongRay > 0) {
+            if (distanceAlongRay > 0)
                 return cameraPosition + directionToCursor * distanceAlongRay;
-            }
         }
 
         return new Vector3(boardPosition.x, targetCardHeight, boardPosition.z);

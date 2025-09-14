@@ -1,86 +1,170 @@
-﻿using Cysharp.Threading.Tasks;
-using System;
+﻿using DG.Tweening;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public abstract class CardHandView : MonoBehaviour {
-    public event Action<CardView> OnCardClicked;
-    public event Action<CardView, bool> OnCardHovered;
+    [SerializeField] protected HandLayoutStrategy layoutStrategy;
+    [SerializeField] private float cardsOrganizeDuration = 0.2f;
+    [SerializeField] protected float cardHoverDuration = 0.2f;
+    [SerializeField] protected int baseRenderOrder = 2800;
 
-    protected Dictionary<string, CardView> _cardViews = new();
-    protected bool isInteractable = true;
+    [Header("Hover Settings")]
+    [SerializeField] protected float hoverOffsetY = 1.0f;
+    [SerializeField] protected float hoverOffsetZ = 1.0f;
+    [SerializeField] private int hoverRenderOrderBoost = 50;
 
-    // Кэш для оптимизации поиска индексов
-    protected Dictionary<CardView, int> _cardIndexCache = new();
+    private CardView hoveredCard;
+    private readonly Dictionary<CardView, TransformPoint> cardLayoutData = new();
 
-    public virtual void Toggle(bool value = true) {
-        if (gameObject.activeSelf != value) {
-            gameObject.SetActive(value);
+    public virtual void Toggle(bool value) => gameObject.SetActive(value);
+
+    protected TransformPoint[] GetCardPoints(int cardCount) =>
+        layoutStrategy?.CalculateCardTransforms(cardCount) ?? new TransformPoint[0];
+
+    public virtual void UpdateCardPositions(List<CardView> cardViews) {
+        if (cardViews == null) return;
+
+        var points = GetCardPoints(cardViews.Count);
+
+        // Очищуємо застарілі дані
+        CleanupLayoutData(cardViews);
+
+        for (int i = 0; i < points.Length && i < cardViews.Count; i++) {
+            var cardPoint = points[i];
+            var cardView = cardViews[i];
+
+            if (cardView == null) continue;
+
+            cardLayoutData[cardView] = points[i];
+
+            // Анімуємо карту якщо вона не в hover стані
+            cardView.SetRenderOrder(baseRenderOrder + i);
+            AnimateToPosition(cardView, cardPoint);
         }
     }
 
-    public virtual CardView CreateCardView(string id = null) {
-        id ??= Guid.NewGuid().ToString();
+    private void AnimateToPosition(CardView cardView, TransformPoint cardPoint) {
+        Transform cardTransform = cardView.transform;
 
-        CardView cardView = BuildCardView(id);
-        cardView.Id = id;
-        cardView.OnCardClicked += OnCardClickDown;
-        cardView.OnHoverChanged += OnCardHover;
+        Tweener moveTween = cardTransform.DOMove(cardPoint.position, cardsOrganizeDuration)
+                                    .SetEase(Ease.OutQuad)
+                                    .SetLink(cardTransform.gameObject);
 
-        _cardViews.Add(id, cardView);
-
-        // Обновляем кэш индексов
-        RefreshCardIndexCache();
-        UpdateCardPositions();
-
-        return cardView;
+        cardView.DoTweener(moveTween);
     }
 
-    protected void RefreshCardIndexCache() {
-        _cardIndexCache.Clear();
-        int index = 0;
-        foreach (var kvp in _cardViews) {
-            _cardIndexCache[kvp.Value] = index++;
+    public virtual void SetCardHover(CardView cardView, bool isHovered) {
+        if (cardView == null) return;
+
+        if (isHovered) {
+            SetHoveredCard(cardView);
+        } else {
+            ClearHoveredCard();
         }
     }
 
-    public abstract CardView BuildCardView(string id);
+    private void SetHoveredCard(CardView cardView) {
+        // Очищуємо попередню hover карту
+        ClearHoveredCard();
 
-    public virtual void RemoveCardView(string id) {
-        if (_cardViews.TryGetValue(id, out var cardView)) {
-            cardView.OnCardClicked -= OnCardClickDown;
-            cardView.OnHoverChanged -= OnCardHover;
-            _cardViews.Remove(id);
-            HandleCardViewRemoval(cardView);
+        hoveredCard = cardView;
+
+        if (!cardLayoutData.TryGetValue(cardView, out var data)) {
+            Debug.LogWarning($"No layout data found for hovered card {cardView.name}");
+            return;
+        }
+
+        // Розраховуємо hover позицію
+        Vector3 hoverPosition = data.position + new Vector3(0f, hoverOffsetY, hoverOffsetZ);
+
+        // Анімуємо до hover позиції
+        Sequence hoverSequence = DOTween.Sequence();
+        hoverSequence.Join(hoveredCard.transform.DOMove(hoverPosition, cardHoverDuration));
+        hoverSequence.Join(hoveredCard.transform.DORotate(data.rotation.eulerAngles, cardHoverDuration));
+
+        hoveredCard.DoSequence(hoverSequence);
+        hoveredCard.ModifyRenderOrder(hoverRenderOrderBoost);
+    }
+
+    private void ClearHoveredCard() {
+        if (hoveredCard == null) return;
+
+        if (cardLayoutData.TryGetValue(hoveredCard, out var data)) {
+            // Анімуємо назад до оригінальної позиції
+            Sequence returnSequence = DOTween.Sequence();
+            returnSequence.Join(hoveredCard.transform.DOMove(data.position, cardHoverDuration));
+            returnSequence.Join(hoveredCard.transform.DORotate(data.rotation.eulerAngles, cardHoverDuration));
+
+            hoveredCard.DoSequence(returnSequence);
+        }
+
+        hoveredCard.ModifyRenderOrder(-hoverRenderOrderBoost);
+        hoveredCard = null;
+    }
+
+    
+
+    private void CleanupLayoutData(List<CardView> activeCardViews) {
+        // Видаляємо дані для карт, яких більше немає в активному списку
+        var activeCardViewsSet = new HashSet<CardView>(activeCardViews);
+        var keysToRemove = cardLayoutData.Keys.Where(k => !activeCardViewsSet.Contains(k)).ToList();
+
+        foreach (var key in keysToRemove) {
+            cardLayoutData.Remove(key);
         }
     }
 
-    public virtual void HandleCardViewRemoval(CardView cardView) {
-        cardView.PlayRemovalAnimation().Forget(); 
-        UpdateCardPositions();
+    // Викликається коли карта видаляється з руки
+    public virtual void RemoveCardView(CardView cardView) {
+        if (cardView == null) return;
+
+        // Очищуємо hover якщо це ця карта
+        if (hoveredCard == cardView) {
+            hoveredCard = null;
+        }
+
+        // Видаляємо дані макету
+        cardLayoutData.Remove(cardView);
+
+        // Дозволяємо наслідникам вирішити що робити з вʼю
+        HandleCardViewRemoval(cardView);
     }
 
-    protected virtual void OnCardClickDown(CardView cardView) {
-        OnCardClicked?.Invoke(cardView);
+    // Абстрактний метод для обробки видалення - наслідники вирішують чи знищувати об'єкт
+    protected abstract void HandleCardViewRemoval(CardView cardView);
+
+    // Метод для отримання оригінальної позиції карти (для налагодження)
+    public Vector3? GetOriginalCardPosition(CardView cardView) {
+        return cardLayoutData.TryGetValue(cardView, out var data)
+            ? data.position
+            : null;
     }
-
-    protected virtual void OnCardHover(CardView view, bool isHovered) {
-        OnCardHovered?.Invoke(view, isHovered);
-    }
-
-    public abstract void UpdateCardPositions();
-
 
     protected virtual void OnDestroy() {
-        foreach (var cardView in _cardViews.Values) {
-            cardView.OnCardClicked -= OnCardClickDown;
-            cardView.OnHoverChanged -= OnCardHover;
-        }
-        _cardViews.Clear();
+        cardLayoutData.Clear();
+        hoveredCard = null;
     }
 
-    public virtual void SetCardHover(CardView changedCardView, bool isHovered) {
-        throw new NotImplementedException();
+    // Абстрактні методи для створення та знищення карт
+    public abstract CardView CreateCardView(Card card);
+}
+public abstract class HandLayoutStrategy : MonoBehaviour {
+    public abstract TransformPoint[] CalculateCardTransforms(int cardCount);
+}
+
+[System.Serializable]
+public struct TransformPoint {
+    public Vector3 position;
+    public Quaternion rotation;
+    public Vector3 scale;
+    public int sortingOrder;
+
+    public TransformPoint(Vector3 pos, Quaternion rot, Vector3 scl, int sorting = 0) {
+        position = pos;
+        rotation = rot;
+        scale = scl;
+        sortingOrder = sorting;
     }
 }
 

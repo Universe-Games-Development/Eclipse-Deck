@@ -9,28 +9,26 @@ public class CardsHandleSystem : MonoBehaviour {
     [SerializeField] private CardHandView handView;
     [SerializeField] private DeckView deckView;
     [SerializeField] private DeckView discardDeckView;
-    public HandPresenter HandPresenter;
+    public HandPresenter handPresenter;
 
     private DeckPresenter _deckPresenter;
     private DeckPresenter _discardeckPresenter; // not used now
     [SerializeField] public BoardPlayer BoardPlayer;
     public CardSpendable CardSpendable { get; private set; }
 
-    [Inject] GameEventBus _eventBus;
+    [Inject] IEventBus<IEvent> _eventBus;
     [Inject] CommandManager _commandManager;
     [Inject] CardProvider _cardProvider;
-    [Inject] DiContainer diContainer;
-    CardFactory _cardFactory;
+    [Inject] ICardFactory _cardFactory;
 
     private void Awake() {
-        CardFactory cardFactory = new(diContainer);
         Deck deckModel = new();
         CardHand handModel = new();
-        _cardFactory = new(diContainer);
 
         _deckPresenter = new(deckModel, deckView);
 
-        HandPresenter.Initialize(handModel, handView);
+        handModel.ChangeOwner(BoardPlayer);
+        handPresenter.Initialize(handModel, handView);
     }
 
     public void Initialize(BoardPlayer boardPlayer) { 
@@ -63,7 +61,7 @@ public class CardsHandleSystem : MonoBehaviour {
     private void EndBattleActions(ref BattleEndEventData eventData) {
         _eventBus.UnsubscribeFrom<TurnStartEvent>(TurnStartActions);
         _deckPresenter.Deck.Clear();
-        HandPresenter.ClearHand();
+        handPresenter.ClearHand();
     }
     
 
@@ -92,7 +90,7 @@ public class CardsHandleSystem : MonoBehaviour {
                 return drawnCards;
             }
 
-            if (!HandPresenter.Hand.Add(card)) {
+            if (!handPresenter.AddCard(card)) {
                 
                 _discardeckPresenter.Deck.Add(card);
                 _eventBus.Raise(new DiscardCardEvent(card, BoardPlayer));

@@ -25,10 +25,10 @@ public class TestingBoard : MonoBehaviour
     private Player player;
 
     private OpponentRegistrator _registrator;
-    GameEventBus eventBus;
+    IEventBus<IEvent> eventBus;
 
     [Inject]
-    public void Construct(OpponentRegistrator registrator, GameEventBus eventBus) {
+    public void Construct(OpponentRegistrator registrator, IEventBus<IEvent> eventBus) {
         _registrator = registrator;
         this.eventBus = eventBus;
     }

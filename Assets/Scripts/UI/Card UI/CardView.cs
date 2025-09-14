@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
+﻿using DG.Tweening;
 using System;
 using UnityEngine;
 
@@ -8,12 +7,11 @@ public abstract class CardView : MonoBehaviour {
     public Action<CardView> OnCardClicked;
     public Action<CardView, bool> OnHoverChanged;
 
-    public CardUIInfo CardInfo;
     public string Id { get; set; }
     private bool _isInteractive = true;
 
+    [SerializeField] protected MovementComponent movementComponent;
 
-    [SerializeField] CardMovementComponent movementComponent;
     #region Unity Lifecycle
 
     protected virtual void Awake() {
@@ -44,15 +42,6 @@ public abstract class CardView : MonoBehaviour {
         _isInteractive = enabled;
     }
 
-    public virtual void Reset() {
-        // Сбрасываем визуальные состояния
-        ResetVisualState();
-    }
-
-    protected virtual void ResetVisualState() {
-        // Переопределяется в наследниках для сброса визуального состояния
-    }
-
     #endregion
 
     #region Mouse Interaction (базовая реализация)
@@ -74,57 +63,27 @@ public abstract class CardView : MonoBehaviour {
 
     #endregion
 
-    #region Card Removal
-
-    public virtual async UniTask PlayRemovalAnimation() {
-        // Переопределяется в наследниках для анимации удаления
-        await UniTask.CompletedTask;
-    }
-
-    #endregion
-
     #region Movement API - основне для інших модулів
 
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void MoveTo(Vector3 position, Quaternion rotation, Vector3 scale, float duration, System.Action onComplete = null) {
-        movementComponent?.MoveTo(position, rotation, scale, duration, onComplete);
+    public void DoTweener(Tweener tweener) {
+        movementComponent?.ExecuteTween(tweener);
     }
 
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void MoveTo(Vector3 position, Quaternion rotation, float duration, System.Action onComplete = null) {
-        movementComponent?.MoveTo(position, rotation, duration, onComplete);
-    }
-
-    /// <summary>
-    /// Простий рух до позиції
-    /// </summary>
-    public void MoveTo(Vector3 position, float duration, System.Action onComplete = null) {
-        MoveTo(position, transform.rotation, transform.localScale, duration, onComplete);
-    }
-
-    /// <summary>
-    /// Миттєве переміщення
-    /// </summary>
-    public void SetPosition(Vector3 position, Quaternion rotation, Vector3 scale) {
-        movementComponent?.SetPosition(position, rotation, scale);
+    public void DoSequence(Sequence sequence) {
+        movementComponent?.ExecuteTweenSequence(sequence);
     }
 
     /// <summary>
     /// Почати фізичний рух (для драгу, таргетингу)
     /// </summary>
-    public void StartPhysicsMovement(Vector3 initialPosition) {
-        movementComponent?.StartPhysicsMovement(initialPosition);
-    }
-
-    /// <summary>
-    /// Оновлення цільової позиції в real-time
-    /// </summary>
-    public void UpdateTargetPosition(Vector3 position) {
-        movementComponent?.UpdateTargetPosition(position);
+    public void DoPhysicsMovement(Vector3 initialPosition) {
+        movementComponent?.UpdateContinuousTarget(initialPosition);
     }
 
     /// <summary>
@@ -133,7 +92,34 @@ public abstract class CardView : MonoBehaviour {
     public void StopMovement() {
         movementComponent?.StopMovement();
     }
+    #endregion
 
+    #region UI Info Update
+    public abstract void UpdateCost(int cost);
+
+    public abstract void UpdateName(string name);
+
+    public abstract void UpdateAttack(int attack);
+
+    public abstract void UpdateHealth(int health);
+
+    public abstract void ToggleCreatureStats(bool isEnabled);
+
+    public abstract void UpdatePortait(Sprite portait);
+
+    public abstract void UpdateBackground(Sprite bgImage);
+
+    public abstract void UpdateRarity(Color rarity);
+    #endregion
+
+    #region Render Order Management
+    public abstract void SetRenderOrder(int sortingOrder);
+
+    public abstract void ModifyRenderOrder(int modifyValue);
+
+    public abstract void ResetRenderOrder();
 
     #endregion
+
+    public abstract void SetHoverState(bool isHovered);
 }

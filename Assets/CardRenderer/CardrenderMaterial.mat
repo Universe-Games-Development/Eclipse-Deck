@@ -46,7 +46,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _CardFrontTexture:
-        m_Texture: {fileID: 2800000, guid: 5794af7c7cd4e8f41b99d782f2977f55, type: 3}
+        m_Texture: {fileID: 2800000, guid: d2a0f7bbe3cca864582597d3ba6d9852, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:

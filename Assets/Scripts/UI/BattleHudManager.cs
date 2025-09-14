@@ -15,11 +15,11 @@ public class CardBattleInfo : MonoBehaviour {
     [SerializeField] private string activeOpponentFormat = "Current Player: {0}";
 
     private TurnManager turnManager;
-    private GameEventBus eventBus;
+    private IEventBus<IEvent> eventBus;
     public bool isInitialized = false;
 
     [Inject]
-    public void Construct(GameEventBus eventBus, [InjectOptional] TurnManager turnManager) {
+    public void Construct(IEventBus<IEvent> eventBus, [InjectOptional] TurnManager turnManager) {
         this.eventBus = eventBus;
         this.turnManager = turnManager;
     }

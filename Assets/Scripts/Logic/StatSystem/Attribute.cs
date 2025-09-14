@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 public struct ModifierChangedEvent : IEvent {
     public int OldValue { get; }
@@ -132,7 +130,7 @@ public class Attribute {
     public int TotalValue => BaseValue + AttributeModifier.TotalValue;
 
     // Основне значення атрибуту
-    private int _mainValue;
+    protected int _mainValue;
     public int MainValue {
         get => _mainValue;
         private set {
@@ -146,13 +144,13 @@ public class Attribute {
     }
 
     // Поточне значення атрибуту з урахуванням модифікаторів
-    public int CurrentValue => MainValue + AttributeModifier.CurrentValue;
+    public int Current => MainValue + AttributeModifier.CurrentValue;
 
     // Мінімальне значення атрибуту
     public int MinValue { get; set; } = 0;
 
     // Модифікатор атрибуту
-    public AttributeModifier AttributeModifier { get; private set; }
+    public AttributeModifier AttributeModifier { get; protected set; }
 
     // Події
     public event EventHandler<ModifierChangedEvent> OnMainValueChanged;
@@ -162,10 +160,20 @@ public class Attribute {
     public Attribute(int baseValue, int minValue = -999) {
         MinValue = minValue;
         BaseValue = Math.Max(minValue, baseValue);
-        _mainValue = BaseValue; // Встановлюємо напряму, щоб уникнути виклику події
+        _mainValue = BaseValue;
         AttributeModifier = new AttributeModifier();
+        SubscribeToModifierEvents();
+    }
 
-        // Підписуємось на події модифікатора
+    public Attribute(Attribute attribute) {
+        MinValue = attribute.MinValue;
+        BaseValue = attribute.BaseValue;
+        _mainValue = attribute.MainValue;
+        AttributeModifier = attribute.AttributeModifier;
+        SubscribeToModifierEvents();
+    }
+
+    private void SubscribeToModifierEvents() {
         AttributeModifier.OnCurrentValueChanged += (s, e) =>
             OnTotalValueChanged?.Invoke(this, new AttributeTotalChangedEvent(
                 e.OldValue + MainValue,
@@ -179,17 +187,18 @@ public class Attribute {
                 e.Difference));
     }
 
+
     // Зменшити значення атрибуту (отримання шкоди тощо)
     public int Subtract(int amount) {
         if (amount <= 0) return 0;
 
-        int oldTotal = CurrentValue;
+        int oldTotal = Current;
         int remainingValue = ApplyDamage(amount);
 
         int actualDecrease = amount - remainingValue;
         if (actualDecrease > 0) {
             OnTotalValueChanged?.Invoke(this, new AttributeTotalChangedEvent(
-                oldTotal, CurrentValue, -actualDecrease));
+                oldTotal, Current, -actualDecrease));
         }
 
         return actualDecrease;
@@ -226,7 +235,7 @@ public class Attribute {
     public int Add(int amount) {
         if (amount <= 0) return 0;
 
-        int oldTotal = CurrentValue;
+        int oldTotal = Current;
 
         // Спочатку відновлюємо основне значення до максимуму
         int mainDifference = BaseValue - MainValue;
@@ -245,7 +254,7 @@ public class Attribute {
         int totalAdded = addedToMain + addedToModifier;
         if (totalAdded > 0) {
             OnTotalValueChanged?.Invoke(this, new AttributeTotalChangedEvent(
-                oldTotal, CurrentValue, totalAdded));
+                oldTotal, Current, totalAdded));
         }
 
         return totalAdded;
@@ -280,8 +289,8 @@ public class Attribute {
         }
 
         // if effect was possitive
-        if (CurrentValue > BaseValue) {
-            int canDecrease = Math.Min(CurrentValue - BaseValue, amount);
+        if (Current > BaseValue) {
+            int canDecrease = Math.Min(Current - BaseValue, amount);
             ApplyDamage(canDecrease);
             AttributeModifier.Decrease(canDecrease);
         }
@@ -323,6 +332,6 @@ public class Attribute {
     public override string ToString() {
         return $"Base: {BaseValue}, Main: {MainValue}, " +
                $"Modifier (Total/Current): {AttributeModifier.TotalValue}/{AttributeModifier.CurrentValue}, " +
-               $"Total: {TotalValue}, Current: {CurrentValue}";
+               $"Total: {TotalValue}, Current: {Current}";
     }
 }

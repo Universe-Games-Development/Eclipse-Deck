@@ -28,7 +28,7 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<ResourceLoadingManager>().AsSingle();
         Container.Bind<VisitedLocationsService>().AsSingle();
 
-        Container.Bind<GameEventBus>().AsSingle().NonLazy();
+        Container.Bind<IEventBus<IEvent>>().To<GameEventBus>().AsSingle().NonLazy();
         Container.Bind<CommandManager>().AsSingle().NonLazy();
 
         Container.Bind<CardProvider>().AsSingle();

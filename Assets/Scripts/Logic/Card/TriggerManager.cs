@@ -7,7 +7,7 @@ using Zenject;
  */
 public class TriggerManager {
     private List<AbilityTrigger> _triggers = new();
-    public Action<BoardPlayer, GameUnit, IEvent> OnTriggerActivation;
+    public Action<BoardPlayer, UnitModel, IEvent> OnTriggerActivation;
 
     public void AddTrigger(AbilityTrigger trigger) {
         if (!_triggers.Contains(trigger)) {
@@ -24,11 +24,11 @@ public class TriggerManager {
 }
 
 public abstract class AbilityTrigger {
-    [Inject] protected GameEventBus _eventBus;
-    public Action<BoardPlayer, GameUnit, IEvent> OnTriggerActivation;
+    [Inject] protected IEventBus<IEvent> _eventBus;
+    public Action<BoardPlayer, UnitModel, IEvent> OnTriggerActivation;
     public string TriggerName { get; protected set; }
-    public abstract void ActivateTrigger(GameUnit gameUnit);
-    public abstract void DeactivateTrigger(GameUnit gameUnit);
+    public abstract void ActivateTrigger(UnitModel gameUnit);
+    public abstract void DeactivateTrigger(UnitModel gameUnit);
 }
 
 public class OnSelfSummonTrigger : AbilityTrigger {
@@ -38,15 +38,15 @@ public class OnSelfSummonTrigger : AbilityTrigger {
 
     // Logic for activating the trigger
 
-    public override void ActivateTrigger(GameUnit gameUnit) {
+    public override void ActivateTrigger(UnitModel gameUnit) {
         gameUnit.OnUnitDeployed += HandleSummon;
     }
-    public override void DeactivateTrigger(GameUnit gameUnit) {
+    public override void DeactivateTrigger(UnitModel gameUnit) {
         gameUnit.OnUnitDeployed -= HandleSummon;
     }
 
     private void HandleSummon(GameEnterEvent eventData) {
-        OnTriggerActivation?.Invoke(eventData.Summoned.Owner, eventData.Summoned, eventData);
+        OnTriggerActivation?.Invoke(eventData.Summoned.GetPlayer(), eventData.Summoned, eventData);
     }
 }
 
@@ -55,16 +55,16 @@ public class OnAnotherSummonTrigger : AbilityTrigger {
         TriggerName = "When another creature sommons";
     }
 
-    public override void ActivateTrigger(GameUnit gameUnit) {
+    public override void ActivateTrigger(UnitModel gameUnit) {
         _eventBus.SubscribeTo<GameEnterEvent>(HandleSummon);
     }
 
-    public override void DeactivateTrigger(GameUnit gameUnit) {
+    public override void DeactivateTrigger(UnitModel gameUnit) {
         _eventBus.UnsubscribeFrom<GameEnterEvent>(HandleSummon);
     }
 
     private void HandleSummon(ref GameEnterEvent eventData) {
-        OnTriggerActivation?.Invoke(eventData.Summoned.Owner, eventData.Summoned, eventData);
+        OnTriggerActivation?.Invoke(eventData.Summoned.GetPlayer(), eventData.Summoned, eventData);
     }
 }
 

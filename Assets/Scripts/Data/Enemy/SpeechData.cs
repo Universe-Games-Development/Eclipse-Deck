@@ -20,14 +20,14 @@ public class Speaker : IDisposable {
     public Character Opponent { get; private set; }
 
     private readonly DialogueSystem dialogueSystem;
-    private readonly GameEventBus eventBus;
+    private readonly IEventBus<IEvent> eventBus;
     private readonly List<IDialogue> eventDialogues = new List<IDialogue>();
 
     private readonly Dictionary<int, List<IDialogue>> storyDialogues = new();
 
     public SpeechData SpeechData { get; }
 
-    public Speaker(SpeechData speechData, Character opponent, DialogueSystem dialogueSystem, GameEventBus eventBus) {
+    public Speaker(SpeechData speechData, Character opponent, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus) {
         SpeechData = speechData;
         Opponent = opponent;
         this.dialogueSystem = dialogueSystem;

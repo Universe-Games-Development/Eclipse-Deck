@@ -5,7 +5,7 @@ using Zenject;
 
 
 
-public class Character : IDisposable {
+public class Character : UnitModel, IDisposable {
     public Action<Character> OnDefeat { get; internal set; }
 
     
@@ -38,7 +38,7 @@ public class Enemy : Character {
     [Inject] private TurnManager _turnManager;
     [Inject] protected OpponentRegistrator opponentRegistrator;
 
-    public Enemy(CharacterData opponentData, DialogueSystem dialogueSystem, GameEventBus eventBus)
+    public Enemy(CharacterData opponentData, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus)
         : base(opponentData) {
         SpeechData speechData = opponentData.speechData;
         if (speechData != null) {

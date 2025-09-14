@@ -37,7 +37,7 @@ public class OperationTargetsFiller : MonoBehaviour {
         currentOperation?.Dispose();
     }
 
-    public bool CanFillTargets(List<NamedTarget> targets) {
+    public bool CanFillTargets(List<Target> targets) {
         if (targets?.Any() != true) return false;
 
         try {
@@ -100,6 +100,7 @@ public class OperationTargetsFiller : MonoBehaviour {
                 throw;
             } catch (Exception ex) {
                 GameLogger.LogError($"Error processing target {target.Name}: {ex.Message}", LogCategory.TargetsFiller);
+                GameLogger.LogException(ex);
 
                 if (operation.ShouldAbortOnError()) {
                     break;
@@ -116,7 +117,7 @@ public class OperationTargetsFiller : MonoBehaviour {
             return false;
         }
 
-        if (request.Initiator == null && request.RequiresInitiator()) {
+        if (request.Source == null && request.RequiresSource()) {
             GameLogger.LogWarning("Request requires initiator but none provided", LogCategory.TargetsFiller);
             return false;
         }
@@ -129,46 +130,46 @@ public class OperationTargetsFiller : MonoBehaviour {
 
 public class TargetOperationRequest {
 
-    public TargetOperationRequest(List<NamedTarget> namedTargets, bool isMandatory, BoardPlayer initiator) {
+    public TargetOperationRequest(List<Target> namedTargets, bool isMandatory, UnitModel source) {
         Targets = namedTargets;
         IsMandatory = isMandatory;
-        Initiator = initiator;
+        Source = source;
     }
 
-    public List<NamedTarget> Targets { get; set; }
+    public List<Target> Targets { get; set; }
     public bool IsMandatory { get; set; }
-    public BoardPlayer Initiator { get; set; }
+    public UnitModel Source { get; set; }
     public string OperationId { get; set; } = Guid.NewGuid().ToString();
 
-    public bool RequiresInitiator() =>
+    public bool RequiresSource() =>
         Targets?.Any(t => t.Requirement?.GetTargetSelector() != TargetSelector.AnyPlayer) == true;
 }
 
 public class TargetOperationResult {
     public OperationStatus Status { get; private set; }
-    public Dictionary<string, GameUnit> FilledTargets { get; private set; }
+    public Dictionary<string, UnitModel> FilledTargets { get; private set; }
     public string ErrorMessage { get; private set; }
     public TimeSpan Duration { get; private set; }
 
-    private TargetOperationResult(OperationStatus status, Dictionary<string, GameUnit> targets = null, string error = null) {
+    private TargetOperationResult(OperationStatus status, Dictionary<string, UnitModel> targets = null, string error = null) {
         Status = status;
-        FilledTargets = targets ?? new Dictionary<string, GameUnit>();
+        FilledTargets = targets ?? new Dictionary<string, UnitModel>();
         ErrorMessage = error;
     }
 
-    public static TargetOperationResult Success(Dictionary<string, GameUnit> targets, TimeSpan duration) {
-        var result = new TargetOperationResult(OperationStatus.Success, targets);
+    public static TargetOperationResult Success(Dictionary<string, UnitModel> targets, TimeSpan duration) {
+        TargetOperationResult result = new(OperationStatus.Success, targets);
         result.Duration = duration;
         return result;
     }
 
     public static TargetOperationResult Failure(string error) =>
-        new TargetOperationResult(OperationStatus.Failed, error: error);
+        new(OperationStatus.Failed, error: error);
 
     public static TargetOperationResult Cancelled() =>
-        new TargetOperationResult(OperationStatus.Cancelled);
+        new(OperationStatus.Cancelled);
 
-    public static TargetOperationResult PartialSuccess(Dictionary<string, GameUnit> targets, TimeSpan duration) {
+    public static TargetOperationResult PartialSuccess(Dictionary<string, UnitModel> targets, TimeSpan duration) {
         var result = new TargetOperationResult(OperationStatus.PartialSuccess, targets);
         result.Duration = duration;
         return result;
@@ -234,7 +235,7 @@ public class TargetOperationContext : IDisposable {
         }
     }
 
-    private void HandleDuplicateUnit(GameUnit unit, TargetState currentTarget) {
+    private void HandleDuplicateUnit(UnitModel unit, TargetState currentTarget) {
         var duplicateTarget = targetStates.FirstOrDefault(t => t.Unit == unit);
         if (duplicateTarget != null) {
             duplicateTarget.ClearUnit();
@@ -291,15 +292,15 @@ public class TargetOperationContext : IDisposable {
 public class TargetState {
     public string Name { get; }
     public ITargetRequirement Requirement { get; }
-    public GameUnit Unit { get; private set; }
+    public UnitModel Unit { get; private set; }
     public int RetryCount { get; private set; }
 
-    public TargetState(NamedTarget target) {
-        Name = target.Name;
+    public TargetState(Target target) {
+        Name = target.Key;
         Requirement = target.Requirement;
     }
 
-    public void SetUnit(GameUnit unit) => Unit = unit;
+    public void SetUnit(UnitModel unit) => Unit = unit;
     public void ClearUnit() => Unit = null;
     public void IncrementRetries() => RetryCount++;
     public void ResetRetries() => RetryCount = 0;
@@ -326,12 +327,11 @@ public class TargetSelectionProcessor {
         TargetOperationRequest request,
         CancellationToken cancellationToken) {
 
-        var selector = selectorFactory.CreateSelector(target.Requirement, request.Initiator);
+        var selector = selectorFactory.CreateSelector(target.Requirement, request.Source.GetPlayer());
 
         try {
             var selectedUnit = await selector.SelectTargetAsync(
-                target.Requirement,
-                target.Name,
+                new TargetSelectionRequest(request.Source, target.Requirement),
                 cancellationToken);
 
             return ProcessSelection(selectedUnit, target, request);
@@ -339,18 +339,19 @@ public class TargetSelectionProcessor {
         } catch (OperationCanceledException) {
             throw;
         } catch (Exception ex) {
+            GameLogger.LogException(ex);
             GameLogger.LogError($"Selector error for {target.Name}: {ex.Message}", LogCategory.TargetsFiller);
             return TargetSelectionResult.Retry();
         }
     }
 
-    private TargetSelectionResult ProcessSelection(GameUnit unit, TargetState target, TargetOperationRequest request) {
+    private TargetSelectionResult ProcessSelection(UnitModel unit, TargetState target, TargetOperationRequest request) {
         if (unit == null) {
             return HandleNullSelection(request);
         }
 
         // Валідація
-        var validationResult = validator.ValidateTarget(unit, target.Requirement, request.Initiator);
+        var validationResult = validator.ValidateTarget(unit, target.Requirement, request.Source.GetPlayer());
         if (!validationResult.IsValid) {
             GameLogger.LogWarning($"Invalid target {unit} for {target.Name}: {validationResult.ErrorMessage}",
                 LogCategory.TargetsFiller);
@@ -375,24 +376,24 @@ public class TargetSelectionProcessor {
 
 public class TargetSelectionResult {
     public SelectionAction Action { get; private set; }
-    public GameUnit SelectedUnit { get; private set; }
+    public UnitModel SelectedUnit { get; private set; }
 
-    private TargetSelectionResult(SelectionAction action, GameUnit unit = null) {
+    private TargetSelectionResult(SelectionAction action, UnitModel unit = null) {
         Action = action;
         SelectedUnit = unit;
     }
 
-    public static TargetSelectionResult Success(GameUnit unit) =>
-        new TargetSelectionResult(SelectionAction.Success, unit);
+    public static TargetSelectionResult Success(UnitModel unit) =>
+        new(SelectionAction.Success, unit);
 
     public static TargetSelectionResult Retry() =>
-        new TargetSelectionResult(SelectionAction.Retry);
+        new(SelectionAction.Retry);
 
     public static TargetSelectionResult Cancel() =>
-        new TargetSelectionResult(SelectionAction.Cancel);
+        new(SelectionAction.Cancel);
 
-    public static TargetSelectionResult ClearDuplicate(GameUnit unit) =>
-        new TargetSelectionResult(SelectionAction.ClearDuplicate, unit);
+    public static TargetSelectionResult ClearDuplicate(UnitModel unit) =>
+        new(SelectionAction.ClearDuplicate, unit);
 }
 
 public enum SelectionAction {
@@ -406,7 +407,7 @@ public enum SelectionAction {
 
 public interface ITargetSelectorFactory {
     ITargetSelector CreateSelector(ITargetRequirement requirement, BoardPlayer initiator);
-    bool CanCreateSelectors(List<NamedTarget> targets);
+    bool CanCreateSelectors(List<Target> targets);
 }
 
 public class TargetSelectorFactory : ITargetSelectorFactory {
@@ -429,40 +430,31 @@ public class TargetSelectorFactory : ITargetSelectorFactory {
         };
     }
 
-    public bool CanCreateSelectors(List<NamedTarget> targets) {
+    public bool CanCreateSelectors(List<Target> targets) {
         return targets?.All(t => t.Requirement?.GetTargetSelector() != TargetSelector.AllPlayers) == true;
     }
 }
 
 public interface ITargetValidator {
-    ValidationResult ValidateTarget(GameUnit unit, ITargetRequirement requirement, BoardPlayer initiator);
-    bool CanValidateAllTargets(List<NamedTarget> targets);
+    ValidationResult ValidateTarget(UnitModel unit, ITargetRequirement requirement, BoardPlayer initiator);
+    bool CanValidateAllTargets(List<Target> targets);
 }
 
 public class TargetValidator : ITargetValidator {
-    public ValidationResult ValidateTarget(GameUnit unit, ITargetRequirement requirement, BoardPlayer initiator) {
+    public ValidationResult ValidateTarget(UnitModel unit, ITargetRequirement requirement, BoardPlayer initiator) {
         try {
             return requirement.IsValid(unit, initiator);
         } catch (Exception ex) {
             GameLogger.LogError($"Validation error: {ex.Message}", LogCategory.TargetsFiller);
-            return ValidationResult.InValid($"Validation failed: {ex.Message}");
+            return ValidationResult.Error($"Validation failed: {ex.Message}");
         }
     }
 
-    public bool CanValidateAllTargets(List<NamedTarget> targets) {
+    public bool CanValidateAllTargets(List<Target> targets) {
         return targets?.All(t => t.Requirement != null) == true;
     }
 }
 
-// === Extensions ===
-
-public static class TargetRequirementExtensions {
-    public static TargetSelector GetTargetSelector(this ITargetRequirement requirement) {
-        // Implementation depends on your ITargetRequirement interface
-        // This is a placeholder
-        return TargetSelector.Initiator;
-    }
-}
 
 // === Existing interfaces (keeping for compatibility) ===
 public enum TargetSelector {
@@ -473,11 +465,8 @@ public enum TargetSelector {
     AllPlayers,
     NextPlayer
 }
+
 public interface ITargetSelector {
-    UniTask<GameUnit> SelectTargetAsync(ITargetRequirement requirement, string targetName, CancellationToken cancellationToken);
+    UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken);
 }
 
-// will be used to get model of game unit objects
-public interface IGameUnitProvider {
-    GameUnit GetUnit();
-}

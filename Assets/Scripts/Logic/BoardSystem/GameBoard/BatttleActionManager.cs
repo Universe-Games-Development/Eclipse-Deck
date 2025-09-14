@@ -7,8 +7,8 @@ public class BatttleActionManager {
 
     [Inject] CommandManager _commandManager;
     // Zenject
-    private GameEventBus _eventBus;
-    public BatttleActionManager(GameEventBus eventBus, CommandManager commandManager) {
+    private IEventBus<IEvent> _eventBus;
+    public BatttleActionManager(IEventBus<IEvent> eventBus, CommandManager commandManager) {
         _commandManager = commandManager;
         _eventBus = eventBus;
     }

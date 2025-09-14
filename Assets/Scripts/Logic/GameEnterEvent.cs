@@ -1,6 +1,6 @@
 ﻿public struct GameEnterEvent : IEvent {
-    public GameUnit Summoned;
-    public GameEnterEvent(GameUnit summoned) {
+    public UnitModel Summoned;
+    public GameEnterEvent(UnitModel summoned) {
         Summoned = summoned;
     }
 }

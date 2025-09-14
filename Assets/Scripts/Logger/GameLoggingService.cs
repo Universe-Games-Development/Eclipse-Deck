@@ -158,6 +158,7 @@ public class GameLoggingService : MonoBehaviour, ILogger {
             LogCategory.Animation => "[ANIM]",
             LogCategory.AI => "[AI]",
             LogCategory.Physics => "[PHYS]",
+            LogCategory.CardModule => "[CPM]",
             _ => $"[{category.ToString().ToUpper()}]"
         };
     }

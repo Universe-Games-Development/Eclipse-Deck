@@ -1,14 +1,9 @@
-﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
-using System;
+﻿using TMPro;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
 public class Card3DView : CardView {
-    // Компоненты рендеринга
-    [SerializeField] private SkinnedMeshRenderer cardRenderer;
-    //[SerializeField] private Card3DAnimator animator;
-    public Action OnInitialized;
+    [SerializeField] private Renderer cardRenderer;
+    [SerializeField] private Card3DAnimator animator;
 
     // Кэширование шейдера и материалов
     private static readonly int CardFrontTextureId = Shader.PropertyToID("_CardFrontTexture");
@@ -16,14 +11,24 @@ public class Card3DView : CardView {
     private Material _instancedMaterial;
     private int _defaultRenderQueue;
 
+    [Header ("3D info")]
+    [SerializeField] TextMeshPro cardName;
+
+    [SerializeField] TextMeshPro costText;
+    
+    [SerializeField] TextMeshPro healthText;
+    [SerializeField] Transform healthIcon;
+
+    [SerializeField] TextMeshPro attackText;
+    [SerializeField] Transform attack3DIcon;
 
     #region Unity Lifecycle
 
     protected override void Awake() {
         base.Awake();
 
-        // Создаем MaterialPropertyBlock для эффективного изменения свойств материала
         _propertyBlock = new MaterialPropertyBlock();
+        InitializeMaterials();
     }
 
     protected override void OnDestroy() {
@@ -34,32 +39,16 @@ public class Card3DView : CardView {
 
     #region Initialization
 
-    public void SyncWithUICopy(CardUIView cardUIView) {
-        CardInfo = cardUIView.CardInfo;
-        InitializeMaterials();
-        OnInitialized.Invoke();
-    }
-
     protected override void ValidateComponents() {
         base.ValidateComponents();
-
-        // Проверяем наличие компонентов рендеринга
         if (cardRenderer == null) {
-            Debug.LogError("Card3DView: SkinnedMeshRenderer not assigned!", this);
-        }
-
-        // Проверяем наличие коллайдера для взаимодействия
-        Collider col = GetComponent<Collider>();
-        if (col == null) {
-            Debug.LogWarning("Card3DView: No Collider component found! Adding BoxCollider.", this);
-            gameObject.AddComponent<BoxCollider>();
+            Debug.LogError("Card3DView: Renderer not assigned!", this);
         }
     }
 
     protected override void CleanupResources() {
         base.CleanupResources();
 
-        // Очищаем экземпляр материала для предотвращения утечек памяти
         if (_instancedMaterial != null) {
             Destroy(_instancedMaterial);
             _instancedMaterial = null;
@@ -75,21 +64,6 @@ public class Card3DView : CardView {
         }
     }
 
-    #endregion
-
-    #region State Management
-
-    protected override void ResetVisualState() {
-        base.ResetVisualState();
-
-        // Сбрасываем анимации
-        //if (animator != null) {
-        //    animator.Reset();
-        //}
-
-        // Сбрасываем порядок рендеринга
-        ResetRenderingOrder();
-    }
     #endregion
 
     #region Mouse Interaction
@@ -124,24 +98,73 @@ public class Card3DView : CardView {
         cardRenderer.SetPropertyBlock(_propertyBlock);
     }
 
-    public void SetSortingOrder(int order) {
+    #endregion
+
+    public override void SetRenderOrder(int order) {
         if (_instancedMaterial != null) {
             _instancedMaterial.renderQueue = order;
+            //Debug.Log($"{gameObject.name}: Render queue: {order}");
         }
     }
 
-    public void ResetRenderingOrder() {
-        SetSortingOrder(_defaultRenderQueue);
+    public override void ModifyRenderOrder(int modifyValue) {
+        if (TryGetCurrentRenderOrder(out int currentOrder)) {
+            SetRenderOrder(currentOrder + modifyValue);
+        }
     }
 
-    #endregion
-
-    #region Card Removal
-
-    public override async UniTask PlayRemovalAnimation() {
-        // Проигрываем анимацию удаления, если есть
-        await UniTask.Yield();
+    public override void ResetRenderOrder() {
+        SetRenderOrder(_defaultRenderQueue);
     }
 
+    private bool TryGetCurrentRenderOrder(out int order) {
+        order = _instancedMaterial?.renderQueue ?? 0;
+        return _instancedMaterial != null;
+    }
+
+    public override void SetHoverState(bool isHovered) {
+        if (!movementComponent.IsMoving) {
+            //animator?.Hover(isHovered);
+        }
+        
+    }
+
+
+    #region 3d Info Update
+    public override void UpdateCost(int cost) {
+        costText.text = cost.ToString();
+    }
+
+    public override void UpdateName(string name) {
+        cardName.text = name;
+    }
+
+    public override void UpdateAttack(int attack) {
+        attackText.text = attack.ToString();
+    }
+
+    public override void UpdateHealth(int health) {
+        healthText.text = health.ToString();
+    }
+
+    public override void ToggleCreatureStats(bool isEnabled) {
+       healthIcon.gameObject.SetActive(isEnabled);
+        attack3DIcon.gameObject.SetActive(isEnabled);
+    }
+
+    public override void UpdatePortait(Sprite portrait) {
+        if (_instancedMaterial != null && portrait != null) {
+            _instancedMaterial.SetTexture("_Portait", portrait.texture);
+        }
+    }
+
+
+    public override void UpdateBackground(Sprite bgImage) {
+        //throw new NotImplementedException();
+    }
+
+    public override void UpdateRarity(Color rarity) {
+        //throw new NotImplementedException();
+    }
     #endregion
 }

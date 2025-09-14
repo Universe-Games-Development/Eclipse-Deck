@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zenject;
-using UnityEngine;
 
 public class EffectManager {
     private readonly List<BaseEffect> permanents = new();
@@ -12,7 +10,7 @@ public class EffectManager {
     public event Action OnCleared;
     public event Action<BaseEffect> OnEffectAdded;
     public event Action<BaseEffect> OnEffectRemoved;
-    public EffectManager(GameEventBus eventBus) {
+    public EffectManager(IEventBus<IEvent> eventBus) {
         eventBus.SubscribeTo<TurnEndEvent>(OnTurnEnd);
     }
 

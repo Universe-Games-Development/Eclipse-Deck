@@ -3,8 +3,8 @@ using System;
 using UnityEngine;
 using Zenject;
 
-public class BoardPlayer : MonoBehaviour, IDamageable, IMannable {
-    [Inject] protected GameEventBus _eventBus;
+public class BoardPlayer : UnitPresenter, IHealthable, IMannable {
+    [Inject] protected IEventBus<IEvent> _eventBus;
     public Direction FacingDirection;
     [SerializeField] private HealthCellView _healthDisplay;
     [SerializeField] private CardsHandleSystem _cardsSystem;
@@ -73,9 +73,23 @@ public class BoardPlayer : MonoBehaviour, IDamageable, IMannable {
         Gizmos.DrawSphere(transform.position, 1f);
     }
 
-
-    public override string ToString() {
-        return $"{GetType().Name} {Character.Data.Name} ({Health.CurrentValue}/{Health.TotalValue})";
+    #region Unit presenter API
+    public override UnitModel GetModel() {
+        return Character;
     }
 
+    public override BoardPlayer GetPlayer() {
+        return this;
+    }
+    #endregion
+
+    public void SpendMana(int currentValue) {
+        int was = Mana.Current;
+        Mana.Subtract(currentValue);
+        DebugLog($"Mana: {Mana.Current} / {Mana.MinValue}");
+    }
+
+    public override string ToString() {
+        return $"{GetType().Name} {Character.Data.Name} ({Health.Current}/{Health.TotalValue})";
+    }
 }

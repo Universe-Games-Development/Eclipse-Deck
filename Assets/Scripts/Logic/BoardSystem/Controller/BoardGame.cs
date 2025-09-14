@@ -7,7 +7,7 @@ public class BoardGame : MonoBehaviour {
 
     [SerializeField] public OpponentRepresentator OpponentsRepresentation;
 
-    [Inject] GameEventBus _eventBus;
+    [Inject] IEventBus<IEvent> _eventBus;
     [Inject] CommandManager _commandManager;
     [Inject] CardProvider _cardProvider;
     [Inject] DiContainer diContainer;
