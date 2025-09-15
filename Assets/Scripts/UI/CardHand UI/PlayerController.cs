@@ -15,6 +15,9 @@ public class PlayerController : MonoBehaviour {
 
     private PlayerState currentState;
 
+
+    [SerializeField] public int debounceTime = 100;
+
     private void Start() {
         if (!ValidateComponents()) return;
 
@@ -46,15 +49,15 @@ public class PlayerController : MonoBehaviour {
     private void SubscribeToEvents() {
         operationManager.OnOperationStatus += HandleOperationStatus;
         player.Selector.OnSelectionStarted += HandleSelectionStart;
-        eventBus.SubscribeTo<CardPlayStatusEvent>(HandleCardPlayCompleted);
+        eventBus.SubscribeTo<CardPlaySessionEndedEvent>(HandleCardPlayCompleted);
     }
 
-    private void HandleCardPlayCompleted(ref CardPlayStatusEvent eventData) {
+    private void HandleCardPlayCompleted(ref CardPlaySessionEndedEvent eventData) {
         Card spentCard = eventData.Card;
         if (!handPresenter.Contains(spentCard))
             return;
 
-        if (eventData.playResult.IsSuccess && false) {
+        if (eventData.FinalResult.IsSuccess && false) {
             player.SpendMana(spentCard.Cost.Current);
             handPresenter.RemoveCard(spentCard);
             GameLogger.Log("Card successfully played and spent");
@@ -108,7 +111,7 @@ public class PlayerController : MonoBehaviour {
         currentState.controller = this;
         currentState.Enter();
 
-        Debug.Log($"State changed to: {currentState.GetType().Name}");
+        //Debug.Log($"State changed to: {currentState.GetType().Name}");
     }
 }
 
@@ -171,7 +174,6 @@ public class IdleState : PlayerState {
 public class PlayingState : PlayerState {
     private CancellationTokenSource _debounceCts;
     private readonly Card _card;
-    private readonly TimeSpan _debounceTime = TimeSpan.FromMilliseconds(500);
     private bool _isExiting = false;
 
     public PlayingState(Card card = null) {
@@ -187,6 +189,7 @@ public class PlayingState : PlayerState {
         }
 
         controller.operationManager.OnQueueEmpty += TryExitPlaying;
+        controller.eventBus.SubscribeTo<CardPlaySessionEndedEvent>(HandleCardStatus);
 
         _debounceCts = new CancellationTokenSource();
 
@@ -195,9 +198,10 @@ public class PlayingState : PlayerState {
         }
     }
 
-    private void OnCardPlayCompleted(CardPresenter presenter, bool success) {
+    private void HandleCardStatus(ref CardPlaySessionEndedEvent eventData) {
         TryExitPlaying();
     }
+
 
     private async void TryExitPlaying() {
         if (_isExiting) return; // Запобігаємо race condition
@@ -211,7 +215,7 @@ public class PlayingState : PlayerState {
         _debounceCts = new CancellationTokenSource();
 
         try {
-            await UniTask.Delay(_debounceTime, cancellationToken: _debounceCts.Token);
+            await UniTask.Delay(controller.debounceTime, cancellationToken: _debounceCts.Token);
 
             if (!_isExiting && controller?.operationManager?.IsQueueEmpty() == true) {
                 controller.SwitchState(new IdleState());

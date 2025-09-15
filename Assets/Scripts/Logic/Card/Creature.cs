@@ -15,6 +15,7 @@ public class Creature : UnitModel, IHealthable {
         Data = card.CreatureCardData ?? throw new ArgumentNullException(nameof(card.CreatureCardData));
         Health = new Health(card.Health, this);
         Attack = new Attack(card.Attack, this);
+        sourceCard = card;
 
         Id = System.Guid.NewGuid().ToString();
     }

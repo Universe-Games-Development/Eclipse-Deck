@@ -4,6 +4,7 @@ public class ZoneColor : MonoBehaviour
 {
     [SerializeField] ZonePresenter zonePresenter;
     [SerializeField] Renderer zoneRenderer;
+    [SerializeField] Color unAssignedColor;
 
     private void Awake() {
         if (zoneRenderer == null) {
@@ -21,16 +22,11 @@ public class ZoneColor : MonoBehaviour
             return;
         }
         if (zonePresenter.Owner == null) {
-            //Debug.LogWarning("ZonePresenter owner is not assigned.");
-            return;
+            Debug.LogWarning("ZonePresenter owner is not assigned.");
         }
         BoardPlayer owner = zonePresenter.Owner;
-        if (owner.Character == null) {
-            Debug.LogWarning("Character Data not assigned");
-            return;
-        }
+        Color color = owner == null ? unAssignedColor : owner.Character.Data.Color;
 
-        Color ownerColor = owner.Character.Data.Color;
-        zoneRenderer.material.color = ownerColor;
+        zoneRenderer.material.color = color;
     }
 }

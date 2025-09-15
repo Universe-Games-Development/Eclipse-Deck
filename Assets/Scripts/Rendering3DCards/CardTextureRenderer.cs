@@ -87,7 +87,7 @@ public class CardTextureRenderer : MonoBehaviour {
         // Знаходимо всі 3D-карти, які використовують цей UI і оновлюємо їх текстури
         foreach (var pair in cardMappings) {
             if (pair.Value == cardUI) {
-                pair.Key.UpdateTexture(texture);
+                //pair.Key.UpdateTexture(texture);
             }
         }
     }

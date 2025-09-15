@@ -25,6 +25,8 @@ public class SpawnCreatureOperation : GameOperation {
             return false;
         }
         Creature creature = _spawnService.SpawnCreature(_data.creatureCard);
+        if (creature == null) return false;
+
         zone.PlaceCreature(creature);
 
         return true;

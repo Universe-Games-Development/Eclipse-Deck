@@ -6,7 +6,7 @@ public interface ICreatureFactory {
 }
 
 public class CreatureFactory : MonoBehaviour, ICreatureFactory {
-    [SerializeField] private CreaturePool creaturePool;
+    [SerializeField] private Card3DPool creaturePool;
 
     [Inject] private DiContainer container;
     [Inject] private IUnitPresenterRegistry unitRegistry;

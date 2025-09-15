@@ -1,4 +1,5 @@
-﻿using DG.Tweening;
+﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -24,6 +25,22 @@ public class ZonePresenter : UnitPresenter {
         Zone = zone;
     }
 
+    [SerializeField] float updateTimer = 1f;
+    [SerializeField] bool doUpdate = false;
+    private void Awake() {
+        if (doUpdate) {     
+            _ = DoTestUpdate();
+        }
+    }
+
+    private async UniTask DoTestUpdate() {
+        while (doUpdate) {
+            await UniTask.Delay((int)(updateTimer * 1000));
+            var positions = View.GetCreaturePoints(creaturesInZone.Count);
+            RearrangeCreatures(positions);
+}
+    }
+
     private void HandleCreaturePlacement(Creature creature) {
         DebugLog("Creature spawned event received");
 
@@ -44,12 +61,13 @@ public class ZonePresenter : UnitPresenter {
         var creatureToRemove = creaturesInZone.FirstOrDefault(c => c.Creature == creature);
         if (creatureToRemove != null) {
             creaturesInZone.Remove(creatureToRemove);
-            View.UpdateSummonedCount(creaturesInZone.Count);
 
             // Перерозподіляємо решту істот
             var positions = View.GetCreaturePoints(creaturesInZone.Count);
             RearrangeCreatures(positions);
         }
+
+        View.UpdateSummonedCount(Zone.GetCreaturesCount());
     }
 
     public bool PlaceCreature(Creature creature) {
@@ -60,12 +78,12 @@ public class ZonePresenter : UnitPresenter {
 
     [SerializeField] private float cardsOrganizeDuration = 0.5f;
     // VISUAL TASK
-    private void RearrangeCreatures(List<TransformPoint> positions) {
+    private void RearrangeCreatures(List<LayoutPoint> positions) {
         for (int i = 0; i < creaturesInZone.Count; i++) {
             if (i < positions.Count) {
                 CreaturePresenter creaturePresenter = creaturesInZone[i];
                 Transform cardTransform = creaturePresenter.transform;
-                TransformPoint point = positions[i];
+                LayoutPoint point = positions[i];
 
                 Tweener moveTween = cardTransform.DOMove(point.position, cardsOrganizeDuration)
                                     .SetEase(Ease.OutQuad)

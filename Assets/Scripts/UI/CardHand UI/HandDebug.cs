@@ -16,12 +16,11 @@ public class HandDebug : MonoBehaviour
     [SerializeField] int initialCards = 0;
     [SerializeField] TextMeshProUGUI hoveredCard;
 
-    [SerializeField] CreatureCardData creatureCardData;
-    [SerializeField] SpellCardData spellCardData;
-
     [Inject] IEventBus<IEvent> eventBus;
 
     [Inject] private ICardFactory cardFactory;
+    [Inject] CardProvider cardProvider;
+    [SerializeField] List<CardData> cardDatas;
 
     private void Start() {
 
@@ -48,12 +47,11 @@ public class HandDebug : MonoBehaviour
     }
 
     private void AddCard() {
-        float value = UnityEngine.Random.Range(0f, 1f);
-        CardData dataToChoose = creatureCardData;
-        if (value > 0.5f) dataToChoose = spellCardData;
+        List<CardData> cardDatas1 = cardProvider.GetUnlockedCards();
+        bool v = cardDatas.TryGetRandomElement(out CardData cardData);
 
         EffectManager effectManager = new EffectManager(eventBus);
-        Card card = cardFactory.CreateCard(dataToChoose);
+        Card card = cardFactory.CreateCard(cardData);
         handPresenter.AddCard(card);
     }
 

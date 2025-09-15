@@ -68,6 +68,7 @@ public class CardPlaySession : IDisposable {
     private int _completedOperations = 0;
 
     private bool _isDisposed = false;
+
     public CardPlaySession(
         Card card,
         IOperationFactory operationFactory,
@@ -91,20 +92,29 @@ public class CardPlaySession : IDisposable {
         var token = linkedTokenSource.Token;
 
         try {
-            _eventBus.Raise(new CardPlayStartedEvent(_card));
+            // 1. Івент старту сесії
+            _eventBus.Raise(new CardPlaySessionStartedEvent(_card, _operations.Count));
 
             if (!ValidateOperations()) {
                 var failedResult = CardPlayResult.Failed("Invalid operations for card");
-                _eventBus.Raise(new CardPlayStatusEvent(_card, failedResult));
+                _eventBus.Raise(new CardPlaySessionEndedEvent(_card, failedResult));
                 return failedResult;
             }
 
             while (HasNextOperation() && !token.IsCancellationRequested) {
                 var operationResult = await ExecuteNextOperationAsync(token);
 
+                // 2. Івент результату операції
+                _eventBus.Raise(new CardOperationResultEvent(
+                    _card,
+                    _currentOperationIndex - 1, // -1 тому що індекс вже інкрементований
+                    _operations.Count,
+                    operationResult
+                ));
+
                 if (!operationResult.IsSuccess) {
                     var failedResult = CardPlayResult.Failed(operationResult.ErrorMessage);
-                    _eventBus.Raise(new CardPlayStatusEvent(_card, failedResult));
+                    _eventBus.Raise(new CardPlaySessionEndedEvent(_card, failedResult));
                     return failedResult;
                 }
 
@@ -112,17 +122,18 @@ public class CardPlaySession : IDisposable {
             }
 
             var successResult = CardPlayResult.Success(_completedOperations);
-            _eventBus.Raise(new CardPlayStatusEvent(_card, successResult));
+            // 3. Івент закінчення сесії
+            _eventBus.Raise(new CardPlaySessionEndedEvent(_card, successResult));
             return successResult;
 
         } catch (OperationCanceledException) {
             var cancelledResult = CardPlayResult.Cancelled();
-            _eventBus.Raise(new CardPlayStatusEvent(_card, cancelledResult));
+            _eventBus.Raise(new CardPlaySessionEndedEvent(_card, cancelledResult));
             return cancelledResult;
         } catch (Exception ex) {
             Debug.LogError($"Card play failed with exception: {ex}");
             var failedResult = CardPlayResult.Failed(ex.Message);
-            _eventBus.Raise(new CardPlayStatusEvent(_card, failedResult));
+            _eventBus.Raise(new CardPlaySessionEndedEvent(_card, failedResult));
             return failedResult;
         }
     }
@@ -133,7 +144,6 @@ public class CardPlaySession : IDisposable {
             return false;
         }
 
-        // Перевіряємо чи всі операції можна створити
         return _operations.All(op => _operationFactory.CanCreate(op.GetType()));
     }
 
@@ -163,7 +173,6 @@ public class CardPlaySession : IDisposable {
         }
     }
 
-
     private async UniTask WaitForOperationManager(CancellationToken token) {
         await UniTask.WaitUntil(
             () => !_operationManager.IsRunning,
@@ -179,9 +188,8 @@ public class CardPlaySession : IDisposable {
 
         _operationManager.Push(operation);
 
-        return await tcs.Task.AttachExternalCancellation(token); ;
+        return await tcs.Task.AttachExternalCancellation(token);
     }
-
 
     public void Cancel() {
         _cancellationTokenSource.Cancel();
@@ -275,31 +283,54 @@ public struct OperationResult {
     public static OperationResult Failed(string errorMessage) => new(false, errorMessage);
 }
 
-// Events
-public struct CardPlayStartedEvent : IEvent {
+// 1. Івент старту сесії гри карти
+public struct CardPlaySessionStartedEvent : IEvent {
     public Card Card { get; }
-    public CardPlayStartedEvent(Card card) => Card = card;
-}
+    public int TotalOperations { get; }
+    public DateTime StartTime { get; }
 
-public struct CardPlayStatusEvent : IEvent {
-    public Card Card { get; }
-    public CardPlayResult playResult;
-
-    public CardPlayStatusEvent(Card card, CardPlayResult result) {
+    public CardPlaySessionStartedEvent(Card card, int totalOperations) {
         Card = card;
-        playResult = result;
+        TotalOperations = totalOperations;
+        StartTime = DateTime.Now;
     }
 }
 
-public struct CardOperationCompletedEvent : IEvent {
+// 2. Івент результату однієї операції карти
+public struct CardOperationResultEvent : IEvent {
     public Card Card { get; }
     public int OperationIndex { get; }
     public int TotalOperations { get; }
+    public OperationResult Result { get; }
+    public DateTime CompletedTime { get; }
 
-    public CardOperationCompletedEvent(Card card, int operationIndex, int totalOperations) {
+    public CardOperationResultEvent(Card card, int operationIndex, int totalOperations, OperationResult result) {
         Card = card;
         OperationIndex = operationIndex;
         TotalOperations = totalOperations;
+        Result = result;
+        CompletedTime = DateTime.Now;
     }
+
+    public bool IsLastOperation => OperationIndex == TotalOperations - 1;
+    public float Progress => TotalOperations > 0 ? (float)(OperationIndex + 1) / TotalOperations : 0f;
 }
+
+// 3. Івент закінчення сесії гри карти
+public struct CardPlaySessionEndedEvent : IEvent {
+    public Card Card { get; }
+    public CardPlayResult FinalResult { get; }
+    public DateTime EndTime { get; }
+
+    public CardPlaySessionEndedEvent(Card card, CardPlayResult finalResult) {
+        Card = card;
+        FinalResult = finalResult;
+        EndTime = DateTime.Now;
+    }
+
+    public bool WasSuccessful => FinalResult.IsSuccess;
+    public bool WasCancelled => FinalResult.IsCancelled;
+    public bool WasFailed => !FinalResult.IsSuccess && !FinalResult.IsCancelled;
+}
+
 #endregion

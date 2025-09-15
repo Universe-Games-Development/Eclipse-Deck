@@ -32,11 +32,9 @@ public class CardPresenter : UnitPresenter {
 
     public async UniTask LaunchTestUpdate() {
         for (int i = 0; i < updateTimes; i++) {
-            int randomHealth = UnityEngine.Random.Range(1, 100);
-            View.UpdateHealth(randomHealth);
-            int randomAttack = UnityEngine.Random.Range(1, 100);
-            View.UpdateAttack(randomAttack);
-            Debug.Log($"Iteration {i}, {randomAttack}/{randomHealth}");
+            int randomCost = UnityEngine.Random.Range(1, 100);
+            Card.Cost.Add(randomCost);
+            Debug.Log($"Iteration {i}, {randomCost}");
             await UniTask.Delay(TimeSpan.FromSeconds(updateRate));
         }
     }
@@ -64,30 +62,32 @@ public class CardPresenter : UnitPresenter {
 
     #region UI Info Update
     private void UpdateUIInfo() {
-        UpdateViewAppear();
-        UpdateViewStats();
-    }
-
-    private void UpdateViewStats() {
-        View.UpdateCost(Card.Cost.Current);
-
-        var creatureCard = Card as CreatureCard;
-        bool isCreatureCard = creatureCard != null;
-
-        if (isCreatureCard) {
-            View.UpdateAttack(creatureCard.Attack.Current);
-            View.UpdateHealth(creatureCard.Health.Current);
+        CardDisplayData cardDisplayData = ConvertToDisplayData(Card);
+        CardDisplayConfig cardDisplayConfig = CardDisplayConfig.ForHandCard();
+        if (!(Card is CreatureCard card)) {
+            cardDisplayConfig.showStats = false;
         }
-
-        View.ToggleCreatureStats(isCreatureCard);
+        CardDisplayContext context = new(cardDisplayData, cardDisplayConfig);
+        View.UpdateDisplay(context);
     }
 
-    private void UpdateViewAppear() {
-        View.UpdateName(Card.Data.Name);
-        View.UpdatePortait(Card.Data.Portait);
-        View.UpdateBackground(Card.Data.BgImage);
-        Color color = RarityUtility.GetRarityColor( Card.Data.Rarity);
-        View.UpdateRarity(color);
+    private CardDisplayData ConvertToDisplayData(Card card) {
+        int attack = 0;
+        int health = 0;
+        if (card is CreatureCard creature) {
+            attack = creature.Attack.Current;
+            health = creature.Health.Current;
+        }
+        
+        return new CardDisplayData {
+            name = card.Data.Name,
+            cost = card.Cost.Current,
+            attack = attack,
+            health = health,
+            portrait = card.Data.Portait,
+            background = card.Data.Background,
+            rarity = RarityUtility.GetRarityColor(card.Data.Rarity)
+        };
     }
 
     #endregion

@@ -94,23 +94,7 @@ public abstract class CardView : MonoBehaviour {
     }
     #endregion
 
-    #region UI Info Update
-    public abstract void UpdateCost(int cost);
-
-    public abstract void UpdateName(string name);
-
-    public abstract void UpdateAttack(int attack);
-
-    public abstract void UpdateHealth(int health);
-
-    public abstract void ToggleCreatureStats(bool isEnabled);
-
-    public abstract void UpdatePortait(Sprite portait);
-
-    public abstract void UpdateBackground(Sprite bgImage);
-
-    public abstract void UpdateRarity(Color rarity);
-    #endregion
+    public abstract void UpdateDisplay(CardDisplayContext context);
 
     #region Render Order Management
     public abstract void SetRenderOrder(int sortingOrder);

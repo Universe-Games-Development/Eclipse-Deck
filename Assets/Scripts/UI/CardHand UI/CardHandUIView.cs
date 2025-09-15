@@ -85,5 +85,17 @@ public class CardHandUIView : CardHandView {
     protected override void HandleCardViewRemoval(CardView cardView) {
         throw new NotImplementedException();
     }
+
+    protected override void HandleCardHovered(CardView cardView) {
+        throw new NotImplementedException();
+    }
+
+    public override void UpdateCardPositions(List<CardView> cardViews) {
+        throw new NotImplementedException();
+    }
+
+    protected override void HandleClearCardHovered(CardView cardView) {
+        throw new NotImplementedException();
+    }
 }
 

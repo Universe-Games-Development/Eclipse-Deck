@@ -1104,6 +1104,7 @@ GameObject:
   - component: {fileID: 3764676270445240160}
   - component: {fileID: 9015347378124168813}
   - component: {fileID: 7218164727689283696}
+  - component: {fileID: 7219568571880624990}
   - component: {fileID: -8699964533942601430}
   - component: {fileID: 6672949540244191898}
   - component: {fileID: 6585816273941797280}
@@ -1167,7 +1168,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isDebugEnabled: 0
-  View: {fileID: -8699964533942601430}
+  View: {fileID: 7219568571880624990}
+--- !u!114 &7219568571880624990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5035915735796379205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33328c3e0efbe9b4980ec5395c49923a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movementComponent: {fileID: 6672949540244191898}
+  cardRenderer: {fileID: 7788813463689524630}
+  animator: {fileID: 6497592486819746803}
 --- !u!114 &-8699964533942601430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1222,7 +1238,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5035915735796379205}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b6b3e8e25e416f64f9e887c0b06665fe, type: 3}
   m_Name: 
@@ -1647,8 +1663,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7949405105004948762}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0, y: -0, z: 0}
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

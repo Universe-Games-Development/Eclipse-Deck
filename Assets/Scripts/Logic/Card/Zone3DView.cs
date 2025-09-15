@@ -5,27 +5,33 @@ using UnityEngine;
 public class Zone3DView : MonoBehaviour {
     [SerializeField] TextMeshPro text;
     [SerializeField] float spacing = 1.5f;
+    [SerializeField] SummonZone3DLayoutSettings settings;
+    [SerializeField] Transform creaturesContainer;
+
+    ILayout3DHandler layout;
+    private void Awake() {
+        layout = new SummonZone3DLayout(settings);
+    }
 
     public void UpdateSummonedCount(int count) {
         text.text = $"Units: {count}";
     }
 
-    public List<TransformPoint> GetCreaturePoints(int count) {
-        List<TransformPoint> points = new();
+    public List<LayoutPoint> GetCreaturePoints(int count) {
+        
+        List<LayoutPoint> points = layout.CalculateCardTransforms(count);
 
-        if (count == 0) return points;
+        for (int i = 0; i < points.Count; i++) {
+            var point = points[i];
 
-        float startX = -((count - 1) * spacing) / 2;
-
-        for (int i = 0; i < count; i++) {
-            points.Add(new TransformPoint {
-                position = transform.TransformPoint(new Vector3(startX + i * spacing, 0, 0)),
-                rotation = transform.rotation,
-                scale = Vector3.one
-            });
+            Vector3 position = transform.position;
+            Vector3 pointPosition = point.position;
+            Vector3 result = creaturesContainer.TransformPoint(point.position);
+            point.position = result;
+            Debug.DrawRay(point.position, Vector3.up, Color.red, 5f);
         }
 
-        return points;
+        return new(points);
     }
 
     public void Highlight(bool enable) {

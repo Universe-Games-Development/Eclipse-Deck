@@ -1420,7 +1420,7 @@ GameObject:
   - component: {fileID: 6053699619000527960}
   - component: {fileID: 4066564013037518403}
   m_Layer: 0
-  m_Name: Card3DView
+  m_Name: RenderMaybeView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

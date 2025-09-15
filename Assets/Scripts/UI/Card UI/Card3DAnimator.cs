@@ -33,11 +33,14 @@ public class Card3DAnimator : MonoBehaviour {
     public void Hover(bool hovered) {
         if (hovered) {
             // Hover animation - lift the card up
-            target.DOLocalMoveY(originalPosition.y + hoverHeight, hoverSpeedDuration).SetEase(hoverEase);
-            target.DOLocalMoveZ(originalPosition.z + hoverZOffset, hoverSpeedDuration);
+            Sequence hoverSequence = DOTween.Sequence();
+            hoverSequence
+                .Join(target.DOLocalMoveY(originalPosition.y + hoverHeight, hoverSpeedDuration).SetEase(hoverEase))
+                .Join(target.DOLocalMoveZ(originalPosition.z + hoverZOffset, hoverSpeedDuration))
+                .Play();
             
         } else {
-            target.DOLocalMove(originalPosition, hoverSpeedDuration).SetEase(hoverEase);
+            target.DOLocalMove(originalPosition, hoverSpeedDuration).SetEase(hoverEase).Play();
         }
     }
     public void PlayClickAnimation() {
