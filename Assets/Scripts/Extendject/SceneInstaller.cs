@@ -8,6 +8,7 @@ public class CoreGameInstaller : MonoInstaller<CoreGameInstaller> {
         Container.Bind<BoardGame>().FromComponentInHierarchy().AsSingle();
         Container.Bind<TravelManager>().FromComponentInHierarchy().AsSingle();
         Container.Bind<OperationManager>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<IVisualManager>().To<VisualSequenceManager>().AsSingle();
 
         Container.Bind<ICardPlayService>().To<CardPlayService>().AsSingle().NonLazy();
 

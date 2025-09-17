@@ -1,8 +1,17 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using Zenject;
 
-public abstract class OperationData : ScriptableObject {
+public class OperationData : ScriptableObject {
+}
+
+public abstract class VisualTask {
+    [Inject] protected IUnitPresenterRegistry UnitRegistry;
+    public abstract UniTask Execute();
+}
+
+public abstract class VisualData : ScriptableObject {
 }
 
 public class DamageOperationData : OperationData {

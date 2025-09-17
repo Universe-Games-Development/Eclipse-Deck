@@ -3,6 +3,7 @@
 public interface IUnitPresenterRegistry {
     void Register(UnitModel model, UnitPresenter presenter);
     void Unregister(UnitModel model);
+    void Unregister(UnitPresenter model);
     T GetPresenter<T>(UnitModel model) where T : UnitPresenter;
     UnitModel GetModel(UnitPresenter presenter);
     IEnumerable<UnitPresenter> GetAllPresenters();

@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Zone3DView : MonoBehaviour {
     [SerializeField] TextMeshPro text;
-    [SerializeField] float spacing = 1.5f;
     [SerializeField] SummonZone3DLayoutSettings settings;
     [SerializeField] Transform creaturesContainer;
 

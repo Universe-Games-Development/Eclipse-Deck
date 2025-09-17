@@ -32,7 +32,7 @@ public class TargetHighlightingService : MonoBehaviour {
     private bool IsValidTarget(UnitModel unit, TargetSelectionRequest request) {
         var player = unit.GetPlayer();
         if (player == null) {
-            Debug.LogWarning($"player is null for {unit}");
+            //Debug.LogWarning($"player is null for {unit}");
         }
 
         return request.Requirement.IsValid(unit, player);

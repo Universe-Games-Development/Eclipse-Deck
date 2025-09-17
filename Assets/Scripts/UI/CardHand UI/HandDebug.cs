@@ -18,7 +18,7 @@ public class HandDebug : MonoBehaviour
 
     [Inject] IEventBus<IEvent> eventBus;
 
-    [Inject] private ICardFactory cardFactory;
+    [Inject] private ICardFactory<Card3DView> cardFactory;
     [Inject] CardProvider cardProvider;
     [SerializeField] List<CardData> cardDatas;
 

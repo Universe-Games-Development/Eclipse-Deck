@@ -1,137 +1,81 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 using Zenject;
 
-public interface ICreatureFactory {
-    Creature SpawnCreature(CreatureCard card, Vector3? spawnPosition = null);
+public interface ICreatureFactory<TView> {
+    Creature CreateModel(CreatureCard card);
+    CreaturePresenter SpawnPresenter(Creature creature);
+    void DestroyCreature(CreaturePresenter creaturePresenter);
 }
 
-public class CreatureFactory : MonoBehaviour, ICreatureFactory {
-    [SerializeField] private Card3DPool creaturePool;
+public class CreatureFactory<TView> : ICreatureFactory<TView> where TView : CardView {
 
+    [Inject] public IUnitPresenterRegistry _unitRegistry;
     [Inject] private DiContainer container;
-    [Inject] private IUnitPresenterRegistry unitRegistry;
 
-    public Creature SpawnCreature(CreatureCard card, Vector3? spawnPosition = null) {
-        if (card == null) {
-            Debug.LogError("[CreatureFactory] Cannot spawn creature: CreatureCard is null");
+    private readonly IComponentPool<TView> _pool;
+
+    public CreatureFactory(IComponentPool<TView> cardPool) {
+        _pool = cardPool;
+    }
+
+    public Creature CreateModel(CreatureCard card) {
+       return new Creature(card);
+    }
+
+    public CreaturePresenter SpawnPresenter(Creature creature) {
+        if (creature == null) {
+            Debug.LogError("[CreatureFactory] Creature is null");
             return null;
         }
 
-        try {
-            // Створюємо модель
-            var creatureModel = new Creature(card);
-
-            // Визначаємо позицію спавну
-            var finalSpawnPosition = DetermineSpawnPosition(card, spawnPosition);
-
-            // Створюємо presenter
-            var creaturePresenter = CreateCreaturePresenter(creatureModel, finalSpawnPosition);
-            if (creaturePresenter == null) {
-                Debug.LogError($"[CreatureFactory] Failed to create presenter for creature: {card}");
-                return null;
-            }
-
-            // Реєструємо один раз
-            unitRegistry.Register(creatureModel, creaturePresenter);
-
-            Debug.Log($"[CreatureFactory] Successfully spawned creature: {card}");
-            return creatureModel;
-        } catch (System.Exception ex) {
-            Debug.LogException(ex);
-            Debug.LogError($"[CreatureFactory] Exception while spawning creature {card}: {ex.Message}");
-            return null;
-        }
-    }
-
-    public void DestroyCreature(Creature creature) {
-        if (creature == null) return;
-
-        try {
-            CreaturePresenter cardPresenter = unitRegistry.GetPresenter<CreaturePresenter>(creature);
-            // Отримуємо presenter перед видаленням з реєстру
-            if (cardPresenter) {
-                // Видаляємо з реєстру
-                unitRegistry.Unregister(creature);
-
-                // Повертаємо view в пул
-                if (cardPresenter.View != null) {
-                    creaturePool.Release(cardPresenter.View);
-                }
-
-                // Очищуємо presenter
-                if (cardPresenter != null) {
-                    cardPresenter.Reset();
-                }
-            }
-
-            Debug.Log($"[CreatureFactory] Destroyed creature: {creature.Data.Name}");
-        } catch (System.Exception ex) {
-            Debug.LogException(ex);
-            Debug.LogError($"[CreatureFactory] Exception while destroying creature {creature.Data.Name}: {ex.Message}");
-        }
-    }
-
-    public bool CanSpawnCreature(CreatureCard creatureCard) {
-        return creatureCard != null &&
-               creaturePool != null &&
-               container != null &&
-               unitRegistry != null;
-    }
-
-    private Vector3 DetermineSpawnPosition(CreatureCard card, Vector3? overridePosition) {
-        // Якщо передана позиція - використовуємо її
-        if (overridePosition.HasValue) {
-            return overridePosition.Value;
-        }
-
-        // Спробуємо знайти presenter карти
-        CardPresenter cardPresenter = unitRegistry.GetPresenter<CardPresenter>(card);
-        if (cardPresenter) {
-            return cardPresenter.transform.position;
-        }
-
-        // Fallback до Vector3.zero
-        return Vector3.zero;
-    }
-
-    private CreaturePresenter CreateCreaturePresenter(Creature creature, Vector3 spawnPosition) {
-        if (creaturePool == null) {
+        if (_pool == null) {
             Debug.LogError("[CreatureFactory] CreaturePool is not assigned");
             return null;
         }
 
-        try {
-            // Отримуємо view з пулу
-            var view = creaturePool.Get();
-            if (view == null) {
-                Debug.LogError("[CreatureFactory] Failed to get CreatureView from pool");
+        // Отримуємо view з пулу
+        TView view = _pool.Get();
+        if (view == null) {
+            Debug.LogError("[CreatureFactory] Failed to get CreatureView from pool");
+            return null;
+        }
+
+        // Налаштовуємо view
+        view.name = $"Creature_{creature.Data.Name}_{creature.GetHashCode()}";
+
+        // Створюємо або отримуємо presenter
+        CreaturePresenter presenter;
+        if (!view.TryGetComponent(out presenter)) {
+            presenter = container.InstantiateComponent<CreaturePresenter>(view.gameObject);
+            //presenter = view.gameObject.AddComponent<CreaturePresenter>();
+            if (presenter == null) {
+                Debug.LogError($"[CreatureFactory] Failed to create CreaturePresenter component");
+                _pool.Release(view); // Повертаємо view назад в пул
                 return null;
             }
+        }
 
-            // Налаштовуємо view
-            view.name = $"Creature_{creature.Data.Name}_{creature.GetHashCode()}";
-            view.transform.position = spawnPosition;
+        // Ініціалізуємо presenter
+        presenter.Initialize(creature, view);
+        _unitRegistry.Register(creature, presenter);
 
-            // Створюємо або отримуємо presenter
-            CreaturePresenter presenter;
-            if (!view.TryGetComponent(out presenter)) {
-                //presenter = container.InstantiateComponent<CreaturePresenter>(view.gameObject);
-                presenter = view.gameObject.AddComponent<CreaturePresenter>();
-                if (presenter == null) {
-                    Debug.LogError($"[CreatureFactory] Failed to create CreaturePresenter component");
-                    creaturePool.Release(view); // Повертаємо view назад в пул
-                    return null;
-                }
-            }
+        return presenter;
+    }
 
-            // Ініціалізуємо presenter
-            presenter.Initialize(creature, view);
+    public bool CanSpawnCreature(CreatureCard creatureCard) {
+        return creatureCard != null &&
+               _pool != null &&
+               container != null;
+    }
 
-            return presenter;
-        } catch (System.Exception ex) {
-            Debug.LogException(ex);
-            Debug.LogError($"[CreatureFactory] Exception while creating presenter: {ex.Message}");
-            return null;
+    public void DestroyCreature(CreaturePresenter creaturePresenter) {
+        if (creaturePresenter == null) return;
+
+        _unitRegistry.Unregister(creaturePresenter);
+
+        if (creaturePresenter.View is TView view) {
+            _pool.Release(view);
         }
     }
 }

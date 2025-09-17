@@ -86,7 +86,6 @@ public class Fireball : MonoBehaviour {
     /// </summary>
     public async UniTask Explode() {
         if (CurrentState != FireballState.Flying && CurrentState != FireballState.Idle) {
-            Debug.LogWarning($"Cannot explode fireball in state: {CurrentState}");
             return;
         }
 

@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+using Zenject;
 
 public class OperationManager : MonoBehaviour, IOperationManager {
     [SerializeField] private OperationTargetsFiller operationFiller;
 
     private PriorityQueue<Priority, GameOperation> _operationQueue;
-    private GameOperation _currentOperation;
-    private bool _isRunning;
+    
+   
     private CancellationTokenSource _globalCancellationSource;
     private readonly ReaderWriterLockSlim _queueLock = new();
 
@@ -18,7 +19,11 @@ public class OperationManager : MonoBehaviour, IOperationManager {
     public event Action OnQueueEmpty;
 
     public bool IsRunning => _isRunning;
+    private bool _isRunning;
+
     public GameOperation CurrentOperation => _currentOperation;
+    private GameOperation _currentOperation;
+
     public int QueueCount => _operationQueue?.Count ?? 0;
 
     private void Awake() {
@@ -176,9 +181,6 @@ public class OperationManager : MonoBehaviour, IOperationManager {
                     processedCount++;
                 } catch (OperationCanceledException) {
                     GameLogger.LogInfo($"Operation cancelled: {_currentOperation}", LogCategory.OperationManager);
-                } catch (Exception ex) {
-                    GameLogger.LogError($"Operation failed: {_currentOperation} - {ex.Message}", LogCategory.OperationManager);
-                    GameLogger.LogDebug($"Operation exception details: {ex}", LogCategory.OperationManager);
                 } finally {
                     _currentOperation = null;
                 }
@@ -186,9 +188,6 @@ public class OperationManager : MonoBehaviour, IOperationManager {
 
             GameLogger.LogInfo($"Queue processing completed. Processed {processedCount} operations", LogCategory.OperationManager);
             OnQueueEmpty?.Invoke();
-        } catch (Exception ex) {
-            GameLogger.LogError($"Critical error in operation processing: {ex.Message}", LogCategory.OperationManager);
-            GameLogger.LogException(ex, LogCategory.OperationManager);
         } finally {
             _isRunning = false;
             _currentOperation = null;
@@ -259,10 +258,6 @@ public class OperationManager : MonoBehaviour, IOperationManager {
             status = OperationStatus.Cancelled;
             GameLogger.LogInfo($"Operation {operation} was cancelled", LogCategory.OperationManager);
             throw;
-        } catch (Exception ex) {
-            status = OperationStatus.ThrownException;
-            GameLogger.LogError($"Operation {operation} failed with exception: {ex.Message}", LogCategory.OperationManager);
-            GameLogger.LogException(ex, LogCategory.OperationManager);
         } finally {
             var duration = DateTime.UtcNow - startTime;
             GameLogger.LogInfo($"{operation} finished with status: {status} (Duration: {duration.TotalMilliseconds:F1}ms)",
@@ -360,34 +355,32 @@ public class OperationManager : MonoBehaviour, IOperationManager {
     public bool IsQueueEmpty() {
         return QueueCount == 0;
     }
+}
 
-    #region Helper Disposable Structs for Lock Management
-    private readonly struct ReadLock : IDisposable {
-        private readonly ReaderWriterLockSlim _lock;
+public readonly struct ReadLock : IDisposable {
+    private readonly ReaderWriterLockSlim _lock;
 
-        public ReadLock(ReaderWriterLockSlim @lock) {
-            _lock = @lock;
-            _lock.EnterReadLock();
-        }
-
-        public void Dispose() {
-            _lock.ExitReadLock();
-        }
+    public ReadLock(ReaderWriterLockSlim @lock) {
+        _lock = @lock;
+        _lock.EnterReadLock();
     }
 
-    private readonly struct WriteLock : IDisposable {
-        private readonly ReaderWriterLockSlim _lock;
-
-        public WriteLock(ReaderWriterLockSlim @lock) {
-            _lock = @lock;
-            _lock.EnterWriteLock();
-        }
-
-        public void Dispose() {
-            _lock.ExitWriteLock();
-        }
+    public void Dispose() {
+        _lock.ExitReadLock();
     }
-    #endregion
+}
+
+public readonly struct WriteLock : IDisposable {
+    private readonly ReaderWriterLockSlim _lock;
+
+    public WriteLock(ReaderWriterLockSlim @lock) {
+        _lock = @lock;
+        _lock.EnterWriteLock();
+    }
+
+    public void Dispose() {
+        _lock.ExitWriteLock();
+    }
 }
 
 public enum OperationStatus {
@@ -408,6 +401,9 @@ public enum Priority {
 
 public abstract class GameOperation 
 {
+    [Inject] protected readonly IVisualManager VisualManager;
+    [Inject] protected readonly IVisualTaskFactory VisualTaskFactory;
+
     public List<Target> RequestTargets = new();
     protected Dictionary<string, UnitModel> filledTargets;
     public bool IsMandatory { get; set; } = false;

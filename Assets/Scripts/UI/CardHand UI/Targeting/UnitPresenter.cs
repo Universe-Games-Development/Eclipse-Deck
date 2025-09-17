@@ -22,11 +22,23 @@ public abstract class UnitPresenter : MonoBehaviour {
         DebugLog($"Highlight {(enable ? "enabled" : "disabled")}");
     }
 
-    protected virtual void OnEnable() {
+    private void Awake() {
         _unitRegistry?.Register(GetModel(), this);
     }
 
+    protected virtual void OnEnable() {
+        RegisterInGame();
+    }
+
     protected virtual void OnDestroy() {
+        UnRegisterOutGame();
+    }
+
+    protected void RegisterInGame() {
+        _unitRegistry?.Register(GetModel(), this);
+    }
+
+    protected void UnRegisterOutGame() {
         _unitRegistry?.Unregister(GetModel());
     }
 }

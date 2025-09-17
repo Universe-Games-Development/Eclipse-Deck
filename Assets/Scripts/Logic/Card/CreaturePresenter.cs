@@ -4,9 +4,9 @@ public class CreaturePresenter : UnitPresenter {
     public Creature Creature;
     public Card3DView View;
 
-    public void Initialize(Creature creature, Card3DView view) {
+    public void Initialize(Creature creature, CardView view) {
         Creature = creature;
-        View = view;
+        View = (Card3DView)view;
         UpdateUI();
     }
 

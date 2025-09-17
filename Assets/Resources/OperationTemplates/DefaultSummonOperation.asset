@@ -9,14 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2e46ab4df47f4cc468bc39a57f6f5b73, type: 3}
-  m_Name: SummonZoneLayoutSettings
+  m_Script: {fileID: 11500000, guid: 936fd975f9f633545ad14eafd9e791cb, type: 3}
+  m_Name: DefaultSummonOperation
   m_EditorClassIdentifier: 
-  CardWidth: 2.5
-  CardHeight: 0.2
-  ScaleCardsWhenCrowded: 1
-  MinCardScale: 0.8
-  CardSpacing: 0.08
-  MaxCardsPerRow: 6
-  RowSpacing: 1.5
-  UseMultipleRows: 1

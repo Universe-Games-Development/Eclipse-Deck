@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,9 +22,9 @@ public class CardHand3DView : CardHandView {
     [SerializeField] protected int baseRenderOrder = 2800;
     [Header("Hover Settings")]
     [SerializeField] protected int hoverRenderOrderBoost = 50;
-    [SerializeField] protected float cardHoverDuration = 0.2f;
-    [SerializeField] private float hoverOffsetY = 1.0f;
-    [SerializeField] private float hoverOffsetZ = 1.0f;
+    //[SerializeField] protected float cardHoverDuration = 0.2f;
+    //[SerializeField] private float hoverOffsetY = 1.0f;
+    //[SerializeField] private float hoverOffsetZ = 1.0f;
     
 
     private void Awake() {
@@ -57,33 +58,34 @@ public class CardHand3DView : CardHandView {
         }
     }
 
+    public override void RegisterView(CardView cardView) {
+        if (cardView != null && cardsContainer != null) {
+            //card3DView.transform.SetParent(cardsContainer);
+            cardView.transform.position = cardsContainer.position;
+            cardView.transform.rotation = cardsContainer.rotation;
+        }
+    }
+
     public override CardView CreateCardView(Card card) {
         if (cardPool == null) {
             Debug.LogError("Card pool is not assigned!");
             return null;
         }
 
-        Card3DView card3DView = cardPool.Get();
-        if (card3DView != null && cardsContainer != null) {
-            //card3DView.transform.SetParent(cardsContainer);
-            card3DView.transform.position = cardsContainer.position;
-            card3DView.transform.rotation = cardsContainer.rotation;
-        }
-
-        return card3DView;
+        return cardPool.Get();
     }
 
     protected override void HandleCardViewRemoval(CardView cardView) {
         cardLayoutData.Remove(cardView);
 
-        if (cardView is Card3DView card3DView && cardPool != null) {
-            cardPool.Release(card3DView);
-        } else {
-            Debug.LogWarning($"Trying to remove a CardView that is not a Card3DView or pool is null. Destroying: {cardView?.name}");
-            if (cardView != null) {
-                Destroy(cardView.gameObject);
-            }
-        }
+        //if (cardView is Card3DView card3DView && cardPool != null) {
+        //    //cardPool.Release(card3DView);
+        //} else {
+        //    Debug.LogWarning($"Trying to remove a CardView that is not a Card3DView or pool is null. Destroying: {cardView?.name}");
+        //    if (cardView != null) {
+        //        Destroy(cardView.gameObject);
+        //    }
+        //}
     }
     
     protected override void HandleCardHovered(CardView cardView) {
@@ -159,7 +161,7 @@ public class CardHand3DView : CardHandView {
                                     .SetEase(Ease.OutQuad)
                                     .SetLink(cardTransform.gameObject);
 
-        cardView.DoTweener(moveTween);
+        cardView.DoTweener(moveTween).Forget();
     }
 
     protected override void OnDestroy() {

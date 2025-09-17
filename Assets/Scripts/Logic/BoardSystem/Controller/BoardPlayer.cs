@@ -19,7 +19,9 @@ public class BoardPlayer : UnitPresenter, IHealthable, IMannable {
     private void Awake() {
         if (Data != null) {
             Character = new Character(Data);
+            Character.ChangeOwner(this);
         }
+        
     }
     /// <summary>
     /// Прив'язує об'єкт опонента до цього представлення на дошці

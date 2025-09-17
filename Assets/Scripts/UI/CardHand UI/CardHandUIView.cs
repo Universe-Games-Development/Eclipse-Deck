@@ -97,5 +97,9 @@ public class CardHandUIView : CardHandView {
     protected override void HandleClearCardHovered(CardView cardView) {
         throw new NotImplementedException();
     }
+
+    public override void RegisterView(CardView cardView) {
+        throw new NotImplementedException();
+    }
 }
 

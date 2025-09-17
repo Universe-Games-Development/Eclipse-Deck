@@ -10,7 +10,7 @@ public class Zone : UnitModel {
     List<Creature> creatures = new();
 
     public void PlaceCreature(Creature creature) {
-        Debug.Log($"Spawning craeture at zone: {this}");
+        //Debug.Log($"Spawning craeture at zone: {this}");
 
         creatures.Add(creature);
        
@@ -18,7 +18,7 @@ public class Zone : UnitModel {
     }
 
     public void RemoveCreature(Creature creature) {
-        Debug.Log($"Spawning craeture at zone: {this}");
+        //Debug.Log($"Spawning craeture at zone: {this}");
 
         creatures.Remove(creature);
 
@@ -27,5 +27,9 @@ public class Zone : UnitModel {
 
     public int GetCreaturesCount() {
         return creatures.Count;
+    }
+
+    public List<Creature> GetCreatures() {
+        return creatures;
     }
 }

@@ -22,7 +22,9 @@ public enum LogCategory {
     AI = 1 << 7,
     Physics = 1 << 8,
     CardModule = 1 << 9,
-    All = ~0
+    Visualmanager = 1 << 10,
+    All = ~0,
+    
 }
 
 public interface ILogger {

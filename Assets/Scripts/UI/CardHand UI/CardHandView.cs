@@ -42,9 +42,10 @@ public abstract class CardHandView : MonoBehaviour {
         hoveredCard = null;
     }
 
-    
+
 
     public abstract CardView CreateCardView(Card card);
+    public abstract void RegisterView(CardView cardView);
     protected abstract void HandleCardViewRemoval(CardView cardView);
     protected abstract void HandleCardHovered(CardView cardView);
     protected abstract void HandleClearCardHovered(CardView cardView);
@@ -53,6 +54,8 @@ public abstract class CardHandView : MonoBehaviour {
     protected virtual void OnDestroy() {
         hoveredCard = null;
     }
+
+    
 }
 
 

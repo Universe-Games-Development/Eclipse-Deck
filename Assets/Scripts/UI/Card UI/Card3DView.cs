@@ -43,8 +43,8 @@ public class Card3DView : CardView {
     #endregion
 
     public override void SetHoverState(bool isHovered) {
-        if (!movementComponent.IsMoving)
-            animator?.Hover(isHovered);
+        animator?.Hover(isHovered);
+
     }
 
     private void InitializeMaterials() {

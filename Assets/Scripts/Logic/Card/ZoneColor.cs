@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class ZoneColor : MonoBehaviour
@@ -22,7 +23,7 @@ public class ZoneColor : MonoBehaviour
             return;
         }
         if (zonePresenter.Owner == null) {
-            Debug.LogWarning("ZonePresenter owner is not assigned.");
+            //Debug.LogWarning("ZonePresenter owner is not assigned.");
         }
         BoardPlayer owner = zonePresenter.Owner;
         Color color = owner == null ? unAssignedColor : owner.Character.Data.Color;

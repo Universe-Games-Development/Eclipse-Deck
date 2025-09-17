@@ -48,6 +48,11 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
             return;
         }
 
+        if (inputManager == null) {
+            Debug.LogError("HumanTargetSelector: No InputManager assigned!");
+            return;
+        }
+
         boardInputs = inputManager.inputAsset.BoardPlayer;
     }
 

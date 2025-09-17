@@ -19,7 +19,7 @@ public class CardsHandleSystem : MonoBehaviour {
     [Inject] IEventBus<IEvent> _eventBus;
     [Inject] CommandManager _commandManager;
     [Inject] CardProvider _cardProvider;
-    [Inject] ICardFactory _cardFactory;
+    [Inject] ICardFactory<Card3DView> _cardFactory;
 
     private void Awake() {
         Deck deckModel = new();
@@ -76,7 +76,16 @@ public class CardsHandleSystem : MonoBehaviour {
             collection.AddCardToCollection(randomCard);
         }
 
-        return _cardFactory.CreateCardsFromCollection(collection); ;
+        List<Card> cards = new();
+        foreach (var cardEntry in collection.cardEntries) {
+            for (int i = 0; i < cardEntry.Value; i++) {
+                CardData cardData = cardEntry.Key;
+                Card newCard = _cardFactory.CreateCard(cardData);
+                if (newCard == null) continue;
+                cards.Add(newCard);
+            }
+        }
+        return cards;
     }
 
     public List<Card> DrawCards(int drawAmount) {

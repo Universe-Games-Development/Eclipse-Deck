@@ -1,5 +1,8 @@
-﻿using DG.Tweening;
+﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System;
+using System.Threading;
+using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 
 public abstract class CardView : MonoBehaviour {
@@ -68,15 +71,20 @@ public abstract class CardView : MonoBehaviour {
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void DoTweener(Tweener tweener) {
-        movementComponent?.ExecuteTween(tweener);
+    public async UniTask DoTweener(Tweener tweener, CancellationToken token = default) {
+        if (movementComponent != null) {
+            await movementComponent.ExecuteTween(tweener, token);
+        }
     }
 
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void DoSequence(Sequence sequence) {
-        movementComponent?.ExecuteTweenSequence(sequence);
+    public async UniTask DoSequence(Sequence sequence, CancellationToken token = default) {
+        if (movementComponent != null) {
+            await movementComponent.ExecuteTweenSequence(sequence, token);
+        }
+        
     }
 
     /// <summary>

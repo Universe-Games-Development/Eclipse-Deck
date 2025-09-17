@@ -15,9 +15,11 @@ public class CardPresenter : UnitPresenter {
     [SerializeField] private float updateRate = 1.0f;
     [SerializeField] private bool _isInteractable = true;
 
-    private void OnDestroy() {
+    protected override void OnDestroy() {
+        base.OnDestroy();
         UnSubscribeEvents();
     }
+
     public void Initialize(Card card, CardView cardView) {
         this.Card = card;
         View = cardView;
@@ -97,15 +99,15 @@ public class CardPresenter : UnitPresenter {
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void DoTweener(Tweener twenner) {
-        View.DoTweener(twenner);
+    public async UniTask DoTweener(Tweener twenner) {
+        await View.DoTweener(twenner);
     }
 
     /// <summary>
     /// Простий рух до позиції з поворотом за час
     /// </summary>
-    public void DoSequence(Sequence sequence) {
-        View.DoSequence(sequence);
+    public async UniTask DoSequence(Sequence sequence) {
+        await View.DoSequence(sequence);
     }
 
 
