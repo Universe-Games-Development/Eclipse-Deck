@@ -17,7 +17,7 @@ public class Zone3DView : MonoBehaviour {
     }
 
     public List<LayoutPoint> GetCreaturePoints(int count) {
-        
+
         List<LayoutPoint> points = layout.CalculateCardTransforms(count);
 
         for (int i = 0; i < points.Count; i++) {

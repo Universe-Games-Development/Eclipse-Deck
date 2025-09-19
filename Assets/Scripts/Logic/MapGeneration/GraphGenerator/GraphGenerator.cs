@@ -7,14 +7,16 @@ using UnityEngine;
 public class GraphGenerator {
     private DungeonGraph graph;
     private MapGenerationData settings;
+
     public DungeonGraph GenerateGraph(MapGenerationData settings) {
         if (settings == null) {
             Debug.LogError("null map generation settings");
         }
         this.settings = settings;
         graph = new DungeonGraph();
+
         CreateInitialGraph();
-        ModifyNodeCount();  // Add or remove random nodes
+        ModifyNodeCountWithDeviation(); // Нова логіка з контролем відхилення
 
         AddFirstNode();
         AddEndNode();
@@ -22,18 +24,13 @@ public class GraphGenerator {
         graph.UpdateNodesData();
         CreateMainPaths();
 
-        
-
         return graph;
     }
 
     private void CreateInitialGraph() {
-
-        // Створюємо всі інші рівні
         for (int level = 0; level < settings.levelCount; level++) {
             List<DungeonNode> currentLevelNodes = new List<DungeonNode>();
             for (int i = 0; i < settings.initialNodesPerLevel; i++) {
-                // First level node always 1
                 DungeonNode newNode = new DungeonNode(graph.GetNextNodeId(), new Vector2(level, i));
                 currentLevelNodes.Add(newNode);
             }
@@ -41,9 +38,82 @@ public class GraphGenerator {
         }
     }
 
-    private void ModifyNodeCount() {
-        RemoveRandomNodes();
-        AddRandomNodes();
+    private void ModifyNodeCountWithDeviation() {
+        List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
+
+        for (int level = 0; level < levelNodes.Count; level++) {
+            List<DungeonNode> currentLevel = levelNodes[level];
+            int targetNodeCount = CalculateTargetNodeCount(level, levelNodes);
+
+            AdjustLevelToTargetCount(currentLevel, targetNodeCount, level);
+        }
+    }
+
+    private int CalculateTargetNodeCount(int level, List<List<DungeonNode>> levelNodes) {
+        if (level == 0) {
+            return GetRandomNodeCountInRange(settings.minNodesPerLevel, settings.maxNodesPerLevel);
+        }
+
+        int prevLevelNodeCount = levelNodes[level - 1].Count;
+
+        // Визначаємо діапазон можливих значень
+        int minPossible = Math.Max(settings.minNodesPerLevel, prevLevelNodeCount - settings.maxNodeDeviation);
+        int maxPossible = Math.Min(settings.maxNodesPerLevel, prevLevelNodeCount + settings.maxNodeDeviation);
+
+        // Застосовуємо обмеження gradual increase/decrease
+        if (!settings.allowGradualIncrease) {
+            maxPossible = Math.Min(maxPossible, prevLevelNodeCount);
+        }
+        if (!settings.allowGradualDecrease) {
+            minPossible = Math.Max(minPossible, prevLevelNodeCount);
+        }
+
+        return GetRandomNodeCountInRange(minPossible, maxPossible);
+    }
+
+    private int GetRandomNodeCountInRange(int min, int max) {
+        return UnityEngine.Random.Range(min, max + 1);
+    }
+
+    private void AdjustLevelToTargetCount(List<DungeonNode> currentLevel, int targetCount, int level) {
+        int currentCount = currentLevel.Count;
+
+        if (currentCount > targetCount) {
+            // Видаляємо зайві ноди
+            RemoveNodesFromLevel(currentLevel, currentCount - targetCount);
+        } else if (currentCount < targetCount) {
+            // Додаємо недостатні ноди
+            AddNodesToLevel(currentLevel, targetCount - currentCount, level);
+        }
+    }
+
+    private void RemoveNodesFromLevel(List<DungeonNode> currentLevel, int nodesToRemove) {
+        if (nodesToRemove <= 0) return;
+
+        List<int> indices = Enumerable.Range(0, currentLevel.Count).ToList();
+        indices.Shuffle();
+
+        for (int i = 0; i < nodesToRemove && currentLevel.Count > 0; i++) {
+            int randomIndex = indices[i] % currentLevel.Count;
+            currentLevel[randomIndex].ClearConnections();
+            currentLevel.RemoveAt(randomIndex);
+
+            // Оновлюємо індекси після видалення
+            for (int j = i + 1; j < indices.Count; j++) {
+                if (indices[j] > randomIndex) {
+                    indices[j]--;
+                }
+            }
+        }
+    }
+
+    private void AddNodesToLevel(List<DungeonNode> currentLevel, int nodesToAdd, int level) {
+        for (int i = 0; i < nodesToAdd; i++) {
+            DungeonNode newNode = new DungeonNode(graph.GetNextNodeId(),
+                new Vector2(level, currentLevel.Count));
+            newNode.level = level;
+            currentLevel.Add(newNode);
+        }
     }
 
     private void CreateMainPaths() {
@@ -66,7 +136,6 @@ public class GraphGenerator {
                         List<DungeonNode> prevPottentialConnections = GetNeardyNodes(currentNode, currentLevel, prevLevel);
                         MinimalConnection(currentNode, prevPottentialConnections);
                     }
-
                 }
             }
         }
@@ -81,14 +150,11 @@ public class GraphGenerator {
                 break;
             }
         }
-        
     }
 
     private void EnsureConnections(DungeonNode currentNode, List<DungeonNode> potentialConnections) {
-        // Перевіряємо, чи є з'єднання хоча б з одним вузлом
         bool hasConnected = false;
 
-        // Проходимо по всіх потенційних з'єднаннях
         foreach (var targetNode in potentialConnections) {
             bool shouldConnect = UnityEngine.Random.value <= settings.randomConnectionChance;
 
@@ -98,17 +164,15 @@ public class GraphGenerator {
             }
         }
 
-        // Якщо нода не має жодного з'єднання, ми повинні створити хоча б одне
         if (!hasConnected && potentialConnections.Count > 0) {
             ConnectOneRandomNode(currentNode, potentialConnections);
         }
     }
 
     private DungeonNode ConnectOneRandomNode(DungeonNode currentNode, List<DungeonNode> connections) {
-       if (connections.TryGetRandomElement(out DungeonNode targetNode)) {
+        if (connections.TryGetRandomElement(out DungeonNode targetNode)) {
             currentNode.ConnectTo(targetNode);
         }
-        
         return targetNode;
     }
 
@@ -117,21 +181,13 @@ public class GraphGenerator {
         if (nextLevel.IsEmpty()) {
             return connectTo;
         }
-        // Знаходимо індекс поточної ноди в поточному рівні
+
         int currentIndex = currentLevel.IndexOf(currentNode);
-
-        // Знаходимо відносну позицію (від 0 до 1)
         float relativePosition = currentLevel.Count > 1 ? (float)currentIndex / (currentLevel.Count - 1) : 0.5f;
-
-        // Знаходимо відповідний індекс на наступному рівні
         int targetIndex = Mathf.FloorToInt(relativePosition * (nextLevel.Count - 1));
 
-        
-
-        // Додаємо основну ноду
         connectTo.Add(nextLevel[targetIndex]);
 
-        // Додаємо сусідні ноди (якщо вони існують)
         if (targetIndex > 0) {
             connectTo.Add(nextLevel[targetIndex - 1]);
         }
@@ -158,72 +214,17 @@ public class GraphGenerator {
     }
 
     private void AddEndNode() {
-        // Отримуємо останній рівень графа
         List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
         List<DungeonNode> lastLevel = levelNodes[levelNodes.Count - 1];
 
-        // Створюємо новий рівень з однією нодою "кінець"
         List<DungeonNode> endLevel = new List<DungeonNode>();
         DungeonNode endNode = new DungeonNode(graph.GetNextNodeId(), new Vector2(levelNodes.Count, 0));
         endLevel.Add(endNode);
 
-        // Додаємо новий рівень до графа
         graph.AddLevel(endLevel);
 
-        // З'єднуємо всі ноди останнього рівня з кінцевою нодою
         foreach (DungeonNode node in lastLevel) {
             endNode.ConnectToPrev(node);
         }
-    }
-
-    // always leave 1 node 
-    private void RemoveRandomNodes() {
-        List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
-        for (int level = 0; level < levelNodes.Count; level++) {
-            List<DungeonNode> currentLevel = levelNodes[level];
-            int amountToRemove = currentLevel.Count - settings.minNodesPerLevel;
-            if (amountToRemove <= 0) continue;
-
-            int nodesToRemove = UnityEngine.Random.Range(0, amountToRemove);
-
-
-            if (nodesToRemove > 0) {
-                List<int> indices = Enumerable.Range(0, currentLevel.Count - 1).ToList();
-                indices.Shuffle();
-
-                for (int i = 0; i < nodesToRemove; i++) {
-                    int randomIndex = indices[i];
-                    if (randomIndex < currentLevel.Count) {
-                        currentLevel[randomIndex].ClearConnections();
-                        currentLevel.RemoveAt(randomIndex);
-                    }
-                }
-            }
-        }
-    }
-
-    private void AddRandomNodes() {
-        List<List<DungeonNode>> levelNodes = graph.GetLevelNodes();
-
-        for (int level = 0; level < levelNodes.Count; level++) {
-            List<DungeonNode> currentLevel = levelNodes[level];
-            int amountToAdd = settings.maxNodesPerLevel - currentLevel.Count;
-            if (amountToAdd < 0) {
-                Debug.Log("LOLs");
-            }
-            int nodesToAdd = UnityEngine.Random.Range(0, amountToAdd);
-
-            if (nodesToAdd > 0) {
-                for (int i = 0; i < nodesToAdd; i++) {
-                    DungeonNode newNode = new DungeonNode(graph.GetNextNodeId(), new Vector2(level, currentLevel.Count));
-                    newNode.level = level;
-                    currentLevel.Add(newNode);
-                }
-            }
-        }
-    }
-
-    internal DungeonGraph GenerateGraph(object mapGenerationData) {
-        throw new NotImplementedException();
     }
 }

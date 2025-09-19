@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public static class ListExtensions {
@@ -10,7 +9,7 @@ public static class ListExtensions {
             Debug.LogWarning("List is null or empty");
             return false;
         }
-        
+
         int index = UnityEngine.Random.Range(0, list.Count);
         value = list[index];
         return true;

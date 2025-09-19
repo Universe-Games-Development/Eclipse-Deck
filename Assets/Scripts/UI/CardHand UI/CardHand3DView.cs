@@ -25,7 +25,7 @@ public class CardHand3DView : CardHandView {
     //[SerializeField] protected float cardHoverDuration = 0.2f;
     //[SerializeField] private float hoverOffsetY = 1.0f;
     //[SerializeField] private float hoverOffsetZ = 1.0f;
-    
+
 
     private void Awake() {
         ClearContainer();
@@ -87,7 +87,7 @@ public class CardHand3DView : CardHandView {
         //    }
         //}
     }
-    
+
     protected override void HandleCardHovered(CardView cardView) {
         cardView.ModifyRenderOrder(hoverRenderOrderBoost);
 

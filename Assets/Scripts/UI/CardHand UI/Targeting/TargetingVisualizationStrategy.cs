@@ -1,8 +1,7 @@
-﻿using UnityEditor.PackageManager.Requests;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
 
-public class TargetingVisualizationStrategy : MonoBehaviour{
+public class TargetingVisualizationStrategy : MonoBehaviour {
     [SerializeField] private Transform playerPortrait;
     [SerializeField] private BoardInputManager boardInputManager;
 
@@ -24,7 +23,7 @@ public class TargetingVisualizationStrategy : MonoBehaviour{
             } else {
                 return CreateArrowTargeting(cardPresenter.transform.position, request);
             }
-            
+
         }
 
         return CreateArrowTargeting(playerPortrait.position, request);

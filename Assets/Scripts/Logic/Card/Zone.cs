@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 
 public class Zone : UnitModel {
@@ -13,7 +12,7 @@ public class Zone : UnitModel {
         //Debug.Log($"Spawning craeture at zone: {this}");
 
         creatures.Add(creature);
-       
+
         OnCreaturePlaced?.Invoke(creature);
     }
 

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -6,8 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public class HandDebug : MonoBehaviour
-{
+public class HandDebug : MonoBehaviour {
     [SerializeField] HandPresenter handPresenter;
 
     [SerializeField] Button addCardButton;
@@ -71,5 +69,5 @@ public class GameController {
 
     public CreaturePresenter SpawnCreature() {
         return null;
-    } 
+    }
 }

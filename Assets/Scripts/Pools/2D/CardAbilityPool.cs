@@ -1,5 +1,3 @@
-﻿using UnityEngine;
-
-public class CardAbilityPool : ComponentPool<CardAbilityUI> {
+﻿public class CardAbilityPool : ComponentPool<CardAbilityUI> {
 
 }

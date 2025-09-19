@@ -1,10 +1,10 @@
 using Cysharp.Threading.Tasks;
-using UnityEngine;
-using System.Collections.Generic;
-using System;
-using System.Threading;
-using System.Linq;
 using ModestTree;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using UnityEngine;
 
 public class CommandManager {
     private int _executionFlag = 0;
@@ -84,7 +84,7 @@ public class CommandManager {
             }
 
             await command.Execute(); // Оновіть інтерфейс Command
-            
+
 
             foreach (var child in command.GetChildCommands()) {
                 await ExecuteCommandRecursively(child);

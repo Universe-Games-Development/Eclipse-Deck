@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
+﻿using DG.Tweening;
 using UnityEngine;
 
 public class Card3DAnimator : MonoBehaviour {
@@ -38,7 +37,7 @@ public class Card3DAnimator : MonoBehaviour {
                 .Join(target.DOLocalMoveY(originalPosition.y + hoverHeight, hoverSpeedDuration).SetEase(hoverEase))
                 .Join(target.DOLocalMoveZ(originalPosition.z + hoverZOffset, hoverSpeedDuration))
                 .Play();
-            
+
         } else {
             target.DOLocalMove(originalPosition, hoverSpeedDuration).SetEase(hoverEase).Play();
         }

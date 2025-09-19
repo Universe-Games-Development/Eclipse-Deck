@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,20 +6,16 @@ using System.Text.RegularExpressions;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
 #pragma warning restore IDE0005
 
 
 #nullable enable
 
 
-namespace Meryel.UnityCodeAssist.Editor.Input
-{
+namespace Meryel.UnityCodeAssist.Editor.Input {
 
-    public class Text2Yaml
-    {
-        public static string Convert(IEnumerable<string> textLines)
-        {
+    public class Text2Yaml {
+        public static string Convert(IEnumerable<string> textLines) {
             var sb = new StringBuilder();
             var stack = new Stack<(string typeName, string identifier, int indentation)>();
 
@@ -45,8 +40,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
             stack.Push(("InputManager", "InputManager", textIndentation));
 
 
-            foreach (var line in textLines.Skip(4))
-            {
+            foreach (var line in textLines.Skip(4)) {
                 curTextLine = line;
                 curTextLineNo++;
 
@@ -58,15 +52,13 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                 // Check if type undeclared, scope goes down, indentation decrements
                 {
                     var indentationMatch = regexIndentation.Match(line);
-                    if (indentationMatch.Success)
-                    {
+                    if (indentationMatch.Success) {
                         var indentation = indentationMatch.Groups[0].Value.Length;
 
                         if (indentation > textIndentation)
                             Error($"indentation({indentation}) > textIndentation({textIndentation})");
 
-                        while (indentation < textIndentation)
-                        {
+                        while (indentation < textIndentation) {
                             stack.Pop();
                             textIndentation--;
                             var typeIndentation = textIndentation;
@@ -77,19 +69,15 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                             indentationPrefix = new string(' ', typeIndentation * 2);
                         }
 
-                    }
-                    else
-                    {
+                    } else {
                         Error($"{nameof(regexIndentation)} failed");
                     }
                 }
 
                 // Skip size field of vectors
-                if (stack.TryPeek(out var curType1) && curType1.typeName == "vector")
-                {
+                if (stack.TryPeek(out var curType1) && curType1.typeName == "vector") {
                     var vectorSizeMatch = regexVectorSize.Match(line);
-                    if (vectorSizeMatch.Success)
-                    {
+                    if (vectorSizeMatch.Success) {
                         continue;
                     }
                 }
@@ -97,8 +85,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                 // Read string fields
                 {
                     var stringMatch = regexString.Match(line);
-                    if (stringMatch.Success)
-                    {
+                    if (stringMatch.Success) {
                         AddLine(stringMatch.Groups[2] + ": " + stringMatch.Groups[3]);
                         continue;
                     }
@@ -107,8 +94,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                 // Read bool/int/float/unsignedInt fields
                 {
                     var valueMatch = regexValue.Match(line);
-                    if (valueMatch.Success)
-                    {
+                    if (valueMatch.Success) {
                         AddLine(valueMatch.Groups[2] + ": " + valueMatch.Groups[3]);
                         continue;
                     }
@@ -117,8 +103,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                 // Check if new type declared, scope goes up, indentation increases
                 {
                     var typeMatch = regexType.Match(line);
-                    if (typeMatch.Success)
-                    {
+                    if (typeMatch.Success) {
                         var identifier = typeMatch.Groups[2].Value;
                         var typeName = typeMatch.Groups[3].Value;
 
@@ -132,12 +117,9 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                         else if (line.Length > 0)
                             Error("stack empty at type declaration");
 
-                        if (!isVectorData)
-                        {
+                        if (!isVectorData) {
                             AddLine(typeMatch.Groups[2] + ":");
-                        }
-                        else
-                        {
+                        } else {
                             var customIndentation = typeIndentation - 1;
                             if (customIndentation < 0)
                                 Error($"customIndentation({customIndentation}) < 0");
@@ -169,8 +151,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
             return sb.ToString();
 
 
-            void AddLine(string line, string? customIndentationPrefix = null)
-            {
+            void AddLine(string line, string? customIndentationPrefix = null) {
                 string suffix;
                 if (stack.TryPeek(out var top))
                     suffix = $" # {textIndentation}, {top.indentation}, {top.typeName} {top.identifier}";
@@ -183,8 +164,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                     sb.AppendLine(indentationPrefix + line + suffix);
             }
 
-            void Error(string message)
-            {
+            void Error(string message) {
                 var errorMessage = $"Text2Yaml error '{message}' at lineNo: {curTextLineNo}, line: '{curTextLine}' at {Environment.StackTrace}";
                 //throw new Exception(errorMessage);
                 Serilog.Log.Warning(errorMessage);
@@ -195,17 +175,12 @@ namespace Meryel.UnityCodeAssist.Editor.Input
 
     }
 
-    public static partial class Extensions
-    {
-        public static bool TryPeek<T>(this Stack<T> stack, /*[MaybeNullWhen(false)]*/ out T result)
-        {
-            if (stack.Count > 0)
-            {
+    public static partial class Extensions {
+        public static bool TryPeek<T>(this Stack<T> stack, /*[MaybeNullWhen(false)]*/ out T result) {
+            if (stack.Count > 0) {
                 result = stack.Peek();
                 return true;
-            }
-            else
-            {
+            } else {
                 result = default!;
                 return false;
             }

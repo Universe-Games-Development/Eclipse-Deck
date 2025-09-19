@@ -3,7 +3,7 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "CreatureCard", menuName = "TGE/Cards/CreatureCard")]
 public class CreatureCardData : CardData {
-    [Header ("Creature Data")]
+    [Header("Creature Data")]
     public int MAX_CARD_ATTACK = 100;
     public int MAX_CARD_HEALTH = 100;
 
@@ -13,11 +13,9 @@ public class CreatureCardData : CardData {
     [Header("Operation Template")]
     [SerializeField] private SummonOperationData _summonOperationTemplate;
 
-    public void OnValidate() 
-    {
+    public void OnValidate() {
         // Знаходимо шаблон за замовчуванням, якщо не вказано
-        if (_summonOperationTemplate == null)
-        {
+        if (_summonOperationTemplate == null) {
             _summonOperationTemplate = Resources.Load<SummonOperationData>("OperationTemplates/DefaultSummonOperation");
         }
 
@@ -27,7 +25,7 @@ public class CreatureCardData : CardData {
         if (summonOperation == null) {
             operationsData.Add(_summonOperationTemplate);
         }
-        
+
         EditorUtility.SetDirty(this);
     }
 }

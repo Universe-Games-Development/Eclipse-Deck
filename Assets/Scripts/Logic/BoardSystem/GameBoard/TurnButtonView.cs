@@ -1,6 +1,5 @@
-using UnityEngine;
 using System;
-using Zenject;
+using UnityEngine;
 
 [RequireComponent(typeof(MeshRenderer))]
 public class TurnButtonView : MonoBehaviour {

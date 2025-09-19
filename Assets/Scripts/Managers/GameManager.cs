@@ -1,10 +1,8 @@
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Zenject;
 
-public class GameManager : MonoBehaviour
-{
+public class GameManager : MonoBehaviour {
     [Inject] LocationTransitionManager locationManager;
     [SerializeField]
 

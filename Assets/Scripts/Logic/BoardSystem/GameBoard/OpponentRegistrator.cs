@@ -1,6 +1,6 @@
 ﻿using System;
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class OpponentRegistrator {
     public Action<PlayerPresenter, EnemyPresenter> OnMatchSetup;

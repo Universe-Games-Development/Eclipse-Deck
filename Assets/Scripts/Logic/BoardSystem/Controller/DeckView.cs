@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
 
-public class DeckView : MonoBehaviour { 
+public class DeckView : MonoBehaviour {
 
 }

@@ -1,5 +1,5 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 [CreateAssetMenu(fileName = "DungeonActivityData", menuName = "Dungeon/DungeonActivityData")]
 public class ActivitiesData : ScriptableObject {
@@ -11,5 +11,5 @@ public class ActivitiesData : ScriptableObject {
 
     [Header("Random Activities")]
     public List<ActivityData> commonActivities;
-    
+
 }

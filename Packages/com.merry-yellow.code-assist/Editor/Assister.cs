@@ -1,24 +1,19 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using UnityEditor;
-
+using UnityEngine;
 using CodeEditor = Unity.CodeEditor.CodeEditor;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
 #pragma warning restore IDE0005
 
 
 #nullable enable
 
 
-namespace Meryel.UnityCodeAssist.Editor
-{
-    public class Assister
-    {
+namespace Meryel.UnityCodeAssist.Editor {
+    public class Assister {
         public const string Version = "1.4.18"; //do NOT modify this line, except the number value, its being used by VSCode/Typescript for version detection (in exporter.ts.getVersionOfUnitySide())
 
 #if MERYEL_UCA_LITE_VERSION
@@ -28,15 +23,13 @@ namespace Meryel.UnityCodeAssist.Editor
 #endif
 
         [MenuItem("Tools/" + Title + "/Status", false, 1)]
-        static void DisplayStatusWindow()
-        {
+        static void DisplayStatusWindow() {
             StatusWindow.Display();
         }
 
 
         [MenuItem("Tools/" + Title + "/Synchronize", false, 2)]
-        static void Sync()
-        {
+        static void Sync() {
             EditorCoroutines.EditorCoroutineUtility.StartCoroutine(SyncAux(), MQTTnetInitializer.Publisher);
 
             //MQTTnetInitializer.Publisher.SendConnect();
@@ -47,29 +40,25 @@ namespace Meryel.UnityCodeAssist.Editor
 
 
         [MenuItem("Tools/" + Title + "/Report error", false, 91)]
-        static void DisplayFeedbackWindow()
-        {
+        static void DisplayFeedbackWindow() {
             FeedbackWindow.Display();
         }
 
         [MenuItem("Tools/" + Title + "/About", false, 92)]
-        static void DisplayAboutWindow()
-        {
+        static void DisplayAboutWindow() {
             AboutWindow.Display();
         }
 
 #if MERYEL_UCA_LITE_VERSION
         [MenuItem("Tools/" + Title + "/Compare versions", false, 31)]
-        static void CompareVersions()
-        {
+        static void CompareVersions() {
             Application.OpenURL("http://unitycodeassist.netlify.app/compare");
 
             MQTTnetInitializer.Publisher?.SendAnalyticsEvent("Gui", "CompareVersions_MenuItem");
         }
 
         [MenuItem("Tools/" + Title + "/Get full version", false, 32)]
-        static void GetFullVersion()
-        {
+        static void GetFullVersion() {
             Application.OpenURL("https://unitycodeassist.netlify.app/purchase?utm_source=unity_getfull");
 
             MQTTnetInitializer.Publisher?.SendAnalyticsEvent("Gui", "FullVersion_MenuItem");
@@ -77,8 +66,7 @@ namespace Meryel.UnityCodeAssist.Editor
 #endif // MERYEL_UCA_LITE_VERSION
 
         [MenuItem("Tools/" + Title + "/Setup/Upgrade to full version", false, 65)]
-        public static void Upgrade()
-        {
+        public static void Upgrade() {
             MQTTnetInitializer.Publisher?.SendAnalyticsEvent("Gui", "Upgrade_MenuItem");
 
 #if MERYEL_UCA_LITE_VERSION
@@ -137,7 +125,7 @@ namespace Meryel.UnityCodeAssist.Editor
                 Serilog.Log.Information(error!);
             }
 #endif
-            
+
         }
 
         /*
@@ -149,8 +137,7 @@ namespace Meryel.UnityCodeAssist.Editor
         */
 
         [MenuItem("Tools/" + Title + "/Setup/Re-import package", false, 62)]
-        static void RepairFiles()
-        {
+        static void RepairFiles() {
             if (MQTTnetInitializer.Publisher?.Clients.Any() != true)
                 Serilog.Log.Information("No connected IDE found. Please start up Visual Studio or VS Code first");
 
@@ -164,17 +151,14 @@ namespace Meryel.UnityCodeAssist.Editor
         }
 
         [MenuItem("Tools/" + Title + "/Setup/Import files for .NET Standard 2.0", false, 63)]
-        static void ImportSystemBinariesForDotNetStandard20()
-        {
+        static void ImportSystemBinariesForDotNetStandard20() {
             var solutionDirectory = CommonTools.GetProjectPath();
             var cSharpVersion = Cleanup.GetCSharpVersionFromUnityProjectVersionFile(solutionDirectory);
 
-            if (cSharpVersion >= 9)
-            {
+            if (cSharpVersion >= 9) {
                 if (!EditorUtility.DisplayDialog("Import files for .NET Standard 2.0",
                     "This is not required for versions of Unity 2021.2 and newer. Do you still want to continue?",
-                    "Okay", "Cancel"))
-                {
+                    "Okay", "Cancel")) {
                     Serilog.Log.Debug("ImportNetStandard20_MenuItem cancelled via confirm dialog");
                     return;
                 }
@@ -191,16 +175,11 @@ namespace Meryel.UnityCodeAssist.Editor
         [MenuItem("Tools/" + Title + "/Setup/Regenerate project files", false, 64)]
         public static void RegenerateProjectFiles() => RegenerateProjectFilesAux(true);
 
-        public static void RegenerateProjectFilesAux(bool showError)
-        {
-            try
-            {
-                if (GetCodeEditor(true, out _, out _, out var error))
-                {
+        public static void RegenerateProjectFilesAux(bool showError) {
+            try {
+                if (GetCodeEditor(true, out _, out _, out var error)) {
                     CodeEditor.Editor.CurrentCodeEditor.SyncAll();
-                }
-                else
-                {
+                } else {
                     if (showError && error != null)
                         Serilog.Log.Information(error);
 
@@ -213,25 +192,20 @@ namespace Meryel.UnityCodeAssist.Editor
                     var m = t!.GetMethod("GenerateSolution", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
                     m.Invoke(null, null);
                 }
-            }
-            catch (System.Exception ex)
-            {
+            } catch (System.Exception ex) {
                 Serilog.Log.Error(ex, "Couldn't invoke GenerateSolution");
                 Serilog.Log.Information("Please 'Regenerate project files' manually. 'Edit'->'Preferences'->'External Tools'->'Regenerate project files'");
             }
         }
 
 
-        static IEnumerator CallShell(string command, string ide)
-        {
+        static IEnumerator CallShell(string command, string ide) {
             Serilog.Log.Debug("calling shell with command: {Command}", command);
             var task = Shell.UnityEditorShell.Execute(command);
-            task.OnLog += (logType, log) =>
-            {
+            task.OnLog += (logType, log) => {
                 Serilog.Log.Debug("shell log: {Log}", log);
             };
-            task.OnExit += (code) =>
-            {
+            task.OnExit += (code) => {
                 Serilog.Log.Debug("shell exit: {Code}", code);
                 if (code == 0)
                     Serilog.Log.Information($"{ide} extension installed successfully. Please restart {ide}");
@@ -241,14 +215,12 @@ namespace Meryel.UnityCodeAssist.Editor
             yield return new Shell.ShellCommandYieldable(task);
         }
 
-        static void CallVisualStudioInstaller(string vsixPath)
-        {
+        static void CallVisualStudioInstaller(string vsixPath) {
             EditorCoroutines.EditorCoroutineUtility.StartCoroutine(CallShell(
                 $"@for /f \"usebackq delims=\" %i in (`\"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe\" -latest -prerelease -products * -property enginePath`) do @set enginePath=%i & if exist \"%i\\VSIXInstaller.exe\" call \"%i\\VSIXInstaller.exe\" /u:VSIXLite2.6815b720-6186-48a1-a405-1387e54b41c6 & call \"%i\\VSIXInstaller.exe\" \"{vsixPath}\"", "Visual Studio"), MQTTnetInitializer.Publisher);
         }
 
-        static void CallVSCodeInstaller(string vsixPath)
-        {
+        static void CallVSCodeInstaller(string vsixPath) {
             string command;
 #if UNITY_EDITOR_WIN
             command = $"code --uninstall-extension MerryYellow.uca-lite-vscode & code --install-extension \"{vsixPath}\"";
@@ -262,10 +234,8 @@ namespace Meryel.UnityCodeAssist.Editor
             EditorCoroutines.EditorCoroutineUtility.StartCoroutine(CallShell(command, "VS Code"), MQTTnetInitializer.Publisher);
         }
 
-        internal static string Execute(string vsixPath, bool isVisualStudio = false, bool isVSCode = false)
-        {
-            var startInfo = new System.Diagnostics.ProcessStartInfo
-            {
+        internal static string Execute(string vsixPath, bool isVisualStudio = false, bool isVSCode = false) {
+            var startInfo = new System.Diagnostics.ProcessStartInfo {
                 WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
                 //startInfo.FileName = GetExePath();
                 FileName = vsixPath,
@@ -274,17 +244,13 @@ namespace Meryel.UnityCodeAssist.Editor
                 RedirectStandardOutput = true
                 //startInfo.WorkingDirectory = workingDirectoryPath;
             };
-            var process = new System.Diagnostics.Process
-            {
+            var process = new System.Diagnostics.Process {
                 StartInfo = startInfo
             };
 
-            try
-            {
+            try {
                 process.Start();
-            }
-            catch (System.ComponentModel.Win32Exception ex)
-            {
+            } catch (System.ComponentModel.Win32Exception ex) {
                 Serilog.Log.Error(ex, "Error at running bat file {File}", vsixPath);
             }
 
@@ -295,8 +261,7 @@ namespace Meryel.UnityCodeAssist.Editor
         }
 
 
-        static IEnumerator SyncAux()
-        {
+        static IEnumerator SyncAux() {
             var clientCount = MQTTnetInitializer.Publisher?.Clients.Count() ?? 0;
             MQTTnetInitializer.Publisher?.SendConnect();
             Serilog.Log.Information("Code Assist is looking for more IDEs to connect to...");
@@ -464,8 +429,7 @@ namespace Meryel.UnityCodeAssist.Editor
 #endif // MERYEL_DEBUG
 
 
-        public static void SendTagsAndLayers()
-        {
+        public static void SendTagsAndLayers() {
             Serilog.Log.Debug(nameof(SendTagsAndLayers));
 
             var tags = UnityEditorInternal.InternalEditorUtility.tags;
@@ -487,8 +451,7 @@ namespace Meryel.UnityCodeAssist.Editor
             var renderingLayerCount = RenderingLayerMask.GetRenderingLayerCount();
             var renderingLayerIndices = new string[renderingLayerCount];
             var renderingLayerNames = new string[renderingLayerCount];
-            for (var i = 0; i < renderingLayerCount; i++)
-            {
+            for (var i = 0; i < renderingLayerCount; i++) {
                 renderingLayerIndices[i] = i.ToString();
                 renderingLayerNames[i] = RenderingLayerMask.RenderingLayerToName(i);
             }
@@ -497,32 +460,27 @@ namespace Meryel.UnityCodeAssist.Editor
 #endif // UNITY_6000_0_OR_NEWER
         }
 
-        public static bool GetCodeEditor(bool checkVersion, out bool isVisualStudio, out bool isVisualStudioCode, out string? error)
-        {
+        public static bool GetCodeEditor(bool checkVersion, out bool isVisualStudio, out bool isVisualStudioCode, out string? error) {
             isVisualStudio = false;
             isVisualStudioCode = false;
 
-            if (CodeEditor.Editor.CurrentCodeEditor.TryGetInstallationForPath(CodeEditor.CurrentEditorInstallation, out var installation))
-            {
+            if (CodeEditor.Editor.CurrentCodeEditor.TryGetInstallationForPath(CodeEditor.CurrentEditorInstallation, out var installation)) {
                 if (installation.Name.StartsWith("Visual Studio Code"))
                     isVisualStudioCode = true;
                 else if (installation.Name.StartsWith("Visual Studio"))
                     isVisualStudio = true;
 
-                if (!isVisualStudioCode && !isVisualStudio)
-                {
+                if (!isVisualStudioCode && !isVisualStudio) {
                     error = $"Unsupported code editor: {installation.Name}. Unity Code Assist only supports Visual Studio and Visual Studio Code";
                     return false;
                 }
 
-                if (installation.Name.Contains("(internal)"))
-                {
+                if (installation.Name.Contains("(internal)")) {
                     error = "Code editor set but not working properly. Please try updating 'Visual Studio Editor' package";
                     return false;
                 }
 
-                if (!checkVersion)
-                {
+                if (!checkVersion) {
                     error = null;
                     return true;
                 }
@@ -530,23 +488,19 @@ namespace Meryel.UnityCodeAssist.Editor
                 var versionRegex = new System.Text.RegularExpressions.Regex(".*\\[([\\d\\.]+)\\]");
                 var versionStr = versionRegex.Match(installation.Name).Groups.ElementAtOrDefault(1)?.Value;
 
-                if (isVisualStudioCode && !string.IsNullOrEmpty(versionStr) && (VersionCompare(versionStr!, "1.76") < 0))
-                {
+                if (isVisualStudioCode && !string.IsNullOrEmpty(versionStr) && (VersionCompare(versionStr!, "1.76") < 0)) {
                     error = $"Version {versionStr} of Visual Studio Code is not supported by Unity Code Assist. Please update Visual Studio Code";
                     return false;
                 }
 
-                if (isVisualStudio && !string.IsNullOrEmpty(versionStr) && (VersionCompare(versionStr!, "17") < 0))
-                {
+                if (isVisualStudio && !string.IsNullOrEmpty(versionStr) && (VersionCompare(versionStr!, "17") < 0)) {
                     error = $"Version {versionStr} of Visual Studio is not supported by Unity Code Assist. Please update Visual Studio";
                     return false;
                 }
 
                 error = null;
                 return true;
-            }
-            else
-            {
+            } else {
                 error = "No code editor found. Please set it through 'Edit'->'Preferences'->'External Tools'->'External Script Editor'";
                 return false;
             }
@@ -556,8 +510,7 @@ namespace Meryel.UnityCodeAssist.Editor
 
 
         //https://www.geeksforgeeks.org/compare-two-version-numbers/amp/
-        public static int VersionCompare(string v1, string v2)
-        {
+        public static int VersionCompare(string v1, string v2) {
             // vnum stores each numeric
 
             // part of version
@@ -567,13 +520,10 @@ namespace Meryel.UnityCodeAssist.Editor
             // loop until both string are
             // processed
 
-            for (int i = 0, j = 0; (i < v1.Length || j < v2.Length);)
-
-            {
+            for (int i = 0, j = 0; (i < v1.Length || j < v2.Length);) {
                 // storing numeric part of
                 // version 1 in vnum1
-                while (i < v1.Length && v1[i] != '.')
-                {
+                while (i < v1.Length && v1[i] != '.') {
 
                     vnum1 = vnum1 * 10 + (v1[i] - '0');
 
@@ -583,8 +533,7 @@ namespace Meryel.UnityCodeAssist.Editor
 
                 // version 2 in vnum2
 
-                while (j < v2.Length && v2[j] != '.')
-                {
+                while (j < v2.Length && v2[j] != '.') {
                     vnum2 = vnum2 * 10 + (v2[j] - '0');
                     j++;
                 }

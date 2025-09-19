@@ -11,9 +11,8 @@ public class ShopActivityData : ActivityData {
 }
 
 public class ShopRoomActivity : RoomActivity {
-    public override async UniTask Initialize(Room room) {
+    public override void Initialize(Room room) {
         Debug.Log("Spawning shop");
         CompleteActivity();
-        await UniTask.CompletedTask;
     }
 }

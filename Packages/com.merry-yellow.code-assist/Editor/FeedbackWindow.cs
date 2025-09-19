@@ -1,26 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
 #pragma warning restore IDE0005
 
 
 #nullable enable
 
 
-namespace Meryel.UnityCodeAssist.Editor
-{
-    public class FeedbackWindow : EditorWindow
-    {
+namespace Meryel.UnityCodeAssist.Editor {
+    public class FeedbackWindow : EditorWindow {
 
         GUIStyle? styleLabel;
 
-        public static void Display()
-        {
+        public static void Display() {
             MQTTnetInitializer.Publisher?.SendRequestInternalLog();
 
             // Get existing open window or if none, make a new one:
@@ -33,28 +27,25 @@ namespace Meryel.UnityCodeAssist.Editor
         }
 
 
-        private void OnEnable()
-        {
+        private void OnEnable() {
             //**--icon
             //var icon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Sprites/Gear.png");
             //titleContent = new GUIContent("Code Assist", icon);
             titleContent = new GUIContent("Code Assist Feedback");
         }
 
-        private void OnGUI()
-        {
+        private void OnGUI() {
             var errorCount = Logger.ELogger.GetErrorCountInInternalLog();
             var warningCount = Logger.ELogger.GetWarningCountInInternalLog();
             var logContent = Logger.ELogger.GetInternalLogContent();
             if (!string.IsNullOrEmpty(Logger.ELogger.VsInternalLog))
                 logContent += Logger.ELogger.VsInternalLog;
 
-            styleLabel ??= new GUIStyle(GUI.skin.label)
-            {
+            styleLabel ??= new GUIStyle(GUI.skin.label) {
                 wordWrap = true,
                 alignment = TextAnchor.MiddleCenter,
             };
-            
+
             if (errorCount > 0)
                 EditorGUILayout.LabelField($"{errorCount} error(s) found in logs. Please submit a feedback (via e-mail, Discord or GitHub) with the logs if possible.", styleLabel, GUILayout.ExpandWidth(true));
             else if (warningCount > 0)
@@ -62,41 +53,35 @@ namespace Meryel.UnityCodeAssist.Editor
             else
                 EditorGUILayout.LabelField("No errors found in logs. Please submit a feedback (via e-mail, Discord or GitHub) describing what went wrong or unexpected.", styleLabel, GUILayout.ExpandWidth(true));
 
-            if (GUILayout.Button("Send e-mail"))
-            {
+            if (GUILayout.Button("Send e-mail")) {
                 var uri = "mailto:merryyellow@outlook.com";
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri));
             }
 
-            if (GUILayout.Button("Send Discord message"))
-            {
+            if (GUILayout.Button("Send Discord message")) {
                 //var uri = "discord://invites/2CgKHDq";
                 var uri = "https://discord.gg/2CgKHDq";
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri));
             }
 
-            if (GUILayout.Button("Submit GitHub issue"))
-            {
+            if (GUILayout.Button("Submit GitHub issue")) {
                 var uri = "https://github.com/merryyellow/Unity-Code-Assist/issues/new/choose";
                 Application.OpenURL(uri);
             }
 
             EditorGUILayout.Separator();
 
-            if (GUILayout.Button("View Unity full log"))
-            {
+            if (GUILayout.Button("View Unity full log")) {
                 var filePath = Logger.ELogger.FilePath;
                 System.Diagnostics.Process.Start(filePath);
             }
 
-            if (GUILayout.Button("View Visual Studio full log"))
-            {
+            if (GUILayout.Button("View Visual Studio full log")) {
                 var filePath = Logger.ELogger.VSFilePath;
                 System.Diagnostics.Process.Start(filePath);
             }
 
-            if (GUILayout.Button("Copy recent logs to clipboard"))
-            {
+            if (GUILayout.Button("Copy recent logs to clipboard")) {
                 GUIUtility.systemCopyBuffer = logContent;
             }
 

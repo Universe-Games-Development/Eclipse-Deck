@@ -37,6 +37,6 @@ public class CharacterPresenter : MonoBehaviour, ITargetableObject {
     }
 
     public object GetModel() {
-       return Opponent;
+        return Opponent;
     }
 }

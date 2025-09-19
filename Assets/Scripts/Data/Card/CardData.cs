@@ -16,7 +16,7 @@ public abstract class CardData : ScriptableObject {
     [Header("Logic")]
     public string resourseId;
     public Rarity Rarity;
-   
+
 
     [Header("Rarity Info (Auto-Generated)")]
     [SerializeField] private float spawnChance; // Тепер приватне, оновлюється автоматично

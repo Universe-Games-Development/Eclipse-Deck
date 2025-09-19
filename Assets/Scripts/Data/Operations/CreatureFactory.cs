@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 using Zenject;
 
 public interface ICreatureFactory<TView> {
@@ -20,7 +19,7 @@ public class CreatureFactory<TView> : ICreatureFactory<TView> where TView : Card
     }
 
     public Creature CreateModel(CreatureCard card) {
-       return new Creature(card);
+        return new Creature(card);
     }
 
     public CreaturePresenter SpawnPresenter(Creature creature) {

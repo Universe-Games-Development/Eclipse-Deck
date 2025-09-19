@@ -1,8 +1,8 @@
-using UnityEngine;
-using Zenject;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using Zenject;
 
 public class GlobalInstaller : MonoInstaller {
     [SerializeField] private List<GameObject> managerPrefabs;
@@ -33,7 +33,7 @@ public class GlobalInstaller : MonoInstaller {
 
         Container.Bind<CardProvider>().AsSingle();
         Container.Bind<EnemyResourceProvider>().AsSingle();
-        
+
         Container.Bind<EnemyResourceLoader>().AsSingle();
         Container.Bind<CardResourceLoader>().AsSingle();
 

@@ -1,9 +1,6 @@
-using System;
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
 
-public class ZoneColor : MonoBehaviour
-{
+public class ZoneColor : MonoBehaviour {
     [SerializeField] ZonePresenter zonePresenter;
     [SerializeField] Renderer zoneRenderer;
     [SerializeField] Color unAssignedColor;

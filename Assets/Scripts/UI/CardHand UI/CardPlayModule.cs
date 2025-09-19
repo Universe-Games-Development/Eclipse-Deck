@@ -12,13 +12,13 @@ public interface ICardPlayService {
 }
 
 public class CardPlayService : ICardPlayService {
-    private readonly OperationManager _operationManager;
+    private readonly IOperationManager _operationManager;
     private readonly IOperationFactory _operationFactory;
     private readonly IEventBus<IEvent> _eventBus;
     private readonly Dictionary<string, CardPlaySession> _activeSessions = new();
 
     public CardPlayService(
-        OperationManager operationManager,
+        IOperationManager operationManager,
         IOperationFactory operationFactory,
         IEventBus<IEvent> eventBus) {
 

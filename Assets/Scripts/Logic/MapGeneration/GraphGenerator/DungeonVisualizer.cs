@@ -8,8 +8,8 @@ public class DungeonVisualizer : MonoBehaviour {
     [SerializeField] private Transform dungeonMapParent;
     [SerializeField] private RoomNodePresenter roomPrefab;
     [SerializeField] private float spacing = 2.0f;
-    
-    [Header ("Diagnostic")]
+
+    [Header("Diagnostic")]
     [SerializeField] private bool showNodeDetails = true;
     [SerializeField] private Color normalConnectionColor = Color.white;
     [SerializeField] private Color redundantConnectionColor = Color.red;
@@ -25,7 +25,7 @@ public class DungeonVisualizer : MonoBehaviour {
     public void VisualizeGraph(DungeonGraph graph) {
         if (graph == null) return;
         ClearVisualization();
-        
+
         currentGraph = graph;
 
         int totalLevels = graph.GetLevelNodes().Count;

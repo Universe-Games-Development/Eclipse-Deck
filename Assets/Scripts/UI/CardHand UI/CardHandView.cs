@@ -20,7 +20,7 @@ public abstract class CardHandView : MonoBehaviour {
     public virtual void SetCardHover(CardView cardView, bool isHovered) {
         if (cardView == null) return;
 
-        
+
         if (isHovered) {
             SetHoveredCard(cardView);
         } else {
@@ -55,7 +55,7 @@ public abstract class CardHandView : MonoBehaviour {
         hoveredCard = null;
     }
 
-    
+
 }
 
 

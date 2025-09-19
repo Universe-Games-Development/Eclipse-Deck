@@ -9,7 +9,7 @@ public class CardPresenter : UnitPresenter {
     public Card Card { get; private set; }
     public CardView View { get; private set; }
 
-    [Header ("Debug")]
+    [Header("Debug")]
     [SerializeField] private bool DoTestRandomUpdate = true;
     [SerializeField] private int updateTimes = 15;
     [SerializeField] private float updateRate = 1.0f;
@@ -80,7 +80,7 @@ public class CardPresenter : UnitPresenter {
             attack = creature.Attack.Current;
             health = creature.Health.Current;
         }
-        
+
         return new CardDisplayData {
             name = card.Data.Name,
             cost = card.Cost.Current,

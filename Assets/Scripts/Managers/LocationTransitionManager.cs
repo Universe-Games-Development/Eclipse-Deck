@@ -78,7 +78,7 @@ public class LocationTransitionManager {
     public LocationData GetSceneLocation(Scene scene) {
         var location = _locationDataByType.Values.FirstOrDefault(loc => loc.sceneReference.SceneName == scene.name);
         if (location == null) {
-            Debug.LogError($"LocationData not found for scene: {scene.name}");
+            Debug.LogWarning($"LocationData not found for scene: {scene.name}");
         }
         return location;
     }
@@ -121,7 +121,7 @@ public class LocationTransitionManager {
             if (GetSceneLocation() != locationData) {
                 await locationData.sceneReference.LoadSceneAsync(LoadSceneMode.Single, true);
             }
-            
+
 
             await InvokeTransitionEvent(locationData, LoadingPhase.EnterLocation);
             await InvokeTransitionEvent(locationData, LoadingPhase.Complete);

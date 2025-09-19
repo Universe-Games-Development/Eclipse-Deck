@@ -70,7 +70,8 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
         if (gameUnit == null)
             return noTargetMaterial;
 
-        ValidationResult validation = currentRequest.Target.IsValid(gameUnit, currentRequest.Source.GetPlayer());
+        ValidationContext validationContext = new ValidationContext(currentRequest.Source.GetPlayer());
+        ValidationResult validation = currentRequest.Target.IsValid(gameUnit, validationContext);
         return validation.IsValid ? validTargetMaterial : invalidTargetMaterial;
     }
 

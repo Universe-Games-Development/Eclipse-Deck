@@ -1,5 +1,4 @@
 using DG.Tweening;
-using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SummonVisualTemplate", menuName = "Operations/Visuals/SummonVisualTemplate")]

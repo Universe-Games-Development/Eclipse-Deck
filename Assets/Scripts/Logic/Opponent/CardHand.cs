@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class CardHand : UnitModel {
     private CardContainer cardContainer;
@@ -13,9 +12,9 @@ public class CardHand : UnitModel {
 
     public Action<Card> OnCardAdded;
     public Action<Card> OnCardRemoved;
-    public IEnumerable<Card> Cards { 
-        get { 
-            return cardContainer.Cards; 
+    public IEnumerable<Card> Cards {
+        get {
+            return cardContainer.Cards;
         }
     }
 

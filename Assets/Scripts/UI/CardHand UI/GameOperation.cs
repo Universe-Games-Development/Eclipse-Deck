@@ -65,7 +65,6 @@ public abstract class GameOperation {
         Source = source;
     }
 
-    // Додаткові методи для роботи з цілями
     public IEnumerable<string> GetTargetKeys() => typedTargets.Keys;
     public List<TypedTargetBase> GetTargets() => typedTargets.Values.ToList();
 
@@ -91,10 +90,9 @@ public abstract class TypedTargetBase {
 
     public abstract void SetTarget(object target);
     public abstract object GetTarget();
-    public abstract ValidationResult IsValid(object value = null, Opponent opponent = null);
-    public abstract bool CanTarget(object potentialTarget, Opponent opponent = null);
+    public abstract ValidationResult IsValid(object value = null, ValidationContext context = null);
+    public abstract bool CanTarget(object potentialTarget, ValidationContext context = null);
     public abstract TargetSelector GetTargetSelector();
-    public abstract bool RequiresSource();
 
     public abstract string GetInstruction();
 }
@@ -122,24 +120,18 @@ public class TypedTarget<T> : TypedTargetBase {
 
     public override object GetTarget() => Unit;
 
-    public override ValidationResult IsValid(object value = null, Opponent opponent = null) {
+    public override ValidationResult IsValid(object value = null, ValidationContext context = null) {
         T targetToValidate = value is T typedValue ? typedValue : Unit;
-        return Requirement.IsValid(targetToValidate, opponent);
+        return Requirement.IsValid(targetToValidate, context);
     }
 
-    public override bool CanTarget(object potentialTarget, Opponent opponent = null) {
+    public override bool CanTarget(object potentialTarget, ValidationContext context = null) {
         return potentialTarget is T typedTarget &&
-               Requirement.IsValid(typedTarget, opponent).IsValid;
+               Requirement.IsValid(typedTarget, context).IsValid;
     }
 
     public override TargetSelector GetTargetSelector() {
         return Requirement.GetTargetSelector();
-    }
-
-
-    // Now we specify that this target does not require a source by default
-    public override bool RequiresSource() {
-        return false;
     }
 
     public override string GetInstruction() {

@@ -131,10 +131,8 @@ public class ComponentPool<T> : MonoBehaviour, IComponentPool<T> where T : MonoB
             Release(item);
         }
     }
-
-    [ContextMenu("Log Pool Info")]
     public void LogPoolInfo() {
-        Debug.Log($"{typeof(T).Name} Pool Info:\n" +
+        Debug.Log($"{prefab} Pool Info:\n" +
                  $"- Active objects: {ActiveCount}\n" +
                  $"- Inactive objects: {InactiveCount}\n" +
                  $"- Capacity: {defaultCapacity}\n" +

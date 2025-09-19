@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using Zenject;
-
 public class Deck : CardContainer {
     public Card Draw() {
         if (cards.Count == 0) return null;

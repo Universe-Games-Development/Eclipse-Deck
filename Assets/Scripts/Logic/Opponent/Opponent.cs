@@ -1,8 +1,4 @@
-using Cysharp.Threading.Tasks;
 using System;
-using Unity.VisualScripting;
-using UnityEngine;
-using UnityEngine.XR;
 using Zenject;
 
 
@@ -40,11 +36,11 @@ public class Opponent : UnitModel, IHealthable, IMannable, IDisposable {
 }
 
 public class Player : Opponent {
-    
+
     public PlayerData PlayerData => (PlayerData)base.Data;
 
     public Player(PlayerData data) : base(data) {
-        
+
     }
 }
 

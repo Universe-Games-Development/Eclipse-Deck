@@ -12,7 +12,7 @@ public interface IMana {
     void ModifyMax(int amount);
 
     void SetRestoreAmount(int newRestoreAmount);
-    
+
     string ToString();
     void Dispose();
 }

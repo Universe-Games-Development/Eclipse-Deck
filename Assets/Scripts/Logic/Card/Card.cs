@@ -7,7 +7,7 @@ public abstract class Card : UnitModel {
     public CardData Data { get; protected set; }
     public Cost Cost { get; protected set; }
     protected List<OperationData> _operationDatas;
-    
+
     public Card(CardData cardData)  // Add owner to constructor
     {
         Data = cardData;
@@ -45,7 +45,7 @@ public class CreatureCard : Card, IHealthable {
 
     public CreatureCard(CreatureCardData cardData)
         : base(cardData) {
-        
+
         Health = new(cardData.Health, this);
         Attack = new(cardData.Attack, this);
     }

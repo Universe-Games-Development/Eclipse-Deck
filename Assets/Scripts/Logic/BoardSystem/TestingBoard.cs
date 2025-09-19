@@ -1,10 +1,8 @@
-using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
-public class TestingBoard : MonoBehaviour
-{
+public class TestingBoard : MonoBehaviour {
     [SerializeField] private BoardGame gameboardController;
 
     [SerializeField] private PlayerPresenter playerPresenter;

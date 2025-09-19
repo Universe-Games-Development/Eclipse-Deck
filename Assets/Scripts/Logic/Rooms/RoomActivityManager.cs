@@ -1,5 +1,4 @@
 ﻿using System;
-using Zenject;
 
 public class RoomActivityManager : IDisposable {
     private TravelManager _travelManager;

@@ -1,25 +1,21 @@
+using Meryel.UnityCodeAssist.MQTTnet;
+using Meryel.UnityCodeAssist.MQTTnet.Adapter;
+using Meryel.UnityCodeAssist.MQTTnet.Diagnostics;
+using Meryel.UnityCodeAssist.MQTTnet.Implementations;
+using Meryel.UnityCodeAssist.MQTTnet.Protocol;
+using Meryel.UnityCodeAssist.MQTTnet.Server;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using UnityEngine;
-using UnityEditor;
+using System.Linq;
 using System.Threading;
-using Task = System.Threading.Tasks.Task;
+using UnityEditor;
+using UnityEngine;
 using Application = UnityEngine.Application;
-
-using Meryel.UnityCodeAssist.MQTTnet;
-using Meryel.UnityCodeAssist.MQTTnet.Server;
-using Meryel.UnityCodeAssist.MQTTnet.Protocol;
-using Meryel.UnityCodeAssist.MQTTnet.Adapter;
-using Meryel.UnityCodeAssist.MQTTnet.Implementations;
-using Meryel.UnityCodeAssist.MQTTnet.Diagnostics;
+using Task = System.Threading.Tasks.Task;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
-using MQTTnet = Meryel.UnityCodeAssist.MQTTnet;
-using Newtonsoft = Meryel.UnityCodeAssist.Newtonsoft;
 #pragma warning restore IDE0005
 
 
@@ -30,10 +26,8 @@ using Newtonsoft = Meryel.UnityCodeAssist.Newtonsoft;
 // can also do this for better clear, sometimes it gets locked
 // https://answers.unity.com/questions/704066/callback-before-unity-reloads-editor-assemblies.html#
 
-namespace Meryel.UnityCodeAssist.Editor
-{
-    public class MQTTnetPublisher : Synchronizer.Model.IProcessor
-    {
+namespace Meryel.UnityCodeAssist.Editor {
+    public class MQTTnetPublisher : Synchronizer.Model.IProcessor {
         MqttServer? broker;
 
         CancellationTokenSource? cancellationTokenSource;
@@ -49,11 +43,9 @@ namespace Meryel.UnityCodeAssist.Editor
 
         Synchronizer.Model.Connect Self => _self!;
 
-        void InitializeSelf()
-        {
+        void InitializeSelf() {
             var projectPath = CommonTools.GetProjectPath();
-            _self = new Synchronizer.Model.Connect()
-            {
+            _self = new Synchronizer.Model.Connect() {
                 ModelVersion = Synchronizer.Model.Utilities.Version,
                 ProjectPath = projectPath,
                 ProjectName = getProjectName(),
@@ -68,8 +60,7 @@ namespace Meryel.UnityCodeAssist.Editor
                 ClientId = "",
             };
 
-            string getProjectName()
-            {
+            string getProjectName() {
                 string[] s = projectPath.Split('/');
 #pragma warning disable IDE0056
                 string projectName = s[s.Length - 1];
@@ -80,12 +71,10 @@ namespace Meryel.UnityCodeAssist.Editor
         }
 
 
-        public static void LogContext()
-        {
+        public static void LogContext() {
         }
 
-        public MQTTnetPublisher()
-        {
+        public MQTTnetPublisher() {
             // LogContext();
 
             Serilog.Log.Debug("MQTTnet server initializing, begin");
@@ -132,31 +121,25 @@ namespace Meryel.UnityCodeAssist.Editor
 
             Serilog.Log.Debug("MQTTnet server initializing, constructed broker, port: {Port}", port);
 
-            try
-            {
+            try {
                 //broker.StartAsync().GetAwaiter().GetResult();
 
                 var startTask = Task.Run(() => broker.StartAsync());
-                if (!startTask.Wait(TimeSpan.FromSeconds(5)))
-                {
+                if (!startTask.Wait(TimeSpan.FromSeconds(5))) {
                     Serilog.Log.Error("MQTTnet broker.StartAsync timed out.");
                     return;
                 }
 
 
                 Serilog.Log.Debug("MQTTnet server initializing, started broker");
-            }
-            catch (System.Net.Sockets.SocketException socketEx)
-            {
+            } catch (System.Net.Sockets.SocketException socketEx) {
                 Serilog.Log.Error(socketEx, "Socket exception");
                 LogContext();
                 //Serilog.Log.Warning("Socket exception disposing pubSocket");
                 //broker.Dispose();
                 //broker = null;
                 return;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Serilog.Log.Error(ex, "MQTTnet broker.StartAsync failed.");
                 return;
             }
@@ -182,24 +165,18 @@ namespace Meryel.UnityCodeAssist.Editor
             Serilog.Log.Debug("MQTTnet server initializing, initialized at {port} with {projectPath}", port, Self!.ProjectPath);
         }
 
-        private Task Broker_ClientDisconnectedAsync(ClientDisconnectedEventArgs arg)
-        {
-            try
-            {
+        private Task Broker_ClientDisconnectedAsync(ClientDisconnectedEventArgs arg) {
+            try {
                 var removed = _clients.TryRemove(arg.ClientId, out _);
                 Serilog.Log.Debug("Broker_ClientDisconnectedAsync {ClientId} {Result}", arg.ClientId, removed);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Serilog.Log.Error(ex, "async exception at {Location}", nameof(Broker_ClientDisconnectedAsync));
             }
             return Task.CompletedTask;
         }
 
-        private Task Broker_InterceptingPublishAsync(InterceptingPublishEventArgs arg)
-        {
-            try
-            {
+        private Task Broker_InterceptingPublishAsync(InterceptingPublishEventArgs arg) {
+            try {
                 // if server message
                 if (string.IsNullOrEmpty(arg.ClientId))
                     return Task.CompletedTask;
@@ -211,24 +188,20 @@ namespace Meryel.UnityCodeAssist.Editor
                 var content = arg.ApplicationMessage.ConvertPayloadToString();
 
                 MainThreadDispatcher.Add(() => syncMngr.ProcessMessage(header, content));
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Serilog.Log.Error(ex, "async exception at {Location}", nameof(Broker_InterceptingPublishAsync));
             }
-            
+
             return Task.CompletedTask;
         }
 
-        public void Clear()
-        {
+        public void Clear() {
             // LogContext();
 
             Serilog.Log.Verbose("MQTTnet clearing {HasBroker}", (broker != null));
 
             var server = broker;
-            if (server != null)
-            {
+            if (server != null) {
                 server.InterceptingPublishAsync -= Broker_InterceptingPublishAsync;
                 Serilog.Log.Verbose("MQTTnet clearing, removed events");
             }
@@ -241,26 +214,20 @@ namespace Meryel.UnityCodeAssist.Editor
                 return;
 
             // broker?.StopAsync().GetAwaiter().GetResult(); // this line was freezing Unity editor, so calling Task.Run().Wait() instead
-            try
-            {
+            try {
                 var stopTask = Task.Run(() => server.StopAsync());
                 if (!stopTask.Wait(TimeSpan.FromSeconds(5))) // give it five secs to complete
                 {
                     Serilog.Log.Error("MQTTnet broker.StopAsync timed out.");
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Serilog.Log.Error(ex, "MQTTnet broker.StopAsync failed.");
             }
 
             Serilog.Log.Verbose("MQTTnet clearing, stopped broker");
-            try
-            {
+            try {
                 server.Dispose();
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Serilog.Log.Warning(ex, "MQTTnet broker.Dispose failed.");
             }
 
@@ -271,8 +238,7 @@ namespace Meryel.UnityCodeAssist.Editor
         }
 
         string SerializeObject<T>(T obj)
-            where T : class
-        {
+            where T : class {
             // Odin cant serialize string arrays, https://github.com/TeamSirenix/odin-serializer/issues/26
             //var buffer = OdinSerializer.SerializationUtility.SerializeValue<T>(obj, OdinSerializer.DataFormat.JSON);
             //var str = System.Text.Encoding.UTF8.GetString(buffer, 0, buffer.Length);
@@ -293,16 +259,14 @@ namespace Meryel.UnityCodeAssist.Editor
             return str;
         }
 
-        void SendAux(Synchronizer.Model.IMessage message, bool logContent = true)
-        {
+        void SendAux(Synchronizer.Model.IMessage message, bool logContent = true) {
             if (message == null)
                 return;
 
             SendAux(message.GetType().Name, message, logContent);
         }
 
-        void SendAux(string messageType, object content, bool logContent = true)
-        {
+        void SendAux(string messageType, object content, bool logContent = true) {
             if (logContent)
                 Serilog.Log.Debug("Publishing {MessageType} {@Content}", messageType, content);
             else
@@ -310,7 +274,7 @@ namespace Meryel.UnityCodeAssist.Editor
 
             var publisher = broker;
             if (publisher != null)
-                //publisher.SendMoreFrame(messageType).SendFrame(SerializeObject(content));
+            //publisher.SendMoreFrame(messageType).SendFrame(SerializeObject(content));
             {
                 var applicationMessage = new MqttApplicationMessageBuilder()
                     .WithTopic("sc/" + messageType) // sc/ => server->client message
@@ -321,22 +285,18 @@ namespace Meryel.UnityCodeAssist.Editor
 
                 //broker?.InjectApplicationMessage(new InjectedMqttApplicationMessage(applicationMessage), cancellationTokenSource?.Token ?? default).GetAwaiter().GetResult();
                 broker?.InjectApplicationMessage(new InjectedMqttApplicationMessage(applicationMessage), cancellationTokenSource?.Token ?? default);
-            }
-            else
+            } else
                 Serilog.Log.Error("Publisher socket is null");
         }
 
-        public void SendConnect()
-        {
+        public void SendConnect() {
             var connect = Self;
 
             SendAux(connect);
         }
 
-        public void SendDisconnect()
-        {
-            var disconnect = new Synchronizer.Model.Disconnect()
-            {
+        public void SendDisconnect() {
+            var disconnect = new Synchronizer.Model.Disconnect() {
                 ModelVersion = Self.ModelVersion,
                 ProjectPath = Self.ProjectPath,
                 ProjectName = Self.ProjectName,
@@ -350,10 +310,8 @@ namespace Meryel.UnityCodeAssist.Editor
             SendAux(disconnect);
         }
 
-        public void SendConnectionInfo()
-        {
-            var connectionInfo = new Synchronizer.Model.ConnectionInfo()
-            {
+        public void SendConnectionInfo() {
+            var connectionInfo = new Synchronizer.Model.ConnectionInfo() {
                 ModelVersion = Self.ModelVersion,
                 ProjectPath = Self.ProjectPath,
                 ProjectName = Self.ProjectName,
@@ -367,24 +325,20 @@ namespace Meryel.UnityCodeAssist.Editor
             SendAux(connectionInfo);
         }
 
-        public void SendHandshake()
-        {
+        public void SendHandshake() {
             var handshake = new Synchronizer.Model.Handshake();
 
             SendAux(handshake);
         }
 
-        public void SendRequestInternalLog()
-        {
+        public void SendRequestInternalLog() {
             var requestInternalLog = new Synchronizer.Model.RequestInternalLog();
 
             SendAux(requestInternalLog);
         }
 
-        public void SendRequestUpdate(string app, string path, bool isInteractive)
-        {
-            var requestUpdate = new Synchronizer.Model.RequestUpdate()
-            {
+        public void SendRequestUpdate(string app, string path, bool isInteractive) {
+            var requestUpdate = new Synchronizer.Model.RequestUpdate() {
                 App = app,
                 Path = path,
                 IsInteractive = isInteractive,
@@ -393,10 +347,8 @@ namespace Meryel.UnityCodeAssist.Editor
             SendAux(requestUpdate);
         }
 
-        public void SendInternalLog()
-        {
-            var internalLog = new Synchronizer.Model.InternalLog()
-            {
+        public void SendInternalLog() {
+            var internalLog = new Synchronizer.Model.InternalLog() {
                 LogContent = Logger.ELogger.GetInternalLogContent(),
             };
 
@@ -404,10 +356,8 @@ namespace Meryel.UnityCodeAssist.Editor
         }
 
 
-        void SendStringArrayAux(string id, string[] array)
-        {
-            var stringArray = new Synchronizer.Model.StringArray()
-            {
+        void SendStringArrayAux(string id, string[] array) {
+            var stringArray = new Synchronizer.Model.StringArray() {
                 Id = id,
                 Array = array,
             };
@@ -415,17 +365,13 @@ namespace Meryel.UnityCodeAssist.Editor
             SendAux(stringArray);
         }
 
-        void SendStringArrayContainerAux(params (string id, string[] array)[] container)
-        {
-            var stringArrayContainer = new Synchronizer.Model.StringArrayContainer()
-            {
+        void SendStringArrayContainerAux(params (string id, string[] array)[] container) {
+            var stringArrayContainer = new Synchronizer.Model.StringArrayContainer() {
                 Container = new Synchronizer.Model.StringArray[container.Length],
             };
 
-            for (int i = 0; i < container.Length; i++)
-            {
-                stringArrayContainer.Container[i] = new Synchronizer.Model.StringArray
-                {
+            for (int i = 0; i < container.Length; i++) {
+                stringArrayContainer.Container[i] = new Synchronizer.Model.StringArray {
                     Id = container[i].id,
                     Array = container[i].array
                 };
@@ -437,31 +383,27 @@ namespace Meryel.UnityCodeAssist.Editor
         public void SendTags(string[] tags) =>
             SendStringArrayAux(Synchronizer.Model.Ids.Tags, tags);
 
-        public void SendLayers(string[] layerNames, string[] layerIndices)
-        {
+        public void SendLayers(string[] layerNames, string[] layerIndices) {
             SendStringArrayContainerAux(
                 (Synchronizer.Model.Ids.Layers, layerNames),
                 (Synchronizer.Model.Ids.LayerIndices, layerIndices));
         }
 
-        public void SendSortingLayers(string[] sortingLayers, string[] sortingLayerIds, string[] sortingLayerValues)
-        {
+        public void SendSortingLayers(string[] sortingLayers, string[] sortingLayerIds, string[] sortingLayerValues) {
             SendStringArrayContainerAux(
                 (Synchronizer.Model.Ids.SortingLayers, sortingLayers),
                 (Synchronizer.Model.Ids.SortingLayerIds, sortingLayerIds),
                 (Synchronizer.Model.Ids.SortingLayerValues, sortingLayerValues));
         }
 
-        public void SendRenderingLayers(string[] renderingLayers, string[] renderingLayerIndices)
-        {
+        public void SendRenderingLayers(string[] renderingLayers, string[] renderingLayerIndices) {
             SendStringArrayContainerAux(
                 (Synchronizer.Model.Ids.RenderingLayers, renderingLayers),
                 (Synchronizer.Model.Ids.RenderingLayerIndices, renderingLayerIndices));
         }
 
         public void SendPlayerPrefs(string[] playerPrefKeys, string[] playerPrefValues,
-            string[] playerPrefStringKeys, string[] playerPrefIntegerKeys, string[] playerPrefFloatKeys)
-        {
+            string[] playerPrefStringKeys, string[] playerPrefIntegerKeys, string[] playerPrefFloatKeys) {
             SendStringArrayContainerAux(
                 (Synchronizer.Model.Ids.PlayerPrefKeys, playerPrefKeys),
                 (Synchronizer.Model.Ids.PlayerPrefValues, playerPrefValues),
@@ -473,8 +415,7 @@ namespace Meryel.UnityCodeAssist.Editor
 
         public void SendEditorPrefs(string[] editorPrefKeys, string[] editorPrefValues,
             string[] editorPrefStringKeys, string[] editorPrefIntegerKeys, string[] editorPrefFloatKeys,
-            string[] editorPrefBooleanKeys)
-        {
+            string[] editorPrefBooleanKeys) {
             SendStringArrayContainerAux(
                 (Synchronizer.Model.Ids.EditorPrefKeys, editorPrefKeys),
                 (Synchronizer.Model.Ids.EditorPrefValues, editorPrefValues),
@@ -485,8 +426,7 @@ namespace Meryel.UnityCodeAssist.Editor
                 );
         }
 
-        public void SendInputManager(string[] axisNames, string[] axisInfos, string[] buttonKeys, string[] buttonAxis, string[] joystickNames)
-        {
+        public void SendInputManager(string[] axisNames, string[] axisInfos, string[] buttonKeys, string[] buttonAxis, string[] joystickNames) {
             SendStringArrayContainerAux(
                 (Synchronizer.Model.Ids.InputManagerAxes, axisNames),
                 (Synchronizer.Model.Ids.InputManagerAxisInfos, axisInfos),
@@ -497,8 +437,7 @@ namespace Meryel.UnityCodeAssist.Editor
         }
 
         public void SendSceneList(string[] sceneNames, string[] scenePaths, string[] sceneBuildIndices,
-            string[] sceneNamesAndPaths, string[] scenePathsAndNames)
-        {
+            string[] sceneNamesAndPaths, string[] scenePathsAndNames) {
             SendStringArrayContainerAux(
                 (Synchronizer.Model.Ids.SceneNames, sceneNames),
                 (Synchronizer.Model.Ids.ScenePaths, scenePaths),
@@ -508,32 +447,27 @@ namespace Meryel.UnityCodeAssist.Editor
                 );
         }
 
-        public void SendScriptMissing(string component)
-        {
-            var scriptMissing = new Synchronizer.Model.ScriptMissing()
-            {
+        public void SendScriptMissing(string component) {
+            var scriptMissing = new Synchronizer.Model.ScriptMissing() {
                 Component = component,
             };
 
             SendAux(scriptMissing);
         }
 
-        public void SendComponentHumanTrait(string[] bones, string[] muscles)
-        {
+        public void SendComponentHumanTrait(string[] bones, string[] muscles) {
             //var humanTrait = new Synchronizer.Model.Components.HumanTrait();
 
             var boneIndices = new string[bones.Length];
             var boneNames = new string[bones.Length];
-            for (int i = 0; i < bones.Length; i++)
-            {
+            for (int i = 0; i < bones.Length; i++) {
                 boneIndices[i] = i.ToString();
                 boneNames[i] = bones[i];
             }
 
             var muscleIndices = new string[muscles.Length];
             var muscleNames = new string[muscles.Length];
-            for (int i = 0; i < muscles.Length; i++)
-            {
+            for (int i = 0; i < muscles.Length; i++) {
                 muscleIndices[i] = i.ToString();
                 muscleNames[i] = muscles[i];
             }
@@ -545,32 +479,28 @@ namespace Meryel.UnityCodeAssist.Editor
                 );
         }
 
-        public void SendShaderGlobalKeywords()
-        {
+        public void SendShaderGlobalKeywords() {
             SendStringArrayAux(Synchronizer.Model.Ids.ShaderGlobalKeywords, Shader.globalKeywords.Select(k => k.name).ToArray());
         }
 
-        public void SendGameObject(GameObject go)
-        {
+        public void SendGameObject(GameObject go) {
             if (!go)
                 return;
 
             Serilog.Log.Debug("SendGO: {GoName}", go.name);
 
-            var dataOfSelf = go.ToSyncModel(priority:10000);
+            var dataOfSelf = go.ToSyncModel(priority: 10000);
             if (dataOfSelf != null)
                 SendAux(dataOfSelf);
 
             var dataOfHierarchy = go.ToSyncModelOfHierarchy();
-            if (dataOfHierarchy != null)
-            {
+            if (dataOfHierarchy != null) {
                 foreach (var doh in dataOfHierarchy)
                     SendAux(doh);
             }
 
             var dataOfComponents = go.ToSyncModelOfComponents();
-            if (dataOfComponents != null)
-            {
+            if (dataOfComponents != null) {
                 foreach (var doc in dataOfComponents)
                     SendAux(doc);
             }
@@ -588,8 +518,7 @@ namespace Meryel.UnityCodeAssist.Editor
                 SendAux(dataOfComponentMaterial);
         }
 
-        public void SendScriptableObject(ScriptableObject so)
-        {
+        public void SendScriptableObject(ScriptableObject so) {
             Serilog.Log.Debug("SendSO: {SoName}", so.name);
 
             var dataOfSo = so.ToSyncModel();
@@ -597,20 +526,16 @@ namespace Meryel.UnityCodeAssist.Editor
                 SendAux(dataOfSo);
         }
 
-        public void SendAnalyticsEvent(string type, string content)
-        {
-            var analyticsEvent = new Synchronizer.Model.AnalyticsEvent()
-            {
+        public void SendAnalyticsEvent(string type, string content) {
+            var analyticsEvent = new Synchronizer.Model.AnalyticsEvent() {
                 EventType = type,
                 EventContent = content
             };
             SendAux(analyticsEvent);
         }
 
-        public void SendErrorReport(string errorMessage, string stack, string type)
-        {
-            var errorReport = new Synchronizer.Model.ErrorReport()
-            {
+        public void SendErrorReport(string errorMessage, string stack, string type) {
+            var errorReport = new Synchronizer.Model.ErrorReport() {
                 ErrorMessage = errorMessage,
                 ErrorStack = stack,
                 ErrorType = type,
@@ -618,30 +543,25 @@ namespace Meryel.UnityCodeAssist.Editor
             SendAux(errorReport);
         }
 
-        public void SendRequestVerboseType(string type, string docPath)
-        {
-            var requestVerboseType = new Synchronizer.Model.RequestVerboseType()
-            {
+        public void SendRequestVerboseType(string type, string docPath) {
+            var requestVerboseType = new Synchronizer.Model.RequestVerboseType() {
                 Type = type,
                 DocPath = docPath,
             };
             SendAux(requestVerboseType);
         }
 
-        public void ForwardRelayMessage(Synchronizer.Model.IRelayMessage relayMessage)
-        {
+        public void ForwardRelayMessage(Synchronizer.Model.IRelayMessage relayMessage) {
             SendAux(relayMessage);
         }
 
 
-        string Synchronizer.Model.IProcessor.Serialize<T>(T value)
-        {
+        string Synchronizer.Model.IProcessor.Serialize<T>(T value) {
             //return System.Text.Json.JsonSerializer.Serialize<T>(value);
             //return Newtonsoft.Json.JsonConvert.SerializeObject(value);
             return SerializeObject(value);
         }
-        T Synchronizer.Model.IProcessor.Deserialize<T>(string data)
-        {
+        T Synchronizer.Model.IProcessor.Deserialize<T>(string data) {
             //return System.Text.Json.JsonSerializer.Deserialize<T>(data)!;
             //return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(data)!;
             //return TinyJson.JsonParser.FromJson<T>(data)!;
@@ -656,24 +576,19 @@ namespace Meryel.UnityCodeAssist.Editor
         //**--make sure all Synchronizer.Model.IProcessor.Process methods are thread-safe
 
         // a new client has connected
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Connect connect)
-        {
-            if (connect.ModelVersion != Self.ModelVersion)
-            {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Connect connect) {
+            if (connect.ModelVersion != Self.ModelVersion) {
                 Serilog.Log.Error("Version mismatch with {ContactInfo}. Please update your Unity asset and reinstall the Visual Studio/VS Code extension. {ContactModel} != {SelfModel}", connect.ContactInfo, connect.ModelVersion, Self.ModelVersion);
                 return;
             }
 
-            if (connect.ProjectPath != Self.ProjectPath)
-            {
+            if (connect.ProjectPath != Self.ProjectPath) {
                 Serilog.Log.Error("Project mismatch with {ProjectName}. '{ConnectPath}' != '{SelfPath}'", connect.ProjectName, connect.ProjectPath, Self.ProjectPath);
                 return;
             }
 
-            if (!string.IsNullOrEmpty(connect.LiteOrFull) && connect.LiteOrFull != Self.LiteOrFull)
-            {
-                if (connect.LiteOrFull == "Lite")
-                {
+            if (!string.IsNullOrEmpty(connect.LiteOrFull) && connect.LiteOrFull != Self.LiteOrFull) {
+                if (connect.LiteOrFull == "Lite") {
                     //**-- upgrade vsix to full here //**--//**--
                 }
             }
@@ -681,8 +596,7 @@ namespace Meryel.UnityCodeAssist.Editor
             var hasClient = _clients.TryGetValue(connect.ClientId, out var client);
             if (!hasClient)
                 _clients[connect.ClientId] = connect;
-            else
-            {
+            else {
                 // LiteOrFull field might be updated
                 client.ModelVersion = connect.ModelVersion;
                 client.ProjectPath = connect.ProjectPath;
@@ -701,43 +615,34 @@ namespace Meryel.UnityCodeAssist.Editor
         }
 
         // a new client is online and requesting connection
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestConnect requestConnect)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestConnect requestConnect) {
             SendConnect();
         }
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Disconnect disconnect)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Disconnect disconnect) {
             var removed = _clients.TryRemove(disconnect.ClientId, out var client);
             Serilog.Log.Debug("Synchronizer.Model.Disconnect {ClientId} {Removed}", disconnect.ClientId, removed);
         }
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ConnectionInfo connectionInfo)
-        {
-            if (connectionInfo.ModelVersion != Self.ModelVersion)
-            {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ConnectionInfo connectionInfo) {
+            if (connectionInfo.ModelVersion != Self.ModelVersion) {
                 Serilog.Log.Error("Version mismatch with {ContactInfo}. Please update your Unity asset and reinstall the Visual Studio/VS Code extension. {ContactModel} != {SelfModel}", connectionInfo.ContactInfo, connectionInfo.ModelVersion, Self.ModelVersion);
                 return;
             }
 
-            if (connectionInfo.ProjectPath != Self.ProjectPath)
-            {
+            if (connectionInfo.ProjectPath != Self.ProjectPath) {
                 Serilog.Log.Error("Project mismatch with {ProjectName}. '{ConnectPath}' != '{SelfPath}'", connectionInfo.ProjectName, connectionInfo.ProjectPath, Self.ProjectPath);
                 return;
             }
 
-            if (!_clients.TryGetValue(connectionInfo.ClientId, out _))
-            {
+            if (!_clients.TryGetValue(connectionInfo.ClientId, out _)) {
                 SendConnect();
-            }
-            else
-            {
+            } else {
                 SendHandshake();
                 if (ScriptFinder.GetActiveGameObject(out var activeGO))
                     SendGameObject(activeGO);
                 Assister.SendTagsAndLayers();
             }
         }
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestConnectionInfo requestConnectionInfo)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestConnectionInfo requestConnectionInfo) {
             SendConnectionInfo();
         }
         /*
@@ -753,75 +658,61 @@ namespace Meryel.UnityCodeAssist.Editor
         {
 
         }*/
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.StringArray stringArray)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.StringArray stringArray) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.StringArray)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.StringArrayContainer stringArrayContainer)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.StringArrayContainer stringArrayContainer) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.StringArrayContainer)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.GameObject gameObject)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.GameObject gameObject) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.GameObject)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ComponentData component)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ComponentData component) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ComponentData)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Component_Animator component_Animator)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Component_Animator component_Animator) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Component_Animator)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Component_Animation component_Animation)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Component_Animation component_Animation) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Component_Animation)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Component_Material component_Material)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Component_Material component_Material) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Component_Material)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestScript requestScript)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestScript requestScript) {
             if (requestScript.DeclaredTypes == null || requestScript.DeclaredTypes.Length == 0)
                 return;
 
             var documentPath = requestScript.DocumentPath;
 
-            foreach (var declaredType in requestScript.DeclaredTypes)
-            {
-                if (ScriptFinder.FindInstanceOfType(declaredType, documentPath, out var go, out var so))
-                {
+            foreach (var declaredType in requestScript.DeclaredTypes) {
+                if (ScriptFinder.FindInstanceOfType(declaredType, documentPath, out var go, out var so)) {
                     if (go != null)
                         SendGameObject(go);
                     else if (so != null)
                         SendScriptableObject(so);
                     else
                         Serilog.Log.Warning("Invalid instance of type");
-                }
-                else
-                {
+                } else {
                     SendScriptMissing(declaredType);
                 }
             }
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestScriptFast requestScriptFast)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestScriptFast requestScriptFast) {
             var documentPath = requestScriptFast.DocumentPath;
 
             //**--namespace?
             var possiblyDeclaredType = Path.GetFileNameWithoutExtension(documentPath);
 
-            if (ScriptFinder.FindInstanceOfType(possiblyDeclaredType, documentPath, out var go, out var so))
-            {
+            if (ScriptFinder.FindInstanceOfType(possiblyDeclaredType, documentPath, out var go, out var so)) {
                 if (go != null)
                     SendGameObject(go);
                 else if (so != null)
@@ -831,56 +722,46 @@ namespace Meryel.UnityCodeAssist.Editor
             }
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ScriptMissing scriptMissing)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ScriptMissing scriptMissing) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ScriptMissing)");
         }
 
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Handshake handshake)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.Handshake handshake) {
             // Do nothing
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestInternalLog requestInternalLog)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestInternalLog requestInternalLog) {
             SendInternalLog();
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.InternalLog internalLog)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.InternalLog internalLog) {
             Logger.ELogger.VsInternalLog = internalLog.LogContent;
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.AnalyticsEvent analyticsEvent)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.AnalyticsEvent analyticsEvent) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.AnalyticsEvent)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ErrorReport errorReport)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ErrorReport errorReport) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.ErrorReport)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestVerboseType requestVerboseType)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestVerboseType requestVerboseType) {
             Serilog.Log.Warning("Unity/Server shouldn't call Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestVerboseType)");
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestLazyLoad requestLazyLoad)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestLazyLoad requestLazyLoad) {
             Monitor.LazyLoad(requestLazyLoad.Category);
         }
 
         internal Synchronizer.Model.RequestUpdate? DelayedRequestUpdate { get; private set; }
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestUpdate requestUpdate)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RequestUpdate requestUpdate) {
             if (requestUpdate.App != "Unity" && requestUpdate.App != "SystemBinariesForDotNetStandard20")
                 return;
 
             // cannot import package in play mode, so delay it
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
-            {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) {
                 Serilog.Log.Information("Cannot import package in play mode, please exit play mode to update");
                 DelayedRequestUpdate = requestUpdate;
                 return;
@@ -891,33 +772,27 @@ namespace Meryel.UnityCodeAssist.Editor
             AssetDatabase.ImportPackage(requestUpdate.Path, requestUpdate.IsInteractive);
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayDocumentShow relayDocumentShow)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayDocumentShow relayDocumentShow) {
             ForwardRelayMessage(relayDocumentShow);
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayDocumentSave relayDocumentSave)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayDocumentSave relayDocumentSave) {
             ForwardRelayMessage(relayDocumentSave);
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayDocumentViewportChanged relayDocumentViewportChanged)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayDocumentViewportChanged relayDocumentViewportChanged) {
             ForwardRelayMessage(relayDocumentViewportChanged);
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayLogMessage relayLogMessage)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayLogMessage relayLogMessage) {
             ForwardRelayMessage(relayLogMessage);
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayUpdateExport relayUpdateExport)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayUpdateExport relayUpdateExport) {
             ForwardRelayMessage(relayUpdateExport);
         }
 
-        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayAdornmentText relayAdornmentText)
-        {
+        void Synchronizer.Model.IProcessor.Process(Synchronizer.Model.RelayAdornmentText relayAdornmentText) {
             ForwardRelayMessage(relayAdornmentText);
         }
 

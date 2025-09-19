@@ -4,7 +4,7 @@ using System;
 public class Health : Attribute {
     public event Action<OnDamageTaken> OnDamageTaken;
     public event Action<DeathEvent> OnDeath;
-    
+
     public bool IsDead = false;
     private readonly IHealthable _owner;
 

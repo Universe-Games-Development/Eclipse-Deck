@@ -1,4 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using ModestTree;
+using NUnit.Framework.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,32 +8,21 @@ using System.Threading;
 using UnityEngine;
 using Zenject;
 
-public class OperationTargetsFiller : MonoBehaviour {
+public class OperationTargetsFiller : MonoBehaviour, ITargetFiller {
 
     [Header("Configuration")]
     [SerializeField] private HumanTargetSelector fallbackSelector;
     [SerializeField] private int maxRetryAttempts = 3;
     [SerializeField] private float operationTimeoutSeconds = 30f;
 
-    // Dependencies - будуть ін'єктовані
-    
-    private ITargetValidator targetValidator;
-    
     // State management
-    private CancellationTokenSource globalCancellationSource = new();
+    private readonly CancellationTokenSource globalCancellationSource = new();
     private TargetOperationContext currentOperation;
 
-    [Inject] private BoardGame boardGame;
-    [Inject] private IUnitPresenterRegistry _unitPresenterRegistry;
-
-    private void Start() {
-        InitializeDependencies();
-    }
-
-    private void InitializeDependencies() {
-        // TODO: Замінити на правильну DI ін'єкцію
-        targetValidator = new TargetValidator();
-    }
+    [Inject] private readonly BoardGame boardGame;
+    [Inject] private readonly IUnitPresenterRegistry _unitPresenterRegistry;
+    [Inject] private readonly ITargetValidator targetValidator;
+    [Inject] private readonly ILogger logger;
 
     private void OnDestroy() {
         globalCancellationSource?.Cancel();
@@ -40,6 +31,11 @@ public class OperationTargetsFiller : MonoBehaviour {
     }
 
     public bool CanFillTargets(List<TypedTargetBase> targets) {
+        if (targets.IsEmpty()) {
+            logger.LogWarning($"No targets", LogCategory.TargetsFiller);
+            return false;
+        }
+
         if (targets?.Any() != true) return false;
 
         return targetValidator.CanValidateAllTargets(targets);
@@ -51,7 +47,7 @@ public class OperationTargetsFiller : MonoBehaviour {
             return TargetOperationResult.Failure("Invalid request parameters");
         }
 
-        using var operationContext = new TargetOperationContext(request, maxRetryAttempts);
+        using var operationContext = new TargetOperationContext(request, maxRetryAttempts, logger);
         currentOperation = operationContext;
 
         try {
@@ -59,24 +55,24 @@ public class OperationTargetsFiller : MonoBehaviour {
             using var combinedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken, globalCancellationSource.Token, timeoutSource.Token);
 
-            GameLogger.LogInfo($"Starting target operation: {request.Targets.Count} targets, mandatory: {request.IsMandatory}",
+            logger.LogInfo($"Starting target operation: {request.Targets.Count} targets, mandatory: {request.IsMandatory}",
                 LogCategory.TargetsFiller);
 
             var result = await ProcessTargetSelection(operationContext, combinedTokenSource.Token);
 
-            GameLogger.LogInfo($"Target operation completed: {result.Status}", LogCategory.TargetsFiller);
+            logger.LogInfo($"Target operation completed: {result.Status}", LogCategory.TargetsFiller);
             return result;
 
         } catch (OperationCanceledException) {
-            GameLogger.LogInfo("Target operation cancelled", LogCategory.TargetsFiller);
+            logger.LogInfo("Target operation cancelled", LogCategory.TargetsFiller);
             return TargetOperationResult.Cancelled();
-        }  finally {
+        } finally {
             currentOperation = null;
         }
     }
 
     private async UniTask<TargetOperationResult> ProcessTargetSelection(TargetOperationContext operationContext, CancellationToken cancellationToken) {
-        var processor = new TargetSelectionProcessor(targetValidator);
+        var processor = new TargetSelectionProcessor(targetValidator, logger);
 
         while (operationContext.HasNextTarget && !cancellationToken.IsCancellationRequested) {
             var targetState = operationContext.GetCurrentTarget();
@@ -103,12 +99,12 @@ public class OperationTargetsFiller : MonoBehaviour {
 
     private bool ValidateRequest(TargetOperationRequest request) {
         if (request?.Targets?.Any() != true) {
-            GameLogger.LogWarning("Cannot process empty target request", LogCategory.TargetsFiller);
+            logger.LogWarning("Cannot process empty target request", LogCategory.TargetsFiller);
             return false;
         }
 
-        if (request.Source == null && request.RequiresSource()) {
-            GameLogger.LogWarning("Request requires initiator but none provided", LogCategory.TargetsFiller);
+        if (request.Source == null) {
+            logger.LogWarning("Request requires source but none provided", LogCategory.TargetsFiller);
             return false;
         }
 
@@ -126,7 +122,7 @@ public class OperationTargetsFiller : MonoBehaviour {
                 break;
 
             case TargetSelector.Opponent:
-                target = boardGame?.GetOpponent(initiator);
+                target = boardGame.GetOpponent(initiator);
                 break;
 
             case TargetSelector.AnyPlayer:
@@ -135,7 +131,7 @@ public class OperationTargetsFiller : MonoBehaviour {
         }
 
         var playerPresenter = _unitPresenterRegistry.GetPresenter<BoardPlayerPresenter>(target);
-        return playerPresenter?.Selector ?? fallbackSelector;
+        return playerPresenter == null ? fallbackSelector : playerPresenter.Selector;
     }
 }
 
@@ -153,10 +149,6 @@ public class TargetOperationRequest {
     public bool IsMandatory { get; set; }
     public UnitModel Source { get; set; }
     public string OperationId { get; set; } = Guid.NewGuid().ToString();
-
-    public bool RequiresSource() {
-        return Targets.Any(t => t.RequiresSource());
-    }
 }
 
 public class TargetOperationResult {
@@ -172,8 +164,9 @@ public class TargetOperationResult {
     }
 
     public static TargetOperationResult Success(Dictionary<string, object> targets, TimeSpan duration) {
-        TargetOperationResult result = new(OperationStatus.Success, targets);
-        result.Duration = duration;
+        TargetOperationResult result = new(OperationStatus.Success, targets) {
+            Duration = duration
+        };
         return result;
     }
 
@@ -184,8 +177,9 @@ public class TargetOperationResult {
         new(OperationStatus.Cancelled);
 
     public static TargetOperationResult PartialSuccess(Dictionary<string, object> targets, TimeSpan duration) {
-        var result = new TargetOperationResult(OperationStatus.PartialSuccess, targets);
-        result.Duration = duration;
+        var result = new TargetOperationResult(OperationStatus.PartialSuccess, targets) {
+            Duration = duration
+        };
         return result;
     }
 }
@@ -202,14 +196,16 @@ public class TargetOperationContext : IDisposable {
     public TargetOperationRequest Request { get; }
     public int MaxRetries { get; }
     public bool HasNextTarget => currentIndex < targetStates.Count;
+    ILogger logger;
 
-    public TargetOperationContext(TargetOperationRequest request, int maxRetries) {
+    public TargetOperationContext(TargetOperationRequest request, int maxRetries, ILogger logger) {
         Request = request;
         MaxRetries = maxRetries;
         startTime = DateTime.UtcNow;
         currentIndex = 0;
 
         targetStates = request.Targets.Select(t => new TargetState(t)).ToList();
+        this.logger = logger;
     }
 
     public TargetState GetCurrentTarget() {
@@ -232,7 +228,7 @@ public class TargetOperationContext : IDisposable {
                     if (Request.IsMandatory) {
                         return TargetActionResult.Continue; // Продовжуємо для обов'язкових
                     }
-                    GameLogger.LogWarning($"Max retries reached for target: {currentTarget.Name}", LogCategory.TargetsFiller);
+                    logger.LogWarning($"Max retries reached for target: {currentTarget.Name}", LogCategory.TargetsFiller);
                     return TargetActionResult.BreakLoop;
                 }
                 return TargetActionResult.Continue;
@@ -331,9 +327,10 @@ public enum TargetActionResult {
 
 public class TargetSelectionProcessor {
     private readonly ITargetValidator validator;
-
-    public TargetSelectionProcessor(ITargetValidator validator) {
+    ILogger logger;
+    public TargetSelectionProcessor(ITargetValidator validator, ILogger logger) {
         this.validator = validator;
+        this.logger = logger;
     }
 
     public async UniTask<TargetSelectionResult> ProcessTarget(
@@ -352,13 +349,13 @@ public class TargetSelectionProcessor {
         } catch (OperationCanceledException) {
             throw;
         } catch (Exception ex) {
-            GameLogger.LogException(ex);
-            GameLogger.LogError($"Selector error for {targetState.Name}: {ex.Message}", LogCategory.TargetsFiller);
+            logger.LogException(ex);
+            logger.LogError($"Selector error for {targetState.Name}: {ex.Message}", LogCategory.TargetsFiller);
             return TargetSelectionResult.Retry();
         }
     }
 
-    
+
 
     private TargetSelectionResult ProcessSelection(UnitModel unit, TargetState targetState, TargetOperationRequest request) {
         if (unit == null) {
@@ -366,9 +363,13 @@ public class TargetSelectionProcessor {
         }
 
         // Валідація
-        var validationResult = validator.ValidateTarget(unit, targetState.Target, request.Source.GetPlayer());
+
+        Opponent opponent = request.Source.GetPlayer();
+        TypedTargetBase target = targetState.Target;
+
+        var validationResult = target.IsValid(unit, new ValidationContext(opponent));
         if (!validationResult.IsValid) {
-            GameLogger.LogWarning($"Invalid target {unit} for {targetState.Name}: {validationResult.ErrorMessage}",
+            logger.LogWarning($"Invalid target {unit} for {targetState.Name}: {validationResult.ErrorMessage}",
                 LogCategory.TargetsFiller);
             return TargetSelectionResult.Retry();
         }
@@ -418,29 +419,7 @@ public enum SelectionAction {
     ClearDuplicate
 }
 
-public interface ITargetValidator {
-    ValidationResult ValidateTarget(UnitModel unit, TypedTargetBase targetBase, Opponent initiator);
-    bool CanValidateAllTargets(List<TypedTargetBase> targets);
-}
 
-public class TargetValidator : ITargetValidator {
-    public ValidationResult ValidateTarget(UnitModel unit, TypedTargetBase targetBase, Opponent initiator) {
-        try {
-            return targetBase.IsValid(unit, initiator);
-        } catch (Exception ex) {
-            GameLogger.LogError($"Validation error: {ex.Message}", LogCategory.TargetsFiller);
-            return ValidationResult.Error($"Validation failed: {ex.Message}");
-        }
-    }
-
-    // Soon it will search and compose all possible targets
-    public bool CanValidateAllTargets(List<TypedTargetBase> targets) {
-        return true;
-    }
-}
-
-
-// === Existing interfaces (keeping for compatibility) ===
 public enum TargetSelector {
     Initiator,  // Той, хто ініціював операцію
     Opponent,   // Опонент ініціатора

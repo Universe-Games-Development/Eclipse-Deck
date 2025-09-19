@@ -35,7 +35,8 @@ public class TargetHighlightingService : MonoBehaviour {
             //Debug.LogWarning($"player is null for {unit}");
         }
 
-        return request.Target.IsValid(unit, player);
+
+        return request.Target.IsValid(unit, new ValidationContext(request.Source.GetPlayer()));
     }
 
 

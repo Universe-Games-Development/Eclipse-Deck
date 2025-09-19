@@ -11,8 +11,7 @@ public class NoneActivityData : ActivityData {
 }
 
 public class NoneRoomActivity : RoomActivity {
-    public override async UniTask Initialize(Room room) {
+    public override void Initialize(Room room) {
         CompleteActivity();
-        await UniTask.CompletedTask;
     }
 }

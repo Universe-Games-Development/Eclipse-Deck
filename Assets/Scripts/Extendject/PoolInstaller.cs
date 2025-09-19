@@ -3,9 +3,9 @@ using Zenject;
 
 public class PoolInstaller : MonoInstaller {
     [Header("Pool Prefabs")]
-    public GameObject poolManagerPrefab;
-    public GameObject card3DPoolPrefab;
-    public GameObject creaturePoolPrefab;
+    public PoolManager poolManagerPrefab;
+    public ComponentPool<Card3DView> card3DPoolPrefab;
+    public ComponentPool<Card3DView> creaturePoolPrefab;
 
     public override void InstallBindings() {
         // Реєструємо PoolManager як синглтон

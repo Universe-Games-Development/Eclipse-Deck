@@ -1,6 +1,4 @@
-﻿using DG.Tweening;
-using TMPro;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Card3DView : CardView {
     [SerializeField] private Renderer cardRenderer;

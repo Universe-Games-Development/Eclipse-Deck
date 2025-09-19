@@ -2,7 +2,6 @@
 using DG.Tweening;
 using System;
 using System.Threading;
-using TMPro;
 using UnityEngine;
 
 public enum MovementState {

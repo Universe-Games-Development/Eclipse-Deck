@@ -29,7 +29,7 @@ public class RoomSystem : MonoBehaviour {
     }
     public SplineContainer GetEntrySplineForOpponent(Opponent opponent, Room chosenRoom) {
         if (opponent is Player)
-            return roomView?.playerEntrySpline;  
+            return roomView?.playerEntrySpline;
         if (opponent is Enemy)
             return roomView.enemyEntrySpline;
         throw new ArgumentException("Unknown opponent type");
@@ -89,7 +89,7 @@ public class Room : IDisposable {
             _currentActivity.OnActivityCompleted += SetCleared;
         }
 
-        _currentActivity.Initialize(this).Forget();
+        _currentActivity.Initialize(this);
     }
 
     private void CleanupCurrentActivity() {

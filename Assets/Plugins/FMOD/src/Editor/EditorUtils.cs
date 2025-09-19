@@ -1,5 +1,5 @@
 ﻿#if UNITY_ADDRESSABLES_EXIST
-    // The Addressables package depends on the ScriptableBuildPipeline package
+// The Addressables package depends on the ScriptableBuildPipeline package
 #define UNITY_SCRIPTABLEBUILDPIPELINE_EXIST
 #endif
 

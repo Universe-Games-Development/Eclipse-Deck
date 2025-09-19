@@ -1,11 +1,5 @@
-using Cysharp.Threading.Tasks;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Unity.Cinemachine;
 using UnityEngine;
-using UnityEngine.Splines;
-using Zenject;
 
 public class CameraManager : MonoBehaviour {
     public CinemachineCamera activeCamera;
@@ -15,7 +9,7 @@ public class CameraManager : MonoBehaviour {
     public CinemachineCamera dollyCamera;
     [SerializeField] private BoardViews boardViewSwitcher;
 
-    
+
 
     public void SwitchCamera(CinemachineCamera newCamera) {
         if (newCamera == null) {

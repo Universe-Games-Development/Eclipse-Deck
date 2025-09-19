@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 #if UNITY_EDITOR_WIN
 using Microsoft.Win32;
@@ -16,7 +15,6 @@ using System.Xml.Linq;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
 #pragma warning restore IDE0005
 
 
@@ -24,24 +22,19 @@ using Serilog = Meryel.Serilog;
 
 
 //namespace BgTools.PlayerPrefsEditor
-namespace Meryel.UnityCodeAssist.Editor.Preferences
-{
-    public abstract class PreferanceStorageAccessor
-    {
+namespace Meryel.UnityCodeAssist.Editor.Preferences {
+    public abstract class PreferanceStorageAccessor {
         protected string prefPath;
         protected string[] cachedData = new string[0];
 
         protected abstract void FetchKeysFromSystem();
 
-        protected PreferanceStorageAccessor(string pathToPrefs)
-        {
+        protected PreferanceStorageAccessor(string pathToPrefs) {
             prefPath = pathToPrefs;
         }
 
-        public string[] GetKeys(bool reloadData = true)
-        {
-            if (reloadData || cachedData.Length == 0)
-            {
+        public string[] GetKeys(bool reloadData = true) {
+            if (reloadData || cachedData.Length == 0) {
                 FetchKeysFromSystem();
             }
 
@@ -51,15 +44,12 @@ namespace Meryel.UnityCodeAssist.Editor.Preferences
         public Action? PrefEntryChangedDelegate;
         protected bool ignoreNextChange = false;
 
-        public void IgnoreNextChange()
-        {
+        public void IgnoreNextChange() {
             ignoreNextChange = true;
         }
 
-        protected virtual void OnPrefEntryChanged()
-        {
-            if (ignoreNextChange)
-            {
+        protected virtual void OnPrefEntryChanged() {
+            if (ignoreNextChange) {
                 ignoreNextChange = false;
                 return;
             }
@@ -77,29 +67,23 @@ namespace Meryel.UnityCodeAssist.Editor.Preferences
 
 #if UNITY_EDITOR_WIN
 
-    public class WindowsPrefStorage : PreferanceStorageAccessor
-    {
+    public class WindowsPrefStorage : PreferanceStorageAccessor {
         readonly RegistryMonitor monitor;
 
-        public WindowsPrefStorage(string pathToPrefs) : base(pathToPrefs)
-        {
+        public WindowsPrefStorage(string pathToPrefs) : base(pathToPrefs) {
             monitor = new RegistryMonitor(RegistryHive.CurrentUser, prefPath);
             monitor.RegChanged += new EventHandler(OnRegChanged);
         }
 
-        private void OnRegChanged(object sender, EventArgs e)
-        {
+        private void OnRegChanged(object sender, EventArgs e) {
             OnPrefEntryChanged();
         }
 
-        protected override void FetchKeysFromSystem()
-        {
+        protected override void FetchKeysFromSystem() {
             cachedData = new string[0];
 
-            using (RegistryKey rootKey = Registry.CurrentUser.OpenSubKey(prefPath))
-            {
-                if (rootKey != null)
-                {
+            using (RegistryKey rootKey = Registry.CurrentUser.OpenSubKey(prefPath)) {
+                if (rootKey != null) {
                     cachedData = rootKey.GetValueNames();
                     rootKey.Close();
                 }
@@ -107,8 +91,7 @@ namespace Meryel.UnityCodeAssist.Editor.Preferences
 
             // Clean <key>_h3320113488 nameing
             //cachedData = cachedData.Select((key) => { return key.Substring(0, key.LastIndexOf("_h", StringComparison.Ordinal)); }).ToArray();
-            for (int i = 0; i < cachedData.Length; i++)
-            {
+            for (int i = 0; i < cachedData.Length; i++) {
                 var indexOfSuffix = cachedData[i].LastIndexOf("_h", StringComparison.Ordinal);
                 if (indexOfSuffix >= 0)
                     cachedData[i] = cachedData[i].Substring(0, indexOfSuffix);
@@ -117,28 +100,23 @@ namespace Meryel.UnityCodeAssist.Editor.Preferences
             EncodeAnsiInPlace();
         }
 
-        public override void StartMonitoring()
-        {
+        public override void StartMonitoring() {
             monitor.Start();
         }
 
-        public override void StopMonitoring()
-        {
+        public override void StopMonitoring() {
             monitor.Stop();
         }
 
-        public override bool IsMonitoring()
-        {
+        public override bool IsMonitoring() {
             return monitor.IsMonitoring;
         }
 
-        private void EncodeAnsiInPlace()
-        {
+        private void EncodeAnsiInPlace() {
             Encoding utf8 = Encoding.UTF8;
             Encoding ansi = Encoding.GetEncoding(1252);
 
-            for (int i = 0; i < cachedData.Length; i++)
-            {
+            for (int i = 0; i < cachedData.Length; i++) {
                 cachedData[i] = utf8.GetString(ansi.GetBytes(cachedData[i]));
             }
         }

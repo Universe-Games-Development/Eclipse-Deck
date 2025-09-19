@@ -10,8 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 119288688733355092}
   - component: {fileID: 4567074288442617086}
-  - component: {fileID: 1011711238063444299}
-  - component: {fileID: 8347096341338919869}
   m_Layer: 0
   m_Name: PoolManager
   m_TagString: Untagged
@@ -46,35 +44,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5aadf6d735dbcd348b530c18712eba60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1011711238063444299
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 676498272738174184}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04a375600622b6a4195abc630aff0437, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultCapacity: 10
-  maxSize: 50
-  collectionCheck: 1
-  prefab: {fileID: 3178679955655854316, guid: 474e1891b23a7a449bcfa3486d4ba210, type: 3}
---- !u!114 &8347096341338919869
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 676498272738174184}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d6c909c3be0b78f43a476f418025ef8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultCapacity: 10
-  maxSize: 50
-  collectionCheck: 1
-  prefab: {fileID: -8699964533942601430, guid: a72c9323b29420e42838e928346268a9, type: 3}

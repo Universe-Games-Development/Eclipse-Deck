@@ -2,29 +2,27 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameLoggingService : MonoBehaviour, ILogger {
-    public static GameLoggingService Instance { get; private set; }
+public interface ILogger {
+    void Log(string message, LogLevel level = LogLevel.Info, LogCategory category = LogCategory.None);
+    void LogDebug(string message, LogCategory category = LogCategory.None);
+    void LogInfo(string message, LogCategory category = LogCategory.None);
+    void LogWarning(string message, LogCategory category = LogCategory.None);
+    void LogError(string message, LogCategory category = LogCategory.None);
+    void LogException(Exception exception, LogCategory category = LogCategory.None);
 
-    [SerializeField] private LoggingSettings settings = new LoggingSettings();
+    bool IsEnabled(LogCategory category, LogLevel level = LogLevel.Debug);
+    void SetCategoryEnabled(LogCategory category, bool enabled);
+    void SetMinLogLevel(LogLevel minLevel);
+}
 
+public class GameLogger : ILogger {
     private readonly Dictionary<LogCategory, bool> categoryStates = new Dictionary<LogCategory, bool>();
     private readonly Dictionary<LogLevel, Color> levelColors = new Dictionary<LogLevel, Color>();
 
-    // Events for external log handlers
-    public event Action<string, LogLevel, LogCategory> OnLogMessage;
+    private LoggingSettings settings;
 
-    private void Awake() {
-        if (Instance == null) {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            InitializeLogger();
-        } else {
-            Destroy(gameObject);
-        }
-    }
-
-    private void InitializeLogger() {
-        // Initialize category states
+    public GameLogger(LoggingSettings settings) {
+        this.settings = settings;
         foreach (LogCategory category in Enum.GetValues(typeof(LogCategory))) {
             if (category != LogCategory.None && category != LogCategory.All) {
                 categoryStates[category] = (settings.enabledCategories & category) != 0;
@@ -36,18 +34,12 @@ public class GameLoggingService : MonoBehaviour, ILogger {
         levelColors[LogLevel.Info] = settings.infoColor;
         levelColors[LogLevel.Warning] = settings.warningColor;
         levelColors[LogLevel.Error] = settings.errorColor;
-
-        //Log("Logging service initialized", LogLevel.Info, LogCategory.None);
     }
-
     public void Log(string message, LogLevel level = LogLevel.Info, LogCategory category = LogCategory.None) {
         if (!ShouldLog(category, level))
             return;
 
         var formattedMessage = FormatMessage(message, level, category);
-
-        // Notify subscribers
-        OnLogMessage?.Invoke(formattedMessage, level, category);
 
         // Log to Unity console
         if (settings.enableUnityConsole) {
@@ -198,74 +190,4 @@ public class GameLoggingService : MonoBehaviour, ILogger {
             UnityEngine.Debug.LogError($"Failed to write to log file: {ex.Message}");
         }
     }
-
-    // Runtime configuration methods
-    [ContextMenu("Toggle Operation Manager Logs")]
-    public void ToggleOperationManagerLogs() {
-        var currentState = categoryStates.GetValueOrDefault(LogCategory.OperationManager, true);
-        SetCategoryEnabled(LogCategory.OperationManager, !currentState);
-    }
-
-    [ContextMenu("Toggle Targets Filler Logs")]
-    public void ToggleTargetsFillerLogs() {
-        var currentState = categoryStates.GetValueOrDefault(LogCategory.TargetsFiller, true);
-        SetCategoryEnabled(LogCategory.TargetsFiller, !currentState);
-    }
-
-    [ContextMenu("Enable All Categories")]
-    public void EnableAllCategories() {
-        SetCategoryEnabled(LogCategory.All, true);
-    }
-
-    [ContextMenu("Disable All Categories")]
-    public void DisableAllCategories() {
-        SetCategoryEnabled(LogCategory.All, false);
-    }
-
-    // Debug methods for editor
-#if UNITY_EDITOR
-    [ContextMenu("Test All Log Levels")]
-    private void TestAllLogLevels() {
-        LogDebug("This is a debug message", LogCategory.OperationManager);
-        LogInfo("This is an info message", LogCategory.TargetsFiller);
-        LogWarning("This is a warning message", LogCategory.GameLogic);
-        LogError("This is an error message", LogCategory.UI);
-    }
-
-    [UnityEditor.CustomEditor(typeof(GameLoggingService))]
-    public class GameLoggingServiceEditor : UnityEditor.Editor {
-        public override void OnInspectorGUI() {
-            DrawDefaultInspector();
-
-            var loggingService = (GameLoggingService)target;
-
-            UnityEditor.EditorGUILayout.Space();
-            UnityEditor.EditorGUILayout.LabelField("Runtime Controls", UnityEditor.EditorStyles.boldLabel);
-
-            if (Application.isPlaying) {
-                // Show current category states
-                foreach (LogCategory category in Enum.GetValues(typeof(LogCategory))) {
-                    if (category != LogCategory.None && category != LogCategory.All) {
-                        var isEnabled = loggingService.categoryStates.GetValueOrDefault(category, true);
-                        var newState = UnityEditor.EditorGUILayout.Toggle(category.ToString(), isEnabled);
-
-                        if (newState != isEnabled) {
-                            loggingService.SetCategoryEnabled(category, newState);
-                        }
-                    }
-                }
-
-                UnityEditor.EditorGUILayout.Space();
-
-                // Min log level control
-                var newMinLevel = (LogLevel)UnityEditor.EditorGUILayout.EnumPopup("Min Log Level", loggingService.settings.minLogLevel);
-                if (newMinLevel != loggingService.settings.minLogLevel) {
-                    loggingService.SetMinLogLevel(newMinLevel);
-                }
-            } else {
-                UnityEditor.EditorGUILayout.HelpBox("Runtime controls available only in play mode", UnityEditor.MessageType.Info);
-            }
-        }
-    }
-#endif
 }

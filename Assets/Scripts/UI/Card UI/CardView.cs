@@ -2,11 +2,10 @@
 using DG.Tweening;
 using System;
 using System.Threading;
-using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 
 public abstract class CardView : MonoBehaviour {
-    
+
     public Action<CardView> OnCardClicked;
     public Action<CardView, bool> OnHoverChanged;
 
@@ -84,7 +83,7 @@ public abstract class CardView : MonoBehaviour {
         if (movementComponent != null) {
             await movementComponent.ExecuteTweenSequence(sequence, token);
         }
-        
+
     }
 
     /// <summary>

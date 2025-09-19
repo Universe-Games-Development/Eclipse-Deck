@@ -6,12 +6,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GameStarter : MonoBehaviour
-{
+public class GameStarter : MonoBehaviour {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
+    void Start() {
+
     }
 }
 
@@ -61,7 +59,7 @@ public class LoadingScreen : MonoBehaviour {
 
     private async UniTask UpdateProgressBar() {
         while (_canvas.enabled) {
-            if (_progressFill.value < _targetProgress) 
+            if (_progressFill.value < _targetProgress)
                 _progressFill.value += Time.deltaTime * _barSpeed;
             await UniTask.Delay(1);
         }

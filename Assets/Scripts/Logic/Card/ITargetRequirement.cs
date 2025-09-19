@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using System;
-using System.Linq;
-using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
 
 public readonly struct ValidationResult {
     public bool IsValid { get; }
@@ -13,46 +11,68 @@ public readonly struct ValidationResult {
     }
 
     public static implicit operator bool(ValidationResult result) => result.IsValid;
-
-    public static implicit operator ValidationResult(bool isValid) =>
-        new ValidationResult(isValid);
+    public static implicit operator ValidationResult(bool isValid) => new(isValid);
 
     public static ValidationResult Success => true;
-    public static ValidationResult Error(string message) =>
-        new ValidationResult(false, message);
+    public static ValidationResult Error(string message) => new(false, message);
 }
 
+public class ValidationContext {
+    public Opponent Initiator { get; }
+    public object Extra { get; }
+
+    public ValidationContext(Opponent initiator, object extra = null) {
+        Initiator = initiator;
+        Extra = extra;
+    }
+}
+
+
+public interface ICondition {
+    ValidationResult Validate(object model, ValidationContext context);
+}
+
+public abstract class Condition<T> : ICondition {
+    public ValidationResult Validate(object model, ValidationContext context) {
+        if (model is not T typedModel)
+            return ValidationResult.Error($"Expected {typeof(T).Name}, got {model?.GetType().Name}");
+
+        return CheckCondition(typedModel, context);
+    }
+
+    protected abstract ValidationResult CheckCondition(T model, ValidationContext context);
+}
+
+
 public interface ITargetRequirement {
-    ValidationResult IsValid(object selected, Opponent initiator = null);
+    ValidationResult IsValid(object selected, ValidationContext context = null);
     string GetInstruction();
     TargetSelector GetTargetSelector();
-    bool AllowSameTargetMultipleTimes { get; } // Чи можна вибирати ту саму ціль кілька разів
 }
 
 public interface IGenericRequirement<T> : ITargetRequirement {
-    ValidationResult IsValid(T selected, Opponent initiator = null);
+    ValidationResult IsValid(T selected, ValidationContext context = null);
 }
 
 public class TargetRequirement<T> : IGenericRequirement<T> {
-    public IEnumerable<Condition<T>> Conditions { get; private set; }
+    public IEnumerable<ICondition> Conditions { get; private set; }
     public TargetSelector RequiredSelector { get; set; } = TargetSelector.Initiator;
     public bool AllowSameTargetMultipleTimes { get; set; } = false;
 
-    public TargetRequirement(params Condition<T>[] conditions) {
+    public TargetRequirement(params ICondition[] conditions) {
         Conditions = conditions ?? throw new ArgumentNullException(nameof(conditions));
     }
 
-    public ValidationResult IsValid(object selected, Opponent initiator = null) {
+    public ValidationResult IsValid(object selected, ValidationContext context = null) {
         if (selected is T typedSelected) {
-            return IsValid(typedSelected, initiator);
+            return IsValid(typedSelected, context);
         }
         return ValidationResult.Error($"Expected {typeof(T).Name}, got {selected?.GetType().Name}");
     }
 
-    public ValidationResult IsValid(T selected, Opponent initiator = null) {
+    public ValidationResult IsValid(T selected, ValidationContext context = null) {
         foreach (var condition in Conditions) {
-            condition.SetInitiator(initiator);
-            var result = condition.Validate(selected);
+            var result = condition.Validate(selected, context);
             if (!result.IsValid) {
                 return result;
             }
@@ -66,48 +86,22 @@ public class TargetRequirement<T> : IGenericRequirement<T> {
 
     public TargetSelector GetTargetSelector() => RequiredSelector;
 }
-public abstract class Condition<T> {
-    protected Opponent Initiator;
 
-    public void SetInitiator(Opponent opponent) {
-        Initiator = opponent;
-    }
-
-    public ValidationResult Validate(T model) {
-        if (model == null)
-            return ValidationResult.Error("Wrong item selected");
-
-        return CheckCondition(model);
-    }
-
-    protected abstract ValidationResult CheckCondition(T model);
-}
-
-public class ZoneRequirement : TargetRequirement<Zone> {
-    public ZoneRequirement(params Condition<Zone>[] conditions) : base(conditions) {
-    }
-    public override string GetInstruction() {
-        return "Select a zone";
+// Атомарні умови
+public class HealthableCondition : Condition<IHealthable> {
+    protected override ValidationResult CheckCondition(IHealthable model, ValidationContext context) {
+        return ValidationResult.Success; // Просто перевіряємо що це IHealthable
     }
 }
-
-public class CreatureRequirement : TargetRequirement<Creature> {
-    public CreatureRequirement(params Condition<Creature>[] conditions) : base(conditions) {
-    }
-    public override string GetInstruction() {
-        return "Select a creature";
-    }
-}
-
-public class OwnershipCondition<T> : Condition<T> where T : UnitModel {
+public class OwnershipCondition : Condition<UnitModel> {
     private readonly OwnershipType ownershipType;
 
     public OwnershipCondition(OwnershipType ownershipType) {
         this.ownershipType = ownershipType;
     }
 
-    protected override ValidationResult CheckCondition(T model) {
-        bool isFriendly = model.GetPlayer() == Initiator;
+    protected override ValidationResult CheckCondition(UnitModel model, ValidationContext context) {
+        bool isFriendly = model.GetPlayer() == context.Initiator;
 
         return ownershipType switch {
             OwnershipType.Ally when !isFriendly =>
@@ -118,73 +112,6 @@ public class OwnershipCondition<T> : Condition<T> where T : UnitModel {
         };
     }
 }
-
-public class HealthableOwnershipCondition : Condition<IHealthable> {
-    private readonly OwnershipType ownershipType;
-
-    public HealthableOwnershipCondition(OwnershipType ownershipType) {
-        this.ownershipType = ownershipType;
-    }
-
-    protected override ValidationResult CheckCondition(IHealthable model) {
-        if (model is not UnitModel unitModel) {
-            return ValidationResult.Error("Target must be a unit");
-        }
-
-        bool isFriendly = unitModel.GetPlayer() == Initiator;
-
-        return ownershipType switch {
-            OwnershipType.Ally when !isFriendly =>
-                ValidationResult.Error("You can only select your own units"),
-            OwnershipType.Enemy when isFriendly =>
-                ValidationResult.Error("You cannot select your own units"),
-            _ => ValidationResult.Success
-        };
-    }
-}
-
-public static class TargetRequirements {
-    public static CreatureRequirement EnemyCreature =>
-        new CreatureRequirement(new OwnershipCondition<Creature>(OwnershipType.Enemy));
-
-    public static CreatureRequirement AllyCreature =>
-        new CreatureRequirement(new OwnershipCondition<Creature>(OwnershipType.Ally));
-
-    public static CreatureRequirement AnyCreature =>
-        new CreatureRequirement();
-
-    public static ZoneRequirement AllyZone =>
-        new ZoneRequirement(new OwnershipCondition<Zone>(OwnershipType.Ally));
-
-    public static ZoneRequirement EnemyZone =>
-        new ZoneRequirement(new OwnershipCondition<Zone>(OwnershipType.Enemy));
-
-    public static IGenericRequirement<IHealthable> EnemyHealthable =>
-        new TargetRequirement<IHealthable>(
-            new HealthableOwnershipCondition(OwnershipType.Enemy)
-        );
-
-    public static IGenericRequirement<IHealthable> AllyHealthable =>
-        new TargetRequirement<IHealthable>(
-            new HealthableOwnershipCondition(OwnershipType.Ally)
-        );
-
-    public static IGenericRequirement<IHealthable> AnyHealthable =>
-        new TargetRequirement<IHealthable>();
-
-    public static IGenericRequirement<IHealthable> HealthableWithMinHealth(int minHealth) =>
-        new TargetRequirement<IHealthable>(
-            new MinHealthCondition(minHealth)
-        );
-
-    public static IGenericRequirement<IHealthable> EnemyWithMinHealth(int minHealth) =>
-        new TargetRequirement<IHealthable>(
-            new HealthableOwnershipCondition(OwnershipType.Enemy),
-            new MinHealthCondition(minHealth)
-        );
-}
-
-
 public class MinHealthCondition : Condition<IHealthable> {
     private readonly int minHealth;
 
@@ -192,7 +119,7 @@ public class MinHealthCondition : Condition<IHealthable> {
         this.minHealth = minHealth;
     }
 
-    protected override ValidationResult CheckCondition(IHealthable model) {
+    protected override ValidationResult CheckCondition(IHealthable model, ValidationContext context) {
         if (model.Health.Current < minHealth) {
             return ValidationResult.Error($"Target must have at least {minHealth} health");
         }
@@ -200,3 +127,66 @@ public class MinHealthCondition : Condition<IHealthable> {
     }
 }
 
+// Типізовані Requirements
+public class ZoneRequirement : TargetRequirement<Zone> {
+    public ZoneRequirement(params ICondition[] conditions) : base(conditions) {
+    }
+    public override string GetInstruction() {
+        return "Select a zone";
+    }
+}
+public class CreatureRequirement : TargetRequirement<Creature> {
+    public CreatureRequirement(params ICondition[] conditions) : base(conditions) {
+    }
+    public override string GetInstruction() {
+        return "Select a creature";
+    }
+}
+
+public static class TargetRequirements {
+    public static CreatureRequirement EnemyCreature =>
+        new(new OwnershipCondition(OwnershipType.Enemy));
+
+    public static CreatureRequirement AllyCreature =>
+        new(new OwnershipCondition(OwnershipType.Ally));
+
+    public static CreatureRequirement AnyCreature => new();
+
+    public static ZoneRequirement AllyZone =>
+        new(new OwnershipCondition(OwnershipType.Ally));
+
+    public static ZoneRequirement EnemyZone =>
+        new(new OwnershipCondition(OwnershipType.Enemy));
+
+    // Тепер можемо комбінувати умови різних типів
+    public static TargetRequirement<IHealthable> EnemyHealthable =>
+        new(
+            new HealthableCondition(),
+            new OwnershipCondition(OwnershipType.Enemy)
+        );
+
+    public static TargetRequirement<IHealthable> AllyHealthable =>
+        new(
+            new HealthableCondition(),
+            new OwnershipCondition(OwnershipType.Ally)
+        );
+
+    public static TargetRequirement<IHealthable> AnyHealthable => new();
+
+    public static TargetRequirement<IHealthable> HealthableWithMinHealth(int minHealth) =>
+        new(new MinHealthCondition(minHealth));
+
+    public static TargetRequirement<IHealthable> EnemyWithMinHealth(int minHealth) =>
+        new(
+            new HealthableCondition(),
+            new OwnershipCondition(OwnershipType.Enemy),
+            new MinHealthCondition(minHealth)
+        );
+
+    // Приклад для конкретного типу з різними умовами
+    public static CreatureRequirement EnemyCreatureWithMinHealth(int minHealth) =>
+        new(
+            new OwnershipCondition(OwnershipType.Enemy),
+            new MinHealthCondition(minHealth)
+        );
+}

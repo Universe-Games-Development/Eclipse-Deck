@@ -5,21 +5,17 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
 #pragma warning restore IDE0005
 
 
 #nullable enable
 
 
-namespace Meryel.UnityCodeAssist.Editor
-{
+namespace Meryel.UnityCodeAssist.Editor {
 
     // copied from Exporter.cs in VSIX
-    public static class Cleanup
-    {
-        public static bool DoCleanup()
-        {
+    public static class Cleanup {
+        public static bool DoCleanup() {
             var assetsPath = UnityEngine.Application.dataPath;
 
             var _solutionDirectory = CommonTools.GetProjectPath();
@@ -28,15 +24,12 @@ namespace Meryel.UnityCodeAssist.Editor
 
 
             var succeed = true;
-            try
-            {
+            try {
                 Cleanup1(oldDestination);
                 Cleanup2(oldDestination);
                 Cleanup3(oldDestination, _solutionDirectory);
                 Cleanup4(oldDestination);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 succeed = false;
                 Serilog.Log.Error(ex, "DoCleanup failed at {Destination}", destination);
             }
@@ -45,18 +38,15 @@ namespace Meryel.UnityCodeAssist.Editor
         }
 
 
-        private static void DeleteFileAndItsMeta(string filePath)
-        {
-            if (File.Exists(filePath))
-            {
+        private static void DeleteFileAndItsMeta(string filePath) {
+            if (File.Exists(filePath)) {
                 Serilog.Log.Debug("Deleting file {File}", filePath);
                 //File.Delete(filePath);
                 DeleteFileAux(filePath);
                 Serilog.Log.Debug("Deleted file {File} {Exists}", filePath, File.Exists(filePath));
             }
             var metaFilePath = filePath + ".meta";
-            if (File.Exists(metaFilePath))
-            {
+            if (File.Exists(metaFilePath)) {
                 Serilog.Log.Debug("Deleting meta file {File}", metaFilePath);
                 //File.Delete(metaFilePath);
                 DeleteFileAux(metaFilePath);
@@ -64,22 +54,18 @@ namespace Meryel.UnityCodeAssist.Editor
             }
         }
 
-        private static bool IsDirectoryExistsAndEmpty(string path)
-        {
+        private static bool IsDirectoryExistsAndEmpty(string path) {
             return Directory.Exists(path) && !Directory.EnumerateFileSystemEntries(path).Any();
         }
 
-        private static void DeleteDirectoryAndItsMeta(string directoryPath)
-        {
-            if (IsDirectoryExistsAndEmpty(directoryPath))
-            {
+        private static void DeleteDirectoryAndItsMeta(string directoryPath) {
+            if (IsDirectoryExistsAndEmpty(directoryPath)) {
                 Serilog.Log.Debug("Deleting directory {Dir}", directoryPath);
                 Directory.Delete(directoryPath);
                 Serilog.Log.Debug("Deleted directory {Dir} {Exists}", directoryPath, IsDirectoryExistsAndEmpty(directoryPath));
 
                 var metaFilePath = directoryPath + ".meta";
-                if (File.Exists(metaFilePath))
-                {
+                if (File.Exists(metaFilePath)) {
                     Serilog.Log.Debug("Deleting directory meta file {File}", metaFilePath);
                     //File.Delete(metaFilePath);
                     DeleteFileAux(metaFilePath);
@@ -88,14 +74,10 @@ namespace Meryel.UnityCodeAssist.Editor
             }
         }
 
-        private static void DeleteFileAux(string filePath)
-        {
-            try
-            {
+        private static void DeleteFileAux(string filePath) {
+            try {
                 File.Delete(filePath);
-            }
-            catch (UnauthorizedAccessException)
-            {
+            } catch (UnauthorizedAccessException) {
                 var fileDirectoryPath = Path.GetDirectoryName(filePath);
                 SetEveryoneAccessToDirectory(fileDirectoryPath, out _);
                 TakeOwnership(filePath);
@@ -109,11 +91,9 @@ namespace Meryel.UnityCodeAssist.Editor
         /// </summary>
         /// <param name="dirName"></param>
         /// <returns></returns>
-        static bool SetEveryoneAccessToDirectory(string dirName, out string _lastError)
-        {
+        static bool SetEveryoneAccessToDirectory(string dirName, out string _lastError) {
 
-            try
-            {
+            try {
                 // Make sure directory exists
                 if (Directory.Exists(dirName) == false)
                     throw new Exception(string.Format("Directory {0} does not exist, so permissions cannot be set.", dirName));
@@ -132,9 +112,7 @@ namespace Meryel.UnityCodeAssist.Editor
 
                 return true;
 
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 _lastError = ex.Message;
                 return false;
             }
@@ -155,8 +133,7 @@ namespace Meryel.UnityCodeAssist.Editor
         /// 9 if C# 9.0 (.netstandard2.1),
         /// -1 if error
         /// </returns>
-        public static int GetCSharpVersionFromUnityProjectVersionFile(string? solutionDirectory)
-        {
+        public static int GetCSharpVersionFromUnityProjectVersionFile(string? solutionDirectory) {
             if (string.IsNullOrEmpty(solutionDirectory))
                 return -1;
 
@@ -167,21 +144,17 @@ namespace Meryel.UnityCodeAssist.Editor
 
             string? version = null;
             string[]? readText = null;
-            try
-            {
+            try {
                 readText = System.IO.File.ReadAllLines(projectVersionFilePath);
                 // format is m_EditorVersion: 2018.2.0b7
                 string[] versionText = readText[0].Split(' ');
                 version = versionText[1];
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Serilog.Log.Error(ex, "Project version file parsing error {FirstLine}", readText?.FirstOrDefault());
                 return -1;
             }
 
-            if (version == null)
-            {
+            if (version == null) {
                 Serilog.Log.Error("Parsed project version is null");
                 return -1;
             }
@@ -204,8 +177,7 @@ namespace Meryel.UnityCodeAssist.Editor
             return -1;
         }
 
-        private static void TakeOwnership(string filename)
-        {
+        private static void TakeOwnership(string filename) {
             // Remove read-only attribute
             File.SetAttributes(filename, File.GetAttributes(filename) & ~FileAttributes.ReadOnly);
 
@@ -218,14 +190,12 @@ namespace Meryel.UnityCodeAssist.Editor
             File.SetAccessControl(filename, security);
         }
 
-        private static void Cleanup1(string destination)
-        {
+        private static void Cleanup1(string destination) {
             // prior to version UCA.v.1.1.9, syncronizerModel and yamlDotNet dll files were located at ProjectPath/Assets/Plugins/CodeAssist/Editor/ExternalReferences/Release/netstandard2.0
             // with version UCA.v.1.1.9 and newer versions, they are located at ProjectPath/Assets/Plugins/CodeAssist/Editor/ExternalReferences
             // delete ProjectPath/Assets/Plugins/CodeAssist/Editor/ExternalReferences/Release
             var oldBinariesDirectory = Path.Combine(destination, "Plugins/CodeAssist/Editor/ExternalReferences/Release/netstandard2.0");
-            if (Directory.Exists(oldBinariesDirectory))
-            {
+            if (Directory.Exists(oldBinariesDirectory)) {
                 // dont just delete the directory for security reasons, instead delete binary files one by one
 
                 Serilog.Log.Debug("Old binaries directory exists at {Location}", oldBinariesDirectory);
@@ -241,8 +211,7 @@ namespace Meryel.UnityCodeAssist.Editor
                     "UnityCodeAssistYamlDotNet.xml",
                 };
 
-                foreach (var file in files)
-                {
+                foreach (var file in files) {
                     var filePath = Path.Combine(oldBinariesDirectory, file);
                     DeleteFileAndItsMeta(filePath);
                 }
@@ -259,8 +228,7 @@ namespace Meryel.UnityCodeAssist.Editor
             DeleteFileAndItsMeta(oldVsixFilePath);
         }
 
-        private static void Cleanup2(string destination)
-        {
+        private static void Cleanup2(string destination) {
             // with version 1.1.12, dll files has been customized (renamed and changed their namespace) (so that they dont conflict with user's other dll files, if he tries to use them)
             // delete AsyncIO.dll, and use Meryel.UnityCodeAssist.AsyncIO.dll instead
             var files = new string[]
@@ -274,15 +242,13 @@ namespace Meryel.UnityCodeAssist.Editor
 
             var binariesDirectory = Path.Combine(destination, "Plugins/CodeAssist/Editor/ExternalReferences");
 
-            foreach (var file in files)
-            {
+            foreach (var file in files) {
                 var filePath = Path.Combine(binariesDirectory, file);
                 DeleteFileAndItsMeta(filePath);
             }
         }
 
-        private static void Cleanup3(string destination, string solutionDirectory)
-        {
+        private static void Cleanup3(string destination, string solutionDirectory) {
             // as it turns out, .netstandard2.1 does not need system binaries (for C#9.0, unity versions 2021.2 and newer)
 
             //var cSharpVersion = CommonVS.VSCommonTools.GetCSharpVersionFromUnityProjectVersionFile(solutionDirectory);
@@ -300,16 +266,14 @@ namespace Meryel.UnityCodeAssist.Editor
 
             var binariesDirectory = Path.Combine(destination, "Plugins/CodeAssist/Editor/ExternalReferences");
 
-            foreach (var file in systemBinaryFiles)
-            {
+            foreach (var file in systemBinaryFiles) {
                 var filePath = Path.Combine(binariesDirectory, file);
                 DeleteFileAndItsMeta(filePath);
             }
 
         }
 
-        private static void Cleanup4(string destination)
-        {
+        private static void Cleanup4(string destination) {
             // with version 1.2, asset directory moved from Assets/Plugins/CodeAssist to Packages/com.merry-yellow.code-assist
             // so remove all files from the old directory
 
@@ -379,8 +343,7 @@ namespace Meryel.UnityCodeAssist.Editor
 //@"EditorCoroutines",
             };
 
-            foreach (var c in content)
-            {
+            foreach (var c in content) {
                 var path = Path.Combine(directory, c);
                 DeleteFileAndItsMeta(path);
             }

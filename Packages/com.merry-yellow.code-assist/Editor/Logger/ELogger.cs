@@ -1,9 +1,5 @@
 //using Meryel.UnityCodeAssist.Serilog;
 //using Meryel.UnityCodeAssist.Serilog.Core;
-using UnityEngine;
-using UnityEditor;
-using System.Linq;
-
 #if ELOGGER
 
 #pragma warning disable IDE0005

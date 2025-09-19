@@ -1,6 +1,3 @@
-using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
-
 public class Attack : Attribute {
     private readonly IHealthable _owner;
     private readonly IEventBus<IEvent> _eventBus;

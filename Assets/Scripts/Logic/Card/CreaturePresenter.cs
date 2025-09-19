@@ -1,6 +1,4 @@
-﻿using System;
-
-public class CreaturePresenter : UnitPresenter {
+﻿public class CreaturePresenter : UnitPresenter {
     public Creature Creature;
     public Card3DView View;
 

@@ -1,12 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using Unity.VisualScripting;
 using UnityEngine;
 using Zenject;
 
 public class PlayerController : MonoBehaviour {
-    [SerializeField] public OperationManager operationManager;
+    [Inject] public IOperationManager operationManager;
     [SerializeField] public BoardPlayerPresenter player;
     [SerializeField] public HandPresenter handPresenter;
 
@@ -48,7 +47,7 @@ public class PlayerController : MonoBehaviour {
 
     private void SubscribeToEvents() {
         if (operationManager != null)
-        operationManager.OnOperationStatus += HandleOperationStatus;
+            operationManager.OnOperationStatus += HandleOperationStatus;
         if (player != null)
             player.Selector.OnSelectionStarted += HandleSelectionStart;
         eventBus.SubscribeTo<CardPlaySessionEndedEvent>(HandleCardPlayCompleted);
@@ -62,9 +61,9 @@ public class PlayerController : MonoBehaviour {
         if (eventData.FinalResult.IsSuccess && false) {
             player.Opponent.SpendMana(spentCard.Cost.Current);
             handPresenter.RemoveCard(spentCard);
-            GameLogger.Log("Card successfully played and spent");
+            Debug.Log("Card successfully played and spent");
         } else {
-            GameLogger.Log("Card play failed, returning to hand");
+            Debug.Log("Card play failed, returning to hand");
             handPresenter.UpdateCardsOrder();
         }
     }

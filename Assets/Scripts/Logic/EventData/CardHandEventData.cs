@@ -1,8 +1,4 @@
-﻿
-
-using System.Collections.Generic;
-
-public struct CardPullEvent : IEvent {
+﻿public struct CardPullEvent : IEvent {
     public Opponent Owner;
     public Card Card;
 

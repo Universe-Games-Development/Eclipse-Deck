@@ -42,8 +42,8 @@ public class TravelManager : MonoBehaviour {
     [Inject] private IEventBus<IEvent> _eventBus;
     [Inject] private OpponentRegistrator _opponentRegistrator;
     [Inject] private PlayerHeroFactory _playerHeroFactory;
-    
-    
+
+
 
     private PlayerPresenter _playerPresenter;
     [Inject] BoardGame boardGame;

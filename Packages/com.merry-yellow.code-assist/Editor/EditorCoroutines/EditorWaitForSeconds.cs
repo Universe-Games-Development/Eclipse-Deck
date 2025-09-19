@@ -4,8 +4,7 @@
  */
 
 //namespace Unity.EditorCoroutines.Editor
-namespace Meryel.UnityCodeAssist.Editor.EditorCoroutines
-{
+namespace Meryel.UnityCodeAssist.Editor.EditorCoroutines {
     /// <summary>
     /// Suspends the <see cref="EditorCoroutine">EditorCoroutine</see> execution for the given amount of seconds, using unscaled time. 
     /// The coroutine execution continues after the specified time has elapsed.
@@ -30,8 +29,7 @@ namespace Meryel.UnityCodeAssist.Editor.EditorCoroutines
     /// }
     /// </code>
     /// </summary>
-    public class EditorWaitForSeconds
-    {
+    public class EditorWaitForSeconds {
         /// <summary>
         /// The time to wait in seconds.
         /// </summary>
@@ -41,8 +39,7 @@ namespace Meryel.UnityCodeAssist.Editor.EditorCoroutines
         /// Creates a instruction object for yielding inside a generator function.
         /// </summary>
         /// <param name="time">The amount of time to wait in seconds.</param>
-        public EditorWaitForSeconds(float time)
-        {
+        public EditorWaitForSeconds(float time) {
             WaitTime = time;
         }
     }

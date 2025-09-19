@@ -7,12 +7,12 @@ public class BoardInputManager : MonoBehaviour {
     [SerializeField] LayerMask defaultLayerMask;
     [SerializeField] private float _raycastDistance = 10f;
 
-    [Header ("Effects Offset")]
+    [Header("Effects Offset")]
     [SerializeField] float boardHeightOffset = 0.5f;
 
     [Header("Debug")]
     [SerializeField] private bool _isDebug = false;
-    
+
 
     public GameObject lastHitObject;
     public GameObject hoveredObject;
@@ -31,7 +31,7 @@ public class BoardInputManager : MonoBehaviour {
         if (TryGetCursorData(defaultLayerMask, out Vector3 position, out var hitObject)) {
             if (_testObject) _testObject.position = position;
             //Debug.Log($"Курсор попал по новому объекту: {hitObject.name} на позицию: {position}");
-            
+
         }
 
         HandleObjectHover(hitObject);
@@ -76,7 +76,7 @@ public class BoardInputManager : MonoBehaviour {
     }
 
     public bool TryGetCursorPosition(LayerMask layerMask, out Vector3 cursorPositiont) {
-         return TryGetCursorData(layerMask, out cursorPositiont, out _);
+        return TryGetCursorData(layerMask, out cursorPositiont, out _);
     }
 
     public bool TryGetCursorObject(LayerMask layerMask, out GameObject hitObject) {

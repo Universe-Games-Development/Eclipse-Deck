@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+using Zenject;
 
-public class OperationManager : MonoBehaviour, IOperationManager {
-    [SerializeField] private OperationTargetsFiller operationFiller;
+public class OperationManager : IOperationManager, IDisposable{
+    [Inject] private ITargetFiller operationFiller;
+    [Inject] private ILogger logger;
 
-    private PriorityQueue<Priority, GameOperation> _operationQueue;
-    
-   
-    private CancellationTokenSource _globalCancellationSource;
+    private PriorityQueue<Priority, GameOperation> _operationQueue = new();
+
+    private CancellationTokenSource _globalCancellationSource = new();
     private readonly ReaderWriterLockSlim _queueLock = new();
 
     public event Action<GameOperation, OperationStatus> OnOperationStatus;
@@ -24,25 +25,17 @@ public class OperationManager : MonoBehaviour, IOperationManager {
     private GameOperation _currentOperation;
 
     public int QueueCount => _operationQueue?.Count ?? 0;
-
-    private void Awake() {
-        _operationQueue = new PriorityQueue<Priority, GameOperation>();
-        _globalCancellationSource = new CancellationTokenSource();
-
-        //GameLogger.LogInfo("OperationManager initialized", LogCategory.OperationManager);
-    }
-
-    private void OnDestroy() {
+    public void Dispose() {
         _globalCancellationSource?.Cancel();
         _globalCancellationSource?.Dispose();
         _queueLock?.Dispose();
 
-        GameLogger.LogInfo("OperationManager destroyed", LogCategory.OperationManager);
+        logger.LogInfo("OperationManager destroyed", LogCategory.OperationManager);
     }
 
     public void Push(GameOperation operation, Priority priority = Priority.Normal) {
         if (operation == null) {
-            GameLogger.LogError("Cannot push a null operation", LogCategory.OperationManager);
+            logger.LogError("Cannot push a null operation", LogCategory.OperationManager);
             return;
         }
 
@@ -50,7 +43,7 @@ public class OperationManager : MonoBehaviour, IOperationManager {
             _operationQueue.Enqueue(priority, operation);
         }
 
-        GameLogger.LogDebug($"Operation '{operation}' pushed with priority {priority}. Queue size: {QueueCount}",
+        logger.LogDebug($"Operation '{operation}' pushed with priority {priority}. Queue size: {QueueCount}",
             LogCategory.OperationManager);
 
         TryStartProcessing().Forget();
@@ -58,7 +51,7 @@ public class OperationManager : MonoBehaviour, IOperationManager {
 
     public void PushRange(IEnumerable<GameOperation> operations, Priority priority = Priority.Normal) {
         if (operations == null) {
-            GameLogger.LogWarning("Cannot push null operations collection", LogCategory.OperationManager);
+            logger.LogWarning("Cannot push null operations collection", LogCategory.OperationManager);
             return;
         }
 
@@ -79,20 +72,20 @@ public class OperationManager : MonoBehaviour, IOperationManager {
         }
 
         if (nullCount > 0) {
-            GameLogger.LogWarning($"Skipped {nullCount} null operations in PushRange", LogCategory.OperationManager);
+            logger.LogWarning($"Skipped {nullCount} null operations in PushRange", LogCategory.OperationManager);
         }
 
         if (hasValidOperations) {
-            GameLogger.LogDebug($"Pushed {validCount} operations with priority {priority}. Queue size: {QueueCount}",
+            logger.LogDebug($"Pushed {validCount} operations with priority {priority}. Queue size: {QueueCount}",
                 LogCategory.OperationManager);
             TryStartProcessing().Forget();
         } else {
-            GameLogger.LogWarning("No valid operations to push", LogCategory.OperationManager);
+            logger.LogWarning("No valid operations to push", LogCategory.OperationManager);
         }
     }
 
     public async UniTask CancelAllAsync() {
-        GameLogger.LogInfo("Cancelling all operations...", LogCategory.OperationManager);
+        logger.LogInfo("Cancelling all operations...", LogCategory.OperationManager);
 
         // Cancel current operation
         _globalCancellationSource?.Cancel();
@@ -104,7 +97,7 @@ public class OperationManager : MonoBehaviour, IOperationManager {
         int completedIndex = await UniTask.WhenAny(completionTask, timeoutTask);
 
         if (completedIndex == 1) {
-            GameLogger.LogWarning("Force stopping operation due to timeout", LogCategory.OperationManager);
+            logger.LogWarning("Force stopping operation due to timeout", LogCategory.OperationManager);
             _isRunning = false;
             _currentOperation = null;
         }
@@ -116,7 +109,7 @@ public class OperationManager : MonoBehaviour, IOperationManager {
         // Clear queue
         var clearedCount = ClearQueueSafe();
 
-        GameLogger.LogInfo($"All operations cancelled. Cleared {clearedCount} queued operations", LogCategory.OperationManager);
+        logger.LogInfo($"All operations cancelled. Cleared {clearedCount} queued operations", LogCategory.OperationManager);
     }
 
     private async UniTask WaitForCurrentOperationCompletion() {
@@ -127,10 +120,10 @@ public class OperationManager : MonoBehaviour, IOperationManager {
 
     public void CancelCurrent() {
         if (_currentOperation != null && _globalCancellationSource != null) {
-            GameLogger.LogInfo($"Cancelling current operation: {_currentOperation}", LogCategory.OperationManager);
+            logger.LogInfo($"Cancelling current operation: {_currentOperation}", LogCategory.OperationManager);
             ReplaceCancellationTokenSource();
         } else {
-            GameLogger.LogDebug("No current operation to cancel", LogCategory.OperationManager);
+            logger.LogDebug("No current operation to cancel", LogCategory.OperationManager);
         }
     }
 
@@ -140,12 +133,12 @@ public class OperationManager : MonoBehaviour, IOperationManager {
         oldSource.Cancel();
         oldSource.Dispose();
 
-        GameLogger.LogDebug("Cancellation token source replaced", LogCategory.OperationManager);
+        logger.LogDebug("Cancellation token source replaced", LogCategory.OperationManager);
     }
 
     public void ClearQueue() {
         var clearedCount = ClearQueueSafe();
-        GameLogger.LogInfo($"Cleared {clearedCount} operations from queue", LogCategory.OperationManager);
+        logger.LogInfo($"Cleared {clearedCount} operations from queue", LogCategory.OperationManager);
     }
 
     private int ClearQueueSafe() {
@@ -158,12 +151,12 @@ public class OperationManager : MonoBehaviour, IOperationManager {
 
     private async UniTaskVoid TryStartProcessing() {
         if (_isRunning) {
-            GameLogger.LogDebug("Processing already running, skipping start", LogCategory.OperationManager);
+            logger.LogDebug("Processing already running, skipping start", LogCategory.OperationManager);
             return;
         }
 
         _isRunning = true;
-        GameLogger.LogInfo("Starting operation processing...", LogCategory.OperationManager);
+        logger.LogInfo("Starting operation processing...", LogCategory.OperationManager);
 
         int processedCount = 0;
 
@@ -172,25 +165,25 @@ public class OperationManager : MonoBehaviour, IOperationManager {
                 if (!TryDequeueOperation(out _currentOperation))
                     break;
 
-                GameLogger.LogInfo($"Processing operation [{processedCount + 1}]: {_currentOperation}",
+                logger.LogInfo($"Processing operation [{processedCount + 1}]: {_currentOperation}",
                     LogCategory.OperationManager);
 
                 try {
                     await ProcessOperationAsync(_currentOperation, _globalCancellationSource.Token);
                     processedCount++;
                 } catch (OperationCanceledException) {
-                    GameLogger.LogInfo($"Operation cancelled: {_currentOperation}", LogCategory.OperationManager);
+                    logger.LogInfo($"Operation cancelled: {_currentOperation}", LogCategory.OperationManager);
                 } finally {
                     _currentOperation = null;
                 }
             }
 
-            GameLogger.LogInfo($"Queue processing completed. Processed {processedCount} operations", LogCategory.OperationManager);
+            logger.LogInfo($"Queue processing completed. Processed {processedCount} operations", LogCategory.OperationManager);
             OnQueueEmpty?.Invoke();
         } finally {
             _isRunning = false;
             _currentOperation = null;
-            GameLogger.LogDebug("Operation processing finished", LogCategory.OperationManager);
+            logger.LogDebug("Operation processing finished", LogCategory.OperationManager);
         }
     }
 
@@ -204,7 +197,7 @@ public class OperationManager : MonoBehaviour, IOperationManager {
         using (new WriteLock(_queueLock)) {
             var result = _operationQueue.TryDequeue(out operation);
             if (result) {
-                GameLogger.LogDebug($"Dequeued operation: {operation}. Remaining: {_operationQueue.Count}",
+                logger.LogDebug($"Dequeued operation: {operation}. Remaining: {_operationQueue.Count}",
                     LogCategory.OperationManager);
             }
             return result;
@@ -218,11 +211,11 @@ public class OperationManager : MonoBehaviour, IOperationManager {
         try {
             if (!ValidateOperation(operation)) {
                 status = OperationStatus.Failed;
-                GameLogger.LogWarning($"Operation validation failed: {operation}", LogCategory.OperationManager);
+                logger.LogWarning($"Operation validation failed: {operation}", LogCategory.OperationManager);
                 return;
             }
 
-            GameLogger.LogInfo($"Beginning operation: {operation}", LogCategory.OperationManager);
+            logger.LogInfo($"Beginning operation: {operation}", LogCategory.OperationManager);
 
             TargetOperationRequest request = new(
                 operation.GetTargets(),
@@ -235,31 +228,31 @@ public class OperationManager : MonoBehaviour, IOperationManager {
 
             if (targets == null) {
                 status = OperationStatus.Cancelled;
-                GameLogger.LogInfo($"Operation {operation} was cancelled during target filling", LogCategory.OperationManager);
+                logger.LogInfo($"Operation {operation} was cancelled during target filling", LogCategory.OperationManager);
                 return;
             }
 
             operation.SetTargets(targets.FilledTargets);
 
             if (operation.IsReady()) {
-                GameLogger.LogDebug($"Operation {operation} is ready, executing...", LogCategory.OperationManager);
+                logger.LogDebug($"Operation {operation} is ready, executing...", LogCategory.OperationManager);
 
                 OnOperationStatus?.Invoke(operation, OperationStatus.Start);
                 bool success = operation.Execute();
                 status = success ? OperationStatus.Success : OperationStatus.Failed;
 
-                GameLogger.LogInfo($"Operation {operation} execution result: {status}", LogCategory.OperationManager);
+                logger.LogInfo($"Operation {operation} execution result: {status}", LogCategory.OperationManager);
             } else {
-                GameLogger.LogWarning($"Operation {operation} is not ready for execution", LogCategory.OperationManager);
+                logger.LogInfo($"Operation {operation} is not ready for execution", LogCategory.OperationManager);
                 status = OperationStatus.Cancelled;
             }
         } catch (OperationCanceledException) {
             status = OperationStatus.Cancelled;
-            GameLogger.LogInfo($"Operation {operation} was cancelled", LogCategory.OperationManager);
+            logger.LogInfo($"Operation {operation} was cancelled", LogCategory.OperationManager);
             throw;
         } finally {
             var duration = DateTime.UtcNow - startTime;
-            GameLogger.LogInfo($"{operation} finished with status: {status} (Duration: {duration.TotalMilliseconds:F1}ms)",
+            logger.LogInfo($"{operation} finished with status: {status} (Duration: {duration.TotalMilliseconds:F1}ms)",
                 LogCategory.OperationManager);
             OnOperationStatus?.Invoke(operation, status);
         }
@@ -267,17 +260,13 @@ public class OperationManager : MonoBehaviour, IOperationManager {
 
     private bool ValidateOperation(GameOperation operation) {
         List<TypedTargetBase> typedTargetBases = operation.GetTargets();
-        if (typedTargetBases.Count == 0) {
-            GameLogger.LogWarning($"{operation} cannot be executed - targets = 0", LogCategory.OperationManager);
-            return false;
-        }
-
+       
         if (!operationFiller.CanFillTargets(typedTargetBases)) {
-            GameLogger.LogWarning($"{operation} cannot be executed - targets cannot be filled", LogCategory.OperationManager);
+            logger.LogWarning($"{operation} cannot be executed - targets cannot be filled", LogCategory.OperationManager);
             return false;
         }
 
-        GameLogger.LogDebug($"Operation {operation} validation passed", LogCategory.OperationManager);
+        logger.LogDebug($"Operation {operation} validation passed", LogCategory.OperationManager);
         return true;
     }
 
@@ -288,12 +277,12 @@ public class OperationManager : MonoBehaviour, IOperationManager {
             var message = $"Queue State - Running: {_isRunning}, Current: {currentOperationStr}, " +
                          $"Total Queue Size: {_operationQueue.Count}";
 
-            GameLogger.LogInfo(message, LogCategory.OperationManager);
+            logger.LogInfo(message, LogCategory.OperationManager);
 
             // Log details of queued operations if any
             if (_operationQueue.Count > 0) {
                 var operations = _operationQueue.GetAllItems().Take(5).Select(op => op);
-                GameLogger.LogDebug($"Next operations: {string.Join(", ", operations)}{(_operationQueue.Count > 5 ? "..." : "")}",
+                logger.LogDebug($"Next operations: {string.Join(", ", operations)}{(_operationQueue.Count > 5 ? "..." : "")}",
                     LogCategory.OperationManager);
             }
         }
@@ -302,14 +291,14 @@ public class OperationManager : MonoBehaviour, IOperationManager {
     public List<string> GetQueuedOperationNames() {
         using (new ReadLock(_queueLock)) {
             var operations = _operationQueue.GetAllItems().Select(op => op.ToString()).ToList();
-            GameLogger.LogDebug($"Retrieved {operations.Count} queued operation names", LogCategory.OperationManager);
+            logger.LogDebug($"Retrieved {operations.Count} queued operation names", LogCategory.OperationManager);
             return operations;
         }
     }
 
     public List<GameOperation> CancelOperations(IEnumerable<GameOperation> operationsToRemove) {
         if (operationsToRemove == null) {
-            GameLogger.LogWarning("Cannot cancel null operations collection", LogCategory.OperationManager);
+            logger.LogWarning("Cannot cancel null operations collection", LogCategory.OperationManager);
             return new List<GameOperation>();
         }
 
@@ -327,10 +316,10 @@ public class OperationManager : MonoBehaviour, IOperationManager {
 
         if (removedOperations.Count > 0) {
             var operationNames = removedOperations.Select(op => op);
-            GameLogger.LogInfo($"Cancelled {removedOperations.Count} operations: {string.Join(", ", operationNames)}",
+            logger.LogInfo($"Cancelled {removedOperations.Count} operations: {string.Join(", ", operationNames)}",
                 LogCategory.OperationManager);
         } else {
-            GameLogger.LogDebug("No operations were cancelled (not found in queue)", LogCategory.OperationManager);
+            logger.LogDebug("No operations were cancelled (not found in queue)", LogCategory.OperationManager);
         }
 
         return removedOperations;
@@ -338,7 +327,7 @@ public class OperationManager : MonoBehaviour, IOperationManager {
 
     public List<GameOperation> RemoveOperations(Func<GameOperation, bool> predicate) {
         if (predicate == null) {
-            GameLogger.LogWarning("Cannot remove operations with null predicate", LogCategory.OperationManager);
+            logger.LogWarning("Cannot remove operations with null predicate", LogCategory.OperationManager);
             return new List<GameOperation>();
         }
 
@@ -347,10 +336,10 @@ public class OperationManager : MonoBehaviour, IOperationManager {
 
             if (removed.Count > 0) {
                 var operationNames = removed.Select(op => op);
-                GameLogger.LogInfo($"Removed {removed.Count} operations by predicate: {string.Join(", ", operationNames)}",
+                logger.LogInfo($"Removed {removed.Count} operations by predicate: {string.Join(", ", operationNames)}",
                     LogCategory.OperationManager);
             } else {
-                GameLogger.LogDebug("No operations matched the removal predicate", LogCategory.OperationManager);
+                logger.LogDebug("No operations matched the removal predicate", LogCategory.OperationManager);
             }
 
             return removed;

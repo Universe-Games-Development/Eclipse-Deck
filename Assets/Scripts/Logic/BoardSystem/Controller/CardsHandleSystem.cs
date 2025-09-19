@@ -1,12 +1,10 @@
-﻿using Cysharp.Threading.Tasks;
-using ModestTree;
-using System;
+﻿using ModestTree;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
 public class CardsHandleSystem : MonoBehaviour {
-    
+
     [Inject] IEventBus<IEvent> _eventBus;
     [Inject] CommandManager _commandManager;
     [Inject] CardProvider _cardProvider;
@@ -19,7 +17,7 @@ public class CardsHandleSystem : MonoBehaviour {
         CharacterData data = boardPlayer.Opponent.Data; // soon opponent data will define deck and cards
 
         // Move to the global game manager
-        
+
     }
 
     public void StartBattleActions(ref BattleStartedEvent eventData) {
@@ -43,13 +41,13 @@ public class CardsHandleSystem : MonoBehaviour {
         playerPresenter.Opponent.Deck.Clear();
         playerPresenter.Opponent.Hand.Clear();
     }
-    
+
 
     public List<Card> GenerateRandomCards(int cardAmount) {
         CardCollection collection = new();
         List<CardData> _unclokedCards = _cardProvider.GetRandomUnlockedCards(cardAmount);
         if (_unclokedCards.IsEmpty()) return new List<Card>();
-        
+
         for (int i = 0; i < cardAmount; i++) {
             var randomIndex = UnityEngine.Random.Range(0, _unclokedCards.Count);
             var randomCard = _unclokedCards[randomIndex];
@@ -68,7 +66,7 @@ public class CardsHandleSystem : MonoBehaviour {
         return cards;
     }
 
-    
+
 
     private void OnDestroy() {
         if (_eventBus != null) {

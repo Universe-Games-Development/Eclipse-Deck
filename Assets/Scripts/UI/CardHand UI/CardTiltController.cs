@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(MovementComponent))]
 public class CardTiltController : MonoBehaviour {

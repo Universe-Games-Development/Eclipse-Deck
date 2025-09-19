@@ -11,7 +11,7 @@ public abstract class SingleDisplayComponent : CardDisplayComponent {
     [SerializeField] protected Transform icon;
 
     public void SetVisibility(bool visible) {
-        if  (icon != null)
+        if (icon != null)
             icon.gameObject.SetActive(visible);
         if (text != null)
             text.gameObject.SetActive(visible);

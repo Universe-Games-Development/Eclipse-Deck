@@ -1,9 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
+using Zenject;
 
 public class VisualSequenceManager : IVisualManager {
-
+    [Inject] private ILogger logger;
     PriorityQueue<Priority, VisualTask> _visualsQueue = new();
     private readonly ReaderWriterLockSlim _queueLock = new();
     public int QueueCount => _visualsQueue?.Count ?? 0;
@@ -18,13 +19,13 @@ public class VisualSequenceManager : IVisualManager {
 
     public void Push(VisualTask task, Priority priority = Priority.Normal) {
         if (task == null) {
-            GameLogger.LogError("Cannot push a null task", LogCategory.Visualmanager);
+            logger.LogError("Cannot push a null task", LogCategory.Visualmanager);
             return;
         }
 
         _visualsQueue.Enqueue(priority, task);
 
-        GameLogger.LogDebug($"Operation '{task}' pushed with priority {priority}. Queue size: {QueueCount}",
+        logger.LogDebug($"Operation '{task}' pushed with priority {priority}. Queue size: {QueueCount}",
             LogCategory.Visualmanager);
 
         TryStartProcessing().Forget();
@@ -37,7 +38,7 @@ public class VisualSequenceManager : IVisualManager {
         }
 
         _isRunning = true;
-        GameLogger.LogInfo("Starting task processing...", LogCategory.Visualmanager);
+        logger.LogInfo("Starting task processing...", LogCategory.Visualmanager);
 
         int processedCount = 0;
 
@@ -46,25 +47,25 @@ public class VisualSequenceManager : IVisualManager {
                 if (!TryDequeueTask(out _currentTask))
                     break;
 
-                GameLogger.LogInfo($"Processing task [{processedCount + 1}]: {_currentTask}",
+                logger.LogInfo($"Processing task [{processedCount + 1}]: {_currentTask}",
                     LogCategory.OperationManager);
 
                 try {
                     await ProcessOperationAsync(_currentTask, _globalCancellationSource.Token);
                     processedCount++;
                 } catch (OperationCanceledException) {
-                    GameLogger.LogInfo($"Operation cancelled: {_currentTask}", LogCategory.Visualmanager);
+                    logger.LogInfo($"Operation cancelled: {_currentTask}", LogCategory.Visualmanager);
                 } finally {
                     _currentTask = null;
                 }
             }
 
-            GameLogger.LogInfo($"Queue processing completed. Processed {processedCount} tasks", LogCategory.Visualmanager);
+            logger.LogInfo($"Queue processing completed. Processed {processedCount} tasks", LogCategory.Visualmanager);
             OnQueueEmpty?.Invoke();
         } finally {
             _isRunning = false;
             _currentTask = null;
-            GameLogger.LogDebug("Operation processing finished", LogCategory.Visualmanager);
+            logger.LogDebug("Operation processing finished", LogCategory.Visualmanager);
         }
     }
 
@@ -78,7 +79,7 @@ public class VisualSequenceManager : IVisualManager {
         using (new WriteLock(_queueLock)) {
             var result = _visualsQueue.TryDequeue(out task);
             if (result) {
-                GameLogger.LogDebug($"Dequeued task: {task}. Remaining: {_visualsQueue.Count}",
+                logger.LogDebug($"Dequeued task: {task}. Remaining: {_visualsQueue.Count}",
                     LogCategory.OperationManager);
             }
             return result;
@@ -92,22 +93,22 @@ public class VisualSequenceManager : IVisualManager {
         try {
             if (!ValidateTask(task)) {
                 status = OperationStatus.Failed;
-                GameLogger.LogWarning($"Task validation failed: {task}", LogCategory.Visualmanager);
+                logger.LogWarning($"Task validation failed: {task}", LogCategory.Visualmanager);
                 return;
             }
 
-            GameLogger.LogInfo($"Beginning task: {task}", LogCategory.Visualmanager);
+            logger.LogInfo($"Beginning task: {task}", LogCategory.Visualmanager);
 
             await task.Execute();
             status = OperationStatus.Success;
 
         } catch (OperationCanceledException) {
             status = OperationStatus.Cancelled;
-            GameLogger.LogInfo($"Operation {task} was cancelled", LogCategory.Visualmanager);
+            logger.LogInfo($"Operation {task} was cancelled", LogCategory.Visualmanager);
             throw;
         } finally {
             var duration = DateTime.UtcNow - startTime;
-            GameLogger.LogInfo($"{task} finished with status: {status} (Duration: {duration.TotalMilliseconds:F1}ms)",
+            logger.LogInfo($"{task} finished with status: {status} (Duration: {duration.TotalMilliseconds:F1}ms)",
                 LogCategory.Visualmanager);
         }
     }

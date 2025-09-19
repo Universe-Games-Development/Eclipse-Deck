@@ -190,7 +190,7 @@ public class DrawCardCommand : Command {
     }
 
     public async override UniTask Execute() {
-        List<Card> drawnCards = opponentPresetner.DrawCards(_drawAmount);
+        opponentPresetner.DrawCards(_drawAmount);
         await UniTask.CompletedTask;
     }
 
@@ -200,9 +200,12 @@ public class DrawCardCommand : Command {
 }
 
 public struct DiscardCardEvent : IEvent {
-    public Card card;
+    public readonly Card card;
+    public readonly Opponent owner;
+
     public DiscardCardEvent(Card card, Opponent owner) {
         this.card = card;
+        this.owner = owner;
     }
 }
 

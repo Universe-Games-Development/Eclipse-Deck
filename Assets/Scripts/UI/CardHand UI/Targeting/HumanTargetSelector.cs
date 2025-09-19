@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,15 +18,15 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     [SerializeField] private BoardInputManager boardInputManager;
     [SerializeField] private LayerMask surfaceMask;
     [SerializeField] private Transform cursorIndicator;
-    
+
     [SerializeField] private TargetingVisualizationStrategy visualizationStrategy;
     private ITargetingVisualization currentVisualization;
 
-    [Inject] private InputManager inputManager;
+    [Inject] private readonly InputManager inputManager;
 
     private TaskCompletionSource<UnitModel> currentSelection;
     private InputSystem_Actions.BoardPlayerActions boardInputs;
-    
+
     public CardPresenter CurrentCard { get; private set; }
     public Vector3 LastBoardPosition { get; private set; }
 
@@ -73,7 +72,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
         }
     }
 
-    
+
 
     public async UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest selectionRequest, CancellationToken cancellationToken) {
         currentSelection = new TaskCompletionSource<UnitModel>();
@@ -108,15 +107,15 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     }
 
     private void OnLeftClickUp(InputAction.CallbackContext context) {
-        if (currentSelection == null) return;
+        if (currentSelection == null || currentrequest == null) return;
 
         var presenters = GetTargetsUnderCursor();
         var models = presenters.Select(presenter => presenter.GetModel()).ToList();
 
-        TypedTargetBase requirement = currentrequest.Target;
+        TypedTargetBase target = currentrequest.Target;
         Opponent opponent = currentrequest.Source.GetPlayer();
 
-        UnitModel satisfyModel = models.Where(model => requirement.IsValid(model, opponent)).FirstOrDefault();
+        UnitModel satisfyModel = models.Where(model => target.IsValid(model, new ValidationContext(opponent))).FirstOrDefault();
 
         var result = satisfyModel;
 
@@ -141,7 +140,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     }
 
     private void ShowSelectionPrompt(string description) {
-        //Debug.Log($"Select target: {description}");
+        Debug.Log($"Select target: {description}");
     }
 
     private void HideSelectionPrompt() {

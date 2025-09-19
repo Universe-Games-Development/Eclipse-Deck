@@ -44,7 +44,7 @@ public class ZonePresenter : UnitPresenter {
         while (doUpdate) {
             var positions = View.GetCreaturePoints(creaturesInZone.Count);
             await RearrangeCreatures(positions, updateTimer * 1000);
-}
+        }
     }
 
     public void AddCreaturePresenter(CreaturePresenter presenter) {
@@ -78,7 +78,7 @@ public class ZonePresenter : UnitPresenter {
             creaturesInZone.Remove(creatureToRemove);
 
             // Створюємо завдання для реорганізації після видалення
-            
+
 
             _creatureFactory.DestroyCreature(creatureToRemove);
         }
@@ -168,7 +168,7 @@ public class AddCreatureToZoneVisualTask : VisualTask {
     public override async UniTask Execute() {
         // 1. Знаходимо презентер для істоти
         CreaturePresenter creaturePresenter = _presenterRegistry.GetPresenter<CreaturePresenter>(_creature);
-        
+
         if (creaturePresenter == null) {
             Debug.LogWarning($"Failed to find presenter for creature: {_creature}");
             return;
