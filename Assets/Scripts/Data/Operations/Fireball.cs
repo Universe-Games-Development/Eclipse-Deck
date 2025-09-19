@@ -280,14 +280,14 @@ public class Fireball : MonoBehaviour {
         MoveToMouse();
 
         // Клик - взрыв
-        if (Input.GetMouseButtonDown(0)) {
-            _ = Explode();
-        }
+        //if (Input.GetMouseButtonDown(0)) {
+        //    _ = Explode();
+        //}
 
-        // Правый клик - сброс (для теста)
-        if (Input.GetMouseButtonDown(1)) {
-            ResetFireball();
-        }
+        //// Правый клик - сброс (для теста)
+        //if (Input.GetMouseButtonDown(1)) {
+        //    ResetFireball();
+        //}
     }
 
     private void MoveToMouse() {

@@ -6,47 +6,81 @@ using UnityEngine;
 using Zenject;
 
 public class BoardPlayerPresenter : UnitPresenter {
+    #region Injected Dependencies
     [Inject] protected IEventBus<IEvent> _eventBus;
-    [Inject] CommandManager _commandManager;
-    [Inject] CardProvider _cardProvider;
-    [Inject] ICardFactory<Card3DView> _cardFactory;
+    [Inject] private CommandManager _commandManager;
+    [Inject] private CardProvider _cardProvider;
+    [Inject] private ICardFactory<Card3DView> _cardFactory;
+    #endregion
 
-    public Direction FacingDirection;
+    #region Serialized Fields
+    [Header("Core Data")]
+    [SerializeField] private CharacterData Data;
     [SerializeField] private HealthCellView _healthDisplay;
-    public Opponent Opponent { get; private set; }
 
-    [SerializeField] public CharacterData Data;
-
-    [Header("Debug")]
-    public HumanTargetSelector Selector;
-
+    [Header("Card Views")]
     [SerializeField] private CardHandView handView;
     [SerializeField] private DeckView deckView;
 
+    [Header("Debug")]
+    public HumanTargetSelector Selector;
+    #endregion
+
+    #region Runtime State
+    public Direction FacingDirection;
+    public Opponent Opponent { get; private set; }
+
     public HandPresenter handPresenter;
     private DeckPresenter _deckPresenter;
+    #endregion
 
+    #region Unity Lifecycle
     private void Awake() {
+        InitializeOpponent();
+        InitializePresenters();
+        SubscribeToEvents();
+        FillDeckWithRandomCards(40);
+    }
+
+    protected override void OnDestroy() {
+        if (_eventBus != null) {
+            _eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
+            _eventBus.UnsubscribeFrom<BattleEndEventData>(EndBattleActions);
+            _eventBus.UnsubscribeFrom<TurnStartEvent>(TurnStartActions);
+        }
+        base.OnDestroy();
+    }
+
+    private void OnDrawGizmosSelected() {
+        Gizmos.DrawSphere(transform.position, 1f);
+    }
+    #endregion
+
+    #region Initialization
+    private void InitializeOpponent() {
         if (Data != null) {
             Opponent = new Opponent(Data);
             Opponent.ChangeOwner(Opponent);
         }
+    }
 
-        _deckPresenter = new(Opponent.Deck, deckView);
+    private void InitializePresenters() {
+        _deckPresenter = new DeckPresenter(Opponent.Deck, deckView);
         handPresenter.Initialize(Opponent.Hand, handView);
+    }
 
+    private void SubscribeToEvents() {
         _eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
         _eventBus.SubscribeTo<BattleEndEventData>(EndBattleActions);
         _eventBus.SubscribeTo<TurnStartEvent>(TurnStartActions);
-
-        Deck deck = Opponent.Deck;
-        List<Card> _cards = GenerateRandomCards(40);
-        deck.AddRange(_cards);
     }
+    #endregion
 
+    #region Event Handlers
     private void TurnStartActions(ref TurnStartEvent eventData) {
-        if (eventData.StartingOpponent == this)
+        if (eventData.StartingOpponent == this) {
             _commandManager.EnqueueCommand(new DrawCardCommand(this));
+        }
     }
 
     private void EndBattleActions(ref BattleEndEventData eventData) {
@@ -55,59 +89,41 @@ public class BoardPlayerPresenter : UnitPresenter {
     }
 
     public void StartBattleActions(ref BattleStartedEvent eventData) {
+        FillDeckWithRandomCards(40);
+    }
+    #endregion
+
+    #region Card Management
+    private void FillDeckWithRandomCards(int amount) {
         Deck deck = Opponent.Deck;
-        List<Card> _cards = GenerateRandomCards(40);
-        deck.AddRange(_cards);
+        var cards = GenerateRandomCards(amount);
+        deck.AddRange(cards);
     }
 
-    public List<Card> GenerateRandomCards(int cardAmount) {
+    public List<Card> GenerateRandomCards(int amount) {
         CardCollection collection = new();
-        List<CardData> _unclokedCards = _cardProvider.GetRandomUnlockedCards(cardAmount);
-        if (_unclokedCards.IsEmpty()) return new List<Card>();
+        List<CardData> unlockedCards = _cardProvider.GetRandomUnlockedCards(amount);
 
-        for (int i = 0; i < cardAmount; i++) {
-            var randomIndex = UnityEngine.Random.Range(0, _unclokedCards.Count);
-            var randomCard = _unclokedCards[randomIndex];
+        if (unlockedCards.IsEmpty())
+            return new List<Card>();
+
+        // випадковий набір карт
+        for (int i = 0; i < amount; i++) {
+            var randomIndex = UnityEngine.Random.Range(0, unlockedCards.Count);
+            var randomCard = unlockedCards[randomIndex];
             collection.AddCardToCollection(randomCard);
         }
 
+        // створення інстансів
         List<Card> cards = new();
-        foreach (var cardEntry in collection.cardEntries) {
-            for (int i = 0; i < cardEntry.Value; i++) {
-                CardData cardData = cardEntry.Key;
-                Card newCard = _cardFactory.CreateCard(cardData);
-                if (newCard == null) continue;
-                cards.Add(newCard);
+        foreach (var entry in collection.cardEntries) {
+            for (int i = 0; i < entry.Value; i++) {
+                Card newCard = _cardFactory.CreateCard(entry.Key);
+                if (newCard != null)
+                    cards.Add(newCard);
             }
         }
         return cards;
-    }
-
-    /// <summary>
-    /// Прив'язує об'єкт опонента до цього представлення на дошці
-    /// </summary>
-    public void BindPlayer(Opponent character) {
-        Opponent = character;
-        
-        if (_healthDisplay != null) {
-            _healthDisplay.Initialize();
-            _healthDisplay.AssignOwner(Opponent);
-        }
-
-        InitializeCards();
-    }
-
-    /// <summary>
-    /// Ініціалізує систему карт для гравця
-    /// </summary>
-    public void InitializeCards() {
-
-        BattleStartedEvent battleStartedEvent = new BattleStartedEvent();
-        StartBattleActions(ref battleStartedEvent);
-    }
-
-    public void DrawTestCards() {
-        DrawCards(5);
     }
 
     public List<Card> DrawCards(int drawAmount) {
@@ -117,55 +133,50 @@ public class BoardPlayerPresenter : UnitPresenter {
             Card card = _deckPresenter.Deck.Draw();
             if (card == null) {
                 _eventBus.Raise(new OnDeckEmptyDrawn(Opponent));
-
                 return drawnCards;
             }
 
             if (!Opponent.Hand.Add(card)) {
-
                 _eventBus.Raise(new DiscardCardEvent(card, Opponent));
             }
+
             drawnCards.Add(card);
             _eventBus.Raise(new OnCardDrawn(card, Opponent));
             drawAmount--;
         }
         return drawnCards;
     }
-    /// <summary>
-    /// Очищає гравця з позиції за дошкою
-    /// </summary>
-    public void SelfClear() {
-
-        if (_healthDisplay != null) {
-            _healthDisplay.ClearOwner();
-        }
-    }
-
-    private void OnDrawGizmosSelected() {
-        Gizmos.DrawSphere(transform.position, 1f);
-    }
-
-    #region Unit presenter API
-    public override UnitModel GetModel() {
-        return Opponent;
-    }
     #endregion
 
-    
+    #region API
+    public void BindPlayer(Opponent character) {
+        Opponent = character;
 
-    public override string ToString() {
-        return $"{gameObject.name}";
-    }
-
-    protected override void OnDestroy() {
-        if (_eventBus != null) {
-            _eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
-            _eventBus.UnsubscribeFrom<BattleEndEventData>(EndBattleActions);
-
-            _eventBus.UnsubscribeFrom<TurnStartEvent>(TurnStartActions);
+        if (_healthDisplay != null) {
+            _healthDisplay.Initialize();
+            _healthDisplay.AssignOwner(Opponent);
         }
-        base.OnDestroy();
+
+        InitializeCards();
     }
+
+    public void InitializeCards() {
+        var battleStartedEvent = new BattleStartedEvent();
+        StartBattleActions(ref battleStartedEvent);
+    }
+
+    public void DrawTestCards() {
+        DrawCards(5);
+    }
+
+    public void SelfClear() {
+        _healthDisplay?.ClearOwner();
+    }
+
+    public override UnitModel GetModel() => Opponent;
+
+    public override string ToString() => gameObject.name;
+    #endregion
 }
 
 

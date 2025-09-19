@@ -2883,7 +2883,7 @@ MonoBehaviour:
     enableFileLogging: 0
     enableTimestamps: 1
     enableStackTrace: 1
-    enabledCategories: 1024
+    enabledCategories: -1
     debugColor: {r: 1, g: 1, b: 1, a: 1}
     infoColor: {r: 0, g: 1, b: 1, a: 1}
     warningColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
@@ -8523,23 +8523,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4584022649738410705}
   m_Mesh: {fileID: 1244776425715413010, guid: 87f17362ab876074bb9b7d81511afe05, type: 3}
---- !u!114 &3145503504788753006
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7112636217526397954}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9a11b33662be7b46a40dfbbb82d356c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  handView: {fileID: 2379312896532368615}
-  deckView: {fileID: 0}
-  discardDeckView: {fileID: 0}
-  handPresenter: {fileID: 8418556749380161856}
-  BoardPlayer: {fileID: 7112636217526397955}
 --- !u!23 &3153307203462987970
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -10683,7 +10666,6 @@ GameObject:
   m_Component:
   - component: {fileID: 613859523398274181}
   - component: {fileID: 2186117335141322791}
-  - component: {fileID: 3145503504788753006}
   - component: {fileID: 7112636217526397955}
   m_Layer: 0
   m_Name: BoardPlayer
@@ -10705,11 +10687,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isDebugEnabled: 0
-  FacingDirection: 0
-  _healthDisplay: {fileID: 6698457023692098168}
-  _cardsSystem: {fileID: 3145503504788753006}
   Data: {fileID: 11400000, guid: e1e26df24ffbfba41a215be2891d5112, type: 2}
+  _healthDisplay: {fileID: 6698457023692098168}
+  handView: {fileID: 2379312896532368615}
+  deckView: {fileID: 0}
   Selector: {fileID: 1895360920}
+  FacingDirection: 0
+  handPresenter: {fileID: 8418556749380161856}
 --- !u!33 &7131132261851097722
 MeshFilter:
   m_ObjectHideFlags: 0
