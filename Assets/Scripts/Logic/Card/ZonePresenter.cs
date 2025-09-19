@@ -8,7 +8,7 @@ using Zenject;
 public class ZonePresenter : UnitPresenter {
     public Zone Zone;
     public Zone3DView View;
-    [SerializeField] public BoardPlayer Owner;
+    [SerializeField] public BoardPlayerPresenter Owner;
     [Inject] IUnitPresenterRegistry _presenterRegistry;
     [Inject] private IVisualTaskFactory _visualTaskFactory;
     [Inject] IVisualManager _visualManager;
@@ -17,12 +17,19 @@ public class ZonePresenter : UnitPresenter {
     private readonly List<CreaturePresenter> creaturesInZone = new();
     public int CreaturesCount => creaturesInZone.Count;
 
-    private void Start() {
+    private void Awake() {
         Zone = new Zone();
-        Zone.ChangeOwner(Owner);
+    }
+
+    private void Start() {
+        Zone.ChangeOwner(Owner.Opponent);
         Zone.OnCreaturePlaced += HandleCreaturePlacement;
         Zone.OnCreatureRemoved += HandleCreatureRemove;
         RegisterInGame();
+
+        if (doUpdate) {
+            _ = DoTestUpdate();
+        }
     }
 
     public void Initialize(Zone3DView zone3DView, Zone zone) {
@@ -32,11 +39,6 @@ public class ZonePresenter : UnitPresenter {
 
     [SerializeField] float updateTimer = 1f;
     [SerializeField] bool doUpdate = false;
-    private void Awake() {
-        if (doUpdate) {     
-            _ = DoTestUpdate();
-        }
-    }
 
     private async UniTask DoTestUpdate() {
         while (doUpdate) {
@@ -52,7 +54,7 @@ public class ZonePresenter : UnitPresenter {
     }
 
     private void HandleCreaturePlacement(Creature creature) {
-        DebugLog("Creature placed in zone");
+        DebugLog($"{creature} placed in zone");
 
         // 1. Створюємо завдання для додавання істоти
         var addTask = new AddCreatureToZoneVisualTask(creature, this, _presenterRegistry);
@@ -96,6 +98,7 @@ public class ZonePresenter : UnitPresenter {
     [SerializeField] private float cardsOrganizeDuration = 0.5f;
     // VISUAL TASK
     public async UniTask RearrangeCreatures(List<LayoutPoint> positions, float duration) {
+        var tasks = new List<UniTask>();
         for (int i = 0; i < creaturesInZone.Count; i++) {
             if (i < positions.Count) {
                 CreaturePresenter creaturePresenter = creaturesInZone[i];
@@ -105,13 +108,13 @@ public class ZonePresenter : UnitPresenter {
                                     .SetEase(Ease.OutQuad)
                                     .SetLink(creaturePresenter.gameObject);
 
-                await creaturePresenter.View.DoTweener(moveTween);
+                tasks.Add(creaturePresenter.View.DoTweener(moveTween));
             }
         }
+        await UniTask.WhenAll(tasks);
     }
 
     public override void Highlight(bool enable) {
-        DebugLog($"Setting highlight to: {enable}");
         View.Highlight(enable);
     }
 
@@ -120,10 +123,6 @@ public class ZonePresenter : UnitPresenter {
         return Zone;
     }
 
-    public override BoardPlayer GetPlayer() {
-        DebugLog($"Getting owner: {Owner?.name}");
-        return Owner;
-    }
     #endregion
 }
 
@@ -169,6 +168,7 @@ public class AddCreatureToZoneVisualTask : VisualTask {
     public override async UniTask Execute() {
         // 1. Знаходимо презентер для істоти
         CreaturePresenter creaturePresenter = _presenterRegistry.GetPresenter<CreaturePresenter>(_creature);
+        
         if (creaturePresenter == null) {
             Debug.LogWarning($"Failed to find presenter for creature: {_creature}");
             return;

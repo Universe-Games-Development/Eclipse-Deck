@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor.PackageManager.Requests;
+using UnityEngine;
 using Zenject;
 
 public class TargetingVisualizationStrategy : MonoBehaviour{
@@ -18,7 +19,7 @@ public class TargetingVisualizationStrategy : MonoBehaviour{
     public ITargetingVisualization CreateVisualization(TargetSelectionRequest request) {
         if (request.Source is Card card) {
             CardPresenter cardPresenter = presenterRegistry.GetPresenter<CardPresenter>(card);
-            if (IsZoneRequirement(request.Requirement)) {
+            if (IsZoneRequirement(request.Target)) {
                 return CreateCardMovementTargeting(cardPresenter);
             } else {
                 return CreateArrowTargeting(cardPresenter.transform.position, request);
@@ -29,9 +30,8 @@ public class TargetingVisualizationStrategy : MonoBehaviour{
         return CreateArrowTargeting(playerPortrait.position, request);
     }
 
-
-    private bool IsZoneRequirement(ITargetRequirement requirement) {
-        return requirement is ZoneRequirement;
+    private bool IsZoneRequirement(TypedTargetBase request) {
+        return request.TargetType == typeof(Zone);
     }
 
     private ITargetingVisualization CreateCardMovementTargeting(CardPresenter card) {

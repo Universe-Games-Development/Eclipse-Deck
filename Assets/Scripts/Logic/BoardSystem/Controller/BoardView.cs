@@ -1,6 +1,7 @@
 using DG.Tweening;
 using System;
 using UnityEngine;
+using Zenject;
 
 public class BoardView : MonoBehaviour {
     [Header("Grid Interaction Params")]
@@ -13,6 +14,7 @@ public class BoardView : MonoBehaviour {
     [Header("Board Adjuster")]
     [SerializeField] private Transform origin;
     [SerializeField] private Transform globalCenter;
+    [Inject] IEventBus<IEvent> _eventBus;
 
     public void Initialize() {
         if (fieldPrefab == null) throw new ArgumentNullException("field prefab is null");

@@ -145,9 +145,6 @@ public class CardPresenter : UnitPresenter {
         return Card;
     }
 
-    public override BoardPlayer GetPlayer() {
-        return Card?.GetPlayer();
-    }
     #endregion
 }
 

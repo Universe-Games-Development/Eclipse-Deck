@@ -7,7 +7,7 @@ using Zenject;
 
 public class PlayerController : MonoBehaviour {
     [SerializeField] public OperationManager operationManager;
-    [SerializeField] public BoardPlayer player;
+    [SerializeField] public BoardPlayerPresenter player;
     [SerializeField] public HandPresenter handPresenter;
 
     [Inject] public ICardPlayService cardPlayService;
@@ -47,8 +47,10 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void SubscribeToEvents() {
+        if (operationManager != null)
         operationManager.OnOperationStatus += HandleOperationStatus;
-        player.Selector.OnSelectionStarted += HandleSelectionStart;
+        if (player != null)
+            player.Selector.OnSelectionStarted += HandleSelectionStart;
         eventBus.SubscribeTo<CardPlaySessionEndedEvent>(HandleCardPlayCompleted);
     }
 
@@ -58,7 +60,7 @@ public class PlayerController : MonoBehaviour {
             return;
 
         if (eventData.FinalResult.IsSuccess && false) {
-            player.SpendMana(spentCard.Cost.Current);
+            player.Opponent.SpendMana(spentCard.Cost.Current);
             handPresenter.RemoveCard(spentCard);
             GameLogger.Log("Card successfully played and spent");
         } else {
@@ -71,7 +73,7 @@ public class PlayerController : MonoBehaviour {
         switch (status) {
             case OperationStatus.Start:
                 if (operation.Source is Card card && cardPlayService.IsPlayingCard(card)) {
-                    player.SpendMana(card.Cost.Current);
+                    player.Opponent.SpendMana(card.Cost.Current);
                     handPresenter.RemoveCard(card);
                 }
                 break;
@@ -94,6 +96,8 @@ public class PlayerController : MonoBehaviour {
     private void UnsubscribeFromEvents() {
         if (player?.Selector != null)
             player.Selector.OnSelectionStarted -= HandleSelectionStart;
+        if (operationManager != null)
+            operationManager.OnOperationStatus -= HandleOperationStatus;
     }
 
     public void SwitchState(PlayerState newState) {

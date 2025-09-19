@@ -1,11 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using UnityEngine;
-using Zenject;
 
 public class VisualSequenceManager : IVisualManager {
 
@@ -27,9 +22,7 @@ public class VisualSequenceManager : IVisualManager {
             return;
         }
 
-        using (new WriteLock(_queueLock)) {
-            _visualsQueue.Enqueue(priority, task);
-        }
+        _visualsQueue.Enqueue(priority, task);
 
         GameLogger.LogDebug($"Operation '{task}' pushed with priority {priority}. Queue size: {QueueCount}",
             LogCategory.Visualmanager);
@@ -91,6 +84,7 @@ public class VisualSequenceManager : IVisualManager {
             return result;
         }
     }
+
     private async UniTask ProcessOperationAsync(VisualTask task, CancellationToken cancellationToken) {
         OperationStatus status = OperationStatus.Failed;
         var startTime = DateTime.UtcNow;
@@ -105,6 +99,7 @@ public class VisualSequenceManager : IVisualManager {
             GameLogger.LogInfo($"Beginning task: {task}", LogCategory.Visualmanager);
 
             await task.Execute();
+            status = OperationStatus.Success;
 
         } catch (OperationCanceledException) {
             status = OperationStatus.Cancelled;

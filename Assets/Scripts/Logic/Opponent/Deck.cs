@@ -25,27 +25,27 @@ public class DeckPresenter {
 
 public struct OnCardDrawn : IEvent {
     public Card card;
-    public BoardPlayer owner;
+    public Opponent owner;
 
-    public OnCardDrawn(Card card, BoardPlayer owner) {
+    public OnCardDrawn(Card card, Opponent owner) {
         this.card = card;
         this.owner = owner;
     }
 }
 
 public struct OnDeckEmptyDrawn : IEvent {
-    public BoardPlayer owner;
+    public Opponent owner;
 
-    public OnDeckEmptyDrawn(BoardPlayer owner) {
+    public OnDeckEmptyDrawn(Opponent owner) {
         this.owner = owner;
     }
 }
 
 // Новий івент для повідомлення про те, що колода знову заповнена
 public struct OnDeckRefilled : IEvent {
-    public BoardPlayer owner;
+    public Opponent owner;
 
-    public OnDeckRefilled(BoardPlayer owner) {
+    public OnDeckRefilled(Opponent owner) {
         this.owner = owner;
     }
 }

@@ -1,5 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
+using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -14,7 +17,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     [SerializeField] private Camera gameCamera;
     [SerializeField] private LayerMask targetLayerMask;
     [SerializeField] private BoardInputManager boardInputManager;
-    [SerializeField] private LayerMask boardMask;
+    [SerializeField] private LayerMask surfaceMask;
     [SerializeField] private Transform cursorIndicator;
     
     [SerializeField] private TargetingVisualizationStrategy visualizationStrategy;
@@ -29,6 +32,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     public Vector3 LastBoardPosition { get; private set; }
 
     [SerializeField] private bool isDebug = false;
+    private TargetSelectionRequest currentrequest;
 
     private void Start() {
         InitializeComponents();
@@ -62,18 +66,21 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     }
 
     private void UpdateCursorPosition() {
-        if (boardInputManager.TryGetCursorPosition(boardMask, out Vector3 cursorPosition)) {
+        if (boardInputManager.TryGetCursorPosition(surfaceMask, out Vector3 cursorPosition)) {
             LastBoardPosition = cursorPosition;
             if (isDebug)
                 cursorIndicator.transform.position = LastBoardPosition;
         }
     }
 
+    
+
     public async UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest selectionRequest, CancellationToken cancellationToken) {
         currentSelection = new TaskCompletionSource<UnitModel>();
+        currentrequest = selectionRequest;
 
         StartTargetingVisualization(selectionRequest);
-        ShowSelectionPrompt(selectionRequest.Requirement.GetInstruction());
+        ShowSelectionPrompt(selectionRequest.Target.GetInstruction());
 
         boardInputs.LeftClick.canceled += OnLeftClickUp;
 
@@ -83,6 +90,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
             StopTargetingVisualization();
             boardInputs.LeftClick.canceled -= OnLeftClickUp;
             HideSelectionPrompt();
+            currentrequest = null;
         }
     }
 
@@ -102,19 +110,30 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     private void OnLeftClickUp(InputAction.CallbackContext context) {
         if (currentSelection == null) return;
 
-        var presenter = GetTargetUnderCursor();
-        var result = presenter?.GetModel();
+        var presenters = GetTargetsUnderCursor();
+        var models = presenters.Select(presenter => presenter.GetModel()).ToList();
+
+        TypedTargetBase requirement = currentrequest.Target;
+        Opponent opponent = currentrequest.Source.GetPlayer();
+
+        UnitModel satisfyModel = models.Where(model => requirement.IsValid(model, opponent)).FirstOrDefault();
+
+        var result = satisfyModel;
 
         currentSelection.TrySetResult(result);
     }
 
 
-    private UnitPresenter GetTargetUnderCursor() {
-        if (boardInputManager.TryGetCursorObject(boardMask, out GameObject hitObject)) {
-            hitObject.TryGetComponent(out UnitPresenter presenter);
-            return presenter;
+    private List<UnitPresenter> GetTargetsUnderCursor() {
+        List<UnitPresenter> presenters = new();
+        if (boardInputManager.TryGetAllCursorObjects(targetLayerMask, out GameObject[] hitObjects)) {
+            foreach (var hitObj in hitObjects) {
+                if (hitObj.TryGetComponent(out UnitPresenter presenter)) {
+                    presenters.Add(presenter);
+                }
+            }
         }
-        return null;
+        return presenters;
     }
 
     public void SetCurrentCard(CardPresenter cardPresenter) {
@@ -122,7 +141,7 @@ public class HumanTargetSelector : MonoBehaviour, ITargetSelector {
     }
 
     private void ShowSelectionPrompt(string description) {
-        Debug.Log($"Select target: {description}");
+        //Debug.Log($"Select target: {description}");
     }
 
     private void HideSelectionPrompt() {
@@ -138,11 +157,11 @@ public interface ITargetingVisualization {
 
 public class TargetSelectionRequest {
     public UnitModel Source { get; } // Карта, істота, гравець
-    public ITargetRequirement Requirement { get; }
+    public TypedTargetBase Target { get; }
 
-    public TargetSelectionRequest(UnitModel initiator, ITargetRequirement requirement) {
+    public TargetSelectionRequest(UnitModel initiator, TypedTargetBase target) {
         Source = initiator;
-        Requirement = requirement;
+        Target = target;
     }
 }
 

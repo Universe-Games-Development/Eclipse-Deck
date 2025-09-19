@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 936fd975f9f633545ad14eafd9e791cb, type: 3}
   m_Name: DefaultSummonOperation
   m_EditorClassIdentifier: 
+  visualTemplate: {fileID: 11400000, guid: d475267edbd12f94a9d41b2b06f37e15, type: 2}

@@ -32,14 +32,14 @@ public class OpponentRegistrator {
                 return;
         }
 
-        Character opponent = opponentPresenter.Model;
+        Opponent opponent = opponentPresenter.Opponent;
         opponent.OnDefeat += UnregisterOpponent;
 
         // Check if match is ready after registration
         CheckAndTriggerMatchSetup();
     }
 
-    private void UnregisterOpponent(Character opponent) {
+    private void UnregisterOpponent(Opponent opponent) {
         if (opponent == null) return;
         opponent.OnDefeat -= UnregisterOpponent;
         switch (opponent) {
@@ -89,8 +89,8 @@ public class OpponentRegistrator {
     }
 
     // Get all active opponent models
-    public List<Character> GetActiveOpponents() {
-        var list = new List<Character>();
+    public List<Opponent> GetActiveOpponents() {
+        var list = new List<Opponent>();
 
         Player player = GetPlayer();
         if (player != null) list.Add(player);

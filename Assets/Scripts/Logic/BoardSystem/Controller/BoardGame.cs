@@ -5,7 +5,7 @@ using Zenject;
 public class BoardGame : MonoBehaviour {
     [SerializeField] private BoardSettingsData boardConfig;
 
-    [SerializeField] public OpponentRepresentator OpponentsRepresentation;
+    [SerializeField] public OpponentRegistry OpponentsRepresentation;
 
     [Inject] IEventBus<IEvent> _eventBus;
     [Inject] CommandManager _commandManager;
@@ -13,12 +13,9 @@ public class BoardGame : MonoBehaviour {
     [Inject] DiContainer diContainer;
 
     private void Start() {
-        PrepareBattle();
-    }
-
-    public void PrepareBattle() {
         BeginBattle();
     }
+
 
     public void BeginBattle() {
         _eventBus.Raise(new BattleStartedEvent());
@@ -50,10 +47,10 @@ public class BoardGame : MonoBehaviour {
     }
 
     public void TookSeat(CharacterPresenter opponentPresenter) {
-        OpponentsRepresentation.RegisterOpponent(opponentPresenter);
+        OpponentsRepresentation.RegisterOpponent(opponentPresenter.Opponent);
     }
 
-    public BoardPlayer GetOpponent(BoardPlayer initiator) {
+    public Opponent GetOpponent(Opponent initiator) {
         return OpponentsRepresentation.GetOpponent(initiator);
     }
 }

@@ -9,11 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: SummonVisualData
-  m_EditorClassIdentifier: Assembly-CSharp::SummonVisualData
+  m_Script: {fileID: 11500000, guid: 5b7f01de159aede44bab62355795195a, type: 3}
+  m_Name: SummonVisualTemplate
+  m_EditorClassIdentifier: 
   transformEffectPrefab: {fileID: 0}
-  transformDuration: 0
+  transformDuration: 0.5
   transformCurve:
     serializedVersion: 2
     m_Curve: []
@@ -21,5 +21,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   materializationEffect: {fileID: 0}
-  materializationDelay: 0
-  summonPosition: {x: 0, y: 0, z: 0}
+  materializationDelay: 0.2
+  aboveAligmentDuration: 0.43
+  moveEase: 17
+  aligmentHeightOffset: {x: 0, y: 3, z: 0}

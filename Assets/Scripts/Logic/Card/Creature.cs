@@ -33,5 +33,9 @@ public class Creature : UnitModel, IHealthable {
     public override string ToString() {
         return $"{Data.Name} ({Attack.Current}/{Health.Current})";
     }
+
+    public override string GetName() {
+        return Data.Name;
+    }
 }
 

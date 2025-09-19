@@ -83,6 +83,45 @@ public class BoardInputManager : MonoBehaviour {
         return TryGetCursorData(layerMask, out _, out hitObject);
     }
 
+    public bool TryGetAllCursorHits(LayerMask layerMask, out RaycastHit[] hits) {
+        hits = null;
+
+        if (_camera == null) return false;
+
+        Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
+        hits = Physics.RaycastAll(ray, _raycastDistance, layerMask);
+
+        return hits.Length > 0;
+    }
+
+    // Перевантажений варіант з сортуванням за відстанню
+    public bool TryGetAllCursorHits(LayerMask layerMask, out RaycastHit[] hits, bool sortByDistance = true) {
+        hits = null;
+
+        if (_camera == null) return false;
+
+        Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
+        hits = Physics.RaycastAll(ray, _raycastDistance, layerMask);
+
+        if (sortByDistance && hits.Length > 0) {
+            Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+        }
+
+        return hits.Length > 0;
+    }
+    public bool TryGetAllCursorObjects(LayerMask layerMask, out GameObject[] hitObjects, bool sortByDistance = true) {
+        hitObjects = null;
+
+        if (TryGetAllCursorHits(layerMask, out RaycastHit[] hits, sortByDistance)) {
+            hitObjects = new GameObject[hits.Length];
+            for (int i = 0; i < hits.Length; i++) {
+                hitObjects[i] = hits[i].collider.gameObject;
+            }
+            return true;
+        }
+
+        return false;
+    }
     public float GetBoardHeightOffset() {
         return boardHeightOffset;
     }

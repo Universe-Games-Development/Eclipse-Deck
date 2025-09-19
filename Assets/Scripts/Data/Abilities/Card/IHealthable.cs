@@ -12,17 +12,21 @@ public interface IDamageDealer {
 }
 
 public class UnitModel {
-    public Action<BoardPlayer> OnChangedOwner;
+    public Action<Opponent> OnChangedOwner;
     public Action<GameEnterEvent> OnUnitDeployed;
-    private BoardPlayer _owner;
+    private Opponent _owner;
     public string Id { get; protected set; }
-    public void ChangeOwner(BoardPlayer newOwner) {
+    public void ChangeOwner(Opponent newOwner) {
         if (newOwner == _owner) return;
         _owner = newOwner;
         OnChangedOwner?.Invoke(newOwner);
     }
 
-    public BoardPlayer GetPlayer() {
+    public Opponent GetPlayer() {
         return _owner;
+    }
+
+    public virtual string GetName() {
+        return "";
     }
 }

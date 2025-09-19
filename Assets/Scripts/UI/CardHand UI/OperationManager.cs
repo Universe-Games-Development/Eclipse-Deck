@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
-using Zenject;
 
 public class OperationManager : MonoBehaviour, IOperationManager {
     [SerializeField] private OperationTargetsFiller operationFiller;
@@ -226,11 +225,11 @@ public class OperationManager : MonoBehaviour, IOperationManager {
             GameLogger.LogInfo($"Beginning operation: {operation}", LogCategory.OperationManager);
 
             TargetOperationRequest request = new(
-                operation.RequestTargets,
+                operation.GetTargets(),
                 operation.IsMandatory,
                 operation.Source);
 
-            var targets = await operationFiller.FillTargetsAsync(
+            TargetOperationResult targets = await operationFiller.FillTargetsAsync(
                 request,
                 cancellationToken);
 
@@ -267,7 +266,13 @@ public class OperationManager : MonoBehaviour, IOperationManager {
     }
 
     private bool ValidateOperation(GameOperation operation) {
-        if (operation.RequestTargets.Count > 0 && !operationFiller.CanFillTargets(operation.RequestTargets)) {
+        List<TypedTargetBase> typedTargetBases = operation.GetTargets();
+        if (typedTargetBases.Count == 0) {
+            GameLogger.LogWarning($"{operation} cannot be executed - targets = 0", LogCategory.OperationManager);
+            return false;
+        }
+
+        if (!operationFiller.CanFillTargets(typedTargetBases)) {
             GameLogger.LogWarning($"{operation} cannot be executed - targets cannot be filled", LogCategory.OperationManager);
             return false;
         }
@@ -399,67 +404,4 @@ public enum Priority {
     Critical = 3
 }
 
-public abstract class GameOperation 
-{
-    [Inject] protected readonly IVisualManager VisualManager;
-    [Inject] protected readonly IVisualTaskFactory VisualTaskFactory;
 
-    public List<Target> RequestTargets = new();
-    protected Dictionary<string, UnitModel> filledTargets;
-    public bool IsMandatory { get; set; } = false;
-    public UnitModel Source { get; set; }
-    
-    public abstract bool Execute();
-    
-    public void SetTargets(Dictionary<string, UnitModel> filledTargets) 
-    {
-        this.filledTargets = filledTargets;
-    }
-    
-    protected bool TryGetTarget<T>(string key, out T result) where T : UnitModel {
-        if (filledTargets.TryGetValue(key, out var obj) && obj is T cast) 
-        {
-            result = cast;
-            return true;
-        }
-        result = null;
-        return false;
-    }
-    
-    public bool IsReady() 
-    {
-        return !HasUnfilledTargets();
-    }
-    
-    public bool HasUnfilledTargets() 
-    {
-        if (filledTargets == null) return false;
-        bool isMismatchTargets = filledTargets.Count != RequestTargets.Count;
-        bool isAnyEmpty = filledTargets.Values.Any(unit => unit == null);
-        return isAnyEmpty || isMismatchTargets;
-    }
-    
-    public void SetSource(UnitModel source) {
-        Source = source;
-    }
-}
-
-public class Target {
-    public string Key { get; }
-    public ITargetRequirement Requirement { get; }
-    public UnitModel Unit { get; set; }
-
-    public Target(string key, ITargetRequirement requirement) {
-        Key = key;
-        Requirement = requirement;
-    }
-
-    public bool HasTarget => Unit != null;
-    public bool IsValid => Unit != null && Requirement.IsValid(Unit).IsValid;
-
-    public T As<T>() where T : UnitModel => Unit as T;
-    public bool TryGet<T>(out T result) where T : UnitModel {
-        result = Unit as T;
-        return result != null;
-    }
-}

@@ -11,8 +11,6 @@ public class CreaturePresenter : UnitPresenter {
     }
 
     private void UpdateUI() {
-        var data = Creature.SourceCard.CreatureCardData;
-
         // Простий спосіб через готовий конфіг
         var displayData = ConvertToDisplayData(Creature.SourceCard);
         CardDisplayContext context = new(displayData, CardDisplayConfig.ForCreature());
@@ -41,9 +39,6 @@ public class CreaturePresenter : UnitPresenter {
     #region UnitPresenter API
     public override UnitModel GetModel() {
         return Creature;
-    }
-    public override BoardPlayer GetPlayer() {
-        return Creature.GetPlayer();
     }
     #endregion
 

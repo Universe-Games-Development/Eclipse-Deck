@@ -27,7 +27,7 @@ public class RoomSystem : MonoBehaviour {
         if (roomView != null && CurrentRoom.Data != null)
             roomView.InitializeView(CurrentRoom.Data);
     }
-    public SplineContainer GetEntrySplineForOpponent(Character opponent, Room chosenRoom) {
+    public SplineContainer GetEntrySplineForOpponent(Opponent opponent, Room chosenRoom) {
         if (opponent is Player)
             return roomView?.playerEntrySpline;  
         if (opponent is Enemy)
@@ -35,7 +35,7 @@ public class RoomSystem : MonoBehaviour {
         throw new ArgumentException("Unknown opponent type");
     }
 
-    public SplineContainer GetExitSplineForOpponent(Character opponent, Room exitedRoom) {
+    public SplineContainer GetExitSplineForOpponent(Opponent opponent, Room exitedRoom) {
         if (opponent is Player)
             return roomView?.playerExitSpline;
         if (opponent is Enemy)

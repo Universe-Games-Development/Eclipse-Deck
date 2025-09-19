@@ -4,5 +4,5 @@ using UnityEngine;
 public class SummonOperationData : OperationData {
 
     [Header("Summon Visual")]
-    public SummonVisualData visualData;
+    public SummonVisualData visualTemplate;
 }

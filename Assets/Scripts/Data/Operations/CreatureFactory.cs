@@ -45,8 +45,7 @@ public class CreatureFactory<TView> : ICreatureFactory<TView> where TView : Card
         view.name = $"Creature_{creature.Data.Name}_{creature.GetHashCode()}";
 
         // Створюємо або отримуємо presenter
-        CreaturePresenter presenter;
-        if (!view.TryGetComponent(out presenter)) {
+        if (!view.TryGetComponent(out CreaturePresenter presenter)) {
             presenter = container.InstantiateComponent<CreaturePresenter>(view.gameObject);
             //presenter = view.gameObject.AddComponent<CreaturePresenter>();
             if (presenter == null) {
@@ -69,12 +68,12 @@ public class CreatureFactory<TView> : ICreatureFactory<TView> where TView : Card
                container != null;
     }
 
-    public void DestroyCreature(CreaturePresenter creaturePresenter) {
-        if (creaturePresenter == null) return;
+    public void DestroyCreature(CreaturePresenter presenter) {
+        if (presenter == null) return;
 
-        _unitRegistry.Unregister(creaturePresenter);
+        _unitRegistry.Unregister(presenter);
 
-        if (creaturePresenter.View is TView view) {
+        if (presenter.View is TView view) {
             _pool.Release(view);
         }
     }

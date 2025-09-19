@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using static UnityEngine.UI.GridLayoutGroup;
 
 public class ZoneColor : MonoBehaviour
 {
@@ -15,19 +16,32 @@ public class ZoneColor : MonoBehaviour
 
     private void Start() {
         TryChangeColorToOwner();
+
+        zonePresenter.Zone.OnChangedOwner += HandleOwnerChanged;
+    }
+
+    private void HandleOwnerChanged(Opponent opponent) {
+        Color color = unAssignedColor;
+
+        if (opponent != null && opponent.Data != null) {
+            CharacterData data = opponent.Data;
+            color = data.Color;
+        }
+
+        if (zonePresenter.Owner != null) {
+            CharacterData data = zonePresenter.Owner.Opponent.Data;
+            color = data.Color;
+        }
+
+        zoneRenderer.material.color = color;
     }
 
     private void TryChangeColorToOwner() {
-        if (zonePresenter == null) {
+        if (zonePresenter == null || zonePresenter.Zone == null) {
             Debug.LogWarning("ZonePresenter is not assigned.");
             return;
         }
-        if (zonePresenter.Owner == null) {
-            //Debug.LogWarning("ZonePresenter owner is not assigned.");
-        }
-        BoardPlayer owner = zonePresenter.Owner;
-        Color color = owner == null ? unAssignedColor : owner.Character.Data.Color;
-
-        zoneRenderer.material.color = color;
+        var owner = zonePresenter.Zone.GetPlayer(); ;
+        HandleOwnerChanged(owner);
     }
 }

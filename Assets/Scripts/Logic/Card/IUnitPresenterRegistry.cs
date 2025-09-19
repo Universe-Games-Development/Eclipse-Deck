@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 public interface IUnitPresenterRegistry {
     void Register(UnitModel model, UnitPresenter presenter);
@@ -18,6 +19,18 @@ public class UnitPresenterRegistry : IUnitPresenterRegistry {
 
         Unregister(model);
         Unregister(presenter);
+
+        string modelName = model.GetName();
+        string modelInfo = model.ToString();
+        string presenterInfo = presenter.ToString();
+
+        if (!string.IsNullOrEmpty(modelName)) {
+            Debug.Log($"Register : {modelInfo}");
+            bool isWrong = !presenterInfo.Contains(modelName);
+            if (isWrong) {
+                Debug.LogWarning($"AHA! Presenter \"{presenterInfo}\" does not match model \"{modelName}\". Possible identity theft?");
+            }
+        }
 
         _modelToPresenter[model] = presenter;
         _presenterToModel[presenter] = model;

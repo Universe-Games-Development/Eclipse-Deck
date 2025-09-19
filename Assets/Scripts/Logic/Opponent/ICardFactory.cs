@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 using Zenject;
 
 public interface ICardFactory<TView> {
@@ -55,12 +56,13 @@ public class CardFactory<TView> : ICardFactory<TView> where TView : CardView {
         return presenter;
     }
 
-    public void RemovePresenter(CardPresenter cardPresenter) {
-        if (cardPresenter == null) return;
+    public void RemovePresenter(CardPresenter presenter) {
+        if (presenter == null) return;
 
-        _unitRegistry.Unregister(cardPresenter);
+        _unitRegistry.Unregister(presenter);
 
-        if (cardPresenter.View is TView view) {
+
+        if (presenter.View is TView view) {
             _pool.Release(view);
         }
     }

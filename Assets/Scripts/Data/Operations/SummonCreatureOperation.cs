@@ -1,28 +1,52 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using System.Linq;
 using UnityEngine;
-using Zenject;
 
-[CreateAssetMenu(fileName = "SummonVisualData", menuName = "Operations/Visuals/SummonVisualData")]
-public class SummonVisualData : VisualData {
-    [Header("Card Transform Effect")]
-    public GameObject transformEffectPrefab; // Блиск, іскри, дим
-    public float transformDuration = 5f;
-    public AnimationCurve transformCurve;
+[OperationFor(typeof(SummonOperationData))]
+public class SummonCreatureOperation : GameOperation {
+    private const string SpawnZoneKey = "spawnZone";
+    private readonly SummonOperationData _data;
 
-    [Header("Creature Materialization")]
-    public GameObject materializationEffect; // Портал, світло
-    public float materializationDelay;
+    private readonly ICreatureFactory<Card3DView> creatureFactory;
 
-    // Runtime дані
-    public Creature _creature;
-    public CreatureCard _creatureCard;
-    public Zone _zone;
+    public SummonCreatureOperation(SummonOperationData data, ICreatureFactory<Card3DView> creatureFactory) {
+        _data = data;
+        this.creatureFactory = creatureFactory;
 
-    public void SetSummonData(Creature creature, CreatureCard creatureCard, Zone zone) {
-        _creature = creature;
-        _creatureCard = creatureCard;
-        _zone = zone;
+        ZoneRequirement allyZone = TargetRequirements.AllyZone;
+        AddTarget(SpawnZoneKey, allyZone);
+    }
+
+    public override bool Execute() {
+        if (!TryGetTypedTarget(SpawnZoneKey, out Zone zone)) {
+            Debug.LogError($"Valid {SpawnZoneKey} not found");
+            return false;
+        }
+
+        if (Source is not CreatureCard creatureCard) {
+            Debug.LogError($"{this}: Creature card is null");
+            return false;
+        }
+
+        // 1. Створюємо істоту
+        var creature = creatureFactory.CreateModel(creatureCard);
+        if (creature == null) return false;
+
+        // 4. Створюємо візуальну задачу
+        var summonTask = visualTaskFactory.Create<SummonVisualTask>(_data.visualTemplate);
+        // 2. Створюємо runtime контекст із template
+        summonTask.SetRuntimeData(
+            creature,
+            creatureCard,
+            zone
+        );
+        visualManager.Push(summonTask);
+
+        // 5. Виконуємо логіку
+        zone.PlaceCreature(creature);
+
+        return true;
     }
 }
 
@@ -31,86 +55,64 @@ public class SummonVisualTask : VisualTask {
     private readonly ICardFactory<Card3DView> _cardFactory;
 
     private SummonVisualData _data;
+    public Creature Creature { get; private set; }
+    public CreatureCard CreatureCard { get; private set; }
+    public Zone Zone { get; private set; }
 
-    public SummonVisualTask(SummonVisualData data, ICreatureFactory<Card3DView> creatureFactory, ICardFactory<Card3DView> cardFactory) {
-        _data = data;
+    public SummonVisualTask(SummonVisualData context, ICreatureFactory<Card3DView> creatureFactory, ICardFactory<Card3DView> cardFactory) {
+        _data = context;
         _creatureFactory = creatureFactory;
         _cardFactory = cardFactory;
     }
 
+    public void SetRuntimeData(Creature creature, CreatureCard creatureCard, Zone zone) {
+        Creature = creature;
+        CreatureCard = creatureCard;
+        Zone = zone;
+    }
+
     public override async UniTask Execute() {
-        
-        CardPresenter cardPresenter = UnitRegistry.GetPresenter<CardPresenter>(_data._creatureCard);
-        ZonePresenter zonePresenter = UnitRegistry.GetPresenter<ZonePresenter>(_data._zone);
+        if (CreatureCard == null || Zone == null) {
+            Debug.Log($"runtime data is not set for : {this}");
+        }
+        // 1. Отримуємо презентери
+        CardPresenter cardPresenter = UnitRegistry.GetPresenter<CardPresenter>(CreatureCard);
+        ZonePresenter zonePresenter = UnitRegistry.GetPresenter<ZonePresenter>(Zone);
+
+        System.Collections.Generic.List<UnitPresenter> unitPresenters = UnitRegistry.GetAllPresenters().Where(presenter => presenter is CardPresenter).ToList();
+        if (cardPresenter == null) {
+            Debug.LogWarning($"Missing Card presenter for : {CreatureCard}");
+            return;
+        }
+        // 2. Ефект трансформації карти
         Vector3 spawnPosition = cardPresenter.transform.position;
+
+        // 3.Видаляємо карту
         _cardFactory.RemovePresenter(cardPresenter);
-        
 
-        Vector3 zonePosition = zonePresenter.transform.position + Vector3.up * 3f;
+        // 4. Створюємо істоту
+        CreaturePresenter creaturePresenter = _creatureFactory.SpawnPresenter(Creature);
 
-        
-
-        CreaturePresenter creaturePresenter = _creatureFactory.SpawnPresenter(_data._creature);
+        Debug.Log($"CREATURE Created : {creaturePresenter} for {Creature}");
         creaturePresenter.transform.position = spawnPosition;
 
-        Tweener aligmentAnimation = creaturePresenter.transform.DOMove(zonePosition, 0.5f);
+        // 5. Анімація переміщення
+        Vector3 zonePosition = zonePresenter.transform.position + _data.aligmentHeightOffset;
+        Tweener aligmentAnimation = creaturePresenter.transform.DOMove(zonePosition, _data.aboveAligmentDuration).SetEase(_data.moveEase);
         await creaturePresenter.View.DoTweener(aligmentAnimation);
-        
 
-        // Animation Simulation
-        await UniTask.WaitForSeconds(_data.transformDuration);
-    }
-}
-
-public interface IVisualTaskFactory {
-    TVisualTask Create<TVisualTask>(VisualData data) where TVisualTask : VisualTask;
-}
-
-public class VisualTaskFactory : IVisualTaskFactory {
-    [Inject] DiContainer container;
-    public TVisualTask Create<TVisualTask>(VisualData data) where TVisualTask : VisualTask {
-        return container.Instantiate<TVisualTask>(new object[] { data });
-    }
-}
-
-[OperationFor(typeof(SummonOperationData))]
-public class SummonCreatureOperation : GameOperation {
-    private const string SpawnZoneKey = "spawnZone";
-    private readonly SummonOperationData _data;
-
-    private readonly ICreatureFactory<Card3DView> _creatureFactory;
-
-    public SummonCreatureOperation(SummonOperationData data, ICreatureFactory<Card3DView> spawnService) {
-        _data = data;
-        _creatureFactory = spawnService;
-
-        ZoneRequirement allyZone = TargetRequirements.AllyZone;
-        RequestTargets.Add(new Target(SpawnZoneKey, allyZone));
+        // 5. Анімація переміщення
+        await PlayMaterializationEffect(creaturePresenter);
     }
 
-    public override bool Execute() {
-        if (!TryGetTarget(SpawnZoneKey, out Zone zone)) {
-            Debug.LogError($"Valid {SpawnZoneKey} not found");
-            return false;
+    private async UniTask PlayMaterializationEffect(CreaturePresenter creaturePresenter) {
+        GameObject materializationEffect = _data.materializationEffect;
+        if (materializationEffect != null) {
+            var effect = Object.Instantiate(materializationEffect, creaturePresenter.transform.position, Quaternion.identity);
+            Object.Destroy(effect, 2f);
         }
 
-        CreatureCard creatureCard = Source as CreatureCard;
-        if (creatureCard == null) {
-            Debug.LogError($"{this}: Creature card is null");
-            return false;
-        }
-
-        Creature creature = _creatureFactory.CreateModel(creatureCard);
-        if (creature == null) return false;
-
-        _data.visualData.SetSummonData(creature, creatureCard, zone);
-
-        SummonVisualTask summonVisualTask = VisualTaskFactory.Create<SummonVisualTask>(_data.visualData);
-        VisualManager.Push(summonVisualTask);
-
-        zone.PlaceCreature(creature);
-
-        return true;
+        await UniTask.Delay((int)(_data.materializationDelay * 1000));
     }
 }
 

@@ -231,10 +231,11 @@ public class SummonZone3DLayout : ILayout3DHandler {
         if (totalRows == 1) return 0f;
 
         // Центруємо ряди відносно Z = 0
-        float totalRowsHeight = (totalRows - 1) * _settings.RowSpacing;
+        float totalRowsHeight = (totalRows - 1) * (_settings.CardHeight + _settings.RowSpacing);
+
         float startZ = -totalRowsHeight / 2f;
 
-        return startZ + currentRow * _settings.RowSpacing;
+        return startZ + currentRow * (_settings.CardHeight + _settings.RowSpacing);
     }
 
     private List<Vector3> CalculateRowPositions(int cardsInRow, float zPos) {

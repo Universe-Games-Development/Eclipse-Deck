@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: ZoneLayoutSettings
   m_EditorClassIdentifier: 
   CardWidth: 2.5
-  CardHeight: 0.2
+  CardHeight: 2
   ScaleCardsWhenCrowded: 1
   MinCardScale: 0.8
   CardSpacing: 0.08
-  MaxCardsPerRow: 6
+  MaxCardsPerRow: 4
   RowSpacing: 1.5
   UseMultipleRows: 1
