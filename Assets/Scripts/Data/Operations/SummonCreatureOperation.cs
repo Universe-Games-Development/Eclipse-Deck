@@ -1,26 +1,26 @@
 using Cysharp.Threading.Tasks;
-using DG.Tweening;
-using System.Linq;
 using UnityEngine;
+using Zenject;
 
 [OperationFor(typeof(SummonOperationData))]
 public class SummonCreatureOperation : GameOperation {
-    private const string SpawnZoneKey = "spawnZone";
+    private const string SpawnPlaceKey = "spawnZone";
     private readonly SummonOperationData _data;
 
-    private readonly ICreatureFactory<Card3DView> creatureFactory;
+    private readonly ICreatureFactory creatureFactory;
+    
 
-    public SummonCreatureOperation(SummonOperationData data, ICreatureFactory<Card3DView> creatureFactory) {
+    public SummonCreatureOperation(SummonOperationData data, ICreatureFactory creatureFactory) {
         _data = data;
         this.creatureFactory = creatureFactory;
 
-        ZoneRequirement allyZone = TargetRequirements.AllyZone;
-        AddTarget(SpawnZoneKey, allyZone);
+        PlaceRequirement allyZone = TargetRequirements.AllyPlace;
+        AddTarget(SpawnPlaceKey, allyZone);
     }
 
     public override bool Execute() {
-        if (!TryGetTypedTarget(SpawnZoneKey, out Zone zone)) {
-            Debug.LogError($"Valid {SpawnZoneKey} not found");
+        if (!TryGetTypedTarget(SpawnPlaceKey, out Zone zone)) {
+            Debug.LogError($"Valid {SpawnPlaceKey} not found");
             return false;
         }
 
@@ -33,85 +33,59 @@ public class SummonCreatureOperation : GameOperation {
         var creature = creatureFactory.CreateModel(creatureCard);
         if (creature == null) return false;
 
-        // 4. Створюємо візуальну задачу
-        var summonTask = visualTaskFactory.Create<SummonVisualTask>(_data.visualTemplate);
-        // 2. Створюємо runtime контекст із template
-        summonTask.SetRuntimeData(
-            creature,
-            creatureCard,
-            zone
+        // 2. Створюємо візуальну задачу
+        var summonTask = visualTaskFactory.Create<SommonFromCardVisualTask>(
+            creature, zone, creatureCard, _data.visualTemplate
         );
+
         visualManager.Push(summonTask);
 
-        // 5. Виконуємо логіку
-        zone.PlaceCreature(creature);
-
-        return true;
+        // 3. Виконуємо логіку
+        return zone.TryPlaceCreature(creature);
     }
 }
 
-public class SummonVisualTask : VisualTask {
-    private readonly ICreatureFactory<Card3DView> _creatureFactory;
-    private readonly ICardFactory<Card3DView> _cardFactory;
 
-    private SummonVisualData _data;
-    public Creature Creature { get; private set; }
-    public CreatureCard CreatureCard { get; private set; }
-    public Zone Zone { get; private set; }
+// Transform Card into Creature
+public class SommonFromCardVisualTask : VisualTask {
+    private readonly Creature _creature;
+    private readonly SummonVisualData _data;
 
-    public SummonVisualTask(SummonVisualData context, ICreatureFactory<Card3DView> creatureFactory, ICardFactory<Card3DView> cardFactory) {
-        _data = context;
-        _creatureFactory = creatureFactory;
-        _cardFactory = cardFactory;
+    [Inject] IUnitSpawner<Creature, CreatureView, CreaturePresenter> _creatureSpawner;
+    [Inject] IUnitSpawner<Card, CardView, CardPresenter> _cardSpawner;
+    [Inject] IUnitRegistry unitRegistry;
+
+    private CreatureView _creatureView;
+
+    public SommonFromCardVisualTask(Creature creature, SummonVisualData data) {
+        _creature = creature;
+        _data = data;
     }
 
-    public void SetRuntimeData(Creature creature, CreatureCard creatureCard, Zone zone) {
-        Creature = creature;
-        CreatureCard = creatureCard;
-        Zone = zone;
+    public override async UniTask<bool> Execute() {
+        CardPresenter cardPresenter = unitRegistry.GetPresenter<CardPresenter>(_creature.SourceCard);
+        Vector3 _spawnPosition = cardPresenter.CardView.transform.position;
+        _cardSpawner.RemoveUnit(cardPresenter);
+
+        CreaturePresenter creaturePresenter = _creatureSpawner.SpawnUnit(_creature);
+        _creatureView = creaturePresenter.CreatureView;
+        _creatureView.transform.position = _spawnPosition;
+
+        // 2. Ефект матеріалізації
+        await PlayMaterializationEffect();
+
+        return true;
     }
 
-    public override async UniTask Execute() {
-        if (CreatureCard == null || Zone == null) {
-            Debug.Log($"runtime data is not set for : {this}");
+    private async UniTask PlayMaterializationEffect() {
+        if (_data.materializationEffect != null) {
+            var effect = GameObject.Instantiate(
+                _data.materializationEffect,
+                _creatureView.transform.position,
+                Quaternion.identity
+            );
+            GameObject.Destroy(effect, 2f);
         }
-        // 1. Отримуємо презентери
-        CardPresenter cardPresenter = UnitRegistry.GetPresenter<CardPresenter>(CreatureCard);
-        ZonePresenter zonePresenter = UnitRegistry.GetPresenter<ZonePresenter>(Zone);
-
-        System.Collections.Generic.List<UnitPresenter> unitPresenters = UnitRegistry.GetAllPresenters().Where(presenter => presenter is CardPresenter).ToList();
-        if (cardPresenter == null) {
-            Debug.LogWarning($"Missing Card presenter for : {CreatureCard}");
-            return;
-        }
-        // 2. Ефект трансформації карти
-        Vector3 spawnPosition = cardPresenter.transform.position;
-
-        // 3.Видаляємо карту
-        _cardFactory.RemovePresenter(cardPresenter);
-
-        // 4. Створюємо істоту
-        CreaturePresenter creaturePresenter = _creatureFactory.SpawnPresenter(Creature);
-
-        Debug.Log($"CREATURE Created : {creaturePresenter} for {Creature}");
-        creaturePresenter.transform.position = spawnPosition;
-
-        // 5. Анімація переміщення
-        Vector3 zonePosition = zonePresenter.transform.position + _data.aligmentHeightOffset;
-        Tweener aligmentAnimation = creaturePresenter.transform.DOMove(zonePosition, _data.aboveAligmentDuration).SetEase(_data.moveEase);
-        await creaturePresenter.View.DoTweener(aligmentAnimation);
-
-        // 5. Анімація переміщення
-        await PlayMaterializationEffect(creaturePresenter);
-    }
-
-    private async UniTask PlayMaterializationEffect(CreaturePresenter creaturePresenter) {
-        GameObject materializationEffect = _data.materializationEffect;
-        if (materializationEffect != null) {
-            var effect = Object.Instantiate(materializationEffect, creaturePresenter.transform.position, Quaternion.identity);
-            Object.Destroy(effect, 2f);
-        }
-
         await UniTask.Delay((int)(_data.materializationDelay * 1000));
     }
 }

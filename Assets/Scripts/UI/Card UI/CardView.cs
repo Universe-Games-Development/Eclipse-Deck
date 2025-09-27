@@ -4,7 +4,7 @@ using System;
 using System.Threading;
 using UnityEngine;
 
-public abstract class CardView : MonoBehaviour {
+public abstract class CardView : UnitView {
 
     public Action<CardView> OnCardClicked;
     public Action<CardView, bool> OnHoverChanged;
@@ -13,6 +13,8 @@ public abstract class CardView : MonoBehaviour {
     private bool _isInteractive = true;
 
     [SerializeField] protected MovementComponent movementComponent;
+    [SerializeField] protected CardTiltController tiltController;
+    [SerializeField] public Transform innerBody;
 
     #region Unity Lifecycle
 
@@ -34,14 +36,6 @@ public abstract class CardView : MonoBehaviour {
 
     protected virtual void CleanupResources() {
         DOTween.Kill(this); // Очищаем все анимации, связанные с этим объектом
-    }
-
-    #endregion
-
-    #region State Management
-
-    public void SetInteractivity(bool enabled) {
-        _isInteractive = enabled;
     }
 
     #endregion
@@ -99,6 +93,10 @@ public abstract class CardView : MonoBehaviour {
     public void StopMovement() {
         movementComponent?.StopMovement();
     }
+
+    public void ToggleTiling(bool enable) {
+        tiltController.ToggleTiling(enable);
+    }
     #endregion
 
     public abstract void UpdateDisplay(CardDisplayContext context);
@@ -113,4 +111,8 @@ public abstract class CardView : MonoBehaviour {
     #endregion
 
     public abstract void SetHoverState(bool isHovered);
+
+    public void SetInteractable(bool value) {
+        _isInteractive = value;
+    }
 }

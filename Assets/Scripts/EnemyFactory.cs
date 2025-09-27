@@ -12,12 +12,12 @@ public class EnemyFactory : MonoBehaviour {
     [Inject] private DiContainer _container;
     [Inject] private EnemyResourceProvider _enemyResourceProvider;
 
-    public Enemy CreateEnemy(EnemyData enemyData) {
-        Enemy enemy = _container.Instantiate<Enemy>(new object[] { enemyData });
+    public Opponent CreateEnemy(EnemyData enemyData) {
+        Opponent enemy = _container.Instantiate<Opponent>(new object[] { enemyData });
         return enemy;
     }
 
-    public Enemy CreateEnemy(EnemyType type) {
+    public Opponent CreateEnemy(EnemyType type) {
         if (!_enemyResourceProvider.TryGetCachedEnemies(type, out List<EnemyData> enemiesData)) {
             if (enemiesData == null || enemiesData.Count == 0) {
                 Debug.LogWarning($"Enemy type {type} not found to spawn");
@@ -30,7 +30,7 @@ public class EnemyFactory : MonoBehaviour {
         return CreateEnemy(enemyData);
     }
 
-    public CharacterPresenter SpawnEnemy(Enemy enemy) {
+    public CharacterPresenter SpawnEnemy(Opponent enemy) {
 
         // Створюємо презентер ворога через DI контейнер
         CharacterPresenter enemyPresenter = _container.InstantiatePrefabForComponent<CharacterPresenter>(

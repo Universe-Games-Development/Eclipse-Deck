@@ -128,11 +128,11 @@ public class MinHealthCondition : Condition<IHealthable> {
 }
 
 // Типізовані Requirements
-public class ZoneRequirement : TargetRequirement<Zone> {
-    public ZoneRequirement(params ICondition[] conditions) : base(conditions) {
+public class PlaceRequirement : TargetRequirement<Zone> {
+    public PlaceRequirement(params ICondition[] conditions) : base(conditions) {
     }
     public override string GetInstruction() {
-        return "Select a zone";
+        return "Select a place";
     }
 }
 public class CreatureRequirement : TargetRequirement<Creature> {
@@ -152,10 +152,10 @@ public static class TargetRequirements {
 
     public static CreatureRequirement AnyCreature => new();
 
-    public static ZoneRequirement AllyZone =>
+    public static PlaceRequirement AllyPlace =>
         new(new OwnershipCondition(OwnershipType.Ally));
 
-    public static ZoneRequirement EnemyZone =>
+    public static PlaceRequirement EnemyPlace =>
         new(new OwnershipCondition(OwnershipType.Enemy));
 
     // Тепер можемо комбінувати умови різних типів

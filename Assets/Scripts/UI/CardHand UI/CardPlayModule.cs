@@ -113,7 +113,7 @@ public class CardPlaySession : IDisposable {
                 ));
 
                 if (!operationResult.IsSuccess) {
-                    var failedResult = CardPlayResult.Failed(operationResult.ErrorMessage);
+                    var failedResult = CardPlayResult.Failed(operationResult.Error);
                     _eventBus.Raise(new CardPlaySessionEndedEvent(_card, failedResult));
                     return failedResult;
                 }
@@ -272,15 +272,18 @@ public struct CardPlayResult {
 
 public struct OperationResult {
     public bool IsSuccess { get; }
-    public string ErrorMessage { get; }
+    public string Error { get; }
 
-    private OperationResult(bool isSuccess, string errorMessage) {
+    private OperationResult(bool isSuccess, string errorMessage = null) {
         IsSuccess = isSuccess;
-        ErrorMessage = errorMessage;
+        Error = errorMessage;
     }
 
     public static OperationResult Success() => new(true, null);
     public static OperationResult Failed(string errorMessage) => new(false, errorMessage);
+
+    public static implicit operator bool(OperationResult result) => result.IsSuccess;
+    public static implicit operator OperationResult(bool IsSuccess) => new(IsSuccess);
 }
 
 // 1. Івент старту сесії гри карти

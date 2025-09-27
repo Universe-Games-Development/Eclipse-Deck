@@ -43,11 +43,11 @@ public class CreatureCard : Card, IHealthable {
     public Health Health { get; private set; }
     public Attack Attack { get; private set; }
 
-    public CreatureCard(CreatureCardData cardData)
+    public CreatureCard(CreatureCardData cardData, Health health, Attack attack)
         : base(cardData) {
 
-        Health = new(cardData.Health, this);
-        Attack = new(cardData.Attack, this);
+        Health = health;
+        Attack = attack;
     }
 
     public override string ToString() {

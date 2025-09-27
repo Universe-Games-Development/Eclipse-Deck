@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [System.Serializable]
@@ -7,117 +8,295 @@ public class LayoutPoint {
     public Vector3 position;
     public Quaternion rotation;
     public int orderIndex;
+    public int rowIndex;
+    public int columnIndex;
 
-    public LayoutPoint(Vector3 pos, Quaternion rot, int order) {
+    public LayoutPoint(Vector3 pos, Quaternion rot, int order, int row = 0, int col = 0) {
         position = pos;
         rotation = rot;
         orderIndex = order;
+        rowIndex = row;
+        columnIndex = col;
     }
+}
+
+public class RowLayoutSettings {
+    public int ItemsPerRow;
+    public int RowsCount;
+
+    public RowLayoutSettings(int itemsPerRow, int rowsCount) {
+        ItemsPerRow = itemsPerRow;
+        RowsCount = rowsCount;
+    }
+}
+
+// Результат розрахунку макету з метаданими
+public class LayoutResult {
+    public List<LayoutPoint> Points { get; set; }
+    public LayoutMetadata Metadata { get; set; }
+
+    public LayoutResult(List<LayoutPoint> points, LayoutMetadata metadata) {
+        Points = points;
+        Metadata = metadata;
+    }
+}
+
+// Метадані макету для подальшого використання
+public class LayoutMetadata {
+    public int TotalItems { get; set; }
+    public int RowsCount { get; set; }
+    public int ItemsPerRow { get; set; }
+    public float TotalWidth { get; set; }
+    public float TotalLength { get; set; }
+    public List<RowMetadata> Rows { get; set; }
+    public float CompressionRatio { get; set; }
+    public bool HasOverlapping { get; set; }
+    public float MaxOverlapAmount { get; set; }
+
+    public LayoutMetadata() {
+        Rows = new List<RowMetadata>();
+    }
+}
+
+// Метадані окремого ряду
+public class RowMetadata {
+    public int RowIndex { get; set; }
+    public int ItemCount { get; set; }
+    public float StartX { get; set; }
+    public float Spacing { get; set; }
+    public float RowWidth { get; set; }
+    public float ZPosition { get; set; }
+    public bool IsOverlapping { get; set; }
+    public float OverlapAmount { get; set; }
+    public float CompressionRatio { get; set; }
 }
 
 public interface ILayout3DHandler {
-    List<LayoutPoint> CalculateCardTransforms(int cardCount);
+    LayoutResult CalculateLayout(int itemsCount, RowLayoutSettings rowSettings = null);
 }
 
 public class Linear3DLayout : ILayout3DHandler {
-    private readonly Linear3DHandLayoutSettings _settings;
+    private readonly LayoutSettings _settings;
 
-    public Linear3DLayout(Linear3DHandLayoutSettings settings) {
+    public Linear3DLayout(LayoutSettings settings) {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
     }
 
-    public List<LayoutPoint> CalculateCardTransforms(int cardCount) {
-        var transforms = new List<LayoutPoint>();
-        if (cardCount <= 0) return transforms;
+    public LayoutResult CalculateLayout(int itemsCount, RowLayoutSettings rowSettings = null) {
+        if (itemsCount <= 0)
+            return new LayoutResult(new List<LayoutPoint>(), new LayoutMetadata { TotalItems = 0 });
 
-        // Одна карта завжди в центрі
-        if (cardCount == 1) {
-            transforms.Add(new LayoutPoint(
-                Vector3.zero,
-                Quaternion.identity,
-                0
-            ));
-            return transforms;
+        // Single point always in center
+        if (itemsCount == 1) {
+            var metadata = new LayoutMetadata {
+                TotalItems = 1,
+                RowsCount = 1,
+                ItemsPerRow = 1,
+                TotalWidth = _settings.ItemWidth + 2 * _settings.ItemSpacing,
+                TotalLength = _settings.ItemLength,
+                CompressionRatio = 1f,
+                HasOverlapping = false,
+                MaxOverlapAmount = 0f
+            };
+
+            metadata.Rows.Add(new RowMetadata {
+                RowIndex = 0,
+                ItemCount = 1,
+                StartX = 0f,
+                Spacing = 0f,
+                RowWidth = 0f,
+                ZPosition = 0f,
+                IsOverlapping = false,
+                OverlapAmount = 0f,
+                CompressionRatio = 1f
+            });
+
+            var points = new List<LayoutPoint> {
+                new LayoutPoint(Vector3.zero, Quaternion.identity, 0, 0, 0)
+            };
+
+            return new LayoutResult(points, metadata);
         }
 
-        // Розраховуємо оптимальні позиції з урахуванням стискання
-        var layoutData = CalculateLayoutData(cardCount);
-
-        for (int i = 0; i < cardCount; i++) {
-            transforms.Add(new LayoutPoint(
-                CalculateLocalPosition(i, cardCount, layoutData),
-                CalculateLocalRotation(i, cardCount),
-                i
-            ));
+        // Determine layout parameters
+        int itemsPerRow, rowsCount;
+        if (rowSettings == null || rowSettings.RowsCount == 1 || rowSettings.ItemsPerRow >= itemsCount) {
+            itemsPerRow = itemsCount;
+            rowsCount = 1;
+        } else {
+            itemsPerRow = rowSettings.ItemsPerRow;
+            rowsCount = Mathf.CeilToInt((float)itemsCount / itemsPerRow);
         }
 
-        return transforms;
+        return CalculateUniversalLayout(itemsCount, itemsPerRow, rowsCount);
     }
 
-    private LayoutData CalculateLayoutData(int cardCount) {
-        // Мінімальний відступ між картами (не менше 5% від ширини карти)
-        float minSpacing = _settings.CardWidth * 0.05f;
+    private LayoutResult CalculateUniversalLayout(int totalItems, int itemsPerRow, int rowsCount) {
+        var points = new List<LayoutPoint>();
+        var metadata = new LayoutMetadata {
+            TotalItems = totalItems,
+            RowsCount = rowsCount,
+            ItemsPerRow = itemsPerRow
+        };
 
-        // Мінімальна загальна ширина (карти впритул одна до одної)
-        float minTotalWidth = (cardCount * _settings.CardWidth) + ((cardCount - 1) * minSpacing);
+        // Calculate total height for centering
+        float totalLength = rowsCount > 1 ? (rowsCount - 1) * (_settings.ItemLength + _settings.RowSpacing) : _settings.ItemLength + _settings.RowSpacing;
+        float startZ = -totalLength / 2f;
 
-        // Якщо навіть мінімальна ширина більша за максимальну - використовуємо мінімальний відступ
-        if (minTotalWidth > _settings.MaxHandWidth) {
-            // У цьому випадку карти будуть частково перекриватися
-            float overlapWidth = _settings.MaxHandWidth;
-            float overlapSpacing = (overlapWidth - (cardCount * _settings.CardWidth)) / (cardCount - 1);
+        metadata.TotalLength = totalLength;
 
-            float startX_inner = -overlapWidth / 2f + _settings.CardWidth / 2f;
+        int itemIndex = 0;
+        float maxCompressionRatio = 1f;
+        bool hasOverlapping = false;
+        float maxOverlapAmount = 0f;
+        float maxRowWidth = 0f;
 
-            return new LayoutData {
-                StartX = startX_inner,
-                Spacing = _settings.CardWidth + overlapSpacing,
-                IsOverlapping = true,
-                OverlapAmount = Mathf.Abs(overlapSpacing) / _settings.CardWidth
-            };
+        for (int row = 0; row < rowsCount; row++) {
+            int itemsInThisRow = Mathf.Min(itemsPerRow, totalItems - itemIndex);
+            if (itemsInThisRow <= 0) break;
+
+            float zPos = startZ + row * (_settings.ItemLength + _settings.RowSpacing);
+
+            // Calculate row layout data with metadata
+            var rowResult = CalculateRowLayoutData(itemsInThisRow);
+            var rowMetadata = rowResult.Metadata;
+            rowMetadata.RowIndex = row;
+            rowMetadata.ItemCount = itemsInThisRow;
+            rowMetadata.ZPosition = zPos;
+
+            metadata.Rows.Add(rowMetadata);
+
+            // Track overall statistics
+            maxCompressionRatio = Mathf.Min(maxCompressionRatio, rowMetadata.CompressionRatio);
+            if (rowMetadata.IsOverlapping) {
+                hasOverlapping = true;
+                maxOverlapAmount = Mathf.Max(maxOverlapAmount, rowMetadata.OverlapAmount);
+            }
+            maxRowWidth = Mathf.Max(maxRowWidth, rowMetadata.RowWidth);
+
+            for (int col = 0; col < itemsInThisRow; col++) {
+                Vector3 position = CalculateItemPosition(col, itemsInThisRow, rowResult, zPos, row, rowsCount);
+                Quaternion rotation = CalculateItemRotation(col, itemsInThisRow, row);
+
+                points.Add(new LayoutPoint(position, rotation, itemIndex, row, col));
+                itemIndex++;
+            }
         }
 
-        // Ідеальна ширина без стиснення
-        float idealTotalWidth = (cardCount * _settings.CardWidth) + ((cardCount - 1) * _settings.CardSpacing);
+        // Set final metadata
+        metadata.TotalWidth = maxRowWidth;
+        metadata.CompressionRatio = maxCompressionRatio;
+        metadata.HasOverlapping = hasOverlapping;
+        metadata.MaxOverlapAmount = maxOverlapAmount;
 
-        // Якщо ідеальна ширина не перевищує максимальну - використовуємо ідеальну
-        if (idealTotalWidth <= _settings.MaxHandWidth) {
-            float startX_inner = -((cardCount - 1) * (_settings.CardWidth + _settings.CardSpacing)) / 2f;
+        return new LayoutResult(points, metadata);
+    }
 
-            return new LayoutData {
-                StartX = startX_inner,
-                Spacing = _settings.CardWidth + _settings.CardSpacing,
-                CompressionRatio = 1f
-            };
+    private RowLayoutResult CalculateRowLayoutData(int itemsInRow) {
+        var metadata = new RowMetadata();
+
+        if (itemsInRow <= 0) {
+            return new RowLayoutResult(new RowLayoutData(), metadata);
         }
 
-        // Потрібно стискати тільки відступи
-        float availableWidth = _settings.MaxHandWidth;
-        float compressedSpacing = (availableWidth - (cardCount * _settings.CardWidth)) / (cardCount - 1);
+        if (itemsInRow == 1) {
+            metadata.StartX = 0f;
+            metadata.Spacing = 0f;
+            metadata.RowWidth = _settings.ItemWidth;
+            metadata.CompressionRatio = 1f;
+            metadata.IsOverlapping = false;
+            metadata.OverlapAmount = 0f;
+
+            return new RowLayoutResult(
+                new RowLayoutData { StartX = 0f, Spacing = 0f },
+                metadata
+            );
+        }
+
+        float minSpacing = _settings.ItemWidth * 0.05f;
+        float idealSpacing = _settings.ItemSpacing;
+        float idealTotalWidth = (itemsInRow * _settings.ItemWidth) + ((itemsInRow - 1) * idealSpacing);
+
+        // Ideal case
+        if (idealTotalWidth <= _settings.MaxTotalWidth) {
+            float startX_2 = -idealTotalWidth / 2f + _settings.ItemWidth / 2f;
+
+            metadata.StartX = startX_2;
+            metadata.Spacing = _settings.ItemWidth + idealSpacing;
+            metadata.RowWidth = idealTotalWidth;
+            metadata.CompressionRatio = 1f;
+            metadata.IsOverlapping = false;
+            metadata.OverlapAmount = 0f;
+
+            return new RowLayoutResult(
+                new RowLayoutData { StartX = startX_2, Spacing = _settings.ItemWidth + idealSpacing },
+                metadata
+            );
+        }
+
+        float minTotalWidth = (itemsInRow * _settings.ItemWidth) + ((itemsInRow - 1) * minSpacing);
+
+        // Overlapping case
+        if (minTotalWidth > _settings.MaxTotalWidth) {
+            float overlapWidth = _settings.MaxTotalWidth;
+            float overlapSpacing = (overlapWidth - itemsInRow * _settings.ItemWidth) / (itemsInRow - 1);
+            float startX_2 = -overlapWidth / 2f + _settings.ItemWidth / 2f;
+            float overlapAmount = Mathf.Abs(overlapSpacing) / _settings.ItemWidth;
+
+            metadata.StartX = startX_2;
+            metadata.Spacing = _settings.ItemWidth + overlapSpacing;
+            metadata.RowWidth = overlapWidth;
+            metadata.CompressionRatio = overlapWidth / idealTotalWidth;
+            metadata.IsOverlapping = true;
+            metadata.OverlapAmount = overlapAmount;
+
+            return new RowLayoutResult(
+                new RowLayoutData { StartX = startX_2, Spacing = _settings.ItemWidth + overlapSpacing },
+                metadata
+            );
+        }
+
+        // Compressed spacing case
+        float availableWidth = _settings.MaxTotalWidth;
+        float compressedSpacing = (availableWidth - itemsInRow * _settings.ItemWidth) / (itemsInRow - 1);
         compressedSpacing = Mathf.Max(compressedSpacing, minSpacing);
 
-        float actualTotalWidth = (cardCount * _settings.CardWidth) + ((cardCount - 1) * compressedSpacing);
-        float startX = -actualTotalWidth / 2f + _settings.CardWidth / 2f;
-        float compressionRatio = actualTotalWidth / idealTotalWidth;
+        float actualTotalWidth = (itemsInRow * _settings.ItemWidth) + ((itemsInRow - 1) * compressedSpacing);
+        float startX = -actualTotalWidth / 2f + _settings.ItemWidth / 2f;
 
-        return new LayoutData {
-            StartX = startX,
-            Spacing = _settings.CardWidth + compressedSpacing,
-            CompressionRatio = compressionRatio
-        };
+        metadata.StartX = startX;
+        metadata.Spacing = _settings.ItemWidth + compressedSpacing;
+        metadata.RowWidth = actualTotalWidth;
+        metadata.CompressionRatio = actualTotalWidth / idealTotalWidth;
+        metadata.IsOverlapping = false;
+        metadata.OverlapAmount = 0f;
+
+        return new RowLayoutResult(
+            new RowLayoutData { StartX = startX, Spacing = _settings.ItemWidth + compressedSpacing },
+            metadata
+        );
     }
 
-    private Vector3 CalculateLocalPosition(int index, int totalCards, LayoutData layoutData) {
-        float xPos = layoutData.StartX + index * layoutData.Spacing;
+    private Vector3 CalculateItemPosition(int index, int itemsInRow, RowLayoutResult rowResult, float zOffset, int rowIndex, int totalRows) {
+        var layoutData = rowResult.LayoutData;
+        var metadata = rowResult.Metadata;
 
-        // Додаємо нелінійне зміщення по Y та Z для 3D ефекту
-        float normalizedIndex = (float)index / (totalCards - 1);
-        float yPos = -normalizedIndex * _settings.DepthOffset;
-        float zPos = -normalizedIndex * _settings.VerticalOffset;
+        float xPos = metadata.StartX + index * metadata.Spacing;
+        float yPos = 0f;
+        float zPos = zOffset;
 
-        // Додаємо варіацію для більш природнього вигляду
+        // Apply 3D effects
+        if (itemsInRow > 1) {
+            float normalizedIndex = (float)index / (itemsInRow - 1);
+            float rowEffect = totalRows > 1 ? (1f - (float)rowIndex / (totalRows - 1)) * 0.5f + 0.5f : 1f;
+
+            yPos = -normalizedIndex * _settings.DepthOffset * rowEffect;
+            zPos -= normalizedIndex * _settings.VerticalOffset * rowEffect;
+        }
+
+        // Position variation
         if (_settings.PositionVariation > 0f) {
-            float seed = index * 12.9898f;
+            float seed = (index + rowIndex * 100) * 12.9898f;
             float randomX = (Mathf.Sin(seed) * 2f - 1f) * _settings.PositionVariation;
             float randomY = (Mathf.Sin(seed * 1.5f) * 2f - 1f) * _settings.PositionVariation * 0.1f;
 
@@ -128,14 +307,14 @@ public class Linear3DLayout : ILayout3DHandler {
         return new Vector3(xPos, yPos, zPos);
     }
 
-    private Quaternion CalculateLocalRotation(int index, int totalCards) {
-        if (totalCards <= 1) return Quaternion.identity;
+    private Quaternion CalculateItemRotation(int index, int itemsInRow, int rowIndex) {
+        if (itemsInRow <= 1) return Quaternion.identity;
 
-        float t = (float)index / (totalCards - 1);
+        float t = (float)index / (itemsInRow - 1);
         float angle = Mathf.Lerp(-_settings.MaxRotationAngle, _settings.MaxRotationAngle, t);
 
         if (_settings.RotationOffset > 0f) {
-            float seed = index * 23.1406f;
+            float seed = (index + rowIndex * 100) * 23.1406f;
             float randomOffset = (Mathf.Sin(seed) * 2f - 1f) * _settings.RotationOffset;
             angle += randomOffset;
         }
@@ -143,122 +322,19 @@ public class Linear3DLayout : ILayout3DHandler {
         return Quaternion.Euler(0f, angle, 0f);
     }
 
-    // Допоміжний клас для зберігання розрахованих даних макету
-    private class LayoutData {
+    // Helper classes for internal calculations
+    private class RowLayoutData {
         public float StartX;
         public float Spacing;
-        public float CompressionRatio = 1f;
-        public bool IsOverlapping = false;
-        public float OverlapAmount = 0f;
-    }
-}
-
-public class SummonZone3DLayout : ILayout3DHandler {
-    private readonly SummonZone3DLayoutSettings _settings;
-
-    public SummonZone3DLayout(SummonZone3DLayoutSettings settings) {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
     }
 
-    public List<LayoutPoint> CalculateCardTransforms(int cardCount) {
-        var transforms = new List<LayoutPoint>();
+    private class RowLayoutResult {
+        public RowLayoutData LayoutData { get; }
+        public RowMetadata Metadata { get; }
 
-        if (cardCount <= 0) return transforms;
-
-        // Одна карта завжди в центрі (0, 0, 0)
-        if (cardCount == 1) {
-            transforms.Add(new LayoutPoint(Vector3.zero, Quaternion.identity, 0));
-            return transforms;
+        public RowLayoutResult(RowLayoutData layoutData, RowMetadata metadata) {
+            LayoutData = layoutData;
+            Metadata = metadata;
         }
-
-        // Якщо використовуємо декілька рядів і карт багато
-        if (_settings.UseMultipleRows && cardCount > _settings.MaxCardsPerRow) {
-            return CalculateMultiRowLayout(cardCount);
-        } else {
-            return CalculateSingleRowLayout(cardCount);
-        }
-    }
-
-    private List<LayoutPoint> CalculateSingleRowLayout(int cardCount) {
-        var transforms = new List<LayoutPoint>();
-
-        // Загальна ширина всіх карт + відступи між ними
-        float totalWidth = (cardCount * _settings.CardWidth) + ((cardCount - 1) * _settings.CardSpacing);
-
-        // Стартова позиція (ліва межа)
-        float startX = -totalWidth / 2f + _settings.CardWidth / 2f;
-
-        // Крок між центрами карт
-        float step = _settings.CardWidth + _settings.CardSpacing;
-
-        for (int i = 0; i < cardCount; i++) {
-            float xPos = startX + i * step;
-            Vector3 position = new Vector3(xPos, 0f, 0f);
-
-            transforms.Add(new LayoutPoint(position, Quaternion.identity, i));
-        }
-
-        return transforms;
-    }
-
-    private List<LayoutPoint> CalculateMultiRowLayout(int cardCount) {
-        var transforms = new List<LayoutPoint>();
-
-        int rows = Mathf.CeilToInt((float)cardCount / _settings.MaxCardsPerRow);
-        int cardIndex = 0;
-
-        for (int row = 0; row < rows; row++) {
-            // Кількість карт в поточному ряду
-            int cardsInRow = Mathf.Min(_settings.MaxCardsPerRow, cardCount - cardIndex);
-
-            // Z позиція для поточного ряду (центруємо ряди відносно Z = 0)
-            float zPos = CalculateRowZPosition(row, rows);
-
-            // Розраховуємо позиції для карт в поточному ряду
-            var rowPositions = CalculateRowPositions(cardsInRow, zPos);
-
-            for (int i = 0; i < cardsInRow; i++) {
-                transforms.Add(new LayoutPoint(rowPositions[i], Quaternion.identity, cardIndex));
-                cardIndex++;
-            }
-        }
-
-        return transforms;
-    }
-
-    private float CalculateRowZPosition(int currentRow, int totalRows) {
-        if (totalRows == 1) return 0f;
-
-        // Центруємо ряди відносно Z = 0
-        float totalRowsHeight = (totalRows - 1) * (_settings.CardHeight + _settings.RowSpacing);
-
-        float startZ = -totalRowsHeight / 2f;
-
-        return startZ + currentRow * (_settings.CardHeight + _settings.RowSpacing);
-    }
-
-    private List<Vector3> CalculateRowPositions(int cardsInRow, float zPos) {
-        var positions = new List<Vector3>();
-
-        if (cardsInRow == 1) {
-            positions.Add(new Vector3(0f, 0f, zPos));
-            return positions;
-        }
-
-        // Загальна ширина ряду
-        float totalWidth = (cardsInRow * _settings.CardWidth) + ((cardsInRow - 1) * _settings.CardSpacing);
-
-        // Стартова позиція
-        float startX = -totalWidth / 2f + _settings.CardWidth / 2f;
-
-        // Крок між центрами карт
-        float step = _settings.CardWidth + _settings.CardSpacing;
-
-        for (int i = 0; i < cardsInRow; i++) {
-            float xPos = startX + i * step;
-            positions.Add(new Vector3(xPos, 0f, zPos));
-        }
-
-        return positions;
     }
 }

@@ -2,22 +2,20 @@
 using UnityEngine;
 
 public class OpponentRegistry : MonoBehaviour {
-    [SerializeField] public BoardPlayerPresenter _boardPlayer;
-    [SerializeField] public BoardPlayerPresenter _boardEnemy;
-    private Dictionary<Opponent, BoardPlayerPresenter> _activePlayers = new();
+    [SerializeField] public Opponent player1;
+    [SerializeField] public Opponent player2;
 
-    public void RegisterOpponent(Opponent character) {
-        var opponentRepresenter = character is Player ? _boardPlayer : _boardEnemy;
-        opponentRepresenter.BindPlayer(character);
-        _activePlayers[character] = opponentRepresenter;
+    public void RegisterOpponent(Opponent newOpponent) {
+        player1 = newOpponent;
     }
 
     public Opponent GetOpponent(Opponent player) {
-        foreach (var opponent in _activePlayers.Keys) {
-            if (opponent != player) {
-                return opponent;
-            }
+        if (player == player1) {
+            return player2;
+        } else if (player == player2) {
+            return player1;
         }
+
         return null; // Якщо опонент не знайдено
     }
 }

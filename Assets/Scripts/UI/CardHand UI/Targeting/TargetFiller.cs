@@ -1,6 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using ModestTree;
-using NUnit.Framework.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +10,7 @@ using Zenject;
 public class OperationTargetsFiller : MonoBehaviour, ITargetFiller {
 
     [Header("Configuration")]
-    [SerializeField] private HumanTargetSelector fallbackSelector;
+    private ITargetSelector fallbackSelector;
     [SerializeField] private int maxRetryAttempts = 3;
     [SerializeField] private float operationTimeoutSeconds = 30f;
 
@@ -20,9 +19,13 @@ public class OperationTargetsFiller : MonoBehaviour, ITargetFiller {
     private TargetOperationContext currentOperation;
 
     [Inject] private readonly BoardGame boardGame;
-    [Inject] private readonly IUnitPresenterRegistry _unitPresenterRegistry;
+    [Inject] private readonly IUnitRegistry _unitPresenterRegistry;
     [Inject] private readonly ITargetValidator targetValidator;
     [Inject] private readonly ILogger logger;
+
+    private void Awake() {
+        fallbackSelector = new HumanTargetSelector(); // soon be randomSelector
+    }
 
     private void OnDestroy() {
         globalCancellationSource?.Cancel();
@@ -129,9 +132,9 @@ public class OperationTargetsFiller : MonoBehaviour, ITargetFiller {
             default:
                 return fallbackSelector;
         }
+        ITargetSelector targetSelector = target?.Selector;
 
-        var playerPresenter = _unitPresenterRegistry.GetPresenter<BoardPlayerPresenter>(target);
-        return playerPresenter == null ? fallbackSelector : playerPresenter.Selector;
+        return targetSelector != null ? targetSelector : fallbackSelector;
     }
 }
 
@@ -348,10 +351,6 @@ public class TargetSelectionProcessor {
 
         } catch (OperationCanceledException) {
             throw;
-        } catch (Exception ex) {
-            logger.LogException(ex);
-            logger.LogError($"Selector error for {targetState.Name}: {ex.Message}", LogCategory.TargetsFiller);
-            return TargetSelectionResult.Retry();
         }
     }
 
@@ -427,9 +426,5 @@ public enum TargetSelector {
     SpecificPlayer, // Для складних випадків (з можливістю вказати конкретного гравця)
     AllPlayers,
     NextPlayer
-}
-
-public interface ITargetSelector {
-    UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken);
 }
 

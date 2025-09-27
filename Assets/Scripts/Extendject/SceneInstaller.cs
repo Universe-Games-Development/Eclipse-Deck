@@ -6,7 +6,6 @@ public class BoardGameInstaller : MonoInstaller<BoardGameInstaller> {
     public override void InstallBindings() {
         Container.Bind<TurnManager>().AsSingle();
         Container.Bind<PlayerHeroFactory>().AsSingle().NonLazy();
-        Container.Bind<OpponentRegistrator>().AsSingle().NonLazy();
         Container.Bind<BoardGame>().FromComponentInHierarchy().AsSingle();
         Container.Bind<TravelManager>().FromComponentInHierarchy().AsSingle();
 
@@ -17,6 +16,8 @@ public class BoardGameInstaller : MonoInstaller<BoardGameInstaller> {
         Container.Bind<ICardPlayService>().To<CardPlayService>().AsSingle().NonLazy();
         Container.Bind<ITargetFiller>().To<OperationTargetsFiller>().FromComponentInHierarchy().AsSingle();
         Container.Bind<ITargetValidator>().To<TargetValidator>().AsSingle();
+        Container.Bind<Board>().AsSingle();
+        
     }
 }
 

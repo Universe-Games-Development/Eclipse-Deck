@@ -1,10 +1,12 @@
-﻿public class CreaturePresenter : UnitPresenter {
-    public Creature Creature;
-    public Card3DView View;
+﻿using System;
 
-    public void Initialize(Creature creature, CardView view) {
+public class CreaturePresenter : UnitPresenter, IDisposable {
+    public Creature Creature;
+    public CreatureView CreatureView;
+
+    public CreaturePresenter (Creature creature, CreatureView view) : base(creature, view) {
         Creature = creature;
-        View = (Card3DView)view;
+        CreatureView = view;
         UpdateUI();
     }
 
@@ -12,7 +14,7 @@
         // Простий спосіб через готовий конфіг
         var displayData = ConvertToDisplayData(Creature.SourceCard);
         CardDisplayContext context = new(displayData, CardDisplayConfig.ForCreature());
-        View.UpdateDisplay(context);
+        CreatureView.UpdateDisplay(context);
     }
 
     private CardDisplayData ConvertToDisplayData(Card card) {
@@ -34,13 +36,11 @@
         };
     }
 
-    #region UnitPresenter API
-    public override UnitModel GetModel() {
-        return Creature;
-    }
-    #endregion
 
     public void Reset() {
         // Do reset logic here
+    }
+
+    public void Dispose() {
     }
 }

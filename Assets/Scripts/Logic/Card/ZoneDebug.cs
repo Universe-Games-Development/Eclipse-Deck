@@ -12,7 +12,7 @@ public class ZoneDebug : MonoBehaviour {
     }
 
     private void OnRemoveCreatureClicked() {
-        Creature creature = zonePresenter.Zone.GetCreatures().FirstOrDefault();
+        Creature creature = zonePresenter.Zone.Creatures.FirstOrDefault();
         zonePresenter.Zone.RemoveCreature(creature);
     }
 }

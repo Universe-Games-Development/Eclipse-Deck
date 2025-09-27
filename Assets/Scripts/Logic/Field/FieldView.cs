@@ -21,7 +21,7 @@ public class FieldView : MonoBehaviour {
         }
     }
 
-    public void UpdateOwnerVisuals(BoardPlayerPresenter opponent) {
+    public void UpdateOwnerVisuals(OpponentPresenter opponent) {
         materializer.UpdateColor(opponent.Opponent.Data.Color);
     }
 

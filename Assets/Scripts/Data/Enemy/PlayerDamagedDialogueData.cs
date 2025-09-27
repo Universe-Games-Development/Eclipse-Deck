@@ -12,7 +12,6 @@ public class PlayerDamagedDialogueData : RandomEventDialogueData<OnDamageTaken> 
     }
 
     public override bool IsMet(OnDamageTaken eventData) {
-        bool isEnemyDamaged = eventData.Target is Enemy;
-        return isEnemyDamaged && eventData.Amount >= minReactionDamage;
+        return eventData.Amount >= minReactionDamage;
     }
 }

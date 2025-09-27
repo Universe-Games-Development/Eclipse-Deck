@@ -15,7 +15,7 @@ public class CardHandUIView : CardHandView {
 
     private Dictionary<CardUIView, CardLayoutGhost> layoutMap = new();
 
-    public override CardView CreateCardView(Card card) {
+    public override CardView CreateCardView() {
         if (cardPrefab == null || ghostPrefab == null) {
             Debug.LogError("CardPrefab or GhostPrefab not set!", this);
             return null;
@@ -66,7 +66,7 @@ public class CardHandUIView : CardHandView {
         }
     }
 
-    protected override void OnDestroy() {
+    protected void OnDestroy() {
         updatePositionCts?.Cancel();
         updatePositionCts?.Dispose();
 
@@ -75,7 +75,6 @@ public class CardHandUIView : CardHandView {
         }
 
         layoutMap.Clear();
-        base.OnDestroy();
     }
 
     public override void RemoveCardView(CardView cardView) {

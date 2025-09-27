@@ -15,10 +15,10 @@ public interface IGameAnimation {
 
 public class FireballAnimation : IGameAnimation {
     private string prefabAddress;
-    private UnitPresenter target;
+    private Transform target;
     private Fireball fireballPrefab;
 
-    public FireballAnimation(string prefabAddress, UnitPresenter target) {
+    public FireballAnimation(string prefabAddress, Transform target) {
         this.prefabAddress = prefabAddress;
         this.target = target;
     }

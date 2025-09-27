@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Splines;
 using Zenject;
 
-public class CharacterPresenter : MonoBehaviour, ITargetableObject {
+public class CharacterPresenter : MonoBehaviour {
     public Opponent Opponent { get; protected set; }
     [SerializeField] public CharacterView View;
 
@@ -34,9 +34,5 @@ public class CharacterPresenter : MonoBehaviour, ITargetableObject {
 
     public async UniTask OnClearSeat() {
         await View.ClearSeat();
-    }
-
-    public object GetModel() {
-        return Opponent;
     }
 }

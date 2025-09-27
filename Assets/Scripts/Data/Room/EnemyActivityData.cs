@@ -13,7 +13,7 @@ public class EnemyActivityData : ActivityData {
 public class EnemyRoomActivity : RoomActivity {
     [Inject] protected EnemyFactory _enemySpawner;
     [Inject] protected IEventBus<IEvent> _eventBus;
-    private Enemy _currentEnemy;
+    private Opponent _currentEnemy;
 
     public EnemyRoomActivity() {
         _blocksRoomClear = true;
@@ -32,7 +32,7 @@ public class EnemyRoomActivity : RoomActivity {
         }
     }
 
-    protected virtual Enemy SpawnEnemy() {
+    protected virtual Opponent SpawnEnemy() {
         return _enemySpawner.CreateEnemy(EnemyType.Regular);
     }
 

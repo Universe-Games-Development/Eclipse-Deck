@@ -7,14 +7,12 @@ using UnityEngine;
 // Planned to add card rotation to face the player in the future
 public class CardHand3DView : CardHandView {
     [Header("Pool")]
-    [SerializeField] private Card3DView cardPrefab;
     [SerializeField] private Transform cardsContainer;
-    [SerializeField] private Card3DPool cardPool;
+    [SerializeField] private CardPool cardPool;
 
     private readonly Dictionary<CardView, LayoutPoint> cardLayoutData = new();
 
-    [SerializeField] Linear3DHandLayoutSettings settings;
-    [SerializeField] SummonZone3DLayoutSettings settings2;
+    [SerializeField] LayoutSettings settings;
     ILayout3DHandler layout;
 
     [SerializeField] protected float cardsOrganizeDuration = 0.2f;
@@ -22,20 +20,23 @@ public class CardHand3DView : CardHandView {
     [SerializeField] protected int baseRenderOrder = 2800;
     [Header("Hover Settings")]
     [SerializeField] protected int hoverRenderOrderBoost = 50;
-    //[SerializeField] protected float cardHoverDuration = 0.2f;
-    //[SerializeField] private float hoverOffsetY = 1.0f;
-    //[SerializeField] private float hoverOffsetZ = 1.0f;
+    [SerializeField] protected float cardHoverDuration = 0.2f;
+    [SerializeField] protected Vector3 hoverOffset = new Vector3(0f, 1f, 1f);
+    [Header ("Card Spawning")]
+    [SerializeField] Vector3 spawnOffset;
 
 
     private void Awake() {
+        if (cardsContainer == null)
+            throw new UnassignedReferenceException(nameof(cardsContainer));
+        if (cardPool == null)
+            throw new UnassignedReferenceException(nameof(cardPool));
+
         ClearContainer();
         layout = new Linear3DLayout(settings);
-        //layout = new SummonZone3DLayout(settings2);
     }
 
     private void ClearContainer() {
-        if (cardsContainer == null) return;
-
         foreach (Transform child in cardsContainer) {
             if (child != null) {
                 Destroy(child.gameObject);
@@ -59,83 +60,79 @@ public class CardHand3DView : CardHandView {
     }
 
     public override void RegisterView(CardView cardView) {
-        if (cardView != null && cardsContainer != null) {
-            //card3DView.transform.SetParent(cardsContainer);
-            cardView.transform.position = cardsContainer.position;
+        if (cardView != null) {
+            //card3DView.transform.SetParent(cardsContainer); pool already placed on this container but maybe be global?
+            cardView.transform.position = cardsContainer.position + spawnOffset;
             cardView.transform.rotation = cardsContainer.rotation;
         }
     }
 
-    public override CardView CreateCardView(Card card) {
-        if (cardPool == null) {
-            Debug.LogError("Card pool is not assigned!");
-            return null;
-        }
-
+    public override CardView CreateCardView() {
         return cardPool.Get();
     }
 
     protected override void HandleCardViewRemoval(CardView cardView) {
         cardLayoutData.Remove(cardView);
 
-        //if (cardView is Card3DView card3DView && cardPool != null) {
-        //    //cardPool.Release(card3DView);
-        //} else {
-        //    Debug.LogWarning($"Trying to remove a CardView that is not a Card3DView or pool is null. Destroying: {cardView?.name}");
-        //    if (cardView != null) {
-        //        Destroy(cardView.gameObject);
-        //    }
-        //}
+        if (cardView is Card3DView card3DView && cardPool != null) {
+            cardPool.Release(card3DView);
+        } else {
+            Debug.LogWarning($"Trying to remove a CardView that is not a Card3DView or pool is null. Destroying: {cardView?.name}");
+            if (cardView != null) {
+                Destroy(cardView.gameObject);
+            }
+        }
     }
 
     protected override void HandleCardHovered(CardView cardView) {
         cardView.ModifyRenderOrder(hoverRenderOrderBoost);
 
-        cardView.SetHoverState(true);
-        //Transform target = cardView.transform;
-        //if (!cardLayoutData.TryGetValue(cardView, out var data)) {
-        //    Debug.LogWarning($"No layout data found for hovered card {cardView.name}");
-        //    return;
-        //}
+        //cardView.SetHoverState(true); card dont need to know how to hover in hand
+        
+        if (!cardLayoutData.TryGetValue(cardView, out var data)) {
+            Debug.LogWarning($"No layout data found for hovered card {cardView.name}");
+            return;
+        }
 
-        //// Розраховуємо hover позицію
-        //Vector3 hoverPosition = data.position + new Vector3(0f, hoverOffsetY, hoverOffsetZ);
 
-        //Sequence hoverSequence = DOTween.Sequence();
-        //hoverSequence.Join(target.DOMove(hoverPosition, cardHoverDuration));
+        Transform target = cardView.transform;
+        Vector3 hoverPosition = data.position + hoverOffset;
+        //Soon will rotate to face the player
+        Vector3 targetRotation = Vector3.zero; // we align so player dont need to tilt his head
 
-        ////Soon will rotate to face the player
-        //hoverSequence.Join(target.DORotate(data.rotation.eulerAngles, cardHoverDuration));
 
-        //cardView.DoSequence(hoverSequence);
+        Sequence hoverSequence = DOTween.Sequence();
+
+        hoverSequence.Join(target.DOLocalMove(hoverPosition, cardHoverDuration));
+        hoverSequence.Join(target.DOLocalRotate(targetRotation, cardHoverDuration));
+
+        cardView.DoSequence(hoverSequence).Forget();
     }
 
     protected override void HandleClearCardHovered(CardView cardView) {
         cardView.ModifyRenderOrder(-hoverRenderOrderBoost);
 
-        cardView.SetHoverState(false);
-        //Transform target = cardView.transform;
+        //cardView.SetHoverState(false); card dont need to know how to hover in hand
 
-        //if (cardLayoutData.TryGetValue(cardView, out var data)) {
-        //    // Анімуємо назад до оригінальної позиції
-        //    Sequence returnSequence = DOTween.Sequence();
-        //    returnSequence.Join(target.DOMove(data.position, cardHoverDuration));
-        //    returnSequence.Join(target.DORotate(data.rotation.eulerAngles, cardHoverDuration));
+        if (!cardLayoutData.TryGetValue(cardView, out var data)) {
+            Debug.LogWarning($"No layout data found for hovered card {cardView.name}");
+            return;
+        }
 
-        //    cardView.DoSequence(returnSequence);
-        //}
+        Transform target = cardView.transform;
+
+        Sequence returnSequence = DOTween.Sequence();
+        returnSequence.Join(target.DOLocalMove(data.position, cardHoverDuration));
+        returnSequence.Join(target.DOLocalRotate(data.rotation.eulerAngles, cardHoverDuration));
+
+        cardView.DoSequence(returnSequence).Forget(); ;
     }
 
     public override void UpdateCardPositions(List<CardView> cardViews) {
         if (cardViews == null) return;
 
-        if (layout == null) {
-            Debug.LogWarning("Layout strategy is not assigned.");
-            return;
-        }
-
-        var points = layout.CalculateCardTransforms(cardViews.Count);
-
+        var result = layout.CalculateLayout(cardViews.Count);
+        var points = result.Points;
         // Очищуємо застарілі дані
         CleanupLayoutData(cardViews);
 
@@ -145,7 +142,7 @@ public class CardHand3DView : CardHandView {
             int cardOrder = cardPoint.orderIndex;
 
             if (cardView == null) continue;
-            cardPoint.position = cardsContainer.TransformPoint(cardPoint.position);
+            //cardPoint.position = cardsContainer.TransformPoint(cardPoint.position); we dont need to transform it in world position
             cardLayoutData[cardView] = cardPoint;
 
             cardView.SetRenderOrder(baseRenderOrder + cardOrder);
@@ -156,18 +153,18 @@ public class CardHand3DView : CardHandView {
 
     private void AnimateToPosition(CardView cardView, LayoutPoint cardPoint) {
         Transform cardTransform = cardView.transform;
+        Sequence layoutSequence = DOTween.Sequence();
 
-        Tweener moveTween = cardTransform.DOMove(cardPoint.position, cardsOrganizeDuration)
+        layoutSequence.Join(cardTransform.DOLocalMove(cardPoint.position, cardsOrganizeDuration)
                                     .SetEase(Ease.OutQuad)
-                                    .SetLink(cardTransform.gameObject);
-
-        cardView.DoTweener(moveTween).Forget();
+                                    .SetLink(cardTransform.gameObject));
+        layoutSequence.Join(cardTransform.DOLocalRotate(cardPoint.rotation.eulerAngles, cardsOrganizeDuration)
+                                    .SetEase(Ease.OutQuad)
+                                    .SetLink(cardTransform.gameObject));
+        cardView.DoSequence(layoutSequence).Forget();
     }
 
-    protected override void OnDestroy() {
-        base.OnDestroy();
+    protected void OnDestroy() {
         cardLayoutData.Clear();
     }
 }
-
-

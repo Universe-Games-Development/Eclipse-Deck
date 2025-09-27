@@ -12,7 +12,7 @@ public class TutorialActivityData : ActivityData {
 
 public class TutorialRoomActivity : EnemyRoomActivity {
 
-    protected override Enemy SpawnEnemy() {
+    protected override Opponent SpawnEnemy() {
         return _enemySpawner.CreateEnemy(EnemyType.Tutorial);
     }
 }

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SummonVisualTemplate
   m_EditorClassIdentifier: 
   transformEffectPrefab: {fileID: 0}
-  transformDuration: 0.5
+  transformDuration: 0.29
   transformCurve:
     serializedVersion: 2
     m_Curve: []
@@ -22,6 +22,6 @@ MonoBehaviour:
     m_RotationOrder: 4
   materializationEffect: {fileID: 0}
   materializationDelay: 0.2
-  aboveAligmentDuration: 0.43
-  moveEase: 17
+  aboveAligmentDuration: 0.16
+  moveEase: 20
   aligmentHeightOffset: {x: 0, y: 3, z: 0}

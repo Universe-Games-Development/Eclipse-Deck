@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class Card3DView : CardView {
     [SerializeField] private Renderer cardRenderer;
@@ -86,6 +87,8 @@ public class Card3DView : CardView {
     private void OnMouseDown() {
         HandleMouseDown();
     }
+
+    
 
     #endregion
 }

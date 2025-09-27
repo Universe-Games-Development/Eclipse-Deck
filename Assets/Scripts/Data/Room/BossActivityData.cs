@@ -12,7 +12,7 @@ public class BossActivityData : ActivityData {
 
 public class BossRoomActivity : EnemyRoomActivity {
 
-    protected override Enemy SpawnEnemy() {
+    protected override Opponent SpawnEnemy() {
         return _enemySpawner.CreateEnemy(EnemyType.Boss);
     }
 }

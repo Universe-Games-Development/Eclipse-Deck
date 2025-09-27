@@ -6,15 +6,15 @@ using Zenject;
 public class CardsHandleSystem : MonoBehaviour {
 
     [Inject] IEventBus<IEvent> _eventBus;
-    [Inject] CommandManager _commandManager;
+    [Inject] IOperationManager _operationManager;
     [Inject] CardProvider _cardProvider;
-    [Inject] ICardFactory<Card3DView> _cardFactory;
+    [Inject] ICardFactory _cardFactory;
 
-    private BoardPlayerPresenter playerPresenter;
+    private OpponentPresenter playerPresenter;
 
-    public void Initialize(BoardPlayerPresenter boardPlayer) {
+    public void Initialize(OpponentPresenter boardPlayer) {
         playerPresenter = boardPlayer;
-        CharacterData data = boardPlayer.Opponent.Data; // soon opponent data will define deck and cards
+        OpponentData data = boardPlayer.Opponent.Data; // soon opponent data will define deck and cards
 
         // Move to the global game manager
 
@@ -33,7 +33,7 @@ public class CardsHandleSystem : MonoBehaviour {
 
     protected virtual void TurnStartActions(ref TurnStartEvent eventData) {
         if (eventData.StartingOpponent == playerPresenter)
-            _commandManager.EnqueueCommand(new DrawCardCommand(playerPresenter));
+            _operationManager.Push(new DrawCardOperation(playerPresenter));
     }
 
     private void EndBattleActions(ref BattleEndEventData eventData) {

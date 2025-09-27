@@ -2,29 +2,25 @@ using System;
 
 // TO DO: Add regen stat
 public class Health : Attribute {
-    public event Action<OnDamageTaken> OnDamageTaken;
-    public event Action<DeathEvent> OnDeath;
+    public Action OnDeath;
+    public Action OnHealthChanged;
 
     public bool IsDead = false;
-    private readonly IHealthable _owner;
 
-    public Health(int initialValue, IHealthable owner) : base(initialValue) {
-        _owner = owner;
+    public Health(int baseValue, int minValue = -999) : base(baseValue, minValue) {
     }
 
-    public Health(Health health, IHealthable owner) : base(health) {
-        _owner = owner;
+    public Health(Attribute attribute) : base(attribute) {
     }
 
     public void TakeDamage(int damage, IDamageDealer source = null) {
         if (IsDead) return;
 
-        Subtract(damage); // «м≥нено з≥ Subtract(-amount) на Subtract(amount)
-        OnDamageTaken?.Invoke(new OnDamageTaken(_owner, source, damage));
+        Subtract(damage);
 
         if (Current <= 0 && !IsDead) {
             IsDead = true;
-            OnDeath?.Invoke(new DeathEvent(_owner));
+            OnDeath?.Invoke();
         }
     }
 
@@ -55,22 +51,3 @@ public class Health : Attribute {
     }
 }
 
-public struct OnDamageTaken : IEvent {
-    public IDamageDealer Source { get; }
-    public IHealthable Target { get; }
-    public int Amount { get; }
-
-    public OnDamageTaken(IHealthable target, IDamageDealer source, int amount) {
-        Source = source;
-        Target = target;
-        Amount = amount;
-    }
-}
-
-public struct DeathEvent : IEvent {
-    public IHealthable DeadEntity { get; }
-
-    public DeathEvent(IHealthable deadEntity) {
-        DeadEntity = deadEntity;
-    }
-}

@@ -2,10 +2,9 @@
 using Zenject;
 
 public class PlayerManager : MonoBehaviour {
-    private Player _player;
+    private Opponent _player;
 
     [SerializeField] private PlayerData playerData;
-
 
     [Inject] private DiContainer _container;
 
@@ -14,9 +13,9 @@ public class PlayerManager : MonoBehaviour {
     /// </summary>
     /// <param name="player">The current player instance</param>
     /// <returns>True if player is available</returns>
-    public bool GetPlayer(out Player player) {
+    public bool GetPlayer(out Opponent player) {
         if (_player == null) {
-            _player = CreatePlayer();
+            //_player = opponentFactory.CreateOpponent(playerData);
             if (_player == null) {
                 player = null;
                 return false;
@@ -27,18 +26,6 @@ public class PlayerManager : MonoBehaviour {
         return true;
     }
 
-
-    /// <summary>
-    /// Creates a new player instance
-    /// </summary>
-    private Player CreatePlayer() {
-        try {
-            return _container.Instantiate<Player>(new object[] { playerData });
-        } catch (System.Exception e) {
-            Debug.LogError($"Failed to create player: {e.Message}");
-            return null;
-        }
-    }
 
     /// <summary>
     /// Saves the current player data to persistent storage

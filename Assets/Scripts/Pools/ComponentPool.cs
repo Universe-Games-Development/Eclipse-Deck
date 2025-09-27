@@ -18,7 +18,7 @@ public class ComponentPool<T> : MonoBehaviour, IComponentPool<T> where T : MonoB
     [SerializeField] protected bool collectionCheck = true;
     [SerializeField] protected T prefab;
 
-    protected Transform poolParent;
+    [SerializeField] protected Transform poolParent;
     protected ObjectPool<T> pool;
 
     [Inject] protected DiContainer container;
@@ -36,10 +36,11 @@ public class ComponentPool<T> : MonoBehaviour, IComponentPool<T> where T : MonoB
             return;
         }
 
-        // Створюємо батьківський об'єкт для пулу
-        poolParent = new GameObject($"Pool_{typeof(T).Name}").transform;
-        poolParent.SetParent(transform);
-        poolParent.localPosition = Vector3.zero;
+        if (poolParent == null) {
+            poolParent = new GameObject($"Pool_{typeof(T).Name}").transform;
+            poolParent.SetParent(transform);
+            poolParent.localPosition = Vector3.zero;
+        } 
 
         pool = new ObjectPool<T>(
             createFunc: CreatePooledItem,
@@ -50,9 +51,6 @@ public class ComponentPool<T> : MonoBehaviour, IComponentPool<T> where T : MonoB
             defaultCapacity: defaultCapacity,
             maxSize: maxSize
         );
-
-        // Попереднє заповнення
-        PrewarmPool(defaultCapacity);
     }
 
     protected virtual T CreatePooledItem() {

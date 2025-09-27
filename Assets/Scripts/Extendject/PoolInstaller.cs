@@ -4,8 +4,8 @@ using Zenject;
 public class PoolInstaller : MonoInstaller {
     [Header("Pool Prefabs")]
     public PoolManager poolManagerPrefab;
-    public ComponentPool<Card3DView> card3DPoolPrefab;
-    public ComponentPool<Card3DView> creaturePoolPrefab;
+    public ComponentPool<CardView> cardPoolPrefab;
+    public ComponentPool<CreatureView> creaturePoolPrefab;
 
     public override void InstallBindings() {
         // Реєструємо PoolManager як синглтон
@@ -15,9 +15,9 @@ public class PoolInstaller : MonoInstaller {
             .NonLazy();
 
         // Реєструємо пули
-        Container.Bind<IComponentPool<Card3DView>>()
-            .To<Card3DPool>()
-            .FromComponentInNewPrefab(card3DPoolPrefab)
+        Container.Bind<IComponentPool<CardView>>()
+            .To<CardPool>()
+            .FromComponentInNewPrefab(cardPoolPrefab)
             .AsSingle();
 
         Container.Bind<IComponentPool<CreatureView>>()

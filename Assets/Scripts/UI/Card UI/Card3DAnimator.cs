@@ -7,6 +7,7 @@ public class Card3DAnimator : MonoBehaviour {
     [Header("Hover Animation")]
     [SerializeField] private float hoverHeight = 0.3f;
     [SerializeField] private float hoverZOffset = 0.3f;
+    [SerializeField] private Vector3 hoverOffset;
     [SerializeField] private float hoverSpeedDuration = 0.2f;
     [SerializeField] private Ease hoverEase = Ease.OutQuad;
 
@@ -34,8 +35,7 @@ public class Card3DAnimator : MonoBehaviour {
             // Hover animation - lift the card up
             Sequence hoverSequence = DOTween.Sequence();
             hoverSequence
-                .Join(target.DOLocalMoveY(originalPosition.y + hoverHeight, hoverSpeedDuration).SetEase(hoverEase))
-                .Join(target.DOLocalMoveZ(originalPosition.z + hoverZOffset, hoverSpeedDuration))
+                .Join(target.DOLocalMove(originalPosition + hoverOffset, hoverSpeedDuration).SetEase(hoverEase))
                 .Play();
 
         } else {

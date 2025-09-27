@@ -1,12 +1,10 @@
 ﻿using System;
 
 public class Mana : Attribute {
-    public event Action<ManaSpentEvent> OnManaSpent;
+    public event Action<int> OnManaSpent;
     public int RestoreAmount { get; private set; } = 1;
-    private IMannable _owner;
 
-    public Mana(IMannable owner, int initialValue) : base(initialValue) {
-        _owner = owner;
+    public Mana(int initialValue) : base(initialValue) {
 
         // Підписуємося на події зміни значень атрибуту
         OnTotalValueChanged += HandleTotalValueChanged;
@@ -41,7 +39,7 @@ public class Mana : Attribute {
         //OnManaSpent?.Invoke(Owner, amountSpent);
 
         if (amountSpent > 0) {
-            OnManaSpent?.Invoke(new ManaSpentEvent(_owner, amountSpent));
+            OnManaSpent?.Invoke(amountSpent);
         } else {
             Console.WriteLine($"Spent {amountSpent} mana. Current mana: {Current}/{TotalValue}");
         }

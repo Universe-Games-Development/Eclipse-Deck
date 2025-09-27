@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7563577461131786576}
-  - component: {fileID: 132433479553733042}
+  - component: {fileID: 5750584231336505023}
   m_Layer: 0
   m_Name: CardPool
   m_TagString: Untagged
@@ -32,7 +32,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &132433479553733042
+--- !u!114 &5750584231336505023
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,10 +41,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2591656740473365407}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04a375600622b6a4195abc630aff0437, type: 3}
+  m_Script: {fileID: 11500000, guid: 8cdf95b3ed8ef9741ad915fafd5cd256, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   defaultCapacity: 10
   maxSize: 50
   collectionCheck: 1
-  prefab: {fileID: 3178679955655854316, guid: 474e1891b23a7a449bcfa3486d4ba210, type: 3}
+  prefab: {fileID: 7219568571880624990, guid: a72c9323b29420e42838e928346268a9, type: 3}

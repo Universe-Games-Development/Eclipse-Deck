@@ -1414,7 +1414,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3847259741370005765}
   - component: {fileID: 6814735406756078079}
-  - component: {fileID: -2543251850805565068}
   - component: {fileID: 88677707838969812}
   - component: {fileID: 3533580172023111911}
   - component: {fileID: 6053699619000527960}
@@ -1463,22 +1462,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.53, y: 0.03, z: 2.547166}
   m_Center: {x: 0, y: 0, z: -0.06}
---- !u!114 &-2543251850805565068
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5313828200636121029}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3a9bac6470fa3e54abfbf8158a1f043c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoTestRandomUpdate: 0
-  updateTimes: 15
-  updateRate: 1
-  _isInteractable: 1
 --- !u!114 &88677707838969812
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1494,12 +1477,6 @@ MonoBehaviour:
   movementComponent: {fileID: 3533580172023111911}
   cardRenderer: {fileID: 4876830036779901885}
   animator: {fileID: 4066564013037518403}
-  cardName: {fileID: 9010223119223352363}
-  costText: {fileID: 2130193427631558359}
-  healthText: {fileID: 4378642439351433591}
-  healthIcon: {fileID: 7547907074830020945}
-  attackText: {fileID: 7001518921464199384}
-  attack3DIcon: {fileID: 1390142209974567333}
 --- !u!114 &3533580172023111911
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1512,68 +1489,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86da4d081fb0c2a41889a6960359ac46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementType: 1
-  moveSpeed: 40
-  rotationSpeed: 10
-  stoppingDistance: 0.1
-  moveCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  scaleCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  springForce: 150
-  damping: 16
-  maxPhysicsSpeed: 50
-  physicsStoppingVelocity: 1.5
-  minRotationVelocity: 0.5
-  lookAtTarget: 0
-  maintainHeight: 0
-  heightOffset: 0
-  currentState: 0
-  currentVelocity: {x: 0, y: 0, z: 0}
+  _continuousMoveSpeed: 10
+  _defaultDuration: 1
+  _defaultEase: 6
+  _useRelativeRotation: 0
 --- !u!114 &6053699619000527960
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1609,10 +1528,6 @@ MonoBehaviour:
   hoverZOffset: 2
   hoverSpeedDuration: 0.2
   hoverEase: 6
-  selectedHeight: 0.5
-  selectedScale: 1.1
-  selectionDuration: 0.3
-  selectionEase: 6
   clickScaleDown: 0.95
   clickDuration: 0.1
   clickReturnDuration: 0.15
@@ -2360,7 +2275,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 68.5
+  m_fontSize: 71.6
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using Zenject;
 
 public class HandDebug : MonoBehaviour {
-    [SerializeField] HandPresenter handPresenter;
+    [SerializeField] CardHandView handView;
 
     [SerializeField] Button addCardButton;
     [SerializeField] Button removeCardButton;
@@ -16,11 +16,23 @@ public class HandDebug : MonoBehaviour {
 
     [Inject] IEventBus<IEvent> eventBus;
 
-    [Inject] private ICardFactory<Card3DView> cardFactory;
+    [Inject] private ICardFactory cardFactory;
     [Inject] CardProvider cardProvider;
     [SerializeField] List<CardData> cardDatas;
+    [Inject] IUnitRegistry registry;
+
+    private HandPresenter handPresenter;
 
     private void Start() {
+        if (handView == null) {
+            Debug.LogWarning("HandView null");
+            return;
+        }
+        handPresenter = registry.GetPresenter<HandPresenter>(handView);
+        if (handPresenter == null) {
+            Debug.LogWarning("HandPresenter null");
+            return;
+        }
 
         addCardButton?.onClick.AddListener(() => {
             AddCard();
@@ -30,7 +42,6 @@ public class HandDebug : MonoBehaviour {
             RemoveRandomCard();
         });
 
-        handPresenter.OnCardHovered += HandleHover;
 
         for (int i = 0; i < initialCards; i++) {
             AddCard();
@@ -38,7 +49,7 @@ public class HandDebug : MonoBehaviour {
     }
 
     private void RemoveRandomCard() {
-        List<Card> cards = handPresenter.GetCards();
+        List<Card> cards = handPresenter.GetCards().ToList();
         if (cards.Count() > 0) {
             handPresenter.RemoveCard(cards.Last());
         }
@@ -53,15 +64,6 @@ public class HandDebug : MonoBehaviour {
         handPresenter.AddCard(card);
     }
 
-    private void HandleHover(CardPresenter presenter, bool isHovered) {
-        if (hoveredCard == null) return;
-
-        if (isHovered) {
-            hoveredCard.text = presenter.Card.Data.Name;
-        } else {
-            hoveredCard.text = "No Card";
-        }
-    }
 }
 
 

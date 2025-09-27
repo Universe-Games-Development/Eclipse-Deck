@@ -39,10 +39,10 @@ public class OnSelfSummonTrigger : AbilityTrigger {
     // Logic for activating the trigger
 
     public override void ActivateTrigger(UnitModel gameUnit) {
-        gameUnit.OnUnitDeployed += HandleSummon;
+        //gameUnit.OnUnitDeployed += HandleSummon;
     }
     public override void DeactivateTrigger(UnitModel gameUnit) {
-        gameUnit.OnUnitDeployed -= HandleSummon;
+        //gameUnit.OnUnitDeployed -= HandleSummon;
     }
 
     private void HandleSummon(GameEnterEvent eventData) {

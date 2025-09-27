@@ -11,11 +11,13 @@ public class Creature : UnitModel, IHealthable {
     public CreatureCard SourceCard => sourceCard;
     public Zone CurrentZone => currentZone;
 
+    public string Name { get; private set; }
     public Creature(CreatureCard card) {
         Data = card.CreatureCardData ?? throw new ArgumentNullException(nameof(card.CreatureCardData));
-        Health = new Health(card.Health, this);
-        Attack = new Attack(card.Attack, this);
+        Health = new Health(card.Health);
+        Attack = new Attack(card.Attack);
         sourceCard = card;
+        Name = Data.Name;
 
         Id = System.Guid.NewGuid().ToString();
     }
@@ -31,11 +33,14 @@ public class Creature : UnitModel, IHealthable {
     }
 
     public override string ToString() {
-        return $"{Data.Name} ({Attack.Current}/{Health.Current})";
+        return $"{Name} ({Attack.Current}/{Health.Current})";
     }
 
     public override string GetName() {
         return Data.Name;
     }
-}
 
+    public void SetName(string name) {
+        Name = name;
+    }
+}
