@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 public class HealthCellView : MonoBehaviour {
@@ -11,12 +10,14 @@ public class HealthCellView : MonoBehaviour {
     [SerializeField] private float minLevel = -1.5f;
     [SerializeField] private float duration = 2f;
 
-    private Health health;
     private MaterialPropertyBlock propertyBlock;
     private CancellationTokenSource animationCTS;
     private const string LevelProperty = "_Level";
 
-    public void Initialize() {
+    private float _currentHealth;
+    private float _maxHealth;
+
+    private void Awake() {
         if (liquidRenderer == null)
             Debug.LogError("Liquid Renderer is not assigned!");
         InitializePropertyBlock();
@@ -29,45 +30,33 @@ public class HealthCellView : MonoBehaviour {
         liquidRenderer.SetPropertyBlock(propertyBlock);
     }
 
-    public void AssignOwner(IHealthable healthable) {
-        if (healthable?.Health == null) {
-            Debug.LogError("Invalid opponent or health component!");
+    /// <summary>
+    /// Оновлює стан хп ззовні (тепер головний спосіб).
+    /// </summary>
+    public void UpdateHealth(float health, float maxHealth) {
+        if (maxHealth <= 0) {
+            Debug.LogError("MaxHealth must be greater than zero");
             return;
         }
 
-        UnsubscribeFromPreviousHealth();
-        health = healthable.Health;
+        float oldValue = _currentHealth;
+        _currentHealth = health;
+        _maxHealth = maxHealth;
 
-        SubscribeToHealthEvents();
-        SmoothUpdateLiquidLevel(health.Current, health.Current).Forget(); // Встановлюємо початкове значення
+        SmoothUpdateLiquidLevel(_currentHealth, oldValue).Forget();
     }
 
-    private void SubscribeToHealthEvents() {
-        health.OnTotalValueChanged += UpdateHealthBar;
-    }
-
-    private void UpdateHealthBar(object sender, AttributeTotalChangedEvent eventData) {
-        SmoothUpdateLiquidLevel(eventData.NewValue, eventData.OldValue).Forget();
-    }
-
-    private void UnsubscribeFromPreviousHealth() {
-        if (health != null) {
-            health.OnTotalValueChanged -= UpdateHealthBar;
-        }
-    }
-
-    private async UniTaskVoid SmoothUpdateLiquidLevel(int newValue, int previousValue) {
+    private async UniTaskVoid SmoothUpdateLiquidLevel(float newValue, float previousValue) {
         CancelCurrentAnimation();
 
-        // Створюємо НОВИЙ CTS для цієї конкретної анімації
         var localCTS = new CancellationTokenSource();
-        animationCTS = localCTS; // Записуємо посилання в поле класу
+        animationCTS = localCTS;
         var token = localCTS.Token;
 
         try {
             liquidRenderer.GetPropertyBlock(propertyBlock);
             float startLevel = propertyBlock.GetFloat(LevelProperty);
-            float targetLevel = CalculateLiquidLevel(newValue);
+            float targetLevel = CalculateLiquidLevel(newValue, _maxHealth);
 
             float elapsed = 0f;
             while (elapsed < duration) {
@@ -83,8 +72,9 @@ public class HealthCellView : MonoBehaviour {
             if (!token.IsCancellationRequested) {
                 UpdateLiquidLevel(targetLevel);
             }
-        } catch (OperationCanceledException) { } finally {
-            // Видаляємо тільки якщо це ТЕКУЩА анімація
+        } catch (OperationCanceledException) {
+            // ігноруємо — це очікувано
+        } finally {
             if (animationCTS == localCTS) {
                 localCTS.Dispose();
                 animationCTS = null;
@@ -106,29 +96,20 @@ public class HealthCellView : MonoBehaviour {
         liquidRenderer.SetPropertyBlock(propertyBlock);
     }
 
-    // Оновлений метод для розрахунку рівня рідини з урахуванням конкретного значення здоров'я
-    private float CalculateLiquidLevel(int currentHealth) {
-        if (health == null || health.TotalValue <= 0) return minLevel;
-
-        float normalizedLevel = (float)currentHealth / health.TotalValue;
+    private float CalculateLiquidLevel(float currentHealth, float maxHealth) {
+        if (maxHealth <= 0) return minLevel;
+        float normalizedLevel = Mathf.Clamp01(currentHealth / maxHealth);
         return Mathf.Lerp(minLevel, maxLevel, normalizedLevel);
     }
 
-    // Оригінальний метод, використовує поточне значення здоров'я
-    private float CalculateLiquidLevel() {
-        if (health == null || health.TotalValue <= 0) return minLevel;
-
-        float normalizedLevel = (float)health.Current / health.TotalValue;
-        return Mathf.Lerp(minLevel, maxLevel, normalizedLevel);
+    public void ClearOwner() {
+        CancelCurrentAnimation();
+        UpdateLiquidLevel(0);
+        _currentHealth = 0;
+        _maxHealth = 0;
     }
 
     private void OnDestroy() {
         CancelCurrentAnimation();
-        UnsubscribeFromPreviousHealth();
-    }
-
-    public void ClearOwner() {
-        UpdateLiquidLevel(0);
-        health = null;
     }
 }

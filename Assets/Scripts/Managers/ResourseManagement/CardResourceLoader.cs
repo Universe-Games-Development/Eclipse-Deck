@@ -287,22 +287,23 @@ public class EnemyResourceProvider : GenericResourceProvider<EnemyData> {
     private EnemiesLocationCache enemiesLocationCache = new();
 
     private LocationTransitionManager _transitionManager;
-    
+
     public EnemyResourceProvider(EnemyResourceLoader loader, LocationTransitionManager transitionManager
     ) : base(loader) {
         _transitionManager = transitionManager;
     }
 
-    public async UniTask<List<EnemyData>> GetEnemies(EnemyType requestEnemyType) {
+    public async UniTask<List<EnemyData>> GetEnemiesAsync(EnemyType requestEnemyType) {
         if (_transitionManager.GetSceneLocation() == null) {
             Debug.LogWarning("Current location data is null");
             return new List<EnemyData>();
         }
-        AssetLabelReference assetLabel = _transitionManager.GetSceneLocation().assetLabel;
-        if (enemiesLocationCache.TryGetFromCache(requestEnemyType, assetLabel, out var cachedEnemies)) {
+        
+        if (TryGetCachedEnemies(requestEnemyType, out var cachedEnemies)) {
             return cachedEnemies;
         }
 
+        AssetLabelReference assetLabel = _transitionManager.GetSceneLocation().assetLabel;
         List<EnemyData> allEnemies = await _loader.GetResourcesForLocationAsync(assetLabel);
         enemiesLocationCache.Store(assetLabel, allEnemies);
 
@@ -311,7 +312,18 @@ public class EnemyResourceProvider : GenericResourceProvider<EnemyData> {
             : new List<EnemyData>();
     }
 
-    public List<EnemyData> GetEnemies(AssetLabelReference assetLabel) {
+    public bool TryGetCachedEnemies(EnemyType requestEnemyType, out List<EnemyData> enemyDatas) {
+        if (_transitionManager.GetSceneLocation() == null) {
+            Debug.LogWarning("Current location data is null");
+            enemyDatas = new();
+            return false;
+        }
+        AssetLabelReference assetLabel = _transitionManager.GetSceneLocation().assetLabel;
+
+        return enemiesLocationCache.TryGetFromCache(requestEnemyType, assetLabel, out enemyDatas);
+    }
+
+    public List<EnemyData> GetEnemiesByLabel(AssetLabelReference assetLabel) {
         if (enemiesLocationCache.TryGetFromCache(assetLabel, out var enemies)) {
             return enemies;
         }

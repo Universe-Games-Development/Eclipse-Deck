@@ -1,38 +1,33 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using Zenject;
 
 public interface ICardFactory {
     Card CreateCard(CardData cardData);
-    List<Card> CreateCardsFromCollection(CardCollection collection);
 }
 
-public class CardFactory : ICardFactory {
-    private readonly DiContainer _container;
-
-    public CardFactory(DiContainer container) {
-        _container = container;
-    }
-
-    public List<Card> CreateCardsFromCollection(CardCollection collection) {
-        List<Card> cards = new();
-        foreach (var cardEntry in collection.cardEntries) {
-            for (int i = 0; i < cardEntry.Value; i++) {
-                CardData cardData = cardEntry.Key;
-                Card newCard = CreateCard(cardData);
-                if (newCard == null) continue;
-                cards.Add(newCard);
-            }
-        }
-        return cards;
-    }
+public class CardFactory: ICardFactory {
+    [Inject] private DiContainer _container;
 
     public Card CreateCard(CardData cardData) {
         Card card = cardData switch {
-            CreatureCardData creatureData => _container.Instantiate<CreatureCard>(new object[] { creatureData }),
-            SpellCardData spellData => _container.Instantiate<SpellCard>(new object[] { spellData }),
-            _ => null
+            CreatureCardData creatureData => CreateCreatureCard(creatureData),
+            SpellCardData spellData => CreateSpellCard(spellData),
+            _ => throw new ArgumentException($"Unsupported card data type: {cardData.GetType()}")
         };
 
         return card;
     }
+
+    private CreatureCard CreateCreatureCard(CreatureCardData creatureData) {
+        Health health = new(creatureData.Health);
+        Attack attack = new(creatureData.Attack);
+        return _container.Instantiate<CreatureCard>(new object[] { creatureData, health, attack });
+    }
+
+    private SpellCard CreateSpellCard(SpellCardData spellData) {
+        return _container.Instantiate<SpellCard>(new object[] { spellData });
+    }
 }
+
+
+

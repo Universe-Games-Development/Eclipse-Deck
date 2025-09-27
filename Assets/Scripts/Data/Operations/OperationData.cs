@@ -2,40 +2,10 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-public abstract class OperationData : ScriptableObject {
+public class OperationData : ScriptableObject {
 }
 
-public class DamageOperationData : OperationData {
-    public int damage = 6;
-    [SerializeField] private Fireball fireballPrefab;
-}
 
-[OperationFor(typeof(DamageOperationData))]
-public class DamageOperation : GameOperation {
-    private const string TargetCreatureKey = "targetCreature";
-    private readonly DamageOperationData _data;
-
-    public DamageOperation(DamageOperationData data) {
-        _data = data;
-
-        var anyDamagableEnemyTarget = TargetRequirements.EnemyDamageable;
-
-        RequestTargets.Add(new Target(TargetCreatureKey, anyDamagableEnemyTarget)
-        );
-    }
-
-    public override bool Execute() {
-        if (!TryGetTarget(TargetCreatureKey, out UnitModel damagablePresenter)) {
-            Debug.LogError($"Valid {TargetCreatureKey} not found for damage operation");
-            return false;
-        }
-
-        IHealthable target = damagablePresenter as IHealthable;
-
-        target.Health.TakeDamage(_data.damage);
-        return true;
-    }
-}
 
 public interface IGameAnimation {
     UniTask<bool> LoadResources();
@@ -45,10 +15,10 @@ public interface IGameAnimation {
 
 public class FireballAnimation : IGameAnimation {
     private string prefabAddress;
-    private UnitPresenter target;
+    private Transform target;
     private Fireball fireballPrefab;
 
-    public FireballAnimation(string prefabAddress, UnitPresenter target) {
+    public FireballAnimation(string prefabAddress, Transform target) {
         this.prefabAddress = prefabAddress;
         this.target = target;
     }

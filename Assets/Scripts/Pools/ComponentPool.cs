@@ -2,45 +2,45 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 using Zenject;
+public interface IComponentPool<T> where T : MonoBehaviour {
+    T Get();
+    void Release(T item);
+    void Clear();
+    void PrewarmPool(int count);
+    int ActiveCount { get; }
+    int InactiveCount { get; }
+}
 
-public class ComponentPool<T> : MonoBehaviour where T : MonoBehaviour {
+public class ComponentPool<T> : MonoBehaviour, IComponentPool<T> where T : MonoBehaviour {
     [Header("Pool Settings")]
     [SerializeField] protected int defaultCapacity = 10;
     [SerializeField] protected int maxSize = 50;
     [SerializeField] protected bool collectionCheck = true;
+    [SerializeField] protected T prefab;
 
-    protected Transform poolParent;
+    [SerializeField] protected Transform poolParent;
+    protected ObjectPool<T> pool;
 
-    [Header("Prefab")]
-    [SerializeField] private T prefab; // Прямо вказуємо тип!
+    [Inject] protected DiContainer container;
 
-    private ObjectPool<T> pool;
+    public int ActiveCount => poolParent != null ? poolParent.childCount : 0;
+    public int InactiveCount => pool?.CountInactive ?? 0;
 
-    // Публічний доступ до пулу
-    public static ComponentPool<T> Instance { get; private set; }
-    [Inject] DiContainer container;
-
-    protected void Awake() {
-        // Singleton pattern для легкого доступу
-        if (Instance == null) {
-            Instance = this;
-
-            poolParent = new GameObject($"Pool_{GetType().Name}").transform;
-            poolParent.SetParent(transform);
-            poolParent.localPosition = Vector3.zero;
-
-            InitializePool();
-        } else if (Instance != this) {
-            Debug.LogWarning($"Multiple {typeof(T).Name} pools detected! Destroying duplicate.");
-            Destroy(gameObject);
-        }
+    protected virtual void Awake() {
+        InitializePool();
     }
 
-    protected void InitializePool() {
+    protected virtual void InitializePool() {
         if (prefab == null) {
             Debug.LogError($"Prefab not assigned for {typeof(T).Name} pool!");
             return;
         }
+
+        if (poolParent == null) {
+            poolParent = new GameObject($"Pool_{typeof(T).Name}").transform;
+            poolParent.SetParent(transform);
+            poolParent.localPosition = Vector3.zero;
+        } 
 
         pool = new ObjectPool<T>(
             createFunc: CreatePooledItem,
@@ -51,16 +51,22 @@ public class ComponentPool<T> : MonoBehaviour where T : MonoBehaviour {
             defaultCapacity: defaultCapacity,
             maxSize: maxSize
         );
-
-        // Попереднє заповнення пулу
-        PrewarmPool();
     }
 
-    private T CreatePooledItem() {
-        return container.InstantiatePrefabForComponent<T>(prefab, poolParent);
+    protected virtual T CreatePooledItem() {
+        var item = container.InstantiatePrefabForComponent<T>(prefab, poolParent);
+
+        // Викликаємо OnPoolCreate якщо об'єкт це підтримує
+        if (item is IPoolable poolable) {
+            poolable.OnPoolCreate();
+        }
+
+        return item;
     }
 
-    private void OnTakeFromPool(T item) {
+    protected virtual void OnTakeFromPool(T item) {
+        if (item == null) return;
+
         item.gameObject.SetActive(true);
 
         if (item is IPoolable poolable) {
@@ -68,16 +74,21 @@ public class ComponentPool<T> : MonoBehaviour where T : MonoBehaviour {
         }
     }
 
-    private void OnReturnToPool(T item) {
+    protected virtual void OnReturnToPool(T item) {
+        if (item == null) return;
+
         if (item is IPoolable poolable) {
             poolable.OnPoolRelease();
         }
 
         item.gameObject.SetActive(false);
         item.transform.SetParent(poolParent);
+        item.transform.localPosition = Vector3.zero;
+        item.transform.localRotation = Quaternion.identity;
+        item.transform.localScale = Vector3.one;
     }
 
-    private void OnDestroyPoolObject(T item) {
+    protected virtual void OnDestroyPoolObject(T item) {
         if (item != null) {
             if (item is IPoolable poolable) {
                 poolable.OnPoolDestroy();
@@ -87,22 +98,7 @@ public class ComponentPool<T> : MonoBehaviour where T : MonoBehaviour {
         }
     }
 
-    private void PrewarmPool() {
-        var temp = new List<T>();
-
-        // Створюємо об'єкти для розігріву
-        for (int i = 0; i < defaultCapacity; i++) {
-            temp.Add(Get());
-        }
-
-        // Повертаємо їх назад
-        foreach (var item in temp) {
-            Release(item);
-        }
-    }
-
-    // Публічні методи для роботи з пулом
-    public T Get() {
+    public virtual T Get() {
         if (pool == null) {
             Debug.LogError($"Pool for {typeof(T).Name} not initialized!");
             return null;
@@ -111,66 +107,37 @@ public class ComponentPool<T> : MonoBehaviour where T : MonoBehaviour {
         return pool.Get();
     }
 
-    public void Release(T item) {
+    public virtual void Release(T item) {
         if (pool == null || item == null) return;
-
         pool.Release(item);
     }
 
-    public void Clear() {
+    public virtual void Clear() {
         pool?.Clear();
     }
 
-    // Статичні методи для зручності
-    public static T GetStatic() {
-        return Instance?.Get();
-    }
-
-    public static void ReleaseStatic(T item) {
-        Instance?.Release(item);
-    }
-
-    // Інформація про пул
-    [ContextMenu("Log Pool Info")]
-    public void LogPoolInfo() {
+    public virtual void PrewarmPool(int count) {
         if (pool == null) return;
 
-        Debug.Log($"{typeof(T).Name} Pool Info:\n" +
-                 $"- Active objects: {poolParent.childCount}\n" +
+        var temp = new List<T>();
+
+        for (int i = 0; i < count; i++) {
+            temp.Add(Get());
+        }
+
+        foreach (var item in temp) {
+            Release(item);
+        }
+    }
+    public void LogPoolInfo() {
+        Debug.Log($"{prefab} Pool Info:\n" +
+                 $"- Active objects: {ActiveCount}\n" +
+                 $"- Inactive objects: {InactiveCount}\n" +
                  $"- Capacity: {defaultCapacity}\n" +
                  $"- Max size: {maxSize}");
     }
 
-    private void OnDestroy() {
-        if (Instance == this) {
-            Instance = null;
-        }
-
+    protected virtual void OnDestroy() {
         pool?.Clear();
-    }
-}
-
-public abstract class PoolableObject<T> : MonoBehaviour, IPoolable where T : MonoBehaviour {
-
-    public virtual void OnPoolCreate() {
-    }
-
-    public virtual void OnPoolGet() {
-        // Тут можна скинути стан об'єкта
-    }
-
-    public virtual void OnPoolRelease() {
-        // Тут можна очистити стан об'єкта
-    }
-
-    public virtual void OnPoolDestroy() {
-        // Очищення ресурсів
-    }
-
-    // Зручний метод для повернення себе в пул
-    public virtual void ReturnToPool() {
-        if (this is T item) {
-            ComponentPool<T>.ReleaseStatic(item);
-        }
     }
 }

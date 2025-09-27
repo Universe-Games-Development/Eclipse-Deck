@@ -1,7 +1,5 @@
-using Cysharp.Threading.Tasks;
-using DG.Tweening;
+
 using System;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -60,38 +58,7 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
         throw new NotImplementedException();
     }
 
-    #region UI Info Update
-    public override void UpdateCost(int cost) {
-        uiInfo.UpdateCost(cost);
+    public override void UpdateDisplay(CardDisplayContext context) {
+        throw new NotImplementedException();
     }
-
-    public override void UpdateName(string name) {
-        uiInfo.UpdateName(name);
-    }
-
-    public override void UpdateAttack(int attack) {
-        uiInfo.UpdateAttack(attack);
-    }
-
-    public override void UpdateHealth(int health) {
-        uiInfo.UpdateHealth(health);
-    }
-
-    public override void ToggleCreatureStats(bool isEnabled) {
-        uiInfo.ToggleAttackText(isEnabled);
-        uiInfo.TogglHealthText(isEnabled);
-    }
-
-    public override void UpdatePortait(Sprite portait) {
-        uiInfo.UpdatePortait(portait);
-    }
-
-    public override void UpdateBackground(Sprite bgImage) {
-        uiInfo.UpdateBackground(bgImage);
-    }
-
-    public override void UpdateRarity(Color rarity) {
-        uiInfo.UpdateRarity(rarity);
-    }
-    #endregion
 }

@@ -1,23 +1,19 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-using Zenject;
-using static UnityEngine.Rendering.HDROutputUtils;
 
 public abstract class Card : UnitModel {
     public Action<CardContainer> OnContainerChanged { get; internal set; }
     public CardContainer CurrentContainer { get; protected set; }
     public CardData Data { get; protected set; }
     public Cost Cost { get; protected set; }
-    private List<OperationData> _operationDatas;
-    protected IOperationFactory _operationFactory;
-    
-    public Card(CardData cardData, IOperationFactory operationFactory)  // Add owner to constructor
+    protected List<OperationData> _operationDatas;
+
+    public Card(CardData cardData)  // Add owner to constructor
     {
         Data = cardData;
         Cost = new Cost(cardData.cost);
         Id = $"{Data.Name}_{Guid.NewGuid()}";
-        _operationDatas = new();
+        _operationDatas = cardData.operationsData;
     }
 
     public virtual void SetContainer(CardContainer newContainer) {
@@ -47,15 +43,11 @@ public class CreatureCard : Card, IHealthable {
     public Health Health { get; private set; }
     public Attack Attack { get; private set; }
 
-    public CreatureCard(CreatureCardData cardData, IOperationFactory operationFactory)
-        : base(cardData, operationFactory) {
-        
-        Health = new(cardData.Health, this);
-        Attack = new(cardData.Attack, this);
+    public CreatureCard(CreatureCardData cardData, Health health, Attack attack)
+        : base(cardData) {
 
-        var spawnOp = ScriptableObject.CreateInstance<SpawnCreatureOperationData>();
-        spawnOp.creatureCard = this;
-        AddOperation(spawnOp);
+        Health = health;
+        Attack = attack;
     }
 
     public override string ToString() {
@@ -64,6 +56,6 @@ public class CreatureCard : Card, IHealthable {
 }
 
 public class SpellCard : Card {
-    public SpellCard(SpellCardData cardData, IOperationFactory operationFactory) : base(cardData, operationFactory) {
+    public SpellCard(SpellCardData cardData) : base(cardData) {
     }
 }

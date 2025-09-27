@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
+﻿using DG.Tweening;
 using UnityEngine;
 
 public class Card3DAnimator : MonoBehaviour {
@@ -8,6 +7,7 @@ public class Card3DAnimator : MonoBehaviour {
     [Header("Hover Animation")]
     [SerializeField] private float hoverHeight = 0.3f;
     [SerializeField] private float hoverZOffset = 0.3f;
+    [SerializeField] private Vector3 hoverOffset;
     [SerializeField] private float hoverSpeedDuration = 0.2f;
     [SerializeField] private Ease hoverEase = Ease.OutQuad;
 
@@ -33,11 +33,13 @@ public class Card3DAnimator : MonoBehaviour {
     public void Hover(bool hovered) {
         if (hovered) {
             // Hover animation - lift the card up
-            target.DOLocalMoveY(originalPosition.y + hoverHeight, hoverSpeedDuration).SetEase(hoverEase);
-            target.DOLocalMoveZ(originalPosition.z + hoverZOffset, hoverSpeedDuration);
-            
+            Sequence hoverSequence = DOTween.Sequence();
+            hoverSequence
+                .Join(target.DOLocalMove(originalPosition + hoverOffset, hoverSpeedDuration).SetEase(hoverEase))
+                .Play();
+
         } else {
-            target.DOLocalMove(originalPosition, hoverSpeedDuration).SetEase(hoverEase);
+            target.DOLocalMove(originalPosition, hoverSpeedDuration).SetEase(hoverEase).Play();
         }
     }
     public void PlayClickAnimation() {

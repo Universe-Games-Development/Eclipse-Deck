@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -6,9 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public class HandDebug : MonoBehaviour
-{
-    [SerializeField] HandPresenter handPresenter;
+public class HandDebug : MonoBehaviour {
+    [SerializeField] CardHandView handView;
 
     [SerializeField] Button addCardButton;
     [SerializeField] Button removeCardButton;
@@ -16,14 +14,25 @@ public class HandDebug : MonoBehaviour
     [SerializeField] int initialCards = 0;
     [SerializeField] TextMeshProUGUI hoveredCard;
 
-    [SerializeField] CreatureCardData creatureCardData;
-    [SerializeField] SpellCardData spellCardData;
-
     [Inject] IEventBus<IEvent> eventBus;
 
     [Inject] private ICardFactory cardFactory;
+    [Inject] CardProvider cardProvider;
+    [SerializeField] List<CardData> cardDatas;
+    [Inject] IUnitRegistry registry;
+
+    private HandPresenter handPresenter;
 
     private void Start() {
+        if (handView == null) {
+            Debug.LogWarning("HandView null");
+            return;
+        }
+        handPresenter = registry.GetPresenter<HandPresenter>(handView);
+        if (handPresenter == null) {
+            Debug.LogWarning("HandPresenter null");
+            return;
+        }
 
         addCardButton?.onClick.AddListener(() => {
             AddCard();
@@ -33,7 +42,6 @@ public class HandDebug : MonoBehaviour
             RemoveRandomCard();
         });
 
-        handPresenter.OnCardHovered += HandleHover;
 
         for (int i = 0; i < initialCards; i++) {
             AddCard();
@@ -41,31 +49,21 @@ public class HandDebug : MonoBehaviour
     }
 
     private void RemoveRandomCard() {
-        List<Card> cards = handPresenter.GetCards();
+        List<Card> cards = handPresenter.GetCards().ToList();
         if (cards.Count() > 0) {
             handPresenter.RemoveCard(cards.Last());
         }
     }
 
     private void AddCard() {
-        float value = UnityEngine.Random.Range(0f, 1f);
-        CardData dataToChoose = creatureCardData;
-        if (value > 0.5f) dataToChoose = spellCardData;
+        List<CardData> cardDatas1 = cardProvider.GetUnlockedCards();
+        bool v = cardDatas.TryGetRandomElement(out CardData cardData);
 
         EffectManager effectManager = new EffectManager(eventBus);
-        Card card = cardFactory.CreateCard(dataToChoose);
+        Card card = cardFactory.CreateCard(cardData);
         handPresenter.AddCard(card);
     }
 
-    private void HandleHover(CardPresenter presenter, bool isHovered) {
-        if (hoveredCard == null) return;
-
-        if (isHovered) {
-            hoveredCard.text = presenter.Card.Data.Name;
-        } else {
-            hoveredCard.text = "No Card";
-        }
-    }
 }
 
 
@@ -73,5 +71,5 @@ public class GameController {
 
     public CreaturePresenter SpawnCreature() {
         return null;
-    } 
+    }
 }

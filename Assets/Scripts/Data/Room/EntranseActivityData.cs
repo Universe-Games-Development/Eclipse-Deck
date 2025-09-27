@@ -11,9 +11,8 @@ public class EntranseActivityData : ActivityData {
 }
 
 public class EntranceRoomActivity : RoomActivity {
-    public override async UniTask Initialize(Room room) {
+    public override void Initialize(Room room) {
         Debug.Log("Enterance effects");
         CompleteActivity();
-        await UniTask.CompletedTask;
     }
 }

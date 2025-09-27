@@ -10,7 +10,7 @@ public class RoomActivityFactory : IRoomActivityFactory {
     private WeightedRandomizer<ActivityData> weightedRandomizer = new();
     private ActivitiesData _activitiesData;
     [Inject] DiContainer container;
-    
+
     public RoomActivityFactory(ActivitiesData activitiesData) {
         UpdateActivityData(activitiesData);
     }

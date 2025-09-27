@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewStoryDialogue", menuName = "Dialogues/StoryDialogue")]
@@ -71,7 +70,7 @@ public class StoryDialogue : BaseDialogue {
     }
 
     private void OnTurnStart(ref TurnStartEvent eventData) {
-        bool isOwnTurn = eventData.StartingOpponent.Character != speaker.Opponent;
+        bool isOwnTurn = eventData.StartingOpponent.Opponent != speaker.Opponent;
         if (isOwnTurn == storyDialogueData.triggerOnOwnTurn) return;
 
         Queue<string> messages = storyDialogueData.GetContextPages(eventData, storyDialogueData.triggerOnRound);

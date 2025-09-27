@@ -6,7 +6,7 @@ public abstract class RoomActivity : IDisposable {
     public bool BlocksRoomClear => _blocksRoomClear;
     public Action OnActivityCompleted;
     public string Name { get; private set; }
-    public abstract UniTask Initialize(Room room);
+    public abstract void Initialize(Room room);
     public void CompleteActivity() {
         OnActivityCompleted?.Invoke();
     }

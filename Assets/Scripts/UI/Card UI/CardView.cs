@@ -1,9 +1,11 @@
-﻿using DG.Tweening;
+﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System;
+using System.Threading;
 using UnityEngine;
 
-public abstract class CardView : MonoBehaviour {
-    
+public abstract class CardView : UnitView {
+
     public Action<CardView> OnCardClicked;
     public Action<CardView, bool> OnHoverChanged;
 
@@ -11,6 +13,8 @@ public abstract class CardView : MonoBehaviour {
     private bool _isInteractive = true;
 
     [SerializeField] protected MovementComponent movementComponent;
+    [SerializeField] protected CardTiltController tiltController;
+    [SerializeField] public Transform innerBody;
 
     #region Unity Lifecycle
 
@@ -32,14 +36,6 @@ public abstract class CardView : MonoBehaviour {
 
     protected virtual void CleanupResources() {
         DOTween.Kill(this); // Очищаем все анимации, связанные с этим объектом
-    }
-
-    #endregion
-
-    #region State Management
-
-    public void SetInteractivity(bool enabled) {
-        _isInteractive = enabled;
     }
 
     #endregion
@@ -68,15 +64,20 @@ public abstract class CardView : MonoBehaviour {
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void DoTweener(Tweener tweener) {
-        movementComponent?.ExecuteTween(tweener);
+    public async UniTask DoTweener(Tweener tweener, CancellationToken token = default) {
+        if (movementComponent != null) {
+            await movementComponent.ExecuteTween(tweener, token);
+        }
     }
 
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void DoSequence(Sequence sequence) {
-        movementComponent?.ExecuteTweenSequence(sequence);
+    public async UniTask DoSequence(Sequence sequence, CancellationToken token = default) {
+        if (movementComponent != null) {
+            await movementComponent.ExecuteTweenSequence(sequence, token);
+        }
+
     }
 
     /// <summary>
@@ -92,25 +93,13 @@ public abstract class CardView : MonoBehaviour {
     public void StopMovement() {
         movementComponent?.StopMovement();
     }
+
+    public void ToggleTiling(bool enable) {
+        tiltController.ToggleTiling(enable);
+    }
     #endregion
 
-    #region UI Info Update
-    public abstract void UpdateCost(int cost);
-
-    public abstract void UpdateName(string name);
-
-    public abstract void UpdateAttack(int attack);
-
-    public abstract void UpdateHealth(int health);
-
-    public abstract void ToggleCreatureStats(bool isEnabled);
-
-    public abstract void UpdatePortait(Sprite portait);
-
-    public abstract void UpdateBackground(Sprite bgImage);
-
-    public abstract void UpdateRarity(Color rarity);
-    #endregion
+    public abstract void UpdateDisplay(CardDisplayContext context);
 
     #region Render Order Management
     public abstract void SetRenderOrder(int sortingOrder);
@@ -122,4 +111,8 @@ public abstract class CardView : MonoBehaviour {
     #endregion
 
     public abstract void SetHoverState(bool isHovered);
+
+    public void SetInteractable(bool value) {
+        _isInteractive = value;
+    }
 }

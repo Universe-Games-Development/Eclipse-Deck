@@ -96,11 +96,11 @@ public class BoardSettingsData : ScriptableObject {
 
     private void ResizeAllGrids() {
         if (directionGrids != null)
-        foreach (var gridData in directionGrids) {
-            int targetRows = CompassUtil.BelongsToGlobalDirection(gridData.direction, Direction.North) ? northRows : southRows;
-            int targetColumns = CompassUtil.BelongsToGlobalDirection(gridData.direction, Direction.East) ? eastColumns : westColumns;
-            ResizeGrid(gridData, targetRows, targetColumns);
-        }
+            foreach (var gridData in directionGrids) {
+                int targetRows = CompassUtil.BelongsToGlobalDirection(gridData.direction, Direction.North) ? northRows : southRows;
+                int targetColumns = CompassUtil.BelongsToGlobalDirection(gridData.direction, Direction.East) ? eastColumns : westColumns;
+                ResizeGrid(gridData, targetRows, targetColumns);
+            }
     }
 
     private void ResizeGrid(GridData gridData, int targetRows, int targetColumns) {
@@ -261,7 +261,7 @@ public class BoardSettingsData : ScriptableObject {
     public List<List<int>> GetGridValues(Direction dir) {
         GridData gridData = directionGrids.FirstOrDefault(g => g.direction == dir);
         List<List<int>> values = new List<List<int>>();
-        foreach(var row in gridData.grid) {
+        foreach (var row in gridData.grid) {
             values.Add(row.columnValues);
         }
         return values;

@@ -1,12 +1,11 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Splines;
-using Zenject;
 
 public class SplineMover : MonoBehaviour {
     [SerializeField] private float duration = 2f;
     [SerializeField] private bool alignToDirection = true;
-   
+
     public void SetDuration(float newDuration) {
         duration = newDuration;
     }
@@ -50,6 +49,6 @@ public class SplineMover : MonoBehaviour {
 
         // Финальная установка позиции
         if (splinePath)
-        objectToMove.position = splinePath.EvaluatePosition(1);
+            objectToMove.position = splinePath.EvaluatePosition(1);
     }
 }

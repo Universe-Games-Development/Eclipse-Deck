@@ -1,5 +1,4 @@
 using ModestTree;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -284,7 +283,7 @@ public class GraphCenterer {
             for (int i = 0; i < currentLevel.Count; i++) {
                 // «бер≥гаЇмо x-координату (р≥вень) незм≥нною, зм≥нюЇмо лише y-координату (позиц≥ю в р≥вн≥)
                 currentLevel[i].position = new Vector2(level, i + offset);
-            }   
+            }
         }
     }
 

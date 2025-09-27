@@ -1,31 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 
 public class Zone : UnitModel {
-    public Action<Creature> OnCreaturePlaced;
-    public Action<Creature> OnCreatureRemoved;
+    public int MaxCreatures { get; }
+    public event Action<Creature> OnCreaturePlaced;
+    public event Action<Creature> OnCreatureRemoved;
 
-    List<Creature> creatures = new();
+    private readonly List<Creature> _creatures = new();
+    public IReadOnlyList<Creature> Creatures => _creatures.AsReadOnly();
 
-    public void PlaceCreature(Creature creature) {
-        Debug.Log($"Spawning craeture at zone: {this}");
-
-        creatures.Add(creature);
-       
-        OnCreaturePlaced?.Invoke(creature);
+    public Zone(int maxCreatures = 5) {
+        MaxCreatures = maxCreatures;
+        Id = $"Zone_{Guid.NewGuid()}";
     }
 
-    public void RemoveCreature(Creature creature) {
-        Debug.Log($"Spawning craeture at zone: {this}");
+    public bool TryPlaceCreature(Creature creature) {
+        if (_creatures.Count >= MaxCreatures) return false;
 
-        creatures.Remove(creature);
+        _creatures.Add(creature);
+        OnCreaturePlaced?.Invoke(creature);
+        return true;
+    }
+
+    public bool RemoveCreature(Creature creature) {
+        if (!_creatures.Remove(creature)) return false;
 
         OnCreatureRemoved?.Invoke(creature);
-    }
-
-    public int GetCreaturesCount() {
-        return creatures.Count;
+        return true;
     }
 }

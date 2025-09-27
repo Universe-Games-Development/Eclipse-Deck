@@ -3,23 +3,18 @@ using UnityEditor;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
-using MQTTnet = Meryel.UnityCodeAssist.MQTTnet;
 #pragma warning restore IDE0005
 
 
 #nullable enable
 
 
-namespace Meryel.UnityCodeAssist.Editor
-{
+namespace Meryel.UnityCodeAssist.Editor {
     //[InitializeOnLoad]
-    public static class MQTTnetInitializer
-    {
+    public static class MQTTnetInitializer {
         public static MQTTnetPublisher? Publisher;
 
-        static MQTTnetInitializer()
-        {
+        static MQTTnetInitializer() {
             EditorApplication.quitting += EditorApplication_quitting;
             AssemblyReloadEvents.beforeAssemblyReload += AssemblyReloadEvents_beforeAssemblyReload;
             //AssemblyReloadEvents.afterAssemblyReload += AssemblyReloadEvents_afterAssemblyReload;
@@ -36,8 +31,7 @@ namespace Meryel.UnityCodeAssist.Editor
         /// false for profiler standalone process
         /// </summary>
         /// <returns></returns>
-        public static bool IsMainUnityEditorProcess()
-        {
+        public static bool IsMainUnityEditorProcess() {
 #if UNITY_2020_2_OR_NEWER
             if (UnityEditor.AssetDatabase.IsAssetImportWorkerProcess())
                 return false;
@@ -60,10 +54,8 @@ namespace Meryel.UnityCodeAssist.Editor
             return true;
         }
 
-        public static void Initialize()
-        {
-            if (!IsMainUnityEditorProcess())
-            {
+        public static void Initialize() {
+            if (!IsMainUnityEditorProcess()) {
                 // if try to creaate NetMQ, will recieve AddressAlreadyInUseException during binding
                 Serilog.Log.Debug("MQTTnet won't initialize on secondary processes");
                 return;
@@ -73,13 +65,12 @@ namespace Meryel.UnityCodeAssist.Editor
 
             //Serilog.Log.Debug("MQTTnet constructing");
             Publisher = new MQTTnetPublisher();
-            
+
             RunOnShutdown(OnShutDown);
             Serilog.Log.Debug("MQTTnet initialized");
         }
 
-        private static void OnShutDown()
-        {
+        private static void OnShutDown() {
             Serilog.Log.Debug("MQTTnet OnShutDown");
             Clear();
         }
@@ -89,15 +80,13 @@ namespace Meryel.UnityCodeAssist.Editor
         //    Serilog.Log.Debug("MQTTnet AssemblyReloadEvents_afterAssemblyReload");
         //}
 
-        private static void AssemblyReloadEvents_beforeAssemblyReload()
-        {
+        private static void AssemblyReloadEvents_beforeAssemblyReload() {
             Serilog.Log.Debug("MQTTnet AssemblyReloadEvents_beforeAssemblyReload");
 
             Clear();
         }
 
-        private static void EditorApplication_quitting()
-        {
+        private static void EditorApplication_quitting() {
             Serilog.Log.Debug("MQTTnet EditorApplication_quitting");
 
             Publisher?.SendDisconnect();
@@ -107,10 +96,8 @@ namespace Meryel.UnityCodeAssist.Editor
         static void Clear() => Publisher?.Clear();
 
 
-        private static void RunOnceOnUpdate(Action action)
-        {
-            void callback()
-            {
+        private static void RunOnceOnUpdate(Action action) {
+            void callback() {
                 EditorApplication.update -= callback;
                 action();
             }
@@ -118,8 +105,7 @@ namespace Meryel.UnityCodeAssist.Editor
             EditorApplication.update += callback;
         }
 
-        private static void RunOnShutdown(Action action)
-        {
+        private static void RunOnShutdown(Action action) {
             // Mono on OSX has all kinds of quirks on AppDomain shutdown
             //if (!VisualStudioEditor.IsWindows)
             //return;

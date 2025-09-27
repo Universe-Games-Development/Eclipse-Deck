@@ -4,13 +4,10 @@
  */
 
 using System.Collections;
-using UnityEngine;
 
 //namespace Unity.EditorCoroutines.Editor
-namespace Meryel.UnityCodeAssist.Editor.EditorCoroutines
-{
-    public static class EditorCoroutineUtility
-    {
+namespace Meryel.UnityCodeAssist.Editor.EditorCoroutines {
+    public static class EditorCoroutineUtility {
         /// <summary>
         /// Starts an <see cref ="EditorCoroutine">EditorCoroutine</see> with the specified owner object. 
         /// If the garbage collector collects the owner object, while the resulting coroutine is still executing, the coroutine will stop running.
@@ -44,8 +41,7 @@ namespace Meryel.UnityCodeAssist.Editor.EditorCoroutines
         /// Only types that don't inherit from <see cref="UnityEngine.Object">UnityEngine.Object</see> will get collected the next time the GC runs instead of getting null-ed immediately.
         /// </remarks>
         /// <returns>A handle to an <see cref="EditorCoroutine">EditorCoroutine</see>.</returns>
-        public static EditorCoroutine StartCoroutine(IEnumerator routine, object owner)
-        {
+        public static EditorCoroutine StartCoroutine(IEnumerator routine, object owner) {
             return new EditorCoroutine(routine, owner);
         }
 
@@ -77,8 +73,7 @@ namespace Meryel.UnityCodeAssist.Editor.EditorCoroutines
         /// </summary>
         /// <param name="routine"> Generator function to execute. </param>
         /// <returns>A handle to an <see cref="EditorCoroutine">EditorCoroutine.</see></returns>
-        public static EditorCoroutine StartCoroutineOwnerless(IEnumerator routine)
-        {
+        public static EditorCoroutine StartCoroutineOwnerless(IEnumerator routine) {
             return new EditorCoroutine(routine);
         }
 
@@ -115,10 +110,8 @@ namespace Meryel.UnityCodeAssist.Editor.EditorCoroutines
         /// </code>
         /// </summary>
         /// <param name="coroutine">A handle to an <see cref="EditorCoroutine">EditorCoroutine.</see></param>
-        public static void StopCoroutine(EditorCoroutine coroutine)
-        {
-            if (coroutine == null)
-            {
+        public static void StopCoroutine(EditorCoroutine coroutine) {
+            if (coroutine == null) {
                 Serilog.Log.Warning("EditorCoroutine handle is null.");
                 return;
             }

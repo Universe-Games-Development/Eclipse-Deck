@@ -71,8 +71,7 @@ public class RandomEventDialogue<TEvent> : BaseDialogue where TEvent : IEvent {
     private readonly RandomEventDialogueData<TEvent> typedDialogueData;
     protected int activationCount = 0;
     public RandomEventDialogue(RandomEventDialogueData<TEvent> dialogueData, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus, Speaker speaker)
-        : base(dialogueData, dialogueSystem, eventBus, speaker)
-        {
+        : base(dialogueData, dialogueSystem, eventBus, speaker) {
         typedDialogueData = dialogueData;
     }
 

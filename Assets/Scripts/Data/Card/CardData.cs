@@ -11,13 +11,12 @@ public abstract class CardData : ScriptableObject {
     public string Description;
     public string AuthorName;
     public Sprite Portait;
-    public Sprite BgImage;
-    public Texture2D PortaitTX;
+    public Sprite Background;
 
     [Header("Logic")]
     public string resourseId;
     public Rarity Rarity;
-   
+
 
     [Header("Rarity Info (Auto-Generated)")]
     [SerializeField] private float spawnChance; // Тепер приватне, оновлюється автоматично
@@ -25,7 +24,7 @@ public abstract class CardData : ScriptableObject {
     [SerializeField] private string rarityDisplayName; // Локалізована назва
 
     [Header("Operations")]
-    public List<OperationData> operations = new List<OperationData>();
+    public List<OperationData> operationsData = new List<OperationData>();
 
     private void OnValidate() {
         // Генеруємо унікальний ID якщо потрібно
@@ -45,4 +44,5 @@ public abstract class CardData : ScriptableObject {
         rarityColor = RarityUtility.GetRarityColor(Rarity);
         rarityDisplayName = RarityUtility.GetRarityDisplayName(Rarity);
     }
+
 }

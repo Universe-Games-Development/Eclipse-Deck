@@ -1,34 +1,30 @@
 ﻿using Cysharp.Threading.Tasks;
+using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+using Zenject;
 
-public class OperationTargetsFiller : MonoBehaviour {
+public class OperationTargetsFiller : MonoBehaviour, ITargetFiller {
 
     [Header("Configuration")]
-    [SerializeField] private HumanTargetSelector fallbackSelector;
+    private ITargetSelector fallbackSelector;
     [SerializeField] private int maxRetryAttempts = 3;
     [SerializeField] private float operationTimeoutSeconds = 30f;
 
-    // Dependencies - будуть ін'єктовані
-    private ITargetSelectorFactory selectorFactory;
-    private ITargetValidator targetValidator;
-    private BoardGame boardGame;
-
     // State management
-    private CancellationTokenSource globalCancellationSource = new();
+    private readonly CancellationTokenSource globalCancellationSource = new();
     private TargetOperationContext currentOperation;
 
-    private void Start() {
-        InitializeDependencies();
-    }
+    [Inject] private readonly BoardGame boardGame;
+    [Inject] private readonly IUnitRegistry _unitPresenterRegistry;
+    [Inject] private readonly ITargetValidator targetValidator;
+    [Inject] private readonly ILogger logger;
 
-    private void InitializeDependencies() {
-        // TODO: Замінити на правильну DI ін'єкцію
-        selectorFactory = new TargetSelectorFactory(boardGame, fallbackSelector);
-        targetValidator = new TargetValidator();
+    private void Awake() {
+        fallbackSelector = new HumanTargetSelector(); // soon be randomSelector
     }
 
     private void OnDestroy() {
@@ -37,16 +33,15 @@ public class OperationTargetsFiller : MonoBehaviour {
         currentOperation?.Dispose();
     }
 
-    public bool CanFillTargets(List<Target> targets) {
-        if (targets?.Any() != true) return false;
-
-        try {
-            return selectorFactory.CanCreateSelectors(targets) &&
-                   targetValidator.CanValidateAllTargets(targets);
-        } catch (Exception ex) {
-            GameLogger.LogError($"Error checking target filling capability: {ex.Message}", LogCategory.TargetsFiller);
+    public bool CanFillTargets(List<TypedTargetBase> targets) {
+        if (targets.IsEmpty()) {
+            logger.LogWarning($"No targets", LogCategory.TargetsFiller);
             return false;
         }
+
+        if (targets?.Any() != true) return false;
+
+        return targetValidator.CanValidateAllTargets(targets);
     }
 
     public async UniTask<TargetOperationResult> FillTargetsAsync(TargetOperationRequest request, CancellationToken cancellationToken = default) {
@@ -55,74 +50,91 @@ public class OperationTargetsFiller : MonoBehaviour {
             return TargetOperationResult.Failure("Invalid request parameters");
         }
 
-        using var operation = new TargetOperationContext(request, maxRetryAttempts);
-        currentOperation = operation;
+        using var operationContext = new TargetOperationContext(request, maxRetryAttempts, logger);
+        currentOperation = operationContext;
 
         try {
             using var timeoutSource = new CancellationTokenSource(TimeSpan.FromSeconds(operationTimeoutSeconds));
             using var combinedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken, globalCancellationSource.Token, timeoutSource.Token);
 
-            GameLogger.LogInfo($"Starting target operation: {request.Targets.Count} targets, mandatory: {request.IsMandatory}",
+            logger.LogInfo($"Starting target operation: {request.Targets.Count} targets, mandatory: {request.IsMandatory}",
                 LogCategory.TargetsFiller);
 
-            var result = await ProcessTargetSelection(operation, combinedTokenSource.Token);
+            var result = await ProcessTargetSelection(operationContext, combinedTokenSource.Token);
 
-            GameLogger.LogInfo($"Target operation completed: {result.Status}", LogCategory.TargetsFiller);
+            logger.LogInfo($"Target operation completed: {result.Status}", LogCategory.TargetsFiller);
             return result;
 
         } catch (OperationCanceledException) {
-            GameLogger.LogInfo("Target operation cancelled", LogCategory.TargetsFiller);
+            logger.LogInfo("Target operation cancelled", LogCategory.TargetsFiller);
             return TargetOperationResult.Cancelled();
-        } catch (Exception ex) {
-            GameLogger.LogError($"Target operation failed: {ex.Message}", LogCategory.TargetsFiller);
-            return TargetOperationResult.Failure(ex.Message);
         } finally {
             currentOperation = null;
         }
     }
 
-    private async UniTask<TargetOperationResult> ProcessTargetSelection(TargetOperationContext operation, CancellationToken cancellationToken) {
-        var processor = new TargetSelectionProcessor(selectorFactory, targetValidator);
+    private async UniTask<TargetOperationResult> ProcessTargetSelection(TargetOperationContext operationContext, CancellationToken cancellationToken) {
+        var processor = new TargetSelectionProcessor(targetValidator, logger);
 
-        while (operation.HasNextTarget && !cancellationToken.IsCancellationRequested) {
-            var target = operation.GetCurrentTarget();
+        while (operationContext.HasNextTarget && !cancellationToken.IsCancellationRequested) {
+            var targetState = operationContext.GetCurrentTarget();
+
+
+
+            ITargetSelector targetSelector = CreateSelector(targetState.Target, operationContext.Request.Source.GetPlayer());
 
             try {
-                var selectionResult = await processor.ProcessTarget(target, operation.Request, cancellationToken);
+                var selectionResult = await processor.ProcessTarget(targetSelector, targetState, operationContext.Request, cancellationToken);
 
-                var actionResult = operation.ProcessSelectionResult(selectionResult);
+                var actionResult = operationContext.ProcessSelectionResult(selectionResult);
                 if (actionResult == TargetActionResult.BreakLoop) {
                     break;
                 }
 
             } catch (OperationCanceledException) {
                 throw;
-            } catch (Exception ex) {
-                GameLogger.LogError($"Error processing target {target.Name}: {ex.Message}", LogCategory.TargetsFiller);
-                GameLogger.LogException(ex);
-
-                if (operation.ShouldAbortOnError()) {
-                    break;
-                }
             }
         }
 
-        return operation.GetResult();
+        return operationContext.GetResult();
     }
 
     private bool ValidateRequest(TargetOperationRequest request) {
         if (request?.Targets?.Any() != true) {
-            GameLogger.LogWarning("Cannot process empty target request", LogCategory.TargetsFiller);
+            logger.LogWarning("Cannot process empty target request", LogCategory.TargetsFiller);
             return false;
         }
 
-        if (request.Source == null && request.RequiresSource()) {
-            GameLogger.LogWarning("Request requires initiator but none provided", LogCategory.TargetsFiller);
+        if (request.Source == null) {
+            logger.LogWarning("Request requires source but none provided", LogCategory.TargetsFiller);
             return false;
         }
 
         return true;
+    }
+
+    public ITargetSelector CreateSelector(TypedTargetBase typeTarget, Opponent initiator) {
+        var selectorType = typeTarget.GetTargetSelector();
+
+        Opponent target;
+
+        switch (selectorType) {
+            case TargetSelector.Initiator:
+                target = initiator;
+                break;
+
+            case TargetSelector.Opponent:
+                target = boardGame.GetOpponent(initiator);
+                break;
+
+            case TargetSelector.AnyPlayer:
+            default:
+                return fallbackSelector;
+        }
+        ITargetSelector targetSelector = target?.Selector;
+
+        return targetSelector != null ? targetSelector : fallbackSelector;
     }
 }
 
@@ -130,36 +142,34 @@ public class OperationTargetsFiller : MonoBehaviour {
 
 public class TargetOperationRequest {
 
-    public TargetOperationRequest(List<Target> namedTargets, bool isMandatory, UnitModel source) {
+    public TargetOperationRequest(List<TypedTargetBase> namedTargets, bool isMandatory, UnitModel source) {
         Targets = namedTargets;
         IsMandatory = isMandatory;
         Source = source;
     }
 
-    public List<Target> Targets { get; set; }
+    public List<TypedTargetBase> Targets { get; set; }
     public bool IsMandatory { get; set; }
     public UnitModel Source { get; set; }
     public string OperationId { get; set; } = Guid.NewGuid().ToString();
-
-    public bool RequiresSource() =>
-        Targets?.Any(t => t.Requirement?.GetTargetSelector() != TargetSelector.AnyPlayer) == true;
 }
 
 public class TargetOperationResult {
     public OperationStatus Status { get; private set; }
-    public Dictionary<string, UnitModel> FilledTargets { get; private set; }
+    public Dictionary<string, object> FilledTargets { get; private set; }
     public string ErrorMessage { get; private set; }
     public TimeSpan Duration { get; private set; }
 
-    private TargetOperationResult(OperationStatus status, Dictionary<string, UnitModel> targets = null, string error = null) {
+    private TargetOperationResult(OperationStatus status, Dictionary<string, object> targets = null, string error = null) {
         Status = status;
-        FilledTargets = targets ?? new Dictionary<string, UnitModel>();
+        FilledTargets = targets ?? new Dictionary<string, object>();
         ErrorMessage = error;
     }
 
-    public static TargetOperationResult Success(Dictionary<string, UnitModel> targets, TimeSpan duration) {
-        TargetOperationResult result = new(OperationStatus.Success, targets);
-        result.Duration = duration;
+    public static TargetOperationResult Success(Dictionary<string, object> targets, TimeSpan duration) {
+        TargetOperationResult result = new(OperationStatus.Success, targets) {
+            Duration = duration
+        };
         return result;
     }
 
@@ -169,9 +179,10 @@ public class TargetOperationResult {
     public static TargetOperationResult Cancelled() =>
         new(OperationStatus.Cancelled);
 
-    public static TargetOperationResult PartialSuccess(Dictionary<string, UnitModel> targets, TimeSpan duration) {
-        var result = new TargetOperationResult(OperationStatus.PartialSuccess, targets);
-        result.Duration = duration;
+    public static TargetOperationResult PartialSuccess(Dictionary<string, object> targets, TimeSpan duration) {
+        var result = new TargetOperationResult(OperationStatus.PartialSuccess, targets) {
+            Duration = duration
+        };
         return result;
     }
 }
@@ -188,14 +199,16 @@ public class TargetOperationContext : IDisposable {
     public TargetOperationRequest Request { get; }
     public int MaxRetries { get; }
     public bool HasNextTarget => currentIndex < targetStates.Count;
+    ILogger logger;
 
-    public TargetOperationContext(TargetOperationRequest request, int maxRetries) {
+    public TargetOperationContext(TargetOperationRequest request, int maxRetries, ILogger logger) {
         Request = request;
         MaxRetries = maxRetries;
         startTime = DateTime.UtcNow;
         currentIndex = 0;
 
         targetStates = request.Targets.Select(t => new TargetState(t)).ToList();
+        this.logger = logger;
     }
 
     public TargetState GetCurrentTarget() {
@@ -218,7 +231,7 @@ public class TargetOperationContext : IDisposable {
                     if (Request.IsMandatory) {
                         return TargetActionResult.Continue; // Продовжуємо для обов'язкових
                     }
-                    GameLogger.LogWarning($"Max retries reached for target: {currentTarget.Name}", LogCategory.TargetsFiller);
+                    logger.LogWarning($"Max retries reached for target: {currentTarget.Name}", LogCategory.TargetsFiller);
                     return TargetActionResult.BreakLoop;
                 }
                 return TargetActionResult.Continue;
@@ -235,7 +248,7 @@ public class TargetOperationContext : IDisposable {
         }
     }
 
-    private void HandleDuplicateUnit(UnitModel unit, TargetState currentTarget) {
+    private void HandleDuplicateUnit(object unit, TargetState currentTarget) {
         var duplicateTarget = targetStates.FirstOrDefault(t => t.Unit == unit);
         if (duplicateTarget != null) {
             duplicateTarget.ClearUnit();
@@ -285,22 +298,24 @@ public class TargetOperationContext : IDisposable {
             : TargetOperationResult.Failure("No targets were filled");
     }
 
+
     public void Dispose() {
     }
 }
 
 public class TargetState {
+    public TypedTargetBase Target { get; }
+
     public string Name { get; }
-    public ITargetRequirement Requirement { get; }
-    public UnitModel Unit { get; private set; }
+    public object Unit { get; private set; }
     public int RetryCount { get; private set; }
 
-    public TargetState(Target target) {
+    public TargetState(TypedTargetBase target) {
         Name = target.Key;
-        Requirement = target.Requirement;
+        Target = target;
     }
 
-    public void SetUnit(UnitModel unit) => Unit = unit;
+    public void SetUnit(object unit) => Unit = unit;
     public void ClearUnit() => Unit = null;
     public void IncrementRetries() => RetryCount++;
     public void ResetRetries() => RetryCount = 0;
@@ -314,46 +329,46 @@ public enum TargetActionResult {
 // === Selection Processing ===
 
 public class TargetSelectionProcessor {
-    private readonly ITargetSelectorFactory selectorFactory;
     private readonly ITargetValidator validator;
-
-    public TargetSelectionProcessor(ITargetSelectorFactory selectorFactory, ITargetValidator validator) {
-        this.selectorFactory = selectorFactory;
+    ILogger logger;
+    public TargetSelectionProcessor(ITargetValidator validator, ILogger logger) {
         this.validator = validator;
+        this.logger = logger;
     }
 
     public async UniTask<TargetSelectionResult> ProcessTarget(
-        TargetState target,
+        ITargetSelector targetSelector,
+        TargetState targetState,
         TargetOperationRequest request,
         CancellationToken cancellationToken) {
 
-        var selector = selectorFactory.CreateSelector(target.Requirement, request.Source.GetPlayer());
-
         try {
-            var selectedUnit = await selector.SelectTargetAsync(
-                new TargetSelectionRequest(request.Source, target.Requirement),
+            var selectedUnit = await targetSelector.SelectTargetAsync(
+                new TargetSelectionRequest(request.Source, targetState.Target),
                 cancellationToken);
 
-            return ProcessSelection(selectedUnit, target, request);
+            return ProcessSelection(selectedUnit, targetState, request);
 
         } catch (OperationCanceledException) {
             throw;
-        } catch (Exception ex) {
-            GameLogger.LogException(ex);
-            GameLogger.LogError($"Selector error for {target.Name}: {ex.Message}", LogCategory.TargetsFiller);
-            return TargetSelectionResult.Retry();
         }
     }
 
-    private TargetSelectionResult ProcessSelection(UnitModel unit, TargetState target, TargetOperationRequest request) {
+
+
+    private TargetSelectionResult ProcessSelection(UnitModel unit, TargetState targetState, TargetOperationRequest request) {
         if (unit == null) {
             return HandleNullSelection(request);
         }
 
         // Валідація
-        var validationResult = validator.ValidateTarget(unit, target.Requirement, request.Source.GetPlayer());
+
+        Opponent opponent = request.Source.GetPlayer();
+        TypedTargetBase target = targetState.Target;
+
+        var validationResult = target.IsValid(unit, new ValidationContext(opponent));
         if (!validationResult.IsValid) {
-            GameLogger.LogWarning($"Invalid target {unit} for {target.Name}: {validationResult.ErrorMessage}",
+            logger.LogWarning($"Invalid target {unit} for {targetState.Name}: {validationResult.ErrorMessage}",
                 LogCategory.TargetsFiller);
             return TargetSelectionResult.Retry();
         }
@@ -376,14 +391,14 @@ public class TargetSelectionProcessor {
 
 public class TargetSelectionResult {
     public SelectionAction Action { get; private set; }
-    public UnitModel SelectedUnit { get; private set; }
+    public object SelectedUnit { get; private set; }
 
-    private TargetSelectionResult(SelectionAction action, UnitModel unit = null) {
+    private TargetSelectionResult(SelectionAction action, object unit = null) {
         Action = action;
         SelectedUnit = unit;
     }
 
-    public static TargetSelectionResult Success(UnitModel unit) =>
+    public static TargetSelectionResult Success(object unit) =>
         new(SelectionAction.Success, unit);
 
     public static TargetSelectionResult Retry() =>
@@ -392,7 +407,7 @@ public class TargetSelectionResult {
     public static TargetSelectionResult Cancel() =>
         new(SelectionAction.Cancel);
 
-    public static TargetSelectionResult ClearDuplicate(UnitModel unit) =>
+    public static TargetSelectionResult ClearDuplicate(object unit) =>
         new(SelectionAction.ClearDuplicate, unit);
 }
 
@@ -403,60 +418,7 @@ public enum SelectionAction {
     ClearDuplicate
 }
 
-// === Factory and Services ===
 
-public interface ITargetSelectorFactory {
-    ITargetSelector CreateSelector(ITargetRequirement requirement, BoardPlayer initiator);
-    bool CanCreateSelectors(List<Target> targets);
-}
-
-public class TargetSelectorFactory : ITargetSelectorFactory {
-    private readonly BoardGame boardGame;
-    private readonly ITargetSelector fallbackSelector;
-
-    public TargetSelectorFactory(BoardGame boardGame, ITargetSelector fallbackSelector) {
-        this.boardGame = boardGame;
-        this.fallbackSelector = fallbackSelector;
-    }
-
-    public ITargetSelector CreateSelector(ITargetRequirement requirement, BoardPlayer initiator) {
-        var selectorType = requirement.GetTargetSelector();
-
-        return selectorType switch {
-            TargetSelector.Initiator => initiator?.Selector ?? fallbackSelector,
-            TargetSelector.Opponent => boardGame?.GetOpponent(initiator)?.Selector ?? fallbackSelector,
-            TargetSelector.AnyPlayer => initiator?.Selector ?? fallbackSelector,
-            _ => fallbackSelector
-        };
-    }
-
-    public bool CanCreateSelectors(List<Target> targets) {
-        return targets?.All(t => t.Requirement?.GetTargetSelector() != TargetSelector.AllPlayers) == true;
-    }
-}
-
-public interface ITargetValidator {
-    ValidationResult ValidateTarget(UnitModel unit, ITargetRequirement requirement, BoardPlayer initiator);
-    bool CanValidateAllTargets(List<Target> targets);
-}
-
-public class TargetValidator : ITargetValidator {
-    public ValidationResult ValidateTarget(UnitModel unit, ITargetRequirement requirement, BoardPlayer initiator) {
-        try {
-            return requirement.IsValid(unit, initiator);
-        } catch (Exception ex) {
-            GameLogger.LogError($"Validation error: {ex.Message}", LogCategory.TargetsFiller);
-            return ValidationResult.Error($"Validation failed: {ex.Message}");
-        }
-    }
-
-    public bool CanValidateAllTargets(List<Target> targets) {
-        return targets?.All(t => t.Requirement != null) == true;
-    }
-}
-
-
-// === Existing interfaces (keeping for compatibility) ===
 public enum TargetSelector {
     Initiator,  // Той, хто ініціював операцію
     Opponent,   // Опонент ініціатора
@@ -464,9 +426,5 @@ public enum TargetSelector {
     SpecificPlayer, // Для складних випадків (з можливістю вказати конкретного гравця)
     AllPlayers,
     NextPlayer
-}
-
-public interface ITargetSelector {
-    UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken);
 }
 

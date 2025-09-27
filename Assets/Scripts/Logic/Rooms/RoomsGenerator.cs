@@ -1,14 +1,12 @@
-using UnityEditor;
 using UnityEngine;
 using Zenject;
 
-public class RoomsGenerator : MonoBehaviour
-{
+public class RoomsGenerator : MonoBehaviour {
     [Header("Debugging")]
     [Inject] IDungeonGenerator dungeonGenerator;
     [SerializeField] LocationData locationData;
     [SerializeField] DungeonVisualizer visualizer;
-    
+
     public void GenerateTestDungeon() {
         if (locationData == null) {
             Debug.LogError("No rooms data provided");

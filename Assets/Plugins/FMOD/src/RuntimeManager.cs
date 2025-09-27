@@ -849,19 +849,13 @@ namespace FMODUnity {
         }
 
 #if UNITY_ADDRESSABLES_EXIST
-        public static void LoadBank(AssetReference assetReference, bool loadSamples = false, System.Action completionCallback = null)
-        {
-            if (Instance.loadedBanks.ContainsKey(assetReference.AssetGUID))
-            {
+        public static void LoadBank(AssetReference assetReference, bool loadSamples = false, System.Action completionCallback = null) {
+            if (Instance.loadedBanks.ContainsKey(assetReference.AssetGUID)) {
                 ReferenceLoadedBank(assetReference.AssetGUID, loadSamples);
-            }
-            else
-            {
+            } else {
                 Instance.loadingBanksRef++;
-                assetReference.LoadAssetAsync<TextAsset>().Completed += (obj) =>
-                {
-                    if (!obj.IsValid())
-                    {
+                assetReference.LoadAssetAsync<TextAsset>().Completed += (obj) => {
+                    if (!obj.IsValid()) {
                         RuntimeUtils.DebugLogError("[FMOD] Unable to load AssetReference: " + obj.OperationException);
                         return;
                     }
@@ -871,8 +865,7 @@ namespace FMODUnity {
 
                     Instance.loadingBanksRef--;
 
-                    if (completionCallback != null)
-                    {
+                    if (completionCallback != null) {
                         completionCallback();
                     }
 
@@ -946,8 +939,7 @@ namespace FMODUnity {
         }
 
 #if UNITY_ADDRESSABLES_EXIST
-        public static void UnloadBank(AssetReference assetReference)
-        {
+        public static void UnloadBank(AssetReference assetReference) {
             UnloadBank(assetReference.AssetGUID);
         }
 #endif

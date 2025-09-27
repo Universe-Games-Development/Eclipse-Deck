@@ -3,91 +3,65 @@ using DG.Tweening;
 using System;
 using UnityEngine;
 
-public class CardPresenter : UnitPresenter {
-    public Action<CardPresenter> OnCardClicked;
-    public Action<CardPresenter, bool> OnCardHovered;
+public class CardPresenter : UnitPresenter, IDisposable {
     public Card Card { get; private set; }
-    public CardView View { get; private set; }
+    public CardView CardView { get; private set; }
 
-    [Header ("Debug")]
-    [SerializeField] private bool DoTestRandomUpdate = true;
-    [SerializeField] private int updateTimes = 15;
-    [SerializeField] private float updateRate = 1.0f;
-    [SerializeField] private bool _isInteractable = true;
+    public Action<CardPresenter> OnCardClicked;
+    public Action<CardPresenter, bool> OnHoverChanged;
 
-    private void OnDestroy() {
-        UnSubscribeEvents();
-    }
-    public void Initialize(Card card, CardView cardView) {
+    public CardPresenter (Card card, CardView cardView) : base(card, cardView) {
         this.Card = card;
-        View = cardView;
+        CardView = cardView;
 
         SubscribeEvents();
         UpdateUIInfo();
-
-        if (DoTestRandomUpdate) {
-            LaunchTestUpdate().Forget();
-        }
-    }
-
-    public async UniTask LaunchTestUpdate() {
-        for (int i = 0; i < updateTimes; i++) {
-            int randomHealth = UnityEngine.Random.Range(1, 100);
-            View.UpdateHealth(randomHealth);
-            int randomAttack = UnityEngine.Random.Range(1, 100);
-            View.UpdateAttack(randomAttack);
-            Debug.Log($"Iteration {i}, {randomAttack}/{randomHealth}");
-            await UniTask.Delay(TimeSpan.FromSeconds(updateRate));
-        }
     }
 
     private void SubscribeEvents() {
         if (View == null) return;
-        View.OnCardClicked += (view) => OnCardClicked?.Invoke(this);
-        View.OnHoverChanged += (view, isHovered) => OnCardHovered?.Invoke(this, isHovered);
+        CardView.OnCardClicked += (view) => OnCardClicked?.Invoke(this);
+        CardView.OnHoverChanged += (view, isHovered) => OnHoverChanged?.Invoke(this, isHovered);
     }
     private void UnSubscribeEvents() {
         if (View == null) return;
-        View.OnCardClicked -= (view) => OnCardClicked?.Invoke(this);
-        View.OnHoverChanged -= (view, isHovered) => OnCardHovered?.Invoke(this, isHovered);
+        CardView.OnCardClicked -= (view) => OnCardClicked?.Invoke(this);
+        CardView.OnHoverChanged -= (view, isHovered) => OnHoverChanged?.Invoke(this, isHovered);
     }
 
     public void SetHandHoverState(bool isHovered) {
-        if (!_isInteractable) return;
-        View.SetHoverState(isHovered);
+        CardView.SetHoverState(isHovered);
     }
 
-    public void SetInteractable(bool isEnabled) {
-        _isInteractable = isEnabled;
-        View.SetHoverState(false);
-    }
 
     #region UI Info Update
     private void UpdateUIInfo() {
-        UpdateViewAppear();
-        UpdateViewStats();
+        CardDisplayData cardDisplayData = ConvertToDisplayData(Card);
+        CardDisplayConfig cardDisplayConfig = CardDisplayConfig.ForHandCard();
+        if (!(Card is CreatureCard card)) {
+            cardDisplayConfig.showStats = false;
+        }
+        CardDisplayContext context = new(cardDisplayData, cardDisplayConfig);
+        CardView.UpdateDisplay(context);
     }
 
-    private void UpdateViewStats() {
-        View.UpdateCost(Card.Cost.Current);
-
-        var creatureCard = Card as CreatureCard;
-        bool isCreatureCard = creatureCard != null;
-
-        if (isCreatureCard) {
-            View.UpdateAttack(creatureCard.Attack.Current);
-            View.UpdateHealth(creatureCard.Health.Current);
+    private CardDisplayData ConvertToDisplayData(Card card) {
+        int attack = 0;
+        int health = 0;
+        if (card is CreatureCard creature) {
+            attack = creature.Attack.Current;
+            health = creature.Health.Current;
         }
 
-        View.ToggleCreatureStats(isCreatureCard);
-    }
-
-    private void UpdateViewAppear() {
-        View.UpdateName(Card.Data.Name);
-        View.UpdatePortait(Card.Data.Portait);
-        View.UpdateBackground(Card.Data.BgImage);
-        Color color = RarityUtility.GetRarityColor( Card.Data.Rarity);
-        View.UpdateRarity(color);
+        return new CardDisplayData {
+            name = card.Data.Name,
+            cost = card.Cost.Current,
+            attack = attack,
+            health = health,
+            portrait = card.Data.Portait,
+            background = card.Data.Background,
+            rarity = RarityUtility.GetRarityColor(card.Data.Rarity)
+        };
     }
 
     #endregion
@@ -97,55 +71,57 @@ public class CardPresenter : UnitPresenter {
     /// <summary>
     /// Плавний рух до позиції (для руки, реорганізації)
     /// </summary>
-    public void DoTweener(Tweener twenner) {
-        View.DoTweener(twenner);
+    public async UniTask DoTweener(Tweener twenner) {
+        await CardView.DoTweener(twenner);
     }
 
     /// <summary>
     /// Простий рух до позиції з поворотом за час
     /// </summary>
-    public void DoSequence(Sequence sequence) {
-        View.DoSequence(sequence);
+    public async UniTask DoSequence(Sequence sequence) {
+        await CardView.DoSequence(sequence);
     }
-
 
     /// <summary>
     /// Почати фізичний рух (для драгу, таргетингу)
     /// </summary>
     public void DoPhysicsMovement(Vector3 initialPosition) {
-        View?.DoPhysicsMovement(initialPosition);
+        CardView?.DoPhysicsMovement(initialPosition);
     }
 
     /// <summary>
     /// Зупинити всі рухи
     /// </summary>
     public void StopMovement() {
-        View?.StopMovement();
+        CardView?.StopMovement();
     }
     #endregion
 
     #region Render Order
     public void SetSortingOrder(int sortingOrder) {
-        View.SetRenderOrder(sortingOrder);
+        CardView.SetRenderOrder(sortingOrder);
     }
 
     public void ModifyRenderOrder(int value) {
-        View.ModifyRenderOrder(value);
+        CardView.ModifyRenderOrder(value);
     }
 
     public void ResetRenderOrder() {
-        View.ResetRenderOrder();
+        CardView.ResetRenderOrder();
     }
     #endregion
 
-    #region UnitPresenter API
-    public override UnitModel GetModel() {
-        return Card;
+
+    public void SetInteractable(bool v) {
+        CardView.SetInteractable(v);
     }
 
-    public override BoardPlayer GetPlayer() {
-        return Card?.GetPlayer();
+    public void Dispose() {
+        UnSubscribeEvents();
     }
-    #endregion
+
+    public void ToggleTiltMovement(bool v) {
+        CardView.ToggleTiling(v);
+    }
 }
 

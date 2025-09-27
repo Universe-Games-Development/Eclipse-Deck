@@ -1,7 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
-using System;
+using UnityEngine;
 
 // Клас для представлення окремої клітинки
 [Serializable]
@@ -833,7 +833,7 @@ public static class HexUtils {
                 int r = dy;
 
                 // Перетворення axial → offset (even-q)
-                Vector2Int axial = new Vector2Int(center.x + q, center.y + r + (center.x % 2 == 0 ? (q - (q & 1)) / 2  : (q + (q & 1)) / 2));
+                Vector2Int axial = new Vector2Int(center.x + q, center.y + r + (center.x % 2 == 0 ? (q - (q & 1)) / 2 : (q + (q & 1)) / 2));
 
                 if (IsValidHexCoordinate(axial.x, axial.y, gridWidth, gridHeight)) {
                     results.Add(axial);

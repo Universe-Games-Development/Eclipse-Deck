@@ -1,9 +1,8 @@
 using Cysharp.Threading.Tasks;
 using System;
 using Unity.Cinemachine;
-using UnityEngine.Splines;
 using UnityEngine;
-using Zenject;
+using UnityEngine.Splines;
 
 public class CameraSplineMover : MonoBehaviour {
     public float duration = 5f;

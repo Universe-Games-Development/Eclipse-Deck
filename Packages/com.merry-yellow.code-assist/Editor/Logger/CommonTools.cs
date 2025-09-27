@@ -1,24 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using static System.IO.Path;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
 #pragma warning restore IDE0005
 
 
 #nullable enable
 
 
-namespace Meryel.UnityCodeAssist.Editor
-{
-    public static class CommonTools
-    {
-        public static string GetScriptPath(string script)
-        {
+namespace Meryel.UnityCodeAssist.Editor {
+    public static class CommonTools {
+        public static string GetScriptPath(string script) {
             var projectPath = GetProjectPathRaw();
             var toolPath = Combine(projectPath, "Packages/com.merry-yellow.code-assist/Editor/", script);
             return toolPath;
@@ -28,44 +22,38 @@ namespace Meryel.UnityCodeAssist.Editor
         /// does NOT include the trailing slash
         /// </summary>
         /// <returns></returns>
-        public static string GetExternalReferencesPath()
-        {
+        public static string GetExternalReferencesPath() {
             var projectPath = GetProjectPathRaw();
             var extRefPath = Combine(projectPath, "Packages/com.merry-yellow.code-assist/Editor/ExternalReferences");
             return extRefPath;
         }
 
         [Obsolete]
-        public static string GetToolPath(string tool)
-        {
+        public static string GetToolPath(string tool) {
             var projectPath = GetProjectPathRaw();
             var toolPath = Combine(projectPath, "Packages/com.merry-yellow.code-assist/Tools~/", tool);
             return toolPath;
         }
 
-        public static string GetInstallerPath(string installer)
-        {
+        public static string GetInstallerPath(string installer) {
             var projectPath = GetProjectPathRaw();
             var installerPath = Combine(projectPath, "Packages/com.merry-yellow.code-assist/Installers~/", installer);
             return installerPath;
         }
 
-        public static string GetTagManagerFilePath()
-        {
+        public static string GetTagManagerFilePath() {
             var projectPath = GetProjectPathRaw();
             var tagManagerPath = Combine(projectPath, "ProjectSettings/TagManager.asset");
             return tagManagerPath;
         }
 
-        public static string GetInputManagerFilePath()
-        {
+        public static string GetInputManagerFilePath() {
             var projectPath = GetProjectPathRaw();
             var inputManagerPath = Combine(projectPath, "ProjectSettings/InputManager.asset");
             return inputManagerPath;
         }
 
-        public static string GetProjectPath()
-        {
+        public static string GetProjectPath() {
             var rawPath = GetProjectPathRaw();
             //var pathWithoutWhiteSpace = rawPath.Trim(); // this is done in OSPath ctor
             var osPath = new OSPath(rawPath);
@@ -75,10 +63,8 @@ namespace Meryel.UnityCodeAssist.Editor
             return capitalized!;
         }
 
-        static string? FirstCharToUpper(string? input)
-        {
-            switch (input)
-            {
+        static string? FirstCharToUpper(string? input) {
+            switch (input) {
                 case null: return null;
                 case "": return "";
                 default: return input[0].ToString().ToUpper() + input.Substring(1);
@@ -89,8 +75,7 @@ namespace Meryel.UnityCodeAssist.Editor
         /// Get the path to the project folder.
         /// </summary>
         /// <returns>The project folder path</returns>
-        static string GetProjectPathRaw()
-        {
+        static string GetProjectPathRaw() {
             // Application.dataPath returns the path including /Assets, which we need to strip off
             var path = UnityEngine.Application.dataPath;
             var directory = new DirectoryInfo(path);
@@ -105,14 +90,12 @@ namespace Meryel.UnityCodeAssist.Editor
     }
 
     // https://github.com/dmitrynogin/cdsf/blob/master/Cds.Folders/OSPath.cs
-    internal class OSPath
-    {
+    internal class OSPath {
         public static readonly OSPath Empty = "";
 
         public static bool IsWindows => DirectorySeparatorChar == '\\';
 
-        public OSPath(string text)
-        {
+        public OSPath(string text) {
             Text = text.Trim();
         }
 

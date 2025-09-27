@@ -17,15 +17,16 @@ MonoBehaviour:
   Description: Simple
   AuthorName: Rayan
   Portait: {fileID: 21300000, guid: aeb2890575fbd874bb3b1bb791918ef0, type: 3}
-  BgImage: {fileID: 21300000, guid: 7888acd02a647e94eab785656df8d04c, type: 3}
-  PortaitTX: {fileID: 0}
+  Background: {fileID: 0}
   resourseId: a58871c5-f682-4238-87ba-9873e5af83b5
   Rarity: 0
   spawnChance: 0.5
   rarityColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   rarityDisplayName: "\u0417\u0432\u0438\u0447\u0430\u0439\u043D\u0430"
-  operations: []
+  operationsData:
+  - {fileID: 11400000, guid: 3b963328b35682f49b45b3d8db1927ea, type: 2}
   MAX_CARD_ATTACK: 100
   MAX_CARD_HEALTH: 100
   Attack: 2
   Health: 3
+  _summonOperationTemplate: {fileID: 11400000, guid: 3b963328b35682f49b45b3d8db1927ea, type: 2}

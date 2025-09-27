@@ -1,8 +1,7 @@
+using GenericEventBus.Helpers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using GenericEventBus;
-using GenericEventBus.Helpers;
 using UnityEngine;
 
 /// <summary>

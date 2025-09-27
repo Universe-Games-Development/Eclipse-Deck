@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using UnityEditor;
-using UnityEngine;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
 #pragma warning restore IDE0005
 
 
@@ -16,27 +12,23 @@ using Serilog = Meryel.Serilog;
 
 
 //namespace UTJ.UnityCommandLineTools
-namespace Meryel.UnityCodeAssist.Editor.Input
-{
+namespace Meryel.UnityCodeAssist.Editor.Input {
     // <summary>
     // bin2textをUnityEditorから実行する為のClass
     // programed by Katsumasa.Kimura
     // </summary>
-    public class Binary2TextExec : EditorToolExec
-    {
+    public class Binary2TextExec : EditorToolExec {
         public Binary2TextExec() : base("binary2text") { }
 
         // <summary>
         // bin2text filePath outPath options
         // /summary>
-        public int Exec(string filePath, string outPath, string options)
-        {
+        public int Exec(string filePath, string outPath, string options) {
             var args = string.Format(@"""{0}"" ""{1}"" {2}", filePath, outPath, options);
             return Exec(args);
         }
 
-        public int Exec(string filePath, string outPath, bool detailed = false, bool largeBinaryHashOnly = false, bool hexFloat = false)
-        {
+        public int Exec(string filePath, string outPath, bool detailed = false, bool largeBinaryHashOnly = false, bool hexFloat = false) {
             //var args = string.Format(@"""{0}"" ""{1}"" {2}", filePath, outPath, options);
             var args = string.Format(@"""{0}"" ""{1}""", filePath, outPath);
 
@@ -55,8 +47,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
     // UnityEditorに含まれるコマンドラインツールを実行する為の基底Class
     // programed by Katsumasa.Kimura
     //</summary>
-    public class EditorToolExec
-    {
+    public class EditorToolExec {
         // <value>
         // UnityEditorがインストールされているディレクトリへのパス
         // </value>
@@ -85,8 +76,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         // <value>
         // 実行結果のOUTPUT
         // </value>
-        public string? Output
-        {
+        public string? Output {
             get { return mOutput; }
         }
 
@@ -96,8 +86,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         // mExecFname : 実行ファイル名
         // </param>
         // /summary>
-        public EditorToolExec(string mExecFname)
-        {
+        public EditorToolExec(string mExecFname) {
             mEditorPath = Path.GetDirectoryName(EditorApplication.applicationPath);
             mToolsPath = Path.Combine(mEditorPath, @"Data/Tools");
             this.mExecFname = mExecFname;
@@ -116,12 +105,10 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         // arg : コマンドラインツールに渡す引数 
         // </param>
         // </summary>
-        public int Exec(string arg)
-        {
+        public int Exec(string arg) {
             int exitCode = -1;
 
-            try
-            {
+            try {
                 using var process = new Process();
                 process.StartInfo.FileName = mExecFullPath;
                 process.StartInfo.Arguments = arg;
@@ -133,9 +120,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                 process.WaitForExit();
                 exitCode = process.ExitCode;
                 process.Close();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 //UnityEngine.Debug.Log(e);
                 Serilog.Log.Error(e, "Exception while running process at {Scope}.{Location}", nameof(EditorToolExec), nameof(Exec));
             }

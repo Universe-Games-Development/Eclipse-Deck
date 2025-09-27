@@ -18,8 +18,8 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
     private TargetSelectionRequest currentRequest;
     private GameObject lastHoveredObject;
 
-    public void Initialize(Vector3 startPos, TargetSelectionRequest request) {
-        startPosition = startPos;
+    public void Initialize(TargetSelectionRequest request) {
+        startPosition = Vector3.one;
         currentRequest = request;
     }
 
@@ -63,21 +63,10 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
     }
 
     private Material DetermineArrowMaterial(GameObject hoveredObject) {
-        if (hoveredObject == null)
             return noTargetMaterial;
 
-        UnitModel gameUnit = GetGameUnitFromObject(hoveredObject);
-        if (gameUnit == null)
-            return noTargetMaterial;
-
-        ValidationResult validation = currentRequest.Requirement.IsValid(gameUnit, currentRequest.Source.GetPlayer());
-        return validation.IsValid ? validTargetMaterial : invalidTargetMaterial;
     }
 
-    private UnitModel GetGameUnitFromObject(GameObject obj) {
-        return obj.TryGetComponent<UnitPresenter>(out var presenter)
-            ? presenter.GetModel() : null;
-    }
 
     private void ApplyArrowMaterial(Material material) {
         arrowLine.material = material;

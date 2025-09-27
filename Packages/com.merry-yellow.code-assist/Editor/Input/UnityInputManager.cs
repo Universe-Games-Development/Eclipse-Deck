@@ -1,57 +1,46 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
-using YamlDotNet = Meryel.UnityCodeAssist.YamlDotNet;
 #pragma warning restore IDE0005
 
 
 #nullable enable
 
 
-namespace Meryel.UnityCodeAssist.Editor.Input
-{
-    
+namespace Meryel.UnityCodeAssist.Editor.Input {
 
-    internal class UnityInputManager
-    {
+
+    internal class UnityInputManager {
         //string yamlPath;
         TextReader? reader;
         InputManager? inputManager;
 
-        public void ReadFromText(string text)
-        {
+        public void ReadFromText(string text) {
             reader = new StringReader(text);
             ReadAux(false, out _);
         }
 
-        public void ReadFromPath(string yamlPath)
-        {
+        public void ReadFromPath(string yamlPath) {
 
-            switch (UnityEditor.EditorSettings.serializationMode)
-            {
-                case UnityEditor.SerializationMode.ForceText:
-                    {
+            switch (UnityEditor.EditorSettings.serializationMode) {
+                case UnityEditor.SerializationMode.ForceText: {
                         reader = new StreamReader(yamlPath);
                         ReadAux(false, out _);
                     }
                     break;
 
-                case UnityEditor.SerializationMode.ForceBinary:
-                    {
+                case UnityEditor.SerializationMode.ForceBinary: {
                         // this approach will work for InputManager since its file size is small and limited
                         // but in the future, we may need to switch to reading binary files for big files
                         // like this https://github.com/Unity-Technologies/UnityDataTools
                         // or this https://github.com/SeriousCache/UABE
                         var converted = GetOrCreateConvertedFile(yamlPath);
-                        if (!File.Exists(converted))
-                        {
+                        if (!File.Exists(converted)) {
                             Serilog.Log.Warning("Temp file {TempFile} couldn't found for converted yaml input file. Auto Input Manager will not work!", converted);
                             return;
                         }
@@ -62,15 +51,12 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                     }
                     break;
 
-                case UnityEditor.SerializationMode.Mixed:
-                    {
+                case UnityEditor.SerializationMode.Mixed: {
                         reader = new StreamReader(yamlPath);
                         ReadAux(true, out var hasSemanticError);
-                        if (hasSemanticError)
-                        {
+                        if (hasSemanticError) {
                             var converted = GetOrCreateConvertedFile(yamlPath);
-                            if (!File.Exists(converted))
-                            {
+                            if (!File.Exists(converted)) {
                                 Serilog.Log.Warning("Temp file {TempFile} couldn't found for converted yaml input file. Auto Input Manager will not work!", converted);
                                 return;
                             }
@@ -81,17 +67,15 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                         }
                     }
                     break;
-                
+
             }
         }
 
 
-        void ReadAux(bool canHaveSemanticError, out bool hasSemanticError)
-        {
+        void ReadAux(bool canHaveSemanticError, out bool hasSemanticError) {
             hasSemanticError = false;
 
-            if (reader == null)
-            {
+            if (reader == null) {
                 Serilog.Log.Warning($"{nameof(UnityInputManager)}.{nameof(reader)} is null");
                 return;
             }
@@ -105,27 +89,21 @@ namespace Meryel.UnityCodeAssist.Editor.Input
             //serializer.Settings.RegisterTagMapping("tag:unity3d.com,2011:13", typeof(Class13));
             //serializer.Settings.ComparerForKeySorting = null;
             Class13Mapper? result;
-            try
-            {
+            try {
                 result = deserializer.Deserialize<Class13Mapper>(reader);
-            }
-            catch (YamlDotNet.Core.SemanticErrorException semanticErrorException)
-            {
+            } catch (YamlDotNet.Core.SemanticErrorException semanticErrorException) {
                 Serilog.Log.Debug(semanticErrorException, "Couldn't parse InputManager.asset yaml file");
                 if (!canHaveSemanticError)
                     Serilog.Log.Error(semanticErrorException, "Couldn't parse InputManager.asset yaml file unexpectedly");
 
                 hasSemanticError = true;
                 return;
-            }
-            finally
-            {
+            } finally {
                 reader.Close();
             }
 
             var inputManagerMapper = result?.InputManager;
-            if (inputManagerMapper == null)
-            {
+            if (inputManagerMapper == null) {
                 Serilog.Log.Warning($"{nameof(inputManagerMapper)} is null");
                 return;
             }
@@ -134,8 +112,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         }
 
 
-        public void SendData()
-        {
+        public void SendData() {
             if (inputManager == null)
                 return;
 
@@ -145,12 +122,9 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                 return;
 
             string[] joystickNames;
-            try
-            {
+            try {
                 joystickNames = UnityEngine.Input.GetJoystickNames();
-            }
-            catch (InvalidOperationException)
-            {
+            } catch (InvalidOperationException) {
                 // Occurs if user have switched active Input handling to Input System package in Player Settings.
                 joystickNames = new string[0];
             }
@@ -171,10 +145,8 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         }
 
 
-        bool CreateBindingsMap([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string[]? inputKeys, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)]  out string[]? inputAxis)
-        {
-            if (inputManager == null)
-            {
+        bool CreateBindingsMap([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string[]? inputKeys, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string[]? inputAxis) {
+            if (inputManager == null) {
                 inputKeys = null;
                 inputAxis = null;
                 return false;
@@ -182,23 +154,19 @@ namespace Meryel.UnityCodeAssist.Editor.Input
 
             var dict = new Dictionary<string, string?>();
 
-            foreach (var axis in inputManager.Axes)
-            {
+            foreach (var axis in inputManager.Axes) {
                 if (axis.altNegativeButton != null && !string.IsNullOrEmpty(axis.altNegativeButton))
                     dict[axis.altNegativeButton] = axis.Name;
             }
-            foreach (var axis in inputManager.Axes)
-            {
+            foreach (var axis in inputManager.Axes) {
                 if (axis.negativeButton != null && !string.IsNullOrEmpty(axis.negativeButton))
                     dict[axis.negativeButton] = axis.Name;
             }
-            foreach (var axis in inputManager.Axes)
-            {
+            foreach (var axis in inputManager.Axes) {
                 if (axis.altPositiveButton != null && !string.IsNullOrEmpty(axis.altPositiveButton))
                     dict[axis.altPositiveButton] = axis.Name;
             }
-            foreach (var axis in inputManager.Axes)
-            {
+            foreach (var axis in inputManager.Axes) {
                 if (axis.positiveButton != null && !string.IsNullOrEmpty(axis.positiveButton))
                     dict[axis.positiveButton] = axis.Name;
             }
@@ -215,21 +183,17 @@ namespace Meryel.UnityCodeAssist.Editor.Input
 
 
 
-        static string GetOrCreateConvertedFile(string filePath)
-        {
+        static string GetOrCreateConvertedFile(string filePath) {
             var hash = GetMD5Hash(filePath);
             var convertedPath = Path.Combine(Path.GetTempPath(), $"UCA_IM_{hash}.txt");
 
-            if (!File.Exists(convertedPath))
-            {
+            if (!File.Exists(convertedPath)) {
                 Serilog.Log.Debug("Converting binary to text format of {File} to {Target}", filePath, convertedPath);
                 var converter = new Binary2TextExec();
                 converter.Exec(filePath, convertedPath);
-            }
-            else
-            {
+            } else {
                 Serilog.Log.Debug("Converted file already exists at {Target}", convertedPath);
-            }    
+            }
 
             return convertedPath;
         }
@@ -239,8 +203,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public static string GetMD5Hash(string filePath)
-        {
+        public static string GetMD5Hash(string filePath) {
             using var md5 = new MD5CryptoServiceProvider();
             return GetHash(filePath, md5);
         }
@@ -250,20 +213,17 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public static string GetMD5Hash(Stream s)
-        {
+        public static string GetMD5Hash(Stream s) {
             using var md5 = new MD5CryptoServiceProvider();
             return GetHash(s, md5);
         }
 
-        private static string GetHash(string filePath, HashAlgorithm hasher)
-        {
+        private static string GetHash(string filePath, HashAlgorithm hasher) {
             using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             return GetHash(fs, hasher);
         }
 
-        private static string GetHash(Stream s, HashAlgorithm hasher)
-        {
+        private static string GetHash(Stream s, HashAlgorithm hasher) {
             var hash = hasher.ComputeHash(s);
             var hashStr = Convert.ToBase64String(hash);
             //return hashStr.TrimEnd('=');
@@ -273,8 +233,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
 
     }
 
-    public enum AxisType
-    {
+    public enum AxisType {
         KeyOrMouseButton = 0,
         MouseMovement = 1,
         JoystickAxis = 2
@@ -282,8 +241,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
 
 #pragma warning disable IDE1006
 
-    public class InputAxisMapper
-    {
+    public class InputAxisMapper {
         public int serializedVersion { get; set; }
 
         public string? m_Name { get; set; }
@@ -313,17 +271,14 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         public int joyNum { get; set; }
     }
 
-    public class InputAxis
-    {
+    public class InputAxis {
         readonly InputAxisMapper map;
 
-        public InputAxis(InputAxisMapper map)
-        {
+        public InputAxis(InputAxisMapper map) {
             this.map = map;
         }
 
-        public int SerializedVersion
-        {
+        public int SerializedVersion {
             get { return map.serializedVersion; }
             set { map.serializedVersion = value; }
         }
@@ -349,8 +304,7 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         public int joyNum => map.joyNum;
     }
 
-    public class InputManagerMapper
-    {
+    public class InputManagerMapper {
         public int m_ObjectHideFlags { get; set; }
         public int serializedVersion { get; set; }
         public int m_UsePhysicalKeys { get; set; }
@@ -359,18 +313,15 @@ namespace Meryel.UnityCodeAssist.Editor.Input
 
 #pragma warning restore IDE1006
 
-    public class InputManager
-    {
+    public class InputManager {
         readonly InputManagerMapper map;
         readonly List<InputAxis> axes;
 
-        public InputManager(InputManagerMapper map)
-        {
+        public InputManager(InputManagerMapper map) {
             this.map = map;
             this.axes = new List<InputAxis>();
 
-            if (map.m_Axes == null)
-            {
+            if (map.m_Axes == null) {
                 Serilog.Log.Warning($"map.m_Axes is null");
                 return;
             }
@@ -379,20 +330,17 @@ namespace Meryel.UnityCodeAssist.Editor.Input
                 this.axes.Add(new InputAxis(a));
         }
 
-        public int ObjectHideFlags
-        {
+        public int ObjectHideFlags {
             get { return map.m_ObjectHideFlags; }
             set { map.m_ObjectHideFlags = value; }
         }
 
-        public int SerializedVersion
-        {
+        public int SerializedVersion {
             get { return map.serializedVersion; }
             set { map.serializedVersion = value; }
         }
 
-        public bool UsePhysicalKeys
-        {
+        public bool UsePhysicalKeys {
             get { return map.m_UsePhysicalKeys != 0; }
             set { map.m_UsePhysicalKeys = value ? 1 : 0; }
         }
@@ -405,20 +353,15 @@ namespace Meryel.UnityCodeAssist.Editor.Input
         public List<InputAxis> Axes => axes;
     }
 
-    public class Class13Mapper
-    {
+    public class Class13Mapper {
         public InputManagerMapper? InputManager { get; set; }
     }
 
-    public class Tag13Resolver : YamlDotNet.Serialization.INodeTypeResolver
-    {
-        public bool Resolve(YamlDotNet.Core.Events.NodeEvent? nodeEvent, ref Type currentType)
-        {
-            if (nodeEvent != null && !nodeEvent.Tag.IsEmpty && !nodeEvent.Tag.IsNonSpecific)
-            {
+    public class Tag13Resolver : YamlDotNet.Serialization.INodeTypeResolver {
+        public bool Resolve(YamlDotNet.Core.Events.NodeEvent? nodeEvent, ref Type currentType) {
+            if (nodeEvent != null && !nodeEvent.Tag.IsEmpty && !nodeEvent.Tag.IsNonSpecific) {
                 var tagValue = nodeEvent.Tag.Value;
-                if (tagValue.EndsWith(":13"))
-                {
+                if (tagValue.EndsWith(":13")) {
                     currentType = typeof(Class13Mapper);
                     return true;
                 }

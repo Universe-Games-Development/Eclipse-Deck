@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using UnityEngine;
 
 [RequireComponent(typeof(MovementComponent))]
@@ -15,6 +15,8 @@ public class CardTiltController : MonoBehaviour {
     private Quaternion baseRotation;
     private MovementComponent movementComponent;
 
+    public bool isEnabled = false;
+
     private void Awake() {
         movementComponent = GetComponent<MovementComponent>();
 
@@ -23,7 +25,7 @@ public class CardTiltController : MonoBehaviour {
     }
 
     private void Update() {
-        if (movementComponent != null) {
+        if (movementComponent != null && isEnabled) {
             UpdateTilt(movementComponent.CurrentVelocity);
         }
     }
@@ -60,5 +62,12 @@ public class CardTiltController : MonoBehaviour {
             targetRotation,
             Time.deltaTime * tiltSmoothing
         );
+    }
+
+    public void ToggleTiling(bool enable) {
+        isEnabled = enable;
+        if (!isEnabled) {
+            transform.rotation = baseRotation;
+        }
     }
 }

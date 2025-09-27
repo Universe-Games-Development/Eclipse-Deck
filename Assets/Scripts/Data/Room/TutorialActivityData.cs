@@ -10,9 +10,9 @@ public class TutorialActivityData : ActivityData {
     }
 }
 
-public class TutorialRoomActivity : EnemyRoomActivity{
+public class TutorialRoomActivity : EnemyRoomActivity {
 
-    protected override async UniTask<bool> SpawnEnemy() {
-        return await _enemySpawner.SpawnEnemy(EnemyType.Tutorial);
+    protected override Opponent SpawnEnemy() {
+        return _enemySpawner.CreateEnemy(EnemyType.Tutorial);
     }
 }

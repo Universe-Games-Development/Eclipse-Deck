@@ -1,5 +1,4 @@
 ﻿using System;
-using Unity.VisualScripting;
 
 
 
@@ -10,10 +9,10 @@ public class CardSpendable {
     public bool IsManaEnabled { get; private set; } = false;
     private IEventBus<IEvent> _eventBus;
 
-    public CardSpendable(Mana mana, Health health, IEventBus<IEvent> eventBus) {
+    public CardSpendable(Mana mana, Health health) {
         this.mana = mana;
         this.health = health;
-        _eventBus = eventBus;
+        //_eventBus = eventBus;
     }
 
     public void EnableMana() {

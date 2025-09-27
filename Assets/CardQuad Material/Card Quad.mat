@@ -33,7 +33,7 @@ Material:
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
-  m_LockedProperties: 
+  m_LockedProperties: _EdgesTexture _Edges_Color
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -54,7 +54,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Card_Frame:
-        m_Texture: {fileID: 2800000, guid: e731cc8682c89b845a315a359fd5ceab, type: 3}
+        m_Texture: {fileID: 2800000, guid: 3a4cd06eb3915974b93bdb678e21b030, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -67,6 +67,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _DetailNormalMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EdgesTexture:
+        m_Texture: {fileID: 2800000, guid: eb8becb4e0dcd1c449b9d0da0c155094, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
@@ -147,7 +151,12 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
+    - _EmissionIntensity: 3
     - _EnvironmentReflections: 1
+    - _Float: 0
+    - _Float_1: 1
+    - _FrameMask: 0
+    - _FrameStrength: 0
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -168,7 +177,9 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Body_Color: {r: 1, g: 0.18057786, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Edges_Color: {r: 0, g: 1, b: 0.6183789, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Portai_Offset: {r: 0.2, g: 0, b: 0, a: 0}
     - _Portai_Tiling: {r: 0.666, g: 1, b: 0, a: 0}

@@ -5,13 +5,13 @@ using UnityEngine;
 using Zenject;
 
 public class PlayerHeroFactory {
-    [InjectOptional] private PlayerPresenter playerPresenter;
+    [InjectOptional] private OpponentPresenter playerPresenter;
     [Inject] PlayerManager playerManager;
     [Inject] private DiContainer _container;
 
-    public bool SpawnPlayer(out PlayerPresenter presenter) {
+    public bool SpawnPlayer(out OpponentPresenter presenter) {
         presenter = null;
-        if (!playerManager.GetPlayer(out Player player)) {
+        if (!playerManager.GetPlayer(out Opponent player)) {
             Debug.LogError("Failed to create player");
             return false;
         }
@@ -19,11 +19,11 @@ public class PlayerHeroFactory {
         // Create presenter to connect model and view
         if (playerPresenter == null) {
             CharacterPresenter presenterPrefab = player.Data.presenterPrefab;
-            playerPresenter = (PlayerPresenter)_container.InstantiatePrefabForComponent<CharacterPresenter>(presenterPrefab);
+            //playerPresenter = (PlayerPresenter)_container.InstantiatePrefabForComponent<CharacterPresenter>(presenterPrefab);
         }
 
         presenter = playerPresenter;
-        playerPresenter.Initialize(player);
+        //playerPresenter.Initialize(player);
         return true;
     }
 }
@@ -40,13 +40,12 @@ public class TravelManager : MonoBehaviour {
     [Inject] private IDungeonGenerator _dungeonGenerator;
     [Inject] private VisitedLocationsService _visitedLocationService;
     [Inject] private IEventBus<IEvent> _eventBus;
-    [Inject] private OpponentRegistrator _opponentRegistrator;
     [Inject] private PlayerHeroFactory _playerHeroFactory;
-    
-    
 
-    private PlayerPresenter _playerPresenter;
-    [Inject] BoardGame boardGame;
+
+
+    private OpponentPresenter _playerPresenter;
+    
     [Inject] private LocationTransitionManager _locationManager;
     [Inject] ResourceLoadingManager loadingManager;
 
@@ -67,7 +66,7 @@ public class TravelManager : MonoBehaviour {
             await loadingManager.LoadResourcesForLocation(locationData);
         }
 
-        boardGame.TookSeat(_playerPresenter);
+        // Took seat
     }
 
     private void ClearDungeon(LocationData data) {
@@ -115,12 +114,13 @@ public class TravelManager : MonoBehaviour {
             throw new ArgumentNullException(nameof(chosenRoom));
 
         if (_roomSystem.CurrentRoom != null) {
-            await _playerPresenter.OnRoomExited(chosenRoom);
+            //await _playerPresenter.OnRoomExited(chosenRoom);
+            await UniTask.CompletedTask;
         }
 
         try {
             _roomSystem.InitializeRoom(chosenRoom);
-            await _playerPresenter.EnterRoom(chosenRoom);
+            //await _playerPresenter.EnterRoom(chosenRoom);
             OnRoomChanged?.Invoke(chosenRoom);
         } catch (Exception ex) {
             Debug.LogError($"Error going to room: {ex.Message}");

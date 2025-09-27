@@ -5,8 +5,8 @@ using Zenject;
 public class TargetHighlightingService : MonoBehaviour {
     [Header("Highlight Settings")]
 
-    [Inject] private IUnitPresenterRegistry unitRegistry;
-    [SerializeField] private HumanTargetSelector targetSelector;
+    [Inject] private IUnitRegistry unitRegistry;
+    [SerializeField] private OldClumsySelector targetSelector;
 
     private HashSet<UnitPresenter> highlightedUnits = new HashSet<UnitPresenter>();
     private float lastUpdateTime;
@@ -22,9 +22,9 @@ public class TargetHighlightingService : MonoBehaviour {
     }
 
     private void OnTargetSelectionStarted(TargetSelectionRequest request) {
-        foreach (var presenter in unitRegistry.GetAllPresenters()) {
-            if (IsValidTarget(presenter.GetModel(), request)) {
-                HighlightUnit(presenter, true);
+        foreach (var model in unitRegistry.GetAllModels<UnitModel>()) {
+            if (IsValidTarget(model, request)) {
+                HighlightUnit(model, true);
             }
         }
     }
@@ -32,20 +32,22 @@ public class TargetHighlightingService : MonoBehaviour {
     private bool IsValidTarget(UnitModel unit, TargetSelectionRequest request) {
         var player = unit.GetPlayer();
         if (player == null) {
-            Debug.LogWarning($"player is null for {unit}");
+            //Debug.LogWarning($"player is null for {unit}");
         }
 
-        return request.Requirement.IsValid(unit, player);
+
+        return request.Target.IsValid(unit, new ValidationContext(request.Source.GetPlayer()));
     }
 
 
-    public void HighlightUnit(UnitPresenter unit, bool isEnabled) {
+    public void HighlightUnit(UnitModel unit, bool isEnabled) {
         if (unit == null) return;
 
-        highlightedUnits.Add(unit);
+        UnitPresenter presenter = unitRegistry.GetPresenterByModel(unit);
+        highlightedUnits.Add(presenter);
 
         // Викликаємо метод Highlight у юніта (якщо потрібно)
-        unit.Highlight(isEnabled);
+        presenter.Highlight(isEnabled);
     }
 
     private void ClearAllHighlights() {

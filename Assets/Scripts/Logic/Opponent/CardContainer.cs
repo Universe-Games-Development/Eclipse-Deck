@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public class CardContainer {
+public class CardContainer : UnitModel {
     protected readonly List<Card> cards = new List<Card>();
     private readonly int maxSize;
     protected const int DefaultSize = 127;
@@ -68,6 +68,7 @@ public class CardContainer {
 
     public virtual bool Contains(Card card) => card != null && cards.Contains(card);
 
+    public bool IsFull() => Count >= maxSize;
     public virtual void Shuffle() {
         // Реалізація Shuffle
         OnChanged?.Invoke(this);

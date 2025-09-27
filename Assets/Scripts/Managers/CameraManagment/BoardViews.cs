@@ -33,7 +33,7 @@ public class BoardViews : MonoBehaviour {
     private void Awake() {
         _cameras = _cameraMappings.ToDictionary(m => m.State, m => m.Camera);
 
-        
+
         CalculateThresholds();
     }
 

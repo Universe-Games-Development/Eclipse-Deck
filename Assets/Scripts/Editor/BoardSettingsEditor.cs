@@ -8,7 +8,7 @@ public class BoardSettingsEditor : Editor {
 
     private void OnEnable() {
         if (target != null)
-        settings = (BoardSettingsData)target;
+            settings = (BoardSettingsData)target;
     }
 
     public override void OnInspectorGUI() {

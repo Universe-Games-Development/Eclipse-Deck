@@ -140,7 +140,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
     private void ValidateReferences() {
         if (_travelManager == null) return;
-           // Debug.LogWarning("TravelManager not injected into DungeonMapUIController");
+        // Debug.LogWarning("TravelManager not injected into DungeonMapUIController");
 
         if (_locationManager == null) return;
         // Debug.LogWarning("LocationTransitionManager not injected into DungeonMapUIController");
@@ -204,7 +204,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
             ToggleNextLevelButton(hasNextRooms);
             _nextRoomsButton.interactable = hasNextRooms;
         }
-            
+
 
         currentRoom.OnCleared -= OnRoomCleared;
     }
@@ -229,7 +229,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
 
         // Если параметры не указаны явно, получаем их из менеджеров
         LocationData currentLocation = _locationManager.GetSceneLocation();
-        if (locationName == null && _locationManager != null && currentLocation  != null) {
+        if (locationName == null && _locationManager != null && currentLocation != null) {
             locationName = currentLocation.GetName();
         }
 
@@ -252,7 +252,7 @@ public class DungeonMapUIController : MonoBehaviour, IDungeonUIService {
         DungeonGraph dungeonGraph = _travelManager.CurrentDungeon;
 
         totalRoomCount = dungeonGraph.GetLevelCount();
-        
+
         // Находим индекс текущей комнаты
         if (_roomSystem.CurrentRoom != null) {
             DungeonNode node = _roomSystem.CurrentRoom.Node;

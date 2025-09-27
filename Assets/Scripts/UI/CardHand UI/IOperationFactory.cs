@@ -43,13 +43,14 @@ public class OperationFactory : IOperationFactory {
         var attribute = operationType.GetCustomAttribute<OperationForAttribute>();
 
         if (!typeof(OperationData).IsAssignableFrom(attribute.DataType)) {
-            Console.WriteLine($"Invalid data type {attribute.DataType} for operation {operationType}");
-            return;
+            throw new InvalidOperationException(
+                $"{operationType.Name} has OperationFor attribute with invalid data type {attribute.DataType.Name}");
         }
 
         if (_dataToOperationMap.ContainsKey(attribute.DataType)) {
-            Console.WriteLine($"Duplicate operation registration for {attribute.DataType}");
-            return;
+            throw new InvalidOperationException(
+                $"Multiple operations registered for {attribute.DataType.Name}: " +
+                $"{_dataToOperationMap[attribute.DataType].Name} and {operationType.Name}");
         }
 
         _dataToOperationMap[attribute.DataType] = operationType;
@@ -70,9 +71,23 @@ public class OperationFactory : IOperationFactory {
         return (GameOperation)_container.Instantiate(operationType, new object[] { data });
     }
 
+    // Для unit-тестів це може бути зручно
     public TOperation Create<TOperation>(OperationData data) where TOperation : GameOperation {
-        if (data == null) throw new ArgumentNullException(nameof(data));
+        // Але тут є ризик - якщо TOperation не відповідає data
+        var expectedDataType = GetExpectedDataType<TOperation>();
+        if (data.GetType() != expectedDataType) {
+            throw new InvalidOperationException(
+                $"Cannot create {typeof(TOperation).Name} with {data.GetType().Name}. " +
+                $"Expected {expectedDataType.Name}");
+        }
+
         return _container.Instantiate<TOperation>(new object[] { data });
+    }
+
+    private Type GetExpectedDataType<TOperation>() where TOperation : GameOperation {
+        var attribute = typeof(TOperation).GetCustomAttribute<OperationForAttribute>();
+        return attribute?.DataType ??
+               throw new InvalidOperationException($"{typeof(TOperation).Name} has no OperationFor attribute");
     }
 }
 

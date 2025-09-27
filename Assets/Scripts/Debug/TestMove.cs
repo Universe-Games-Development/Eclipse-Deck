@@ -1,8 +1,7 @@
 using DG.Tweening;
 using UnityEngine;
 
-public class TestMove : MonoBehaviour
-{
+public class TestMove : MonoBehaviour {
     [SerializeField] private RectTransform target;
     [SerializeField] private RectTransform self;
 

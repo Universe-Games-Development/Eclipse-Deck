@@ -1,5 +1,5 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
+using Zenject;
 
 public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
     [Header("Movement Settings")]
@@ -7,30 +7,32 @@ public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
     [SerializeField] private bool useCameraRayPositioning = true;
     [SerializeField] private int playRenderOrderBoost = 50;
 
-    private CardPresenter card;
+    private CardPresenter cardPresenter;
 
-    public void Initialize(CardPresenter cardPresenter) {
-        card = cardPresenter;
+    public void Initialize(CardPresenter presenter) {
+        cardPresenter = presenter;
     }
 
     public void StartTargeting() {
-        if (card != null) {
-            card.SetInteractable(false);
-            card.ModifyRenderOrder(playRenderOrderBoost);
+        if (cardPresenter != null) {
+            cardPresenter.SetInteractable(false);
+            cardPresenter.ModifyRenderOrder(playRenderOrderBoost);
+            cardPresenter.ToggleTiltMovement(true);
         }
     }
 
     public void UpdateTargeting(Vector3 cursorPosition) {
-        if (card != null) {
+        if (cardPresenter != null) {
             Vector3 targetPosition = CalculateCardPosition(cursorPosition);
-            card.DoPhysicsMovement(targetPosition);
+            cardPresenter.DoPhysicsMovement(targetPosition);
         }
     }
 
     public void StopTargeting() {
-        if (card != null) {
-            card.SetInteractable(true);
-            card.ModifyRenderOrder(-playRenderOrderBoost);
+        if (cardPresenter != null) {
+            cardPresenter.SetInteractable(true);
+            cardPresenter.ModifyRenderOrder(-playRenderOrderBoost);
+            cardPresenter.ToggleTiltMovement(false);
         }
     }
 

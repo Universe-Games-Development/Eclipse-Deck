@@ -10,9 +10,8 @@ public class ExitActivityData : ActivityData {
     }
 }
 public class ExitRoomActivity : RoomActivity {
-    public override async UniTask Initialize(Room room) {
+    public override void Initialize(Room room) {
         Debug.Log("Exit effects");
         CompleteActivity();
-        await UniTask.CompletedTask;
     }
 }

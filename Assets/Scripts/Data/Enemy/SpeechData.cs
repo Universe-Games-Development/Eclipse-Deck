@@ -1,7 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewSpeech", menuName = "Dialogues/Speech")]
@@ -17,7 +16,7 @@ public class SpeechData : ScriptableObject {
 }
 
 public class Speaker : IDisposable {
-    public Character Opponent { get; private set; }
+    public Opponent Opponent { get; private set; }
 
     private readonly DialogueSystem dialogueSystem;
     private readonly IEventBus<IEvent> eventBus;
@@ -27,7 +26,7 @@ public class Speaker : IDisposable {
 
     public SpeechData SpeechData { get; }
 
-    public Speaker(SpeechData speechData, Character opponent, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus) {
+    public Speaker(SpeechData speechData, Opponent opponent, DialogueSystem dialogueSystem, IEventBus<IEvent> eventBus) {
         SpeechData = speechData;
         Opponent = opponent;
         this.dialogueSystem = dialogueSystem;

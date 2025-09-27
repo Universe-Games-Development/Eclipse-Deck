@@ -11,18 +11,18 @@ public class EnemyActivityData : ActivityData {
 }
 
 public class EnemyRoomActivity : RoomActivity {
-    [Inject] protected EnemySpawner _enemySpawner;
+    [Inject] protected EnemyFactory _enemySpawner;
     [Inject] protected IEventBus<IEvent> _eventBus;
-    private Enemy _currentEnemy;
+    private Opponent _currentEnemy;
 
     public EnemyRoomActivity() {
         _blocksRoomClear = true;
     }
 
-    public override async UniTask Initialize(Room room) {
-        bool result = await SpawnEnemy();
+    public override void Initialize(Room room) {
+        Opponent opponent = SpawnEnemy();
         // Создаем врага при инициализации активности
-        if (!result) {
+        if (opponent == null) {
             Debug.LogWarning("No enemy to spawn. Clearing room...");
             _blocksRoomClear = false;
             CompleteActivity();
@@ -32,8 +32,8 @@ public class EnemyRoomActivity : RoomActivity {
         }
     }
 
-    protected virtual async UniTask<bool> SpawnEnemy() {
-        return await _enemySpawner.SpawnEnemy(EnemyType.Regular);
+    protected virtual Opponent SpawnEnemy() {
+        return _enemySpawner.CreateEnemy(EnemyType.Regular);
     }
 
     private void HandleBattleEnd(ref BattleEndEventData eventData) {
@@ -58,8 +58,8 @@ public class EnemyRoomActivity : RoomActivity {
 }
 
 public struct EnemyDefeatedEvent : IEvent {
-    public Character Opponent { get; }
-    public EnemyDefeatedEvent(Character opponent) {
+    public Opponent Opponent { get; }
+    public EnemyDefeatedEvent(Opponent opponent) {
         Opponent = opponent;
     }
 }

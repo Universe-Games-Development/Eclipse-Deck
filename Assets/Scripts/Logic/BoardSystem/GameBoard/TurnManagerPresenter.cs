@@ -1,6 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
 
 public class TurnManagerPresenter : MonoBehaviour {

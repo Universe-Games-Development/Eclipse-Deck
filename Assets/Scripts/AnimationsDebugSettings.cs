@@ -1,7 +1,6 @@
 using UnityEngine;
 
-public class AnimationsDebugSettings : MonoBehaviour
-{
+public class AnimationsDebugSettings : MonoBehaviour {
     [SerializeField] private bool _skipAllAnimations = false;
 
     public bool SkipAllAnimations {

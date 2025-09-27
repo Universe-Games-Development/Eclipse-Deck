@@ -12,7 +12,7 @@ public class BossActivityData : ActivityData {
 
 public class BossRoomActivity : EnemyRoomActivity {
 
-    protected override async UniTask<bool> SpawnEnemy() {
-        return await _enemySpawner.SpawnEnemy(EnemyType.Regular);
+    protected override Opponent SpawnEnemy() {
+        return _enemySpawner.CreateEnemy(EnemyType.Boss);
     }
 }

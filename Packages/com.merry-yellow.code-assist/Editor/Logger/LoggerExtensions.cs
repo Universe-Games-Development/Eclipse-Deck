@@ -1,27 +1,22 @@
 //using Meryel.UnityCodeAssist.Serilog;
 //using Meryel.UnityCodeAssist.Serilog.Core;
-using UnityEngine;
-using UnityEditor;
-using System.Linq;
-
 using Meryel.Serilog;
 using Meryel.Serilog.Core;
+using UnityEditor;
+using UnityEngine;
 
 
 #pragma warning disable IDE0005
-using Serilog = Meryel.Serilog;
 #pragma warning restore IDE0005
 
 
 #nullable enable
 
 
-namespace Meryel.UnityCodeAssist.Editor.Logger
-{
+namespace Meryel.UnityCodeAssist.Editor.Logger {
 
     //[InitializeOnLoad]
-    public static class ELogger
-    {
+    public static class ELogger {
         public static event System.Action? OnVsInternalLogChanged;
 
 
@@ -45,11 +40,9 @@ namespace Meryel.UnityCodeAssist.Editor.Logger
 
         //**-- make it work with multiple clients
         static string? _vsInternalLog;
-        public static string? VsInternalLog
-        {
+        public static string? VsInternalLog {
             get => _vsInternalLog;
-            set
-            {
+            set {
                 _vsInternalLog = value;
                 OnVsInternalLogChanged?.Invoke();
             }
@@ -57,16 +50,14 @@ namespace Meryel.UnityCodeAssist.Editor.Logger
 
 
 
-        static ELogger()
-        {
+        static ELogger() {
             fileLevelSwitch = null;
             outputWindowLevelSwitch = null;
             _memorySink = null;
 
             var isFirst = false;
             const string stateName = "isFirst";
-            if (!SessionState.GetBool(stateName, false))
-            {
+            if (!SessionState.GetBool(stateName, false)) {
                 isFirst = true;
                 SessionState.SetBool(stateName, true);
             }
@@ -86,8 +77,7 @@ namespace Meryel.UnityCodeAssist.Editor.Logger
         public static void Bump() { }
 
 
-        static void LogHeader(string unityVersion, string solutionDir)
-        {
+        static void LogHeader(string unityVersion, string solutionDir) {
             var os = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
             var assisterVersion = Assister.Version;
             var syncModel = Synchronizer.Model.Utilities.Version;
@@ -99,8 +89,7 @@ namespace Meryel.UnityCodeAssist.Editor.Logger
         }
 
 
-        public static void Init(bool isFirst, string solutionDir, System.Lazy<ILogEventSink> outputWindowSink)
-        {
+        public static void Init(bool isFirst, string solutionDir, System.Lazy<ILogEventSink> outputWindowSink) {
             //var solutionHash = Common.CommonTools.GetHashOfPath(solutionDir);
             var solutionHash = CommonTools.GetHashForLogFile(solutionDir); // dir is osSafePath
             _outputWindowSink ??= outputWindowSink.Value;
@@ -113,8 +102,7 @@ namespace Meryel.UnityCodeAssist.Editor.Logger
                 sinkWrapper, null, null, null, null);
         }
 
-        public static void OnOptionsChanged()
-        {
+        public static void OnOptionsChanged() {
             // Since we don't use LogEventLevel.Fatal, we can use it for disabling sinks
 
             var isLoggingToFile = OptionsIsLoggingToFile;

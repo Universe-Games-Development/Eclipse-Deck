@@ -1,8 +1,8 @@
-using UnityEngine;
-using Zenject;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using Zenject;
 
 public class GlobalInstaller : MonoInstaller {
     [SerializeField] private List<GameObject> managerPrefabs;
@@ -33,42 +33,61 @@ public class GlobalInstaller : MonoInstaller {
 
         Container.Bind<CardProvider>().AsSingle();
         Container.Bind<EnemyResourceProvider>().AsSingle();
-        
+
         Container.Bind<EnemyResourceLoader>().AsSingle();
         Container.Bind<CardResourceLoader>().AsSingle();
 
         Container.BindInstance(_randomConfig).AsSingle();
-        Container.Bind<IInitializable>().To<RandomSeedInitializer>().AsSingle().NonLazy();
+
+        Container.Bind<IRandomService>().To<RandomService>().AsSingle().NonLazy();
     }
 }
 
 [Serializable]
 public class RandomConfig {
-    public string seed = "I like onions!";
-    public bool useRandomSeed = false;
+    public string Seed = "I like onions!";
+    public bool UseRandomSeed = false;
 }
 
-public class RandomSeedInitializer : IInitializable {
-    private readonly RandomConfig _randomConfig;
+public interface IRandomService {
+    int Seed { get; }
+    System.Random SystemRandom { get; }
+}
 
-    public RandomSeedInitializer(RandomConfig randomConfig) {
-        _randomConfig = randomConfig;
-        SceneManager.sceneLoaded += OnSceneLoaded;
+public class RandomService : IRandomService {
+    public int Seed { get; }
+    public System.Random SystemRandom { get; }
+
+    public RandomService(RandomConfig config) {
+        Seed = CalculateSeed(config);
+
+        SystemRandom = new System.Random(Seed);
+        UnityEngine.Random.InitState(Seed);
+
+        UnityEngine.Debug.Log($"Initialized RandomService with Seed: {Seed}");
     }
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
-        Initialize();
-    }
-
-    public void Initialize() {
-        int seed = default;
-        if (_randomConfig.useRandomSeed) {
-            seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+    private int CalculateSeed(RandomConfig config) {
+        if (config.UseRandomSeed) {
+            return Guid.NewGuid().GetHashCode();
         } else {
-            seed = _randomConfig.seed.GetHashCode();
+            return GetStableHashCode(config.Seed);
         }
+    }
 
-        UnityEngine.Random.InitState(seed);
-        //Debug.Log($"UnityEngine.Random initialized with seed: {seed}");
+    private int GetStableHashCode(string str) {
+        unchecked {
+            int hash1 = 5381;
+            int hash2 = hash1;
+
+            for (int i = 0; i < str.Length && str[i] != '\0'; i += 2) {
+                hash1 = ((hash1 << 5) + hash1) ^ str[i];
+                if (i == str.Length - 1 || str[i + 1] == '\0')
+                    break;
+                hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
+            }
+
+            return hash1 + (hash2 * 1566083941);
+        }
     }
 }

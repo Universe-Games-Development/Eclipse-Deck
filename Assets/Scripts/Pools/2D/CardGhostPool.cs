@@ -1,5 +1,3 @@
-﻿using UnityEngine;
-
-public class CardGhostPool : ComponentPool<CardLayoutGhost> {
+﻿public class CardGhostPool : ComponentPool<CardLayoutGhost> {
 
 }
