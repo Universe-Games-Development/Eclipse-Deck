@@ -22,9 +22,6 @@ public class BoardGame : MonoBehaviour
         playerPresenter.Initialize();
     }
 
-    public Opponent GetOpponent(Opponent initiator) {
-        return OpponentsRepresentation.GetOpponent(initiator);
-    }
 }
 
 

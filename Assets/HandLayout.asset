@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e46ab4df47f4cc468bc39a57f6f5b73, type: 3}
   m_Name: HandLayout
   m_EditorClassIdentifier: 
-  MaxTotalWidth: 3
+  MaxTotalWidth: 4
   ItemWidth: 1
   ItemLength: 0
   DepthOffset: -0.09
@@ -20,5 +20,5 @@ MonoBehaviour:
   ItemSpacing: 0.2
   PositionVariation: 0
   RowSpacing: 0
-  MaxRotationAngle: 15
-  RotationOffset: 1
+  MaxRotationAngle: 5.6
+  RotationOffset: 0.35

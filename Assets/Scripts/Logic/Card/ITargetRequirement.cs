@@ -18,11 +18,11 @@ public readonly struct ValidationResult {
 }
 
 public class ValidationContext {
-    public Opponent Initiator { get; }
+    public string InitiatorId { get; }
     public object Extra { get; }
 
-    public ValidationContext(Opponent initiator, object extra = null) {
-        Initiator = initiator;
+    public ValidationContext(string initiatorId, object extra = null) {
+        InitiatorId = initiatorId;
         Extra = extra;
     }
 }
@@ -45,7 +45,7 @@ public abstract class Condition<T> : ICondition {
 
 
 public interface ITargetRequirement {
-    ValidationResult IsValid(object selected, ValidationContext context = null);
+    ValidationResult CheckType(object selected, ValidationContext context = null);
     string GetInstruction();
     TargetSelector GetTargetSelector();
 }
@@ -63,7 +63,11 @@ public class TargetRequirement<T> : IGenericRequirement<T> {
         Conditions = conditions ?? throw new ArgumentNullException(nameof(conditions));
     }
 
-    public ValidationResult IsValid(object selected, ValidationContext context = null) {
+    public ValidationResult CheckType(object selected, ValidationContext context = null) {
+        if (selected == null) {
+            return ValidationResult.Error($"Nothing was selected");
+        }
+
         if (selected is T typedSelected) {
             return IsValid(typedSelected, context);
         }
@@ -71,6 +75,11 @@ public class TargetRequirement<T> : IGenericRequirement<T> {
     }
 
     public ValidationResult IsValid(T selected, ValidationContext context = null) {
+        ValidationResult typeValidation = CheckType(selected, context);
+        if (!typeValidation) {
+            return typeValidation;
+        }
+
         foreach (var condition in Conditions) {
             var result = condition.Validate(selected, context);
             if (!result.IsValid) {
@@ -101,7 +110,7 @@ public class OwnershipCondition : Condition<UnitModel> {
     }
 
     protected override ValidationResult CheckCondition(UnitModel model, ValidationContext context) {
-        bool isFriendly = model.GetPlayer() == context.Initiator;
+        bool isFriendly = model.OwnerId == context.InitiatorId;
 
         return ownershipType switch {
             OwnershipType.Ally when !isFriendly =>

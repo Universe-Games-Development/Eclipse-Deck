@@ -42,7 +42,7 @@ public abstract class GameOperation {
             throw new KeyNotFoundException($"Target with key '{key}' not found");
         }
     }
-    public void SetTargets(Dictionary<string, object> filledTargets) {
+    public void SetTargets(IReadOnlyDictionary<string, object> filledTargets) {
         foreach (var kvp in filledTargets) {
             if (typedTargets.ContainsKey(kvp.Key)) {
                 typedTargets[kvp.Key].SetTarget(kvp.Value);

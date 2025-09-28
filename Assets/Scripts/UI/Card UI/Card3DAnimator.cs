@@ -5,8 +5,6 @@ public class Card3DAnimator : MonoBehaviour {
     [SerializeField] private Transform target;
 
     [Header("Hover Animation")]
-    [SerializeField] private float hoverHeight = 0.3f;
-    [SerializeField] private float hoverZOffset = 0.3f;
     [SerializeField] private Vector3 hoverOffset;
     [SerializeField] private float hoverSpeedDuration = 0.2f;
     [SerializeField] private Ease hoverEase = Ease.OutQuad;

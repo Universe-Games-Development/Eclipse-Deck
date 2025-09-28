@@ -3,17 +3,12 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-public interface ITargetSelector {
-    Action<TargetSelectionRequest> OnSelectionRequested { get; set; }
-    Action<TargetSelectionRequest, UnitModel> OnSelectionFinished { get; set; }
-    Action<TargetSelectionRequest> OnSelectionCancelled { get; set; } // Новий івент
-
-    void CancelSelection();
-    void ConfirmSelection(UnitModel target);
+public interface ITargetSelectionService {
+    void CancelCurrentSelection();
     UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken);
 }
 
-public abstract class BaseTargetSelector : ITargetSelector {
+public abstract class BaseTargetSelector : ITargetSelectionService {
     public Action<TargetSelectionRequest> OnSelectionRequested { get; set; }
     public Action<TargetSelectionRequest, UnitModel> OnSelectionFinished { get; set; }
     public Action<TargetSelectionRequest> OnSelectionCancelled { get; set; } // Нова реалізація
@@ -71,7 +66,7 @@ public abstract class BaseTargetSelector : ITargetSelector {
         }
     }
 
-    public void CancelSelection() {
+    public void CancelCurrentSelection() {
         _isCancelledBySelector = true;
         _currentCancellation?.Cancel();
         OnSelectionCancelled?.Invoke(_currentRequest); // Сповіщаємо про скасування

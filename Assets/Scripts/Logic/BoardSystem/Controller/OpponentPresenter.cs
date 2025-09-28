@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
+
+// Please dont watch this class under the influence of alcohol
 public class OpponentPresenter : UnitPresenter, IDisposable {
     
     [Inject] public IOperationManager operationManager;
@@ -12,10 +14,8 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
     [Inject] private CardProvider _cardProvider;
     [Inject] private ICardFactory _cardFactory;
 
-    [Inject] private readonly IPresenterFactory _unitPresenterFactory;
     [Inject] public readonly IPresenterFactory presenterFactory;
     [Inject] public IUnitRegistry unitRegistry;
-    [Inject] private readonly IEventBus<IEvent> _eventBus;
 
     public Opponent Opponent { get; private set; }
     public OpponentView OpponentView;
@@ -31,19 +31,19 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
     #region Initialization
 
     public virtual void Initialize() {
-        HandPresenter = _unitPresenterFactory.CreateUnitPresenter<HandPresenter>(Opponent.Hand, OpponentView.HandDisplay);
+        HandPresenter = presenterFactory.CreateUnitPresenter<HandPresenter>(Opponent.Hand, OpponentView.HandDisplay);
         unitRegistry.Register(HandPresenter);
         FillDeckWithRandomCards(20);
         SubscribeToEvents();
     }
 
     private void SubscribeToEvents() {
-        _eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
+        eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
     }
 
     private void UnSubscribeEvents() {
-        if (_eventBus != null) {
-            _eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
+        if (eventBus != null) {
+            eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
         }
     }
     #endregion
@@ -91,16 +91,16 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
         while (drawAmount > 0) {
             Card card = DeckPresenter.Deck.Draw();
             if (card == null) {
-                _eventBus.Raise(new OnDeckEmptyDrawn(Opponent));
+                eventBus.Raise(new OnDeckEmptyDrawn(Opponent));
                 return drawnCards;
             }
 
             if (!Opponent.Hand.Add(card)) {
-                _eventBus.Raise(new DiscardCardEvent(card, Opponent));
+                eventBus.Raise(new DiscardCardEvent(card, Opponent));
             }
 
             drawnCards.Add(card);
-            _eventBus.Raise(new OnCardDrawn(card, Opponent));
+            eventBus.Raise(new OnCardDrawn(card, Opponent));
             drawAmount--;
         }
         return drawnCards;
@@ -122,18 +122,19 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
 
     #endregion
 
-    public void Dispose() {
+    public virtual void Dispose() {
         UnSubscribeEvents();
     }
 }
 
 public class PlayerPresenter : OpponentPresenter {
     [Inject] public ICardPlayService cardPlayService;
+    [Inject] ITargetFiller targetFiller;
 
     private PlayerState currentState;
 
     public PlayerView PlayerView;
-    public SelectorPresenter SelectorPresenter;
+    public PlayerSelectorService SelectorPresenter;
 
     public PlayerPresenter(Opponent opponent, PlayerView playerView) : base(opponent, playerView) {
         PlayerView = playerView;
@@ -141,14 +142,27 @@ public class PlayerPresenter : OpponentPresenter {
 
     public override void Initialize() {
         base.Initialize();
-        SelectorPresenter = presenterFactory.CreatePresenter<SelectorPresenter>(Opponent.Selector, PlayerView.SelectionDisplay);
-        Opponent.Selector.OnSelectionRequested += OnSelectionRequested;
+        SelectorPresenter = presenterFactory.CreatePresenter<PlayerSelectorService>(PlayerView.SelectionDisplay);
+        SelectorPresenter.OnSelectionStarted += OnSelectionStarted;
+        SelectorPresenter.OnSelectionCompleted += OnSelectionCompleted;
+        SelectorPresenter.OnSelectionCancelled += OnSelectionCancelled;
 
+        ITargetSelectionService selectionService = SelectorPresenter;
+        targetFiller.RegisterSelector(Opponent.Id, selectionService);
+        
         SwitchState(new IdleState());
     }
 
-    private void OnSelectionRequested(TargetSelectionRequest request) {
+    private void OnSelectionStarted(TargetSelectionRequest request) {
         SwitchState(new BusyState(request));
+    }
+
+    private void OnSelectionCompleted(TargetSelectionRequest request, UnitModel target) {
+        SwitchState(new IdleState());
+    }
+
+    private void OnSelectionCancelled(TargetSelectionRequest request) {
+        SwitchState(new IdleState());
     }
 
     public void SwitchState(PlayerState newState) {
@@ -167,6 +181,11 @@ public class PlayerPresenter : OpponentPresenter {
         currentState.Enter();
 
         Debug.Log($"State changed to: {currentState.GetType().Name}");
+    }
+
+    public override void Dispose() {
+        base.Dispose();
+        targetFiller.UnRegisterSelector(Opponent.Id);
     }
 }
 
@@ -208,7 +227,7 @@ public class BusyState : PlayerState {
     private readonly TargetSelectionRequest _request;
     
     private HandPresenter handPresenter;
-    private SelectorPresenter SelectorPresenter;
+    private PlayerSelectorService SelectorPresenter;
     private ICardPlayService cardPlayService;
 
    
