@@ -139,9 +139,19 @@ public class Linear3DLayout : ILayout3DHandler {
             ItemsPerRow = itemsPerRow
         };
 
-        // Calculate total height for centering
-        float totalLength = rowsCount > 1 ? (rowsCount - 1) * (_settings.ItemLength + _settings.RowSpacing) : _settings.ItemLength + _settings.RowSpacing;
-        float startZ = -totalLength / 2f;
+        // Calculate total height for centering - FIXED
+        float totalLength;
+        float startZ;
+
+        if (rowsCount == 1) {
+            // Single row - no offset needed, place at center
+            totalLength = _settings.ItemLength;
+            startZ = 0f;
+        } else {
+            // Multiple rows - center them
+            totalLength = (rowsCount - 1) * (_settings.ItemLength + _settings.RowSpacing);
+            startZ = -totalLength / 2f;
+        }
 
         metadata.TotalLength = totalLength;
 
@@ -155,7 +165,8 @@ public class Linear3DLayout : ILayout3DHandler {
             int itemsInThisRow = Mathf.Min(itemsPerRow, totalItems - itemIndex);
             if (itemsInThisRow <= 0) break;
 
-            float zPos = startZ + row * (_settings.ItemLength + _settings.RowSpacing);
+            // FIXED: For single row, zPos remains 0, for multiple rows it's calculated from startZ
+            float zPos = rowsCount == 1 ? 0f : startZ + row * (_settings.ItemLength + _settings.RowSpacing);
 
             // Calculate row layout data with metadata
             var rowResult = CalculateRowLayoutData(itemsInThisRow);

@@ -11,8 +11,7 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
     
     [Inject] public IOperationManager operationManager;
     [Inject] public IEventBus<IEvent> eventBus;
-    [Inject] private CardProvider _cardProvider;
-    [Inject] private ICardFactory _cardFactory;
+    
 
     [Inject] public readonly IPresenterFactory presenterFactory;
     [Inject] public IUnitRegistry unitRegistry;
@@ -32,78 +31,25 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
 
     public virtual void Initialize() {
         HandPresenter = presenterFactory.CreateUnitPresenter<HandPresenter>(Opponent.Hand, OpponentView.HandDisplay);
-        unitRegistry.Register(HandPresenter);
-        FillDeckWithRandomCards(20);
-        SubscribeToEvents();
+        DeckPresenter = presenterFactory.CreateUnitPresenter<DeckPresenter>(Opponent.Deck, OpponentView.DeckDisplay);
+        DeckPresenter.FillDeckWithRandomCards(20);
     }
 
-    private void SubscribeToEvents() {
-        eventBus.SubscribeTo<BattleStartedEvent>(StartBattleActions);
-    }
-
-    private void UnSubscribeEvents() {
-        if (eventBus != null) {
-            eventBus.UnsubscribeFrom<BattleStartedEvent>(StartBattleActions);
-        }
-    }
     #endregion
 
-    public void StartBattleActions(ref BattleStartedEvent eventData) {
-        FillDeckWithRandomCards(40);
-    }
 
     #region Card Management
-    public void FillDeckWithRandomCards(int amount) {
-        Deck deck = Opponent.Deck;
-        var cards = GenerateRandomCards(amount);
-        deck.AddRange(cards);
-    }
+    
+    public bool DrawCards(int drawAmount) {
+        if (drawAmount == 0) return true;
 
-    public List<Card> GenerateRandomCards(int amount) {
-        CardCollection collection = new();
-        List<CardData> unlockedCards = _cardProvider.GetRandomUnlockedCards(amount);
+        List<Card> drawnCards = DeckPresenter.DrawCards(drawAmount);
 
-        if (unlockedCards.IsEmpty())
-            return new List<Card>();
-
-        // випадковий набір карт
-        for (int i = 0; i < amount; i++) {
-            var randomIndex = UnityEngine.Random.Range(0, unlockedCards.Count);
-            var randomCard = unlockedCards[randomIndex];
-            collection.AddCardToCollection(randomCard);
+        foreach(var card in drawnCards) {
+            HandPresenter.AddCard(card);
         }
-
-        // створення інстансів
-        List<Card> cards = new();
-        foreach (var entry in collection.cardEntries) {
-            for (int i = 0; i < entry.Value; i++) {
-                Card newCard = _cardFactory.CreateCard(entry.Key);
-                if (newCard != null)
-                    cards.Add(newCard);
-            }
-        }
-        return cards;
-    }
-
-    public List<Card> DrawCards(int drawAmount) {
-        List<Card> drawnCards = new();
-
-        while (drawAmount > 0) {
-            Card card = DeckPresenter.Deck.Draw();
-            if (card == null) {
-                eventBus.Raise(new OnDeckEmptyDrawn(Opponent));
-                return drawnCards;
-            }
-
-            if (!Opponent.Hand.Add(card)) {
-                eventBus.Raise(new DiscardCardEvent(card, Opponent));
-            }
-
-            drawnCards.Add(card);
-            eventBus.Raise(new OnCardDrawn(card, Opponent));
-            drawAmount--;
-        }
-        return drawnCards;
+        
+        return drawnCards.Count > 0;
     }
     #endregion
 
@@ -123,7 +69,6 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
     #endregion
 
     public virtual void Dispose() {
-        UnSubscribeEvents();
     }
 }
 
@@ -134,7 +79,7 @@ public class PlayerPresenter : OpponentPresenter {
     private PlayerState currentState;
 
     public PlayerView PlayerView;
-    public PlayerSelectorService SelectorPresenter;
+    public PlayerSelectorService SelectorService;
 
     public PlayerPresenter(Opponent opponent, PlayerView playerView) : base(opponent, playerView) {
         PlayerView = playerView;
@@ -142,15 +87,21 @@ public class PlayerPresenter : OpponentPresenter {
 
     public override void Initialize() {
         base.Initialize();
-        SelectorPresenter = presenterFactory.CreatePresenter<PlayerSelectorService>(PlayerView.SelectionDisplay);
-        SelectorPresenter.OnSelectionStarted += OnSelectionStarted;
-        SelectorPresenter.OnSelectionCompleted += OnSelectionCompleted;
-        SelectorPresenter.OnSelectionCancelled += OnSelectionCancelled;
+        SelectorService = presenterFactory.CreatePresenter<PlayerSelectorService>(PlayerView.SelectionDisplay);
+        SelectorService.OnSelectionStarted += OnSelectionStarted;
+        SelectorService.OnSelectionCompleted += OnSelectionCompleted;
+        SelectorService.OnSelectionCancelled += OnSelectionCancelled;
+        cardPlayService.OnCardPlayFinished += OnCardPlayFinished;
 
-        ITargetSelectionService selectionService = SelectorPresenter;
-        targetFiller.RegisterSelector(Opponent.Id, selectionService);
+        targetFiller.RegisterSelector(Opponent.Id, SelectorService);
         
         SwitchState(new IdleState());
+    }
+
+    private void OnCardPlayFinished(Card card, CardPlayResult result) {
+        if (result.IsSuccess && HandPresenter.Contains(card)) {
+            HandPresenter.RemoveCard(card);
+        }
     }
 
     private void OnSelectionStarted(TargetSelectionRequest request) {
@@ -240,7 +191,7 @@ public class BusyState : PlayerState {
 
         handPresenter = Presenter.HandPresenter;
         cardPlayService = Presenter.cardPlayService;
-        SelectorPresenter = Presenter.SelectorPresenter;
+        SelectorPresenter = Presenter.SelectorService;
 
 
         handPresenter.SetInteractable(false);

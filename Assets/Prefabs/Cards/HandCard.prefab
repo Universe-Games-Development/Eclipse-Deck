@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2297943703986987503}
+  - component: {fileID: 8929061523942830900}
   m_Layer: 10
   m_Name: Category
   m_TagString: Untagged
@@ -33,6 +34,20 @@ Transform:
   - {fileID: 1410898607984961316}
   m_Father: {fileID: 4237348184267548366}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8929061523942830900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 223360222749700530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1559f44c48db9bf448dd065338472370, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  text: {fileID: 5869499627141127069}
+  icon: {fileID: 7777447595080501896}
 --- !u!1 &1423845000855006752
 GameObject:
   m_ObjectHideFlags: 0
@@ -582,6 +597,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5778928737453308382}
+  - component: {fileID: 1193408774368295567}
   m_Layer: 10
   m_Name: Attack
   m_TagString: Untagged
@@ -606,6 +622,20 @@ Transform:
   - {fileID: 6101756289711197687}
   m_Father: {fileID: 4237348184267548366}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1193408774368295567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3751720036799992138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 481c0379a81a38749b0d65f95bad098c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  text: {fileID: 1997827261417357754}
+  icon: {fileID: 8292374767258834143}
 --- !u!1 &4302839686823352994
 GameObject:
   m_ObjectHideFlags: 0
@@ -1053,14 +1083,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3764676270445240160}
-  - component: {fileID: 9015347378124168813}
   - component: {fileID: 7219568571880624990}
-  - component: {fileID: -8699964533942601430}
   - component: {fileID: 6672949540244191898}
   - component: {fileID: 6585816273941797280}
   - component: {fileID: 6497592486819746803}
+  - component: {fileID: 7332583862399396814}
   m_Layer: 10
-  m_Name: CreatureCardView
+  m_Name: HandCard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1082,27 +1111,6 @@ Transform:
   - {fileID: 75358617504675101}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &9015347378124168813
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5035915735796379205}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2, y: 0.001, z: 3.0176716}
-  m_Center: {x: 0, y: 0, z: 0.008835852}
 --- !u!114 &7219568571880624990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1121,19 +1129,6 @@ MonoBehaviour:
   cardRenderer: {fileID: 7788813463689524630}
   animator: {fileID: 6497592486819746803}
   innerMovementComponent: {fileID: 4262755044960005542}
---- !u!114 &-8699964533942601430
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5035915735796379205}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 389c5b548fc154445a95db42ae5b8b69, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  movementComponent: {fileID: 6672949540244191898}
 --- !u!114 &6672949540244191898
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1188,6 +1183,27 @@ MonoBehaviour:
   clickScaleDown: 0.95
   clickDuration: 0.1
   clickReturnDuration: 0.15
+--- !u!65 &7332583862399396814
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5035915735796379205}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 0.00000040133926, z: 3}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6313086339661605621
 GameObject:
   m_ObjectHideFlags: 0
@@ -1549,6 +1565,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1959821025373040219}
+  - component: {fileID: 280082204283871828}
   m_Layer: 10
   m_Name: Health
   m_TagString: Untagged
@@ -1573,6 +1590,20 @@ Transform:
   - {fileID: 2338125353335526333}
   m_Father: {fileID: 4237348184267548366}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &280082204283871828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6478770588913990138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9f36d358890add4bb286fd6561b07ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  text: {fileID: 5098031714744225860}
+  icon: {fileID: 4318010724109927337}
 --- !u!1 &7949405105004948762
 GameObject:
   m_ObjectHideFlags: 0
@@ -1795,6 +1826,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1044646607197487633}
+  - component: {fileID: 8965779174693739157}
   m_Layer: 10
   m_Name: Mana
   m_TagString: Untagged
@@ -1819,3 +1851,17 @@ Transform:
   - {fileID: 7554456926104537037}
   m_Father: {fileID: 4237348184267548366}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8965779174693739157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8782669208658637038}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b2a0f1383f3f9744afb65cf41f5c5f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  text: {fileID: 79957151631831642}
+  icon: {fileID: 7624520978093943557}

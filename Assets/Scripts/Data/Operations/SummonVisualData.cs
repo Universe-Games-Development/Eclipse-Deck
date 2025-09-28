@@ -16,4 +16,7 @@ public class SummonVisualData : VisualData {
     public float aboveAligmentDuration = 1f;
     public Ease moveEase = Ease.OutQuad;
     public Vector3 aligmentHeightOffset = Vector3.up * 3f;
+    internal float effectLifetime;
+    internal float materializationDuration;
+    internal float cardShrinkDuration;
 }

@@ -16,9 +16,9 @@ MonoBehaviour:
   ItemWidth: 2
   ItemLength: 1.4
   DepthOffset: 0
-  VerticalOffset: 0.01
-  ItemSpacing: 0.4
+  VerticalOffset: 0
+  ItemSpacing: 0.5
   PositionVariation: 0
   RowSpacing: 1.5
-  MaxRotationAngle: 15
-  RotationOffset: 1
+  MaxRotationAngle: 0
+  RotationOffset: 0

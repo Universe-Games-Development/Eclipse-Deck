@@ -2,7 +2,7 @@
 using UnityEngine;
 
 public class UnitView : MonoBehaviour {
-    public void Highlight(bool enable) {
+    public virtual void Highlight(bool enable) {
         // Реалізація підсвічування
     }
 }

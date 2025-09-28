@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 
-public class Zone : UnitModel {
+public class Zone : AreaModel {
     public int MaxCreatures { get; }
     public event Action<Creature> OnCreaturePlaced;
     public event Action<Creature> OnCreatureRemoved;

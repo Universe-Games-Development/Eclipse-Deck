@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public interface IOpponentRegistry {
@@ -6,6 +7,7 @@ public interface IOpponentRegistry {
 
     void UnregisterOpponent(string opponentId);
     Opponent GetAgainstOpponentId(string opponentId);
+    List<Opponent> GetOpponents();
 }
 
 public class OpponentRegistry : IOpponentRegistry {
@@ -42,5 +44,9 @@ public class OpponentRegistry : IOpponentRegistry {
 
     public Opponent GetAgainstOpponentId(Opponent opponent)
         => GetAgainstOpponentId(opponent.Id);
+
+    public List<Opponent> GetOpponents() {
+        return _opponents.Values.ToList();
+    }
 }
 

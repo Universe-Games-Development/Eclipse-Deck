@@ -112,11 +112,6 @@ public class OperationTargetsFiller : MonoBehaviour, ITargetFiller {
 
             } catch (OperationCanceledException) {
                 throw;
-            } catch (Exception ex) {
-                logger.LogError($"Error selecting target {target.Key}: {ex.Message}", LogCategory.TargetsFiller);
-                if (!request.IsMandatory) {
-                    return (true, null);
-                }
             }
         }
 

@@ -5,15 +5,35 @@ using UnityEngine;
 /// <summary>
 /// Enhanced BoardView with dynamic layout support
 /// </summary>
-public class BoardView : MonoBehaviour {
+public class BoardView : AreaView {
     [SerializeField] private LayoutSettings layoutSettings;
     [SerializeField] private float layoutUpdateDelay = 0.1f;
     private ILayout3DHandler layout;
     private List<Cell3DView> currentCellViews = new();
     private int currentRowCount;
     private bool layoutUpdatePending = false;
+    [SerializeField] CellFactory cellFactory;
+
+    [SerializeField] bool doTestUpdate = false;
+    [SerializeField] float updateDelay = 1f;
+    private float updateTimer;
 
     private void Awake() {
+        Initialize();
+    }
+
+    private void Update() {
+        if (doTestUpdate) {
+            updateTimer += Time.deltaTime;
+            if (updateTimer > updateDelay) {
+                ApplyLayout();
+                updateTimer = 0f;
+            }
+        }
+    }
+
+    public void Initialize() {
+        if (layout == null)
         layout = new Linear3DLayout(layoutSettings);
     }
 
@@ -97,4 +117,9 @@ public class BoardView : MonoBehaviour {
         }
     }
 
+    public Cell3DView CreateCell(Cell cell) {
+        return cellFactory.CreateCell();
+    }
+
+    
 }

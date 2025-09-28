@@ -82,14 +82,20 @@ public class SelectorView : MonoBehaviour {
 
         if (boardInputManager.TryGetAllCursorObjects(targetLayerMask, out GameObject[] hitObjects)) {
             foreach (var hitObj in hitObjects) {
-                if (hitObj.TryGetComponent(out UnitView view)) {
-                    views.Add(view);
+                if (hitObj.TryGetComponent(out UnitViewProvider provider)) {
+                    var view = provider.GetUnitView();
+                    if (view != null) {
+                        views.Add(view);
+                    }
+                } else if (hitObj.TryGetComponent(out UnitView directView)) {
+                    views.Add(directView);
                 }
             }
         }
 
         return views;
     }
+
     #endregion
 
     #region Messages

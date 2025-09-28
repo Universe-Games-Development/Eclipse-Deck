@@ -6,6 +6,8 @@ using System.Threading;
 using UnityEngine;
 
 public interface ICardPlayService {
+    event Action<Card, CardPlayResult> OnCardPlayFinished;
+
     UniTask<CardPlayResult> PlayCardAsync(Card card, CancellationToken cancellationToken = default);
     bool IsPlayingCard(Card card);
     void CancelCardPlay(Card card);
@@ -16,6 +18,7 @@ public class CardPlayService : ICardPlayService {
     private readonly IOperationFactory _operationFactory;
     private readonly IEventBus<IEvent> _eventBus;
     private readonly Dictionary<string, CardPlaySession> _activeSessions = new();
+    public event Action<Card, CardPlayResult> OnCardPlayFinished;
 
     public CardPlayService(
         IOperationManager operationManager,
@@ -39,6 +42,7 @@ public class CardPlayService : ICardPlayService {
 
         try {
             var result = await session.ExecuteAsync(cancellationToken);
+            OnCardPlayFinished?.Invoke(card, result);
             return result;
         } finally {
             _activeSessions.Remove(card.Id);

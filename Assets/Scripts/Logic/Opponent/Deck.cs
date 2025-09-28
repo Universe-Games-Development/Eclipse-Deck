@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using Unity.VisualScripting;
+
 public class Deck : CardContainer {
     public Deck(int maxSize = DefaultSize) : base(maxSize) { }
     public Card Draw() {
@@ -6,16 +10,18 @@ public class Deck : CardContainer {
         Remove(card);  
         return card;
     }
-}
 
-public class DeckPresenter : UnitPresenter {
-    private DeckView deckView;
+    public List<Card> DrawCards(int drawAmount) {
+        List<Card> drawnCards = new();
 
-    public Deck Deck { get; private set; }
-
-    public DeckPresenter(Deck deckModel, DeckView deckView) : base (deckModel, deckView) {
-        Deck = deckModel;
-        this.deckView = deckView;
+        while (drawAmount > 0) {
+            Card card = Draw();
+            if (card == null) {
+                return drawnCards;
+            }
+            drawAmount--;
+        }
+        return drawnCards;
     }
 }
 

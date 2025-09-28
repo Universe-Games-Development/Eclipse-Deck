@@ -1,6 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using System;
 using System.Threading;
 using UnityEngine;
 
@@ -14,9 +13,17 @@ public class Card3DView : CardView {
     private Material _instancedMaterial;
     private int _defaultRenderQueue;
 
+    private UnitViewProvider _unitViewCollider;
+
     protected override void Awake() {
         base.Awake();
         displayComponents = GetComponentsInChildren<CardDisplayComponent>();
+        _unitViewCollider = GetComponentInChildren<UnitViewProvider>();
+        if (_unitViewCollider != null) {
+            _unitViewCollider.OnClicked += HandleMouseDown;
+            _unitViewCollider.OnPointerEnter += HandleMouseEnter;
+            _unitViewCollider.OnPointerExit += HandleMouseExit;
+        }
         InitializeMaterials();
     }
 
@@ -99,6 +106,7 @@ public class Card3DView : CardView {
             _instancedMaterial.SetFloat("_FrameMask", isEnabled ? 0f : -1f);
         }
     }
+
     #region Mouse Interaction
 
     private void OnMouseEnter() {
@@ -112,9 +120,6 @@ public class Card3DView : CardView {
     private void OnMouseDown() {
         HandleMouseDown();
     }
-
-    
-
     #endregion
 }
 

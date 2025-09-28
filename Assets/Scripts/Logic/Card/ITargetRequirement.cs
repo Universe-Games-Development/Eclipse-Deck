@@ -69,7 +69,7 @@ public class TargetRequirement<T> : IGenericRequirement<T> {
         }
 
         if (selected is T typedSelected) {
-            return IsValid(typedSelected, context);
+            return ValidationResult.Success;
         }
         return ValidationResult.Error($"Expected {typeof(T).Name}, got {selected?.GetType().Name}");
     }
