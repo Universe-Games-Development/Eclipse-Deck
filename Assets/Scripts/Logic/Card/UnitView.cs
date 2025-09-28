@@ -2,7 +2,7 @@
 using UnityEngine;
 
 public class UnitView : MonoBehaviour {
-    public void Highlight(bool enable) {
+    public virtual void Highlight(bool enable) {
         // Реалізація підсвічування
     }
 }
@@ -22,20 +22,17 @@ public abstract class UnitPresenter {
 }
 
 public class UnitModel {
-    public Action<Opponent> OnChangedOwner;
-    private Opponent _owner;
-    public string Id { get; protected set; }
-    public void ChangeOwner(Opponent newOwner) {
-        if (newOwner == _owner) return;
-        _owner = newOwner;
-        OnChangedOwner?.Invoke(newOwner);
-    }
+    public string Id;
+    public virtual string OwnerId { get; protected set; }
+    public Action<string> OnChangedOwner;
 
-    public virtual Opponent GetPlayer() {
-        return _owner;
+    public void ChangeOwner(string newOwnerId) {
+        if (string.IsNullOrEmpty(newOwnerId) || newOwnerId == OwnerId) return;
+        OwnerId = newOwnerId;
+        OnChangedOwner?.Invoke(newOwnerId);
     }
 
     public virtual string GetName() {
-        return "";
+        return this.ToString();
     }
 }

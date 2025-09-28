@@ -1,6 +1,10 @@
 using System;
 
 public class Opponent : UnitModel, IHealthable, IMannable {
+    public override string OwnerId {
+        get { return Id; }
+    }
+
     public Action<Opponent> OnDefeat { get; internal set; }
     public Health Health { get; private set; }
     public Mana Mana { get; private set; }
@@ -9,10 +13,10 @@ public class Opponent : UnitModel, IHealthable, IMannable {
     public CardSpendable CardSpendable { get; private set; }
     public Deck Deck { get; private set; }
     public CardHand Hand { get; private set; }
-    public ITargetSelector Selector { get; }
 
-    public Opponent(OpponentData data, Deck deck, CardHand hand, ITargetSelector targetSelector) {
+    public Opponent(OpponentData data, Deck deck, CardHand hand) {
         Data = data;
+        Id = $"{Data.Name}_{Guid.NewGuid()}";
 
         Health = new Health(data.Health);
         Mana = new Mana(data.Mana);
@@ -20,10 +24,8 @@ public class Opponent : UnitModel, IHealthable, IMannable {
 
         Deck = deck;
         Hand = hand;
-        Deck.ChangeOwner(this);
-        Hand.ChangeOwner(this);
-
-        Selector = targetSelector;
+        Deck.ChangeOwner(Id);
+        Hand.ChangeOwner(Id);
 
     }
 
@@ -31,10 +33,6 @@ public class Opponent : UnitModel, IHealthable, IMannable {
         int was = Mana.Current;
         Mana.Subtract(currentValue);
         //Debug.Log($"Mana: {Mana.Current} / {Mana.Max}");
-    }
-
-    public override Opponent GetPlayer() {
-        return this;
     }
 }
 

@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// Основной класс игровой доски
 /// </summary>
-public class Board {
+public class Board : UnitModel {
     private readonly List<Row> _rows = new();
 
     public IReadOnlyList<Row> Rows => _rows.AsReadOnly();

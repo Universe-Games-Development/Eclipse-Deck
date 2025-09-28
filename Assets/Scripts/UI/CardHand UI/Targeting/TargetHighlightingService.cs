@@ -6,18 +6,14 @@ public class TargetHighlightingService : MonoBehaviour {
     [Header("Highlight Settings")]
 
     [Inject] private IUnitRegistry unitRegistry;
-    [SerializeField] private OldClumsySelector targetSelector;
 
     private HashSet<UnitPresenter> highlightedUnits = new HashSet<UnitPresenter>();
     private float lastUpdateTime;
 
     private void OnEnable() {
-        targetSelector.OnSelectionStarted += OnTargetSelectionStarted;
-        targetSelector.OnSelectionEnded += ClearAllHighlights;
     }
 
     private void OnDisable() {
-        targetSelector.OnSelectionStarted -= OnTargetSelectionStarted;
         ClearAllHighlights();
     }
 
@@ -30,13 +26,13 @@ public class TargetHighlightingService : MonoBehaviour {
     }
 
     private bool IsValidTarget(UnitModel unit, TargetSelectionRequest request) {
-        var player = unit.GetPlayer();
+        var player = unit.OwnerId;
         if (player == null) {
             //Debug.LogWarning($"player is null for {unit}");
         }
 
 
-        return request.Target.IsValid(unit, new ValidationContext(request.Source.GetPlayer()));
+        return request.Target.IsValid(unit, new ValidationContext(request.Source.OwnerId));
     }
 
 

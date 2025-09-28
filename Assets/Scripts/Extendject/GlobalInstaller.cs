@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Zenject;
 
 public class GlobalInstaller : MonoInstaller {
@@ -64,7 +63,7 @@ public class RandomService : IRandomService {
         SystemRandom = new System.Random(Seed);
         UnityEngine.Random.InitState(Seed);
 
-        UnityEngine.Debug.Log($"Initialized RandomService with Seed: {Seed}");
+        //UnityEngine.Debug.Log($"Initialized RandomService with Seed: {Seed}");
     }
 
     private int CalculateSeed(RandomConfig config) {

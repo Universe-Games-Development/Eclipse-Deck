@@ -18,7 +18,7 @@ public interface IUnitSpawner<TModel, TView, TPresenter>
     where TModel : UnitModel
     where TView : UnitView
     where TPresenter : UnitPresenter {
-    TPresenter SpawnUnit(TModel model);
+    TPresenter SpawnUnit(TModel model, bool registerInSystems = true);
     void RemoveUnit(TPresenter presenter);
 }
 
@@ -29,11 +29,11 @@ public class UnitSpawner<TModel, TView, TPresenter> : IUnitSpawner<TModel, TView
     [Inject] private IPresenterFactory _presenterFactory;
     [Inject] private IComponentPool<TView> _viewPool;
 
-    public TPresenter SpawnUnit(TModel model) {
+    public TPresenter SpawnUnit(TModel model, bool needRegistration = true) {
         var view = _viewPool.Get();
         if (view == null) throw new InvalidOperationException($"No available {typeof(TView).Name} in pool");
 
-        var presenter = _presenterFactory.CreateUnitPresenter<TPresenter>(model, view);
+        var presenter = _presenterFactory.CreateUnitPresenter<TPresenter>(needRegistration, model, view);
 
         return presenter;
     }

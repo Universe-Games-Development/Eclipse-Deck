@@ -1,21 +1,53 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using System.Threading;
 using UnityEngine;
 
 public class Card3DView : CardView {
     [SerializeField] private Renderer cardRenderer;
     [SerializeField] private Card3DAnimator animator;
+    [SerializeField] MovementComponent innerMovementComponent;
 
     // Автоматично знаходимо компоненти
     private CardDisplayComponent[] displayComponents;
     private Material _instancedMaterial;
     private int _defaultRenderQueue;
 
+    private UnitViewProvider _unitViewCollider;
+
     protected override void Awake() {
         base.Awake();
         displayComponents = GetComponentsInChildren<CardDisplayComponent>();
+        _unitViewCollider = GetComponentInChildren<UnitViewProvider>();
+        if (_unitViewCollider != null) {
+            _unitViewCollider.OnClicked += HandleMouseDown;
+            _unitViewCollider.OnPointerEnter += HandleMouseEnter;
+            _unitViewCollider.OnPointerExit += HandleMouseExit;
+        }
         InitializeMaterials();
     }
 
+    #region Movement API - основне для інших модулів
+
+    /// <summary>
+    /// Плавний рух до позиції (для руки, реорганізації)
+    /// </summary>
+    public async UniTask DoTweenerInner(Tweener tweener, CancellationToken token = default) {
+        if (innerMovementComponent != null) {
+            await innerMovementComponent.ExecuteTween(tweener, token);
+        }
+    }
+
+    /// <summary>
+    /// Плавний рух до позиції (для руки, реорганізації)
+    /// </summary>
+    public async UniTask DoSequenceInner(Sequence sequence, CancellationToken token = default) {
+        if (innerMovementComponent != null) {
+            await innerMovementComponent.ExecuteTweenSequence(sequence, token);
+        }
+
+    }
+    #endregion
 
     #region Render Order Management
     public override void SetRenderOrder(int order) {
@@ -74,6 +106,7 @@ public class Card3DView : CardView {
             _instancedMaterial.SetFloat("_FrameMask", isEnabled ? 0f : -1f);
         }
     }
+
     #region Mouse Interaction
 
     private void OnMouseEnter() {
@@ -87,9 +120,6 @@ public class Card3DView : CardView {
     private void OnMouseDown() {
         HandleMouseDown();
     }
-
-    
-
     #endregion
 }
 

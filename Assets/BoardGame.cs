@@ -5,6 +5,8 @@ public class BoardGame : MonoBehaviour
 {
     [Inject] IPresenterFactory presenterFactory;
     [Inject] IOpponentFactory opponentFactory;
+    [Inject] IOpponentRegistry opponentRegistry;
+
     [SerializeField] public OpponentRegistry OpponentsRepresentation;
     [SerializeField] PlayerData playerData;
 
@@ -17,14 +19,11 @@ public class BoardGame : MonoBehaviour
 
     private void TestInit() {
         Opponent player = opponentFactory.CreatePlayer(playerData);
-
+        opponentRegistry.RegisterOpponent(player);
         PlayerPresenter playerPresenter = presenterFactory.CreateUnitPresenter<PlayerPresenter>(player, opponentView);
         playerPresenter.Initialize();
     }
 
-    public Opponent GetOpponent(Opponent initiator) {
-        return OpponentsRepresentation.GetOpponent(initiator);
-    }
 }
 
 

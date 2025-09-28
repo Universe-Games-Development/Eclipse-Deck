@@ -74,7 +74,7 @@ public class UnitRegistry : IUnitRegistry, IDisposable {
         _modelToPresenter[presenter.Model] = presenter;
         _viewToPresenter[presenter.View] = presenter;
 
-        Debug.Log($"Registered {presenter.GetType().Name}: {presenter.Model}");
+        //Debug.Log($"Registered {presenter.GetType().Name}: {presenter.Model}");
     }
 
     public void Unregister(UnitPresenter presenter) {

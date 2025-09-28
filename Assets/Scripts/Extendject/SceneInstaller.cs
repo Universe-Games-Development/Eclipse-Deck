@@ -13,6 +13,8 @@ public class BoardGameInstaller : MonoInstaller<BoardGameInstaller> {
         Container.Bind<IOperationManager>().To<OperationManager>().AsSingle();
         Container.Bind<IVisualManager>().To<VisualSequenceManager>().AsSingle();
 
+        
+        Container.Bind<IOpponentRegistry>().To<OpponentRegistry>().AsSingle().NonLazy();
         Container.Bind<ICardPlayService>().To<CardPlayService>().AsSingle().NonLazy();
         Container.Bind<ITargetFiller>().To<OperationTargetsFiller>().FromComponentInHierarchy().AsSingle();
         Container.Bind<ITargetValidator>().To<TargetValidator>().AsSingle();

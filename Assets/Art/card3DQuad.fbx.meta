@@ -1,14 +1,9 @@
 fileFormatVersion: 2
-guid: d36258c1a4ed30044bb9ff3362cee46e
+guid: e785340b781a20b4f9f91614e13b7976
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mana Crystal
-    second: {fileID: 2100000, guid: f5bce0200e4d4ee4d8f67e020fee1e18, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
