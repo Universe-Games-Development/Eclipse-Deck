@@ -14,13 +14,15 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
     [SerializeField] private BoardInputManager boardInputManager;
     [SerializeField] private LayerMask boardMask;
 
-    private Vector3 startPosition;
+    public Vector3 _startPosition;
+    public Transform startObject;
+
     private TargetSelectionRequest currentRequest;
     private GameObject lastHoveredObject;
 
     public void Initialize(TargetSelectionRequest request) {
-        startPosition = Vector3.one;
         currentRequest = request;
+        _startPosition = startObject ? startObject.transform.position : _startPosition;
     }
 
     public void StartTargeting() {
@@ -29,7 +31,7 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
     }
 
     public void UpdateTargeting(Vector3 cursorPosition) {
-        UpdateArrowPosition(startPosition, cursorPosition);
+        UpdateArrowPosition(_startPosition, cursorPosition);
         UpdateArrowColor(cursorPosition);
     }
 

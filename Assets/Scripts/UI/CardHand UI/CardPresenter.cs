@@ -10,6 +10,8 @@ public class CardPresenter : UnitPresenter, IDisposable {
     public Action<CardPresenter> OnCardClicked;
     public Action<CardPresenter, bool> OnHoverChanged;
 
+    private bool isInteractable = true;
+
     public CardPresenter (Card card, CardView cardView) : base(card, cardView) {
         this.Card = card;
         CardView = cardView;
@@ -20,8 +22,18 @@ public class CardPresenter : UnitPresenter, IDisposable {
 
     private void SubscribeEvents() {
         if (View == null) return;
-        CardView.OnCardClicked += (view) => OnCardClicked?.Invoke(this);
-        CardView.OnHoverChanged += (view, isHovered) => OnHoverChanged?.Invoke(this, isHovered);
+        CardView.OnCardClicked += OnViewClicked;
+        CardView.OnHoverChanged += OnHoverViewChanged;
+    }
+
+    private void OnViewClicked(CardView cardView) {
+        if (!isInteractable) return;
+        OnCardClicked?.Invoke(this);
+    }
+
+    private void OnHoverViewChanged(CardView cardView, bool isHovered) {
+        if (!isInteractable) return;
+        OnHoverChanged?.Invoke(this, isHovered);
     }
     private void UnSubscribeEvents() {
         if (View == null) return;
@@ -112,8 +124,8 @@ public class CardPresenter : UnitPresenter, IDisposable {
     #endregion
 
 
-    public void SetInteractable(bool v) {
-        CardView.SetInteractable(v);
+    public void SetInteractable(bool _isInteractable) {
+        isInteractable = _isInteractable;
     }
 
     public void Dispose() {

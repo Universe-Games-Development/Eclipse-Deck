@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 
 public class DrawCardOperation : GameOperation {
     private OpponentPresenter opponentPresetner;
@@ -9,8 +10,9 @@ public class DrawCardOperation : GameOperation {
         _drawAmount = drawAmount;
     }
 
-    public override bool Execute() {
+    public override async UniTask<bool> Execute() {
         opponentPresetner.DrawCards(_drawAmount);
+        await UniTask.DelayFrame(1);
         return true;
     }
 }

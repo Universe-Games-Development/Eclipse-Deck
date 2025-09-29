@@ -10,6 +10,9 @@ public class BoardManager : MonoBehaviour
     [SerializeField] BoardView boardView;
     [Inject] IUnitSpawner<Zone, ZoneView, ZonePresenter> zoneSpawner;
     [Inject] IOpponentRegistry opponentRegistry;
+    [Inject] IEntityFactory entityFactory;
+
+    [SerializeField] int testZoneSize = 4;
 
     private void Start() {
         ZonePresenter zonePresenter = SpawnTestZone();
@@ -38,7 +41,7 @@ public class BoardManager : MonoBehaviour
         List<Opponent> opponents = opponentRegistry.GetOpponents();
         Opponent player = opponents.First();
 
-        Zone zone = new Zone(4);
+        Zone zone = entityFactory.Create<Zone>(testZoneSize);
         zone.ChangeOwner(player.Id);
         ZonePresenter presenter = zoneSpawner.SpawnUnit(zone);
         presenter.View.transform.SetParent(transform);

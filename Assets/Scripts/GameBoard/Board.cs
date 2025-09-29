@@ -41,9 +41,7 @@ public class Board : UnitModel {
     }
 
     public void AssignAreaModelToCell(Cell cell, UnitModel model) {
-        if (cell != null) {
-            cell.AssignUnit(model);
-        }
+        cell?.AssignUnit(model);
     }
 
     #region Column API
@@ -51,12 +49,13 @@ public class Board : UnitModel {
     /// <summary>
     /// Adds a new column to all rows
     /// </summary>
-    public OperationResult AddColumn() { 
+    public bool AddColumn() { 
         List<Cell> newColumn = new();
         for (int i = 0; i < _rows.Count; i++) {
             var newCell = _rows[i].AddCell();
             if (newCell == null) {
-                return OperationResult.Failed($"Failed to add cell to row {i}: {newCell}");
+                return false;
+                //return OperationResult.Failed($"Failed to add cell to row {i}: {newCell}");
             }
             newColumn.Add(newCell);
         }
@@ -64,19 +63,21 @@ public class Board : UnitModel {
         int newColumnIndex = GetCurrentColumnsCount() - 1;
         ColumnAdded?.Invoke(this, new ColumnAddedEvent(newColumn, newColumnIndex));
 
-        return OperationResult.Success();
+        return true;
     }
 
     /// <summary>
     /// Removes a column from all rows
     /// </summary>
-    public OperationResult RemoveColumn(int columnIndex) {
+    public bool RemoveColumn(int columnIndex) {
         if (_rows.Count == 0) {
-            return OperationResult.Failed("Board is empty");
+            return false;
+            //return OperationResult.Failed("Board is empty");
         }
 
         if (GetCurrentColumnsCount() <= 1) {
-            return OperationResult.Failed("Cannot delete the last column");
+            return false;
+            //return OperationResult.Failed("Cannot delete the last column");
         }
 
         List<Cell> removedColumn = new();
@@ -87,12 +88,13 @@ public class Board : UnitModel {
 
             var removedCell = row.RemoveCell(columnIndex);
             if (removedCell == null) {
-                return OperationResult.Failed($"Failed to remove cell from row {rowIndex}");
+                return false;
+               // return OperationResult.Failed($"Failed to remove cell from row {rowIndex}");
             }
         }
 
         ColumnRemoved?.Invoke(this, new ColumnRemovedEvent(removedColumn, columnIndex));
-        return OperationResult.Success();
+        return true;
     }
 
     /// <summary>

@@ -49,9 +49,9 @@ public struct OnDamageTaken : IEvent {
 }
 
 public struct DeathEvent : IEvent {
-    public IHealthable DeadEntity { get; }
+    public UnitModel DeadUnit { get; }
 
-    public DeathEvent(IHealthable deadEntity) {
-        DeadEntity = deadEntity;
+    public DeathEvent(UnitModel deadUnit) {
+        DeadUnit = deadUnit;
     }
 }

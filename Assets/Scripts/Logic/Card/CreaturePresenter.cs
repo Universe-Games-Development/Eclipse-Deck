@@ -8,6 +8,7 @@ public class CreaturePresenter : UnitPresenter, IDisposable {
         Creature = creature;
         CreatureView = view;
         UpdateUI();
+
     }
 
     private void UpdateUI() {

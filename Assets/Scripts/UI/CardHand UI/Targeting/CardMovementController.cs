@@ -15,7 +15,6 @@ public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
 
     public void StartTargeting() {
         if (cardPresenter != null) {
-            cardPresenter.SetInteractable(false);
             cardPresenter.ModifyRenderOrder(playRenderOrderBoost);
             cardPresenter.ToggleTiltMovement(true);
         }
@@ -30,7 +29,6 @@ public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
 
     public void StopTargeting() {
         if (cardPresenter != null) {
-            cardPresenter.SetInteractable(true);
             cardPresenter.ModifyRenderOrder(-playRenderOrderBoost);
             cardPresenter.ToggleTiltMovement(false);
         }

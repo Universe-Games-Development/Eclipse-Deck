@@ -16,7 +16,7 @@ public class BoardGameInstaller : MonoInstaller<BoardGameInstaller> {
         
         Container.Bind<IOpponentRegistry>().To<OpponentRegistry>().AsSingle().NonLazy();
         Container.Bind<ICardPlayService>().To<CardPlayService>().AsSingle().NonLazy();
-        Container.Bind<ITargetFiller>().To<OperationTargetsFiller>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<ITargetFiller>().To<OperationTargetsFiller>().AsSingle();
         Container.Bind<ITargetValidator>().To<TargetValidator>().AsSingle();
         Container.Bind<Board>().AsSingle();
         

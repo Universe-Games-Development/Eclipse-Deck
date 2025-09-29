@@ -10,8 +10,7 @@ public abstract class CardView : UnitView {
     public Action<CardView, bool> OnHoverChanged;
 
     public string Id { get; set; }
-    private bool _isInteractive = true;
-
+    
     [SerializeField] protected MovementComponent movementComponent;
     [SerializeField] protected CardTiltController tiltController;
     [SerializeField] public Transform innerBody;
@@ -43,17 +42,14 @@ public abstract class CardView : UnitView {
     #region Mouse Interaction (базовая реализация)
 
     protected virtual void HandleMouseEnter() {
-        if (!_isInteractive) return;
         OnHoverChanged?.Invoke(this, true);
     }
 
     protected virtual void HandleMouseExit() {
-        if (!_isInteractive) return;
         OnHoverChanged?.Invoke(this, false);
     }
 
     protected virtual void HandleMouseDown() {
-        if (!_isInteractive) return;
         OnCardClicked?.Invoke(this);
     }
 
@@ -111,8 +107,4 @@ public abstract class CardView : UnitView {
     #endregion
 
     public abstract void SetHoverState(bool isHovered);
-
-    public void SetInteractable(bool value) {
-        _isInteractive = value;
-    }
 }

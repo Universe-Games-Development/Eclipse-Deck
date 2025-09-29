@@ -63,7 +63,11 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
         return _selectionView.CreateArrowTargeting(request);
     }
 
-    private bool IsZoneTarget(TypedTargetBase target) => target.TargetType == typeof(Zone);
+    private bool IsZoneTarget(TargetInfo target) {
+        ITargetRequirement requirement = target.Requirement;
+        bool isZoneReq = requirement is TargetRequirement<Zone>;
+        return isZoneReq;
+    }
 
     private void OnTargetSelected(List<UnitView> views) {
         var models = views
@@ -113,11 +117,11 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
 }
 
 public class TargetSelectionRequest {
-    public UnitModel Source { get; } // Карта, істота, гравець
-    public TypedTargetBase Target { get; }
+    public TargetInfo Target { get; }
+    public UnitModel Source { get; } // Карта, істота, гравець, ніхто
 
-    public TargetSelectionRequest(UnitModel initiator, TypedTargetBase target) {
-        Source = initiator;
+    public TargetSelectionRequest(TargetInfo target, UnitModel initiator = null) {
         Target = target;
+        Source = initiator;
     }
 }

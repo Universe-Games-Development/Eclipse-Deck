@@ -1,19 +1,6 @@
 using System;
 using Zenject;
 
-public interface ICreatureFactory {
-    Creature CreateModel(CreatureCard card);
-}
-
-public class CreatureFactory : ICreatureFactory{
-
-    [Inject] private DiContainer _container;
-
-    public Creature CreateModel(CreatureCard card) {
-        return _container.Instantiate<Creature>(new object[] { card });
-    }
-}
-
 public interface IUnitSpawner<TModel, TView, TPresenter>
     where TModel : UnitModel
     where TView : UnitView

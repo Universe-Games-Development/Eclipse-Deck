@@ -6,7 +6,7 @@ using Zenject;
 
 public interface IOperationFactory {
     bool CanCreate(Type dataType);
-    TOperation Create<TOperation>(OperationData data) where TOperation : GameOperation;
+    TOperation Create<TOperation>(params object[] args) where TOperation : GameOperation;
     GameOperation Create(OperationData data);
 }
 
@@ -71,17 +71,8 @@ public class OperationFactory : IOperationFactory {
         return (GameOperation)_container.Instantiate(operationType, new object[] { data });
     }
 
-    // Для unit-тестів це може бути зручно
-    public TOperation Create<TOperation>(OperationData data) where TOperation : GameOperation {
-        // Але тут є ризик - якщо TOperation не відповідає data
-        var expectedDataType = GetExpectedDataType<TOperation>();
-        if (data.GetType() != expectedDataType) {
-            throw new InvalidOperationException(
-                $"Cannot create {typeof(TOperation).Name} with {data.GetType().Name}. " +
-                $"Expected {expectedDataType.Name}");
-        }
-
-        return _container.Instantiate<TOperation>(new object[] { data });
+    public TOperation Create<TOperation>(params object[] args) where TOperation : GameOperation {
+        return _container.Instantiate<TOperation>(args);
     }
 
     private Type GetExpectedDataType<TOperation>() where TOperation : GameOperation {

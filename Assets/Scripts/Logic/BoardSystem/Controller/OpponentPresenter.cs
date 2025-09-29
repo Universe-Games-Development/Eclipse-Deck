@@ -101,7 +101,11 @@ public class PlayerPresenter : OpponentPresenter {
     private void OnCardPlayFinished(Card card, CardPlayResult result) {
         if (result.IsSuccess && HandPresenter.Contains(card)) {
             HandPresenter.RemoveCard(card);
+        } else {
+            HandPresenter.SetInteractiveCard(card, true);
         }
+        
+        HandPresenter.UpdateCardsOrder();
     }
 
     private void OnSelectionStarted(TargetSelectionRequest request) {
@@ -136,7 +140,7 @@ public class PlayerPresenter : OpponentPresenter {
 
     public override void Dispose() {
         base.Dispose();
-        targetFiller.UnRegisterSelector(Opponent.Id);
+        targetFiller.UnregisterSelector(Opponent.Id);
     }
 }
 
@@ -161,6 +165,7 @@ public class IdleState : PlayerState {
 
     private void OnCardClicked(CardPresenter card) {
         if (card == null) return;
+        handPresenter.SetInteractiveCard(card.Card, false);
         Presenter.cardPlayService.PlayCardAsync(card.Card).Forget();
     }
 
@@ -213,7 +218,6 @@ public class BusyState : PlayerState {
 
     public override void Exit() {
         base.Exit();
-        handPresenter.UpdateCardsOrder();
         handPresenter.SetInteractable(true);
     }
 }
