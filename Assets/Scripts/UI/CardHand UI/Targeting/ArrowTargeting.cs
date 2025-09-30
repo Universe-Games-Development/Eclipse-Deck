@@ -14,25 +14,23 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
     [SerializeField] private BoardInputManager boardInputManager;
     [SerializeField] private LayerMask boardMask;
 
+    [SerializeField] Vector3 _arrowEndOffset = new();
     public Vector3 _startPosition;
     public Transform startObject;
 
-    private TargetSelectionRequest currentRequest;
-    private GameObject lastHoveredObject;
-
-    public void Initialize(TargetSelectionRequest request) {
-        currentRequest = request;
+    public void Initialize() {
         _startPosition = startObject ? startObject.transform.position : _startPosition;
     }
 
     public void StartTargeting() {
         SetArrowActive(true);
         ResetArrowColor();
+        UpdateHoverStatus(TargetValidationState.None);
     }
 
     public void UpdateTargeting(Vector3 cursorPosition) {
-        UpdateArrowPosition(_startPosition, cursorPosition);
-        UpdateArrowColor(cursorPosition);
+        Vector3 endResultPosition = cursorPosition + _arrowEndOffset;
+        UpdateArrowPosition(_startPosition, endResultPosition);
     }
 
     public void StopTargeting() {
@@ -49,24 +47,10 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
         arrowHead.LookAt(start);
     }
 
-    private void UpdateArrowColor(Vector3 targetPosition) {
-        GameObject hoveredObject = GetObjectUnderPosition(targetPosition);
-
-        if (hoveredObject == lastHoveredObject) return;
-        lastHoveredObject = hoveredObject;
-
-        Material materialToUse = DetermineArrowMaterial(hoveredObject);
-        ApplyArrowMaterial(materialToUse);
-    }
 
     private GameObject GetObjectUnderPosition(Vector3 position) {
         return boardInputManager.TryGetCursorObject(boardMask, out GameObject hitObject)
             ? hitObject : null;
-    }
-
-    private Material DetermineArrowMaterial(GameObject hoveredObject) {
-            return noTargetMaterial;
-
     }
 
 
@@ -83,7 +67,20 @@ public class ArrowTargeting : MonoBehaviour, ITargetingVisualization {
 
     private void ResetArrowColor() {
         ApplyArrowMaterial(noTargetMaterial);
-        lastHoveredObject = null;
+    }
+
+    public void UpdateHoverStatus(TargetValidationState state) {
+        Material material = noTargetMaterial;
+        switch (state) {
+            case TargetValidationState.Valid:
+                material = validTargetMaterial;
+                break;
+            case TargetValidationState.WrongTarget:
+                material = invalidTargetMaterial;
+                break;
+                
+        }
+        ApplyArrowMaterial(material);
     }
 }
 

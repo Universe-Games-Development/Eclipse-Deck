@@ -1,13 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using System;
 using System.Threading;
 using UnityEngine;
 
-public class CreatureView : UnitView {
-    public Action<CreatureView> OnClicked;
-    public Action<CreatureView, bool> OnHoverChanged;
-
+public class CreatureView : InteractableView {
     [SerializeField] MovementComponent movementComponent;
     [SerializeField] private Renderer cardRenderer;
     [SerializeField] MovementComponent innerMovementComponent;
@@ -17,11 +13,13 @@ public class CreatureView : UnitView {
     private Material _instancedMaterial;
     private int _defaultRenderQueue;
 
-    private UnitViewProvider _unitViewCollider;
+    
 
-    protected void Awake() {
+    protected override void Awake() {
+        base.Awake();
+
         displayComponents = GetComponentsInChildren<CardDisplayComponent>();
-        _unitViewCollider = GetComponentInChildren<UnitViewProvider>();
+        
         InitializeMaterials();
     }
     #region Movement API - основне для інших модулів
@@ -132,18 +130,4 @@ public class CreatureView : UnitView {
         }
     }
 
-    #region Mouse Interaction
-
-    private void OnMouseEnter() {
-        OnHoverChanged?.Invoke(this, true);
-    }
-
-    private void OnMouseExit() {
-        OnHoverChanged?.Invoke(this, false);
-    }
-
-    private void OnMouseDown() {
-        OnClicked?.Invoke(this);
-    }
-    #endregion
 }

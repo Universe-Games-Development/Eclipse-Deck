@@ -25,7 +25,7 @@ public class CardHand3DView : CardHandView {
     [Header ("Card Spawning")]
     [SerializeField] Vector3 spawnOffset;
 
-    private void Awake() {
+    protected void Awake() {
         if (cardsContainer == null)
             throw new UnassignedReferenceException(nameof(cardsContainer));
         if (cardPool == null)

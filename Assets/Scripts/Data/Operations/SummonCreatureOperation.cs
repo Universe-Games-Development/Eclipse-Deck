@@ -18,8 +18,8 @@ public class SummonCreatureOperation : GameOperation {
         _data = data;
         this.entityFactory = entityFactory;
         this.targetFiller = targetFiller;
-
-        AddTarget(SpawnPlaceKey, TargetRequirements.AllyPlace);
+        
+        AddTarget(new TargetInfo(SpawnPlaceKey, TargetRequirements.AllyPlace));
     }
 
     public override async UniTask<bool> Execute() {
@@ -36,7 +36,6 @@ public class SummonCreatureOperation : GameOperation {
         if (zone.IsFull()) {
             SacrificeCreatureOperation sacrificeCreatureOperation = operationFactory.Create<SacrificeCreatureOperation>();
             TargetInfo targetInfo = sacrificeCreatureOperation.GetTargets().First();
-            targetInfo.Requirement.ChangeInstruction("Select creature to sacrifice");
             // if received null return false
             TargetFillResult targetFillResult = await targetFiller.TryFillTargetAsync(targetInfo, Source, false);
             if (!targetFillResult.IsSuccess) {
@@ -111,9 +110,6 @@ public class SummonFromCardVisualTask : VisualTask, IDisposable {
             await PlayMaterializationEffect(creatureView);
 
             return true;
-        } catch (Exception ex) {
-            Debug.LogError($"Summon visualization failed: {ex.Message}");
-            return false;
         } finally {
             // Cleanup у будь-якому випадку
             SafeCleanupTempCard();
@@ -198,9 +194,20 @@ public class SacrificeOperationData : OperationData {
 
 public class SacrificeCreatureOperation : GameOperation {
     private const string TargetCreatureKey = "targetCreature";
-    public SacrificeCreatureOperation() {
-        AddTarget(TargetCreatureKey, TargetRequirements.EnemyCreature);
+    public SacrificeCreatureOperation(Zone zone = null) {
+        TargetRequirement<Creature> targetRequirement;
+        if (zone != null) {
+            targetRequirement = new RequirementBuilder<Creature>()
+                .WithCondition(new ZoneCondition(zone))
+                .Build();
+        } else {
+            targetRequirement = new RequirementBuilder<Creature>().Build();
+        }
+
+        SimpleTargetInstruction simpleTargetInstruction = new SimpleTargetInstruction("Select creature to sacrifice");
+        AddTarget(new TargetInfo(TargetCreatureKey, targetRequirement, simpleTargetInstruction));
     }
+
     public override async UniTask<bool> Execute() {
         if (!TryGetTypedTarget(TargetCreatureKey, out Creature creature)) {
             Debug.LogError($"Valid {TargetCreatureKey} not found");

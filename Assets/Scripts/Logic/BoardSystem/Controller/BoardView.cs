@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// Enhanced BoardView with dynamic layout support
 /// </summary>
-public class BoardView : AreaView {
+public class BoardView : UnitView {
     [SerializeField] private LayoutSettings layoutSettings;
     [SerializeField] private float layoutUpdateDelay = 0.1f;
     private ILayout3DHandler layout;
@@ -18,7 +18,7 @@ public class BoardView : AreaView {
     [SerializeField] float updateDelay = 1f;
     private float updateTimer;
 
-    private void Awake() {
+    protected void Awake() {
         Initialize();
     }
 

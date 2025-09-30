@@ -1,9 +1,8 @@
 
 using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
-public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler {
+public class CardUIView : CardView {
     public Action OnChanged;
 
     public RectTransform RectTransform;
@@ -26,17 +25,6 @@ public class CardUIView : CardView, IPointerClickHandler, IPointerEnterHandler, 
     private void InvokeCardChangedEvent() => OnChanged?.Invoke();
 
 
-    public void OnPointerEnter(PointerEventData eventData) {
-        HandleMouseEnter();
-    }
-
-    public void OnPointerExit(PointerEventData eventData) {
-        HandleMouseExit();
-    }
-
-    public void OnPointerClick(PointerEventData eventData) {
-        HandleMouseDown();
-    }
 
     public void Reset() {
         DoTweenAnimator?.Reset();

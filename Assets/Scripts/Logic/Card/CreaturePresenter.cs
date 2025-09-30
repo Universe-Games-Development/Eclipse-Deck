@@ -1,6 +1,6 @@
 ﻿using System;
 
-public class CreaturePresenter : UnitPresenter, IDisposable {
+public class CreaturePresenter : InteractablePresenter {
     public Creature Creature;
     public CreatureView CreatureView;
 
@@ -37,11 +37,4 @@ public class CreaturePresenter : UnitPresenter, IDisposable {
         };
     }
 
-
-    public void Reset() {
-        // Do reset logic here
-    }
-
-    public void Dispose() {
-    }
 }

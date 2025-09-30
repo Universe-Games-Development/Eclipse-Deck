@@ -160,7 +160,7 @@ public class IdleState : PlayerState {
         base.Enter();
         handPresenter = Presenter.HandPresenter;
         handPresenter.SetInteractable(true);
-        handPresenter.OnCardClicked += OnCardClicked;
+        handPresenter.OnHandCardClicked += OnCardClicked;
     }
 
     private void OnCardClicked(CardPresenter card) {
@@ -174,7 +174,7 @@ public class IdleState : PlayerState {
         base.Exit();
 
         if (handPresenter != null) {
-            handPresenter.OnCardClicked -= OnCardClicked;
+            handPresenter.OnHandCardClicked -= OnCardClicked;
         }
     }
 }

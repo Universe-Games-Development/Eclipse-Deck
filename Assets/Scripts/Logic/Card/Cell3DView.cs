@@ -11,11 +11,11 @@ public class Cell3DView : AreaView {
 }
 
 
-public class AreaView : UnitView {
+public class AreaView : InteractableView {
     [SerializeField] protected Transform _bodyToScale;
     public event Action<Vector3> OnSizeChanged;
 
-    public virtual void SetScale(Vector3 scale) {
+    public virtual void SetSize(Vector3 scale) {
         _bodyToScale.localScale = scale;
         OnSizeChanged?.Invoke(scale);
     }

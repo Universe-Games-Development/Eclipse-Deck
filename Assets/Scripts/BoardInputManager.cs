@@ -110,8 +110,6 @@ public class BoardInputManager : MonoBehaviour {
         return hits.Length > 0;
     }
     public bool TryGetAllCursorObjects(LayerMask layerMask, out GameObject[] hitObjects, bool sortByDistance = true) {
-        hitObjects = null;
-
         if (TryGetAllCursorHits(layerMask, out RaycastHit[] hits, sortByDistance)) {
             hitObjects = new GameObject[hits.Length];
             for (int i = 0; i < hits.Length; i++) {
@@ -120,6 +118,7 @@ public class BoardInputManager : MonoBehaviour {
             return true;
         }
 
+        hitObjects = Array.Empty<GameObject>();
         return false;
     }
     public float GetBoardHeightOffset() {

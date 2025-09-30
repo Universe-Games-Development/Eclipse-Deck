@@ -44,7 +44,7 @@ public class CellPresenter : UnitPresenter, IDisposable {
         if (CellView.GetCurrentSize() == newSize) return;
 
         Vector3 offset = CellView.GetCellOffsets();
-        CellView.SetScale(newSize + offset);
+        CellView.SetSize(newSize + offset);
         OnCellSizeChanged?.Invoke(this, newSize);
     }
 

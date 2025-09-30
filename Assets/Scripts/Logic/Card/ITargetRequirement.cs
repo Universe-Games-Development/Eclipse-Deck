@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 public readonly struct ValidationResult {
     public bool IsValid { get; }
@@ -18,9 +17,6 @@ public readonly struct ValidationResult {
 
 public interface ITargetRequirement {
     TargetSelector RequiredSelector { get; }
-    string Instruction { get; }
-    public void ChangeInstruction(string newInstruction);
-
     ValidationResult CheckType(object selected);
     ValidationResult IsValid(object selected, ValidationContext context = null);
 }
@@ -40,18 +36,14 @@ public class ValidationContext {
 public class TargetRequirement<T> : ITargetRequirement {
     private List<ICondition> _conditions = new();
     public IReadOnlyList<ICondition> Conditions => _conditions;
-
     public TargetSelector RequiredSelector { get; protected set; }
     public bool AllowSameTargetMultipleTimes { get; set; } = false;
-
-    public string Instruction { get; private set;  }
 
     public TargetRequirement(params ICondition[] conditions) {
         if (conditions != null) {
             _conditions.AddRange(conditions);
         }
         RequiredSelector = TargetSelector.Initiator;
-        Instruction = $"Select {typeof(T).Name}";
     }
 
     public TargetRequirement<T> AddCondition(ICondition condition) {
@@ -65,8 +57,6 @@ public class TargetRequirement<T> : ITargetRequirement {
         RequiredSelector = selector;
         return this;
     }
-
-
 
     public ValidationResult CheckType(object selected) {
         if (selected == null) {
@@ -93,10 +83,6 @@ public class TargetRequirement<T> : ITargetRequirement {
         }
         return ValidationResult.Success;
     }
-
-    public void ChangeInstruction(string newInstruction) {
-        Instruction = newInstruction;
-    }
 }
 
 public class CompositeTargetRequirement : ITargetRequirement {
@@ -104,26 +90,22 @@ public class CompositeTargetRequirement : ITargetRequirement {
     private readonly CompositeType _compositeType;
 
     public TargetSelector RequiredSelector { get; }
-    public string Instruction { get; private set; }
 
-    public CompositeTargetRequirement(CompositeType compositeType, string instruction, params ITargetRequirement[] requirements) {
+    public CompositeTargetRequirement(CompositeType compositeType, params ITargetRequirement[] requirements) {
         _compositeType = compositeType;
         _requirements = requirements;
-        Instruction = instruction;
-        RequiredSelector = TargetSelector.Initiator; // Або логіка для вибору
+        RequiredSelector = TargetSelector.Initiator;
     }
 
     public ValidationResult CheckType(object selected) {
-        // Для OR - достатньо одного валідного типу
         if (_compositeType == CompositeType.Or) {
             foreach (var req in _requirements) {
                 if (req.CheckType(selected))
                     return ValidationResult.Success;
             }
-            return ValidationResult.Error(Instruction);
+            return ValidationResult.Error("Type mismatch for all requirements");
         }
 
-        // Для AND - всі типи мають бути валідними
         foreach (var req in _requirements) {
             var result = req.CheckType(selected);
             if (!result) return result;
@@ -140,16 +122,11 @@ public class CompositeTargetRequirement : ITargetRequirement {
             return ValidationResult.Error("No valid requirement met");
         }
 
-        // AND logic
         foreach (var req in _requirements) {
             var result = req.IsValid(selected, context);
             if (!result) return result;
         }
         return ValidationResult.Success;
-    }
-
-    public void ChangeInstruction(string newInstruction) {
-        Instruction = newInstruction;
     }
 }
 
@@ -158,17 +135,17 @@ public enum CompositeType { And, Or }
 // Extension methods для зручності
 public static class CompositeRequirementExtensions {
     public static CompositeTargetRequirement Or(this ITargetRequirement first, ITargetRequirement second, string instruction = null) {
-        return new CompositeTargetRequirement(CompositeType.Or, instruction ?? $"Select {first.Instruction} OR {second.Instruction}", first, second);
+        return new CompositeTargetRequirement(CompositeType.Or, first, second);
     }
 
     public static CompositeTargetRequirement And(this ITargetRequirement first, ITargetRequirement second, string instruction = null) {
-        return new CompositeTargetRequirement(CompositeType.And, instruction ?? $"Select {first.Instruction} AND {second.Instruction}", first, second);
+        return new CompositeTargetRequirement(CompositeType.And, first, second);
     }
 }
 public class RequirementBuilder<T> {
     private readonly List<ICondition> _conditions = new();
     private TargetSelector _selector = TargetSelector.Initiator;
-    private string _message;
+    private ITargetInstruction _instruction;
 
     public RequirementBuilder<T> WithOwnership(OwnershipType type) {
         _conditions.Add(new OwnershipCondition(type));
@@ -185,15 +162,9 @@ public class RequirementBuilder<T> {
         return this;
     }
 
-    public RequirementBuilder<T> WithDescription(string message) {
-        _message = message;
-        return this;
-    }
-
     public TargetRequirement<T> Build() {
         var requirement = new TargetRequirement<T>(_conditions.ToArray());
         requirement.WithSelector(_selector);
-        if (_message != null) requirement.ChangeInstruction(_message);
         return requirement;
     }
 }

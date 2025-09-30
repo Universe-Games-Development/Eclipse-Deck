@@ -1,32 +1,33 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using TMPro;
 using UnityEngine;
 using Zenject;
 
 public class SelectorView : MonoBehaviour {
-    public event Action<List<UnitView>> OnTargetsSelected;
+    public event Action<GameObject[]> OnTargetsSelected;
 
     [Inject] private readonly InputManager inputManager;
     private InputSystem_Actions.BoardPlayerActions boardInputs;
 
-    [Header("Messaging")]
+    [Header("Visual Components")]
     [SerializeField] private TextMeshProUGUI selectionPromptText;
-    [SerializeField] private TextMeshProUGUI ErrorText;
-    [SerializeField] float tempMessageSeconds = 3f;
-    private CancellationTokenSource messageCancellation;
+    [SerializeField] private TextMeshProUGUI errorText;
+    [SerializeField] private float tempMessageSeconds = 3f;
 
     [Header("Targeting")]
     [SerializeField] private LayerMask targetLayerMask;
     [SerializeField] private LayerMask surfaceMask;
     [SerializeField] private BoardInputManager boardInputManager;
     public Vector3 LastBoardPosition { get; private set; }
-    private ITargetingVisualization currentVisualization;
 
-    [SerializeField] public CardMovementTargeting cardTargeting;
-    [SerializeField] public ArrowTargeting arrowTargeting;
+    [Header("Targeting Visualizations")]
+    [SerializeField] private CardMovementTargeting cardTargeting;
+    [SerializeField] private ArrowTargeting arrowTargeting;
+
+    private ITargetingVisualization _currentVisualization;
+    private CancellationTokenSource _messageCancellation;
 
     [Header("Debug")]
     [SerializeField] private bool isDebug = false;
@@ -40,7 +41,7 @@ public class SelectorView : MonoBehaviour {
 
     private void Update() {
         UpdateCursorPosition();
-        currentVisualization?.UpdateTargeting(LastBoardPosition);
+        _currentVisualization?.UpdateTargeting(LastBoardPosition);
     }
 
     private void UpdateCursorPosition() {
@@ -59,54 +60,38 @@ public class SelectorView : MonoBehaviour {
 
         StopTargeting();
 
-        currentVisualization = visualization;
-        currentVisualization.StartTargeting();
+        _currentVisualization = visualization;
+        _currentVisualization.StartTargeting();
 
         boardInputs.LeftClick.canceled += OnLeftClickUp;
     }
 
     public void StopTargeting() {
         boardInputs.LeftClick.canceled -= OnLeftClickUp;
-        currentVisualization?.StopTargeting();
-        currentVisualization = null;
+
+        _currentVisualization?.StopTargeting();
+        _currentVisualization = null;
+
         HideMessage();
     }
 
     private void OnLeftClickUp(UnityEngine.InputSystem.InputAction.CallbackContext context) {
-        var views = GetTargetsUnderCursor();
-        OnTargetsSelected?.Invoke(views);
+        boardInputManager.TryGetAllCursorObjects(targetLayerMask, out GameObject[] hitObjects);
+        OnTargetsSelected?.Invoke(hitObjects); // even if its empty
     }
 
-    private List<UnitView> GetTargetsUnderCursor() {
-        var views = new List<UnitView>();
-
-        if (boardInputManager.TryGetAllCursorObjects(targetLayerMask, out GameObject[] hitObjects)) {
-            foreach (var hitObj in hitObjects) {
-                if (hitObj.TryGetComponent(out UnitViewProvider provider)) {
-                    var view = provider.GetUnitView();
-                    if (view != null) {
-                        views.Add(view);
-                    }
-                } else if (hitObj.TryGetComponent(out UnitView directView)) {
-                    views.Add(directView);
-                }
-            }
-        }
-
-        return views;
-    }
 
     #endregion
 
     #region Messages
     public async UniTask ShowTemporaryError(string message) {
-        messageCancellation?.Cancel();
-        messageCancellation = new CancellationTokenSource();
+        _messageCancellation?.Cancel();
+        _messageCancellation = new CancellationTokenSource();
 
         try {
             ShowErrorMessage(message);
 
-            await UniTask.Delay(TimeSpan.FromSeconds(tempMessageSeconds), cancellationToken: messageCancellation.Token);
+            await UniTask.Delay(TimeSpan.FromSeconds(tempMessageSeconds), cancellationToken: _messageCancellation.Token);
 
             HideErrorMessage();
         } catch (OperationCanceledException) {
@@ -115,16 +100,16 @@ public class SelectorView : MonoBehaviour {
     }
 
     private void ShowErrorMessage(string message) {
-        if (ErrorText != null) {
-            ErrorText.gameObject.SetActive(true);
-            ErrorText.text = $"<color=red>{message}</color>";
+        if (errorText != null) {
+            errorText.gameObject.SetActive(true);
+            errorText.text = $"<color=red>{message}</color>";
         }
     }
 
     public void HideErrorMessage() {
-        messageCancellation?.Cancel();
-        if (ErrorText != null) {
-            ErrorText.gameObject.SetActive(false);
+        _messageCancellation?.Cancel();
+        if (errorText != null) {
+            errorText.gameObject.SetActive(false);
         }
     }
 
@@ -149,14 +134,18 @@ public class SelectorView : MonoBehaviour {
     }
 
     public ITargetingVisualization CreateArrowTargeting(TargetSelectionRequest request) {
-        arrowTargeting.Initialize(request);
+        arrowTargeting.Initialize();
         return arrowTargeting;
     }
     #endregion
 
     private void OnDestroy() {
         boardInputs.LeftClick.canceled -= OnLeftClickUp;
-        messageCancellation?.Cancel();
-        messageCancellation?.Dispose();
+        _messageCancellation?.Cancel();
+        _messageCancellation?.Dispose();
+    }
+
+    public void UpdateHoverStatus(TargetValidationState state) {
+        _currentVisualization?.UpdateHoverStatus(state);
     }
 }

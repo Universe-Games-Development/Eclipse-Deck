@@ -19,7 +19,7 @@ public class BoardManager : MonoBehaviour
 
         Board board = SetupInitialBoard();
         BoardPresenter boardPresenter = presenterFactory.CreatePresenter<BoardPresenter>(board, boardView);
-        //boardPresenter.CreateBoard();
+        boardPresenter.CreateBoard();
 
         boardPresenter.AssignArea(0, 0, zonePresenter.Zone);
     }

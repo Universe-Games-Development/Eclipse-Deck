@@ -4,7 +4,20 @@ using System.Linq;
 using UnityEngine;
 using Zenject;
 
-public class ZonePresenter : UnitPresenter, IDisposable {
+public class AreaPresenter : InteractablePresenter {
+    Action<Vector3> OnContentSizeChanged;
+    public AreaView AreaView;
+    public AreaPresenter(UnitModel model, AreaView view) : base(model, view) {
+        AreaView = view;
+    }
+
+    public void ChangeSize(Vector3 size) {
+        AreaView.SetSize(size);
+        OnContentSizeChanged?.Invoke(size);
+    }
+}
+
+public class ZonePresenter : AreaPresenter, IDisposable {
     public Zone Zone;
     public ZoneView ZoneView;
 
@@ -25,7 +38,8 @@ public class ZonePresenter : UnitPresenter, IDisposable {
 
     private void InitializeVisuals() {
         ZoneView.ChangeColor(Zone.OwnerId != null ? Color.green : Color.black);
-        ZoneView.UpdateSize(Zone.MaxCreatures);
+        Vector3 newSize = ZoneView.CalculateSize(Zone.MaxCreatures);
+        ZoneView.SetSize(newSize);
     }
 
     private void TryRemoveCreatureDebug() {
@@ -52,7 +66,8 @@ public class ZonePresenter : UnitPresenter, IDisposable {
         _visualManager.Push(rearrangeTask);
     }
 
-    public void Dispose() {
+    public override void Dispose() {
+        base.Dispose();
         ZoneView.OnRemoveDebugRequest -= TryRemoveCreatureDebug;
         Zone.OnCreaturePlaced -= HandleCreaturePlacement;
         Zone.OnCreatureRemoved -= HandleCreatureRemove;

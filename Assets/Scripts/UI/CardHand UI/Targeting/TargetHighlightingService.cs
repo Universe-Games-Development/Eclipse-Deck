@@ -7,7 +7,7 @@ public class TargetHighlightingService : MonoBehaviour {
 
     [Inject] private IUnitRegistry unitRegistry;
 
-    private HashSet<UnitPresenter> highlightedUnits = new HashSet<UnitPresenter>();
+    private HashSet<InteractablePresenter> highlightedUnits = new();
     private float lastUpdateTime;
 
     private void OnEnable() {
@@ -39,7 +39,7 @@ public class TargetHighlightingService : MonoBehaviour {
     public void HighlightUnit(UnitModel unit, bool isEnabled) {
         if (unit == null) return;
 
-        UnitPresenter presenter = unitRegistry.GetPresenterByModel(unit);
+        InteractablePresenter presenter = (InteractablePresenter) unitRegistry.GetPresenterByModel(unit);
         highlightedUnits.Add(presenter);
 
         // Викликаємо метод Highlight у юніта (якщо потрібно)

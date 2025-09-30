@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Zenject;
 
 
@@ -51,5 +52,9 @@ public class Zone : AreaModel, IDisposable {
 
     public void Dispose() {
         eventBus.UnsubscribeFrom<DeathEvent>(OnDeath);
+    }
+
+    public ValidationResult Contains(Creature creature) {
+        return Creatures.Contains(creature);
     }
 }

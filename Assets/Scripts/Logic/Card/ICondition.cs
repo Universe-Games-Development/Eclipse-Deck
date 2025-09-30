@@ -28,7 +28,6 @@ public class AndCondition : ICondition {
         return ValidationResult.Success;
     }
 }
-
 public class OrCondition : ICondition {
     private readonly ICondition[] _conditions;
 
@@ -44,7 +43,6 @@ public class OrCondition : ICondition {
         return ValidationResult.Error($"None of conditions met: {string.Join(", ", errors)}");
     }
 }
-
 public class NotCondition : ICondition {
     private readonly ICondition _condition;
 
@@ -106,5 +104,20 @@ public class AliveCondition : Condition<IHealthable> {
             return ValidationResult.Error($"Target must have alive");
         }
         return ValidationResult.Success;
+    }
+}
+
+public class ZoneCondition : Condition<Creature> {
+    Zone zone;
+
+    public ZoneCondition(Zone requiredZone) {
+        zone = requiredZone;
+    }
+
+    protected override ValidationResult CheckCondition(Creature creature, ValidationContext context) {
+        bool creatureZone = zone.Contains(creature);
+        return creatureZone
+            ? ValidationResult.Success
+            : ValidationResult.Error($"Creature must be in {zone}");
     }
 }

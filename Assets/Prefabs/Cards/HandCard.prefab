@@ -1087,7 +1087,6 @@ GameObject:
   - component: {fileID: 6672949540244191898}
   - component: {fileID: 6585816273941797280}
   - component: {fileID: 6497592486819746803}
-  - component: {fileID: 7332583862399396814}
   m_Layer: 10
   m_Name: HandCard
   m_TagString: Untagged
@@ -1183,27 +1182,6 @@ MonoBehaviour:
   clickScaleDown: 0.95
   clickDuration: 0.1
   clickReturnDuration: 0.15
---- !u!65 &7332583862399396814
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5035915735796379205}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2, y: 0.00000040133926, z: 3}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6313086339661605621
 GameObject:
   m_ObjectHideFlags: 0
@@ -1616,6 +1594,8 @@ GameObject:
   - component: {fileID: 774595804304376183}
   - component: {fileID: 7788813463689524630}
   - component: {fileID: 4262755044960005542}
+  - component: {fileID: 6134465111568594004}
+  - component: {fileID: 4113676349283174809}
   m_Layer: 10
   m_Name: Card
   m_TagString: Untagged
@@ -1708,6 +1688,43 @@ MonoBehaviour:
   _defaultDuration: 1
   _defaultEase: 6
   _useRelativeRotation: 0
+--- !u!114 &6134465111568594004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7949405105004948762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91bb716d6d12f1549a503b941469ddd2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _unitView: {fileID: 7219568571880624990}
+  _isInteractable: 1
+  _enableClick: 1
+  _enableHover: 1
+--- !u!65 &4113676349283174809
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7949405105004948762}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 0.00000040133926, z: 3}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &8119016821773592373
 GameObject:
   m_ObjectHideFlags: 0

@@ -29,7 +29,8 @@ public class ZoneView : AreaView {
     [SerializeField] float updateDelay = 1f;
     private float updateTimer;
 
-    private void Awake() {
+    protected override void Awake() {
+        base.Awake();
         InitializeLayout();
         SetupUI();
     }
@@ -38,7 +39,7 @@ public class ZoneView : AreaView {
         if (doTestUpdate) {
             updateTimer += Time.deltaTime;
             if (updateTimer > updateDelay) {
-                UpdateSize(CreatureViews.Count);
+                CalculateSize(CreatureViews.Count);
                 updateTimer = 0f;
             }
         }
@@ -62,7 +63,7 @@ public class ZoneView : AreaView {
         }
     }
 
-    // НОВЕ: Додавання істоти до зони
+    #region Cereatures
     public void AddCreatureView(CreatureView creatureView) {
         if (creatureView == null) return;
 
@@ -72,7 +73,6 @@ public class ZoneView : AreaView {
         UpdateVisualState();
     }
 
-    // НОВЕ: Видалення істоти з зони
     public void RemoveCreatureView(CreatureView creatureView) {
         if (creatureView == null) return;
 
@@ -81,7 +81,6 @@ public class ZoneView : AreaView {
         UpdateVisualState();
     }
 
-    // НОВЕ: Переміщення всіх істот на нові позиції
     public async UniTask RearrangeCreatures(float duration = 0.5f) {
         var positions = GetCreaturePoints(_creatureViews.Count);
         var tasks = new List<UniTask>();
@@ -101,8 +100,7 @@ public class ZoneView : AreaView {
 
         await UniTask.WhenAll(tasks);
     }
-
-    // НОВЕ: Оновлення візуального стану
+    
     private void UpdateVisualState() {
         UpdateSummonedCount(_creatureViews.Count);
     }
@@ -112,7 +110,7 @@ public class ZoneView : AreaView {
             text.text = $"Units: {count}";
         }
     }
-
+    
     public List<LayoutPoint> GetCreaturePoints(int count) {
         LayoutResult layoutResult = _layout.CalculateLayout(count);
         var transformedPoints = new List<LayoutPoint>();
@@ -124,8 +122,9 @@ public class ZoneView : AreaView {
 
         return transformedPoints;
     }
+    #endregion
 
-    public Vector3 UpdateSize(int creaturesCapacity) {
+    public Vector3 CalculateSize(int creaturesCapacity) {
         float areaWidth = settings.ItemWidth;
         float areaLength = settings.ItemLength;
 
@@ -137,8 +136,7 @@ public class ZoneView : AreaView {
 
         Vector3 localScale = transform.localScale;
         Vector3 newScale = new Vector3(totalWidth, localScale.y, totalLength) + additionalOffset;
-        SetScale(newScale);
-
+       
         return newScale;
     }
 

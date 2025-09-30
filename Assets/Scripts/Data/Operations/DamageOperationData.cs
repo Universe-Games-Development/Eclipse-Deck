@@ -14,8 +14,7 @@ public class DamageOperation : GameOperation {
     public DamageOperation(DamageOperationData data) {
         this.data = data;
 
-        // Тепер можемо вказати точний тип!
-        AddTarget(TargetKey, TargetRequirements.EnemyHealthable);
+        AddTarget(new TargetInfo(TargetKey, TargetRequirements.EnemyHealthable));
     }
 
     public override async UniTask<bool> Execute() {
