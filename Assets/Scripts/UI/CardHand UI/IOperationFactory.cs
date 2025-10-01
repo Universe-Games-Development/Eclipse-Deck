@@ -7,7 +7,7 @@ using Zenject;
 public interface IOperationFactory {
     bool CanCreate(Type dataType);
     TOperation Create<TOperation>(params object[] args) where TOperation : GameOperation;
-    GameOperation Create(OperationData data);
+    GameOperation Create(OperationData data, UnitModel source);
 }
 
 public class OperationFactory : IOperationFactory {
@@ -60,7 +60,7 @@ public class OperationFactory : IOperationFactory {
         return _dataToOperationMap.ContainsKey(dataType);
     }
 
-    public GameOperation Create(OperationData data) {
+    public GameOperation Create(OperationData data, UnitModel source) {
         if (data == null) throw new ArgumentNullException(nameof(data));
 
         var dataType = data.GetType();
@@ -68,7 +68,7 @@ public class OperationFactory : IOperationFactory {
             throw new InvalidOperationException($"No operation registered for {dataType.Name}");
         }
 
-        return (GameOperation)_container.Instantiate(operationType, new object[] { data });
+        return (GameOperation)_container.Instantiate(operationType, new object[] { data, source});
     }
 
     public TOperation Create<TOperation>(params object[] args) where TOperation : GameOperation {

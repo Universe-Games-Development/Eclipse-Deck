@@ -1,54 +1,12 @@
-using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
+[CreateAssetMenu(fileName = "OperationData", menuName = "Operations/Default")]
 public class OperationData : ScriptableObject {
+    [SerializeReference] public List<RequirementData> requirements = new();
+    [SerializeReference] public VisualData visualData;
 }
 
+public class GlobalConditionData : ScriptableObject {
 
-
-public interface IGameAnimation {
-    UniTask<bool> LoadResources();
-    UniTask PlayAnimation();
-    void SkipAnimation();
-}
-
-public class FireballAnimation : IGameAnimation {
-    private string prefabAddress;
-    private Transform target;
-    private Fireball fireballPrefab;
-
-    public FireballAnimation(string prefabAddress, Transform target) {
-        this.prefabAddress = prefabAddress;
-        this.target = target;
-    }
-
-    public async UniTask<bool> LoadResources() {
-        try {
-            var handle = Addressables.LoadAssetAsync<Fireball>(prefabAddress);
-            fireballPrefab = await handle.Task;
-            return fireballPrefab != null;
-        } catch {
-            return false;
-        }
-    }
-
-    public async UniTask PlayAnimation() {
-        if (fireballPrefab == null) {
-            SkipAnimation();
-            return;
-        }
-
-        // Создаем и запускаем файрбол
-        var fireball = Object.Instantiate(fireballPrefab);
-        var fireballComponent = fireball.GetComponent<Fireball>();
-
-        // Просто ждем завершения полета файрбола
-        await fireballComponent.LaunchToTarget(target.transform);
-    }
-
-    public void SkipAnimation() {
-        // При пропуске анимации ничего особенного не делаем
-        // Логика уже выполнена, следующая анимация в очереди покажет результат
-    }
 }

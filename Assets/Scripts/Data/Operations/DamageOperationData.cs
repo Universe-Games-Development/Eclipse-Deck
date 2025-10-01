@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using static Unity.VisualScripting.Member;
 
 public class DamageOperationData : OperationData {
     public int damage = 6;
@@ -11,10 +12,10 @@ public class DamageOperation : GameOperation {
     private const string TargetKey = "target";
     private readonly DamageOperationData data;
 
-    public DamageOperation(DamageOperationData data) {
+    public DamageOperation(UnitModel source, DamageOperationData data) : base(source) {
         this.data = data;
 
-        AddTarget(new TargetInfo(TargetKey, TargetRequirements.EnemyHealthable));
+        AddTarget(new TargetInfo(TargetKey, TargetRequirements.EnemyCreature));
     }
 
     public override async UniTask<bool> Execute() {

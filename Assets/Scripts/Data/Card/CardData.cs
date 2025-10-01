@@ -37,6 +37,9 @@ public abstract class CardData : ScriptableObject {
 
         // Оновлюємо дані рідкості через утиліту
         UpdateRarityData();
+
+        operationsData.RemoveAll(op => op == null);
+
     }
 
     private void UpdateRarityData() {

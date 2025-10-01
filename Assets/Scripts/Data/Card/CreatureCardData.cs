@@ -11,18 +11,23 @@ public class CreatureCardData : CardData {
     public int Health;
 
     [Header("Operation Template")]
-    [SerializeField] private SummonOperationData _summonOperationTemplate;
+    [SerializeField] private OperationData _summonOperationTemplate;
 
     public void OnValidate() {
-        // Знаходимо шаблон за замовчуванням, якщо не вказано
-        if (_summonOperationTemplate == null) {
-            _summonOperationTemplate = Resources.Load<SummonOperationData>("OperationTemplates/DefaultSummonOperation");
-        }
-
-        var summonOperation = operationsData
+        SummonOperationData summonOperation = operationsData
             .Find(op => op is SummonOperationData) as SummonOperationData;
 
         if (summonOperation == null) {
+            // Знаходимо шаблон за замовчуванням, якщо не вказано
+            if (_summonOperationTemplate == null) {
+                _summonOperationTemplate = Resources.Load<OperationData>("OperationTemplates/SummonOperationData");
+            }
+
+            if (_summonOperationTemplate == null) {
+                Debug.LogWarning("Failed to create spawnOperation");
+                return;
+            }
+
             operationsData.Add(_summonOperationTemplate);
         }
 

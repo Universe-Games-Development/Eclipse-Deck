@@ -135,16 +135,6 @@ public class CardPlaySession : IDisposable {
             return ValidationResult.Invalid($"Card {_card.Data?.Name} has no operations");
         }
 
-        // Перевірка всіх операцій за один прохід
-        var invalidOperations = _operations
-            .Select((op, index) => new { Operation = op, Index = index })
-            .Where(x => !_operationFactory.CanCreate(x.Operation.GetType()))
-            .ToList();
-
-        if (invalidOperations.Any()) {
-            var invalidIndices = string.Join(", ", invalidOperations.Select(x => x.Index));
-            return ValidationResult.Invalid($"Invalid operations at indices: {invalidIndices}");
-        }
 
         return ValidationResult.Valid();
     }
@@ -158,7 +148,8 @@ public class CardPlaySession : IDisposable {
         try {
             await WaitForOperationManagerAsync(token);
 
-            var operation = CreateAndConfigureOperation(operationData);
+            
+            var operation = _operationFactory.Create(operationData, _card);
             return await ExecuteOperationAsync(operation, token);
 
         } catch (OperationCanceledException) {
@@ -171,11 +162,6 @@ public class CardPlaySession : IDisposable {
         }
     }
 
-    private GameOperation CreateAndConfigureOperation(OperationData operationData) {
-        var operation = _operationFactory.Create(operationData);
-        operation.SetSource(_card);
-        return operation;
-    }
 
     private async UniTask WaitForOperationManagerAsync(CancellationToken token) {
         // Чекаємо поки менеджер операцій не звільниться

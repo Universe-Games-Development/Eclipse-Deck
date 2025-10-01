@@ -7,6 +7,7 @@ public abstract class InteractablePresenter : UnitPresenter, IDisposable {
     InteractableView view;
     protected InteractablePresenter(UnitModel model, InteractableView view)
         : base(model, view) {
+        this.view = view;
         view.OnClicked += OnClicked;
         view.OnHoverChanged += OnHoverChanged;
         SetInteractable(true);
@@ -24,6 +25,7 @@ public abstract class InteractablePresenter : UnitPresenter, IDisposable {
 
     public void SetInteractable(bool isEnabled) {
         IsInteractable = isEnabled;
+        view.SetInteractable(isEnabled);
     }
 
     public virtual void Dispose() {

@@ -74,24 +74,24 @@ public class Mana : Attribute {
 }
 
 public struct OnManaEmpty : IEvent {
-    public IMannable Owner { get; }
-    public OnManaEmpty(IMannable owner) {
+    public IManaSystem Owner { get; }
+    public OnManaEmpty(IManaSystem owner) {
         Owner = owner;
     }
 }
 
 public struct ManaSpentEvent : IEvent {
-    public IMannable Owner { get; }
+    public IManaSystem Owner { get; }
     public int Amount { get; }
-    public ManaSpentEvent(IMannable owner, int amount) {
+    public ManaSpentEvent(IManaSystem owner, int amount) {
         Owner = owner;
         Amount = amount;
     }
 }
 
 public struct OnManaRestored : IEvent {
-    public IMannable Owner { get; }
-    public OnManaRestored(IMannable owner) {
+    public IManaSystem Owner { get; }
+    public OnManaRestored(IManaSystem owner) {
         Owner = owner;
     }
 }

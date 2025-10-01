@@ -1,6 +1,6 @@
 using System;
 
-public class Opponent : UnitModel, IHealthable, IMannable {
+public class Opponent : UnitModel, IHealthable, IManaSystem {
     public override string OwnerId {
         get { return Id; }
     }

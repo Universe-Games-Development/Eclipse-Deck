@@ -11,8 +11,12 @@ public abstract class GameOperation : IExecutableTask {
     private readonly Dictionary<string, object> filledTargets = new();
     private readonly List<TargetInfo> targetInfos = new();
 
+    protected GameOperation(UnitModel source) {
+        Source = source;
+    }
+
     public bool IsMandatory { get; set; }
-    public UnitModel Source { get; set; }
+    public UnitModel Source { get; private set; }
 
     public abstract UniTask<bool> Execute();
 

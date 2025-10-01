@@ -6713,7 +6713,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selectionPromptText: {fileID: 553086737}
-  errorText: {fileID: 0}
+  errorText: {fileID: 1647388438}
   tempMessageSeconds: 1
   targetLayerMask:
     serializedVersion: 2

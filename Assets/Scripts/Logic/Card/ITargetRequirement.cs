@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 public readonly struct ValidationResult {
     public bool IsValid { get; }
@@ -17,7 +18,6 @@ public readonly struct ValidationResult {
 
 public interface ITargetRequirement {
     TargetSelector RequiredSelector { get; }
-    ValidationResult CheckType(object selected);
     ValidationResult IsValid(object selected, ValidationContext context = null);
 }
 
@@ -34,21 +34,29 @@ public class ValidationContext {
 }
 
 public class TargetRequirement<T> : ITargetRequirement {
-    private List<ICondition> _conditions = new();
-    public IReadOnlyList<ICondition> Conditions => _conditions;
+    private List<ITargetCondition<T>> _targetConditions = new();
+    private List<ICondition> _simpleConditions = new();
+
     public TargetSelector RequiredSelector { get; protected set; }
     public bool AllowSameTargetMultipleTimes { get; set; } = false;
 
-    public TargetRequirement(params ICondition[] conditions) {
+    public TargetRequirement(params ITargetCondition<T>[] conditions) {
         if (conditions != null) {
-            _conditions.AddRange(conditions);
+            _targetConditions.AddRange(conditions);
         }
         RequiredSelector = TargetSelector.Initiator;
     }
 
+    public TargetRequirement<T> AddTargetCondition(ITargetCondition<T> condition) {
+        if (condition != null) {
+            _targetConditions.Add(condition);
+        }
+        return this;
+    }
+
     public TargetRequirement<T> AddCondition(ICondition condition) {
         if (condition != null) {
-            _conditions.Add(condition);
+            _simpleConditions.Add(condition);
         }
         return this;
     }
@@ -58,29 +66,27 @@ public class TargetRequirement<T> : ITargetRequirement {
         return this;
     }
 
-    public ValidationResult CheckType(object selected) {
-        if (selected == null) {
-            return ValidationResult.Error($"Nothing was selected");
-        }
-
-        if (selected is T typedSelected) {
-            return ValidationResult.Success;
-        }
-        return ValidationResult.Error($"Expected {typeof(T).Name}, got {selected?.GetType().Name}");
-    }
 
     public ValidationResult IsValid(object selected, ValidationContext context = null) {
-        ValidationResult typeValidation = CheckType(selected);
-        if (!typeValidation) {
-            return typeValidation;
+        if (selected == null) {
+            return ValidationResult.Error("Nothing was selected");
         }
 
-        foreach (var condition in _conditions) {
-            var result = condition.Validate(selected, context);
-            if (!result.IsValid) {
-                return result;
-            }
+        if (!(selected is T casted)) {
+            return ValidationResult.Error($"Expected {typeof(T).Name}, got {selected.GetType().Name}");
         }
+
+        foreach (var condition in _simpleConditions) {
+            var result = condition.Validate(context);
+            if (!result.IsValid) return result;
+        }
+
+
+        foreach (var condition in _targetConditions) {
+            var result = condition.Validate(casted, context);
+            if (!result.IsValid) return result;
+        }
+
         return ValidationResult.Success;
     }
 }
@@ -97,26 +103,10 @@ public class CompositeTargetRequirement : ITargetRequirement {
         RequiredSelector = TargetSelector.Initiator;
     }
 
-    public ValidationResult CheckType(object selected) {
-        if (_compositeType == CompositeType.Or) {
-            foreach (var req in _requirements) {
-                if (req.CheckType(selected))
-                    return ValidationResult.Success;
-            }
-            return ValidationResult.Error("Type mismatch for all requirements");
-        }
-
-        foreach (var req in _requirements) {
-            var result = req.CheckType(selected);
-            if (!result) return result;
-        }
-        return ValidationResult.Success;
-    }
-
     public ValidationResult IsValid(object selected, ValidationContext context = null) {
         if (_compositeType == CompositeType.Or) {
             foreach (var req in _requirements) {
-                if (req.CheckType(selected) && req.IsValid(selected, context))
+                if (req.IsValid(selected, context))
                     return ValidationResult.Success;
             }
             return ValidationResult.Error("No valid requirement met");
@@ -143,19 +133,29 @@ public static class CompositeRequirementExtensions {
     }
 }
 public class RequirementBuilder<T> {
-    private readonly List<ICondition> _conditions = new();
+    private readonly List<ITargetCondition<T>> _targetConditions = new();
+    private readonly List<ICondition> _globalConditions = new();
     private TargetSelector _selector = TargetSelector.Initiator;
-    private ITargetInstruction _instruction;
 
-    public RequirementBuilder<T> WithOwnership(OwnershipType type) {
-        _conditions.Add(new OwnershipCondition(type));
+    // ✅ Compile-time перевірка типів
+    public RequirementBuilder<T> WithTargetCondition(ITargetCondition<T> condition) {
+        _targetConditions.Add(condition);
         return this;
     }
 
+    public RequirementBuilder<T> WithGlobalCondition(ICondition condition) {
+        _globalConditions.Add(condition);
+        return this;
+    }
+
+    // Для зручності - автоматично визначає тип умови
+    public RequirementBuilder<T> WithCondition(ITargetCondition<T> condition) {
+        return WithTargetCondition(condition);
+    }
     public RequirementBuilder<T> WithCondition(ICondition condition) {
-        _conditions.Add(condition);
-        return this;
+        return WithGlobalCondition(condition);
     }
+
 
     public RequirementBuilder<T> WithSelector(TargetSelector selector) {
         _selector = selector;
@@ -163,43 +163,49 @@ public class RequirementBuilder<T> {
     }
 
     public TargetRequirement<T> Build() {
-        var requirement = new TargetRequirement<T>(_conditions.ToArray());
+        var requirement = new TargetRequirement<T>();
         requirement.WithSelector(_selector);
+
+        foreach (var condition in _targetConditions)
+            requirement.AddTargetCondition(condition);
+
+        foreach (var condition in _globalConditions)
+            requirement.AddCondition(condition);
+
         return requirement;
     }
+
+    
 }
 
 public static class TargetRequirements {
     private static readonly TargetRequirement<Creature> _enemyCreature =
         new RequirementBuilder<Creature>()
-            .WithOwnership(OwnershipType.Enemy)
+            .WithCondition(new OwnershipCondition(OwnershipType.Enemy))
             .WithCondition(new AliveCondition())
             .Build();
+
     private static readonly TargetRequirement<Creature> _allyCreature =
         new RequirementBuilder<Creature>()
-            .WithOwnership(OwnershipType.Enemy)
+            .WithCondition(new OwnershipCondition(OwnershipType.Enemy))
             .WithCondition(new AliveCondition())
             .Build();
 
     private static readonly TargetRequirement<Creature> _anyCreature =
         new RequirementBuilder<Creature>()
             .WithCondition(new AliveCondition())
-            .WithOwnership(OwnershipType.Any)
+            .WithCondition(new OwnershipCondition(OwnershipType.Enemy))
             .Build();
 
     private static readonly TargetRequirement<Zone> _allyPlace =
         new RequirementBuilder<Zone>()
-            .WithOwnership(OwnershipType.Ally)
+            .WithCondition(new OwnershipCondition(OwnershipType.Ally))
             .Build();
 
     private static readonly TargetRequirement<Zone> _enemyPlace =
         new RequirementBuilder<Zone>()
-            .WithOwnership(OwnershipType.Enemy)
+            .WithCondition(new OwnershipCondition(OwnershipType.Enemy))
             .Build();
-    private static readonly TargetRequirement<IHealthable> _enemyHealthable =
-       new RequirementBuilder<IHealthable>()
-           .WithOwnership(OwnershipType.Enemy)
-           .Build();
 
     public static TargetRequirement<Creature> EnemyCreature => _enemyCreature;
 
@@ -210,6 +216,4 @@ public static class TargetRequirements {
     public static TargetRequirement<Zone> AllyPlace = _allyPlace;
 
     public static TargetRequirement<Zone> EnemyPlace = _enemyPlace;
-
-    public static TargetRequirement<IHealthable> EnemyHealthable = _enemyHealthable;
 }

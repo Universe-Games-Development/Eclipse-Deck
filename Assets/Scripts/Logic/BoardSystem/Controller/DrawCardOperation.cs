@@ -5,7 +5,7 @@ public class DrawCardOperation : GameOperation {
     private OpponentPresenter opponentPresetner;
     private int _drawAmount;
     private List<Card> drawnCards;
-    public DrawCardOperation(OpponentPresenter boardPlayer, int drawAmount = 1) {
+    public DrawCardOperation(UnitModel source, OpponentPresenter boardPlayer, int drawAmount = 1) : base (source) {
         opponentPresetner = boardPlayer;
         _drawAmount = drawAmount;
     }

@@ -14,7 +14,7 @@ public class SummonCreatureOperation : GameOperation {
     private readonly ITargetFiller targetFiller;
     [Inject] IOperationFactory operationFactory;
 
-    public SummonCreatureOperation(SummonOperationData data, IEntityFactory entityFactory, ITargetFiller targetFiller) {
+    public SummonCreatureOperation(UnitModel source, SummonOperationData data, IEntityFactory entityFactory, ITargetFiller targetFiller) : base (source) {
         _data = data;
         this.entityFactory = entityFactory;
         this.targetFiller = targetFiller;
@@ -34,7 +34,7 @@ public class SummonCreatureOperation : GameOperation {
         }
 
         if (zone.IsFull()) {
-            SacrificeCreatureOperation sacrificeCreatureOperation = operationFactory.Create<SacrificeCreatureOperation>();
+            SacrificeCreatureOperation sacrificeCreatureOperation = operationFactory.Create<SacrificeCreatureOperation>(Source);
             TargetInfo targetInfo = sacrificeCreatureOperation.GetTargets().First();
             // if received null return false
             TargetFillResult targetFillResult = await targetFiller.TryFillTargetAsync(targetInfo, Source, false);
@@ -55,7 +55,7 @@ public class SummonCreatureOperation : GameOperation {
         // 2. Створюємо візуальну задачу
 
         var summonTask = visualTaskFactory.Create<SummonFromCardVisualTask>(
-            _creature, _data.visualTemplate
+            _creature, _data.visualData
         );
 
         visualManager.Push(summonTask);
@@ -194,7 +194,7 @@ public class SacrificeOperationData : OperationData {
 
 public class SacrificeCreatureOperation : GameOperation {
     private const string TargetCreatureKey = "targetCreature";
-    public SacrificeCreatureOperation(Zone zone = null) {
+    public SacrificeCreatureOperation(UnitModel source, Zone zone = null) : base (source) {
         TargetRequirement<Creature> targetRequirement;
         if (zone != null) {
             targetRequirement = new RequirementBuilder<Creature>()

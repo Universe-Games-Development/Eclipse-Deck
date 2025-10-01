@@ -46,7 +46,7 @@ public abstract class InteractiveUnitInputProviderBase : UnitInputProviderBase {
     [SerializeField] private bool _isInteractable = true;
     [SerializeField] private bool _enableClick = true;
     [SerializeField] private bool _enableHover = true;
-    private bool _hasCollider;
+    protected bool _hasCollider;
 
     public event Action OnClicked {
         add => _onClicked += value;
@@ -65,12 +65,7 @@ public abstract class InteractiveUnitInputProviderBase : UnitInputProviderBase {
 
     protected override void Awake() {
         base.Awake();
-        CheckColliderExistence();
-    }
-
-    private void CheckColliderExistence() {
-        _hasCollider = TryGetComponent<Collider2D>(out _) || TryGetComponent<Collider>(out _);
-
+        _hasCollider = InitializeCollider();
         if (!_hasCollider) {
             Debug.LogWarning($"No collider found on {gameObject.name}. Input will not work.");
         }
@@ -88,14 +83,8 @@ public abstract class InteractiveUnitInputProviderBase : UnitInputProviderBase {
         OnInteractableStateChanged(interactable);
     }
 
-    protected virtual void UpdateColliderState(bool enabled) {
-        if (TryGetComponent<Collider2D>(out var collider2D)) {
-            collider2D.enabled = enabled;
-        }
-        if (TryGetComponent<Collider>(out var collider3D)) {
-            collider3D.enabled = enabled;
-        }
-    }
+    protected abstract void UpdateColliderState(bool enabled);
+    protected abstract bool InitializeCollider();
 
     protected virtual void OnInteractableStateChanged(bool isInteractable) {
         // Для похідних класів
