@@ -8,7 +8,7 @@ using UnityEngine.UI;
 using Zenject;
 
 public class ZoneView : AreaView {
-    [SerializeField] private TextMeshPro text;
+    [SerializeField] private TextMeshProUGUI text;
     [SerializeField] private Transform _creaturesContainer;
     [SerializeField] private Renderer zoneRenderer;
     [SerializeField] private Color unAssignedColor;
@@ -147,3 +147,4 @@ public class ZoneView : AreaView {
         zoneRenderer.material.color = color;
     }
 }
+

@@ -5,50 +5,64 @@ using UnityEngine;
 /// <summary>
 /// Manages individual cell's logic and visual representation
 /// </summary>
-public class CellPresenter : UnitPresenter, IDisposable {
+public class CellPresenter : IDisposable {
     public Cell Cell;
     public Cell3DView CellView;
-    
-    public event Action<CellPresenter, Vector3> OnCellSizeChanged;
 
-    private AreaView _areaObjectView;
+    public Vector3 ContentSize { get; private set; }
+
+    public event Action<CellPresenter, Vector3> OnContentSizeChanged;
+
+    private AreaPresenter areaPresenter;
 
     [Inject] IUnitRegistry unitRegistry;
+    public Action<Vector3> OnSizeChanged;
 
-    public CellPresenter(Cell model, Cell3DView view) : base(model, view) {
+    public CellPresenter(Cell model, Cell3DView view) {
         Cell = model;
         CellView = view;
 
-        Cell.OnUnitAssigned += OnUnitAssigned;
-    }
+        ContentSize = view.GetCurrentSize();
 
-    private void OnUnitAssigned(Cell cell, UnitModel newUnit) {
+        Cell.OnUnitChanged += OnUnitAssigned;
+    }
+    
+    private void OnUnitAssigned(UnitModel newUnit) {
         // Очищуємо старий презентер
-        if (_areaObjectView != null) {
-            _areaObjectView.OnSizeChanged -= OnAreaSizeChanged;
+        if (areaPresenter != null) {
+            areaPresenter.OnSizeChanged -= HandleContentSizeChanged;
         }
 
         // Створюємо новий презентер
-        UnitPresenter unitPresenter = unitRegistry.GetPresenterByModel(newUnit);
-        _areaObjectView = unitRegistry.GetView<Cell3DView>(unitPresenter);
-
-        _areaObjectView.transform.position = CellView.transform.position;
-
-        if (_areaObjectView != null) {
-            _areaObjectView.OnSizeChanged += OnAreaSizeChanged;
-            OnAreaSizeChanged(_areaObjectView.GetCurrentSize());
+        areaPresenter = unitRegistry.GetPresenter<AreaPresenter>(newUnit);
+        if (areaPresenter == null) {
+            Debug.LogWarning($"Failed to get presenter for : {newUnit}");
+            return;
         }
+
+        UnitView view = areaPresenter.View;
+        view.transform.position = CellView.transform.position;
+        view.transform.SetParent(CellView.transform);
+
+        areaPresenter.OnSizeChanged += HandleContentSizeChanged;
+        HandleContentSizeChanged(areaPresenter.CurrentSize);
     }
 
-    private void OnAreaSizeChanged(Vector3 newSize) {
+    private void HandleContentSizeChanged(Vector3 newSize) {
         if (CellView.GetCurrentSize() == newSize) return;
 
-        Vector3 offset = CellView.GetCellOffsets();
-        CellView.SetSize(newSize + offset);
-        OnCellSizeChanged?.Invoke(this, newSize);
+        OnContentSizeChanged?.Invoke(this, newSize);
+    }
+
+    public void ChangeSize(Vector3 size) {
+        CellView.SetSize(size);
+        OnSizeChanged?.Invoke(size);
     }
 
     public void Dispose() {
-        Cell.OnUnitAssigned -= OnUnitAssigned;
+        if (areaPresenter != null) {
+            areaPresenter.OnSizeChanged -= HandleContentSizeChanged;
+        }
+        Cell.OnUnitChanged -= OnUnitAssigned;
     }
 }

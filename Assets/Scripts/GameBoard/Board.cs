@@ -12,6 +12,8 @@ public class Board : UnitModel {
     public IReadOnlyList<Row> Rows => _rows.AsReadOnly();
     public int RowCount => _rows.Count;
 
+    public int ColumnCount => _rows.First().CellCount;
+
     public event EventHandler<ColumnRemovedEvent> ColumnRemoved;
     public event EventHandler<ColumnAddedEvent> ColumnAdded;
 

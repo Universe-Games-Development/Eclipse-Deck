@@ -5,15 +5,18 @@ using UnityEngine;
 using Zenject;
 
 public class AreaPresenter : InteractablePresenter {
-    Action<Vector3> OnContentSizeChanged;
+    public Action<Vector3> OnSizeChanged;
     public AreaView AreaView;
     public AreaPresenter(UnitModel model, AreaView view) : base(model, view) {
         AreaView = view;
     }
 
+    public Vector3 CurrentSize { get; private set; }
+
     public void ChangeSize(Vector3 size) {
         AreaView.SetSize(size);
-        OnContentSizeChanged?.Invoke(size);
+        CurrentSize = size;
+        OnSizeChanged?.Invoke(size);
     }
 }
 

@@ -5,6 +5,7 @@ using UnityEngine;
 // Logic in CellPresenter
 public class Cell3DView : AreaView {
     [SerializeField] Vector3 cellOffset;
+    
     public Vector3 GetCellOffsets() {
         return cellOffset;
     }

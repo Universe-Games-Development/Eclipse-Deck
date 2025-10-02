@@ -17,7 +17,7 @@ MonoBehaviour:
   _allowSameTargetMultipleTimes: 0
   _globalConditions: []
   _targetConditions:
-  - {fileID: 0}
+  - {fileID: 11400000, guid: c02944991a0ecc3429180f852c070c90, type: 2}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32,3 +32,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   requirements:
   - {fileID: -9011418888195132925}
+  visualData: {fileID: 0}

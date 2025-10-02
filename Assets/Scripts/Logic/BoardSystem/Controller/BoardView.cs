@@ -9,16 +9,20 @@ public class BoardView : UnitView {
     [SerializeField] private LayoutSettings layoutSettings;
     [SerializeField] private float layoutUpdateDelay = 0.1f;
     private ILayout3DHandler layout;
+
     private List<Cell3DView> currentCellViews = new();
     private int currentRowCount;
     private bool layoutUpdatePending = false;
+
     [SerializeField] CellFactory cellFactory;
 
     [SerializeField] bool doTestUpdate = false;
     [SerializeField] float updateDelay = 1f;
     private float updateTimer;
 
+    private Vector3 defaultCellSize = Vector3.one;
     protected void Awake() {
+        defaultCellSize = new Vector3(layoutSettings.ItemWidth, 1f, layoutSettings.ItemLength);
         Initialize();
     }
 
@@ -121,5 +125,7 @@ public class BoardView : UnitView {
         return cellFactory.CreateCell();
     }
 
-    
+    public Vector3 GetDefaultCellSize() {
+        return defaultCellSize;
+    }
 }

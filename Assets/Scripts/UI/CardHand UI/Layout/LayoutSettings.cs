@@ -9,13 +9,17 @@ public class LayoutSettings : ScriptableObject {
     public float ItemWidth = 1.0f;
     public float ItemLength = 1.4f;
 
+
     [Header ("Layout Settings")]
     public float DepthOffset = 0.0f;
     public float VerticalOffset = 0.01f;
-    public float ItemSpacing = 0.2f;
 
     public float PositionVariation = 0.00f;
 
+    [Min(0)]
+    public float ColumnSpacing = 0.2f;
+
+    [Min(0)]
     public float RowSpacing = 0.2f;
 
 

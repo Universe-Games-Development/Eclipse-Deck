@@ -24,9 +24,9 @@ MonoBehaviour:
   rarityColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   rarityDisplayName: "\u0417\u0432\u0438\u0447\u0430\u0439\u043D\u0430"
   operationsData:
-  - {fileID: 11400000, guid: 3b963328b35682f49b45b3d8db1927ea, type: 2}
+  - {fileID: 11400000, guid: dcec7792af869054e80b3ea5c09d0e79, type: 2}
   MAX_CARD_ATTACK: 100
   MAX_CARD_HEALTH: 100
   Attack: 5
   Health: 5
-  _summonOperationTemplate: {fileID: 11400000, guid: 3b963328b35682f49b45b3d8db1927ea, type: 2}
+  _summonOperationTemplate: {fileID: 11400000, guid: dcec7792af869054e80b3ea5c09d0e79, type: 2}

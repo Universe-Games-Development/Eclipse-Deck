@@ -92,7 +92,7 @@ public class Linear3DLayout : ILayout3DHandler {
                 TotalItems = 1,
                 RowsCount = 1,
                 ItemsPerRow = 1,
-                TotalWidth = _settings.ItemWidth + 2 * _settings.ItemSpacing,
+                TotalWidth = _settings.ItemWidth + 2 * _settings.ColumnSpacing,
                 TotalLength = _settings.ItemLength,
                 CompressionRatio = 1f,
                 HasOverlapping = false,
@@ -225,7 +225,7 @@ public class Linear3DLayout : ILayout3DHandler {
         }
 
         float minSpacing = _settings.ItemWidth * 0.05f;
-        float idealSpacing = _settings.ItemSpacing;
+        float idealSpacing = _settings.ColumnSpacing;
         float idealTotalWidth = (itemsInRow * _settings.ItemWidth) + ((itemsInRow - 1) * idealSpacing);
 
         // Ideal case

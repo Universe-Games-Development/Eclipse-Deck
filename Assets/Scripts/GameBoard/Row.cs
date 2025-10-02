@@ -36,11 +36,6 @@ public class Row {
 
         _cells.RemoveAt(cellIndex);
 
-        // Обновляем индексы оставшихся колонок
-        for (int i = cellIndex; i < _cells.Count; i++) {
-            _cells[i].UpdateCellIndex(i);
-        }
-
         return cell;
     }
 

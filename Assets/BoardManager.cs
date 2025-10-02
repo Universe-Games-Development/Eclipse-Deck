@@ -15,12 +15,12 @@ public class BoardManager : MonoBehaviour
     [SerializeField] int testZoneSize = 4;
 
     private void Start() {
-        ZonePresenter zonePresenter = SpawnTestZone();
-
         Board board = SetupInitialBoard();
         BoardPresenter boardPresenter = presenterFactory.CreatePresenter<BoardPresenter>(board, boardView);
         boardPresenter.CreateBoard();
 
+
+        ZonePresenter zonePresenter = SpawnTestZone();
         boardPresenter.AssignArea(0, 0, zonePresenter.Zone);
     }
 
