@@ -41,9 +41,9 @@ public class BoardSettingsData : ScriptableObject {
 
             int zonalColumns = CompassUtil.BelongsToGlobalDirection(dir, Direction.North) ? eastColumns : westColumns;
 
-            var grid = new List<GridRow>();
+            var grid = new List<GridRowValues>();
             for (int i = 0; i < meridianRows; i++) {
-                grid.Add(new GridRow { columnValues = new List<int>(Enumerable.Repeat(0, zonalColumns)) });
+                grid.Add(new GridRowValues { columnValues = new List<int>(Enumerable.Repeat(0, zonalColumns)) });
             }
 
             directionGrids.Add(new GridData { direction = dir, grid = grid });
@@ -104,12 +104,12 @@ public class BoardSettingsData : ScriptableObject {
     }
 
     private void ResizeGrid(GridData gridData, int targetRows, int targetColumns) {
-        List<GridRow> grid = gridData.grid;
+        List<GridRowValues> grid = gridData.grid;
 
         while (grid.Count < targetRows) {
             List<int> row = new List<int>(Enumerable.Repeat(0, targetColumns));
 
-            grid.Add(new GridRow { columnValues = row });
+            grid.Add(new GridRowValues { columnValues = row });
         }
         while (grid.Count > targetRows) {
             grid.RemoveAt(grid.Count - 1);
@@ -152,7 +152,7 @@ public class BoardSettingsData : ScriptableObject {
             int targetColumns = CompassUtil.BelongsToGlobalDirection(direction, Direction.North) ? eastColumns : westColumns;
 
             if (isAdding) {
-                gridData.grid.Add(new GridRow { columnValues = new List<int>(Enumerable.Repeat(0, targetColumns)) });
+                gridData.grid.Add(new GridRowValues { columnValues = new List<int>(Enumerable.Repeat(0, targetColumns)) });
             } else {
                 gridData.grid.RemoveAt(gridData.grid.Count - 1);
             }
@@ -210,7 +210,7 @@ public class BoardSettingsData : ScriptableObject {
         CorrectGridData();
     }
 
-    public void SetGrid(List<GridRow> grid, int value, bool doCorrectData = true) {
+    public void SetGrid(List<GridRowValues> grid, int value, bool doCorrectData = true) {
         foreach (var row in grid) {
             for (int j = 0; j < row.columnValues.Count; j++) {
                 row.columnValues[j] = value;
@@ -241,7 +241,7 @@ public class BoardSettingsData : ScriptableObject {
         }
     }
 
-    public void RandomizeGrid(List<GridRow> grid, bool doCorrectData = true) {
+    public void RandomizeGrid(List<GridRowValues> grid, bool doCorrectData = true) {
         foreach (var row in grid) {
             for (int j = 0; j < row.columnValues.Count; j++) {
                 row.columnValues[j] = Random.Range(0, 2);
@@ -338,12 +338,12 @@ public class BoardSettingsData : ScriptableObject {
 
 
 [System.Serializable]
-public class GridRow {
+public class GridRowValues {
     public List<int> columnValues;
 }
 
 [System.Serializable]
 public struct GridData {
     public Direction direction;
-    public List<GridRow> grid;
+    public List<GridRowValues> grid;
 }

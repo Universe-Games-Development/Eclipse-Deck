@@ -12,13 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e46ab4df47f4cc468bc39a57f6f5b73, type: 3}
   m_Name: ZoneLayoutSettings
   m_EditorClassIdentifier: 
-  MaxTotalWidth: 12
-  ItemWidth: 2
-  ItemLength: 3
+  MaxTotalWidth: 19.6
+  itemSizes: {x: 2, y: 1, z: 4}
   DepthOffset: 0
-  VerticalOffset: 0.01
-  ItemSpacing: 0.4
+  VerticalOffset: 0
   PositionVariation: 0
-  RowSpacing: 0.4
-  MaxRotationAngle: 15
-  RotationOffset: 1
+  ColumnSpacing: 0.54
+  RowSpacing: 0
+  MaxRotationAngle: 16.6
+  RotationOffset: 0.67
+  UseMinimalDimensions: 0
+  AlignByLargestInRow: 0
+  CompressPositionsByTotalWidth: 0

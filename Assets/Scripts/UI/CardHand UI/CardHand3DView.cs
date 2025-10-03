@@ -4,15 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-// Planned to add card rotation to face the player in the future
 public class CardHand3DView : CardHandView {
     [Header("Pool")]
     [SerializeField] private Transform cardsContainer;
     [SerializeField] private CardPool cardPool;
 
     private readonly Dictionary<CardView, LayoutPoint> cardLayoutData = new();
-
-    [SerializeField] LayoutSettings settings;
+    [SerializeField] public LayoutSettings settings;
     ILayout3DHandler layout;
 
     [SerializeField] protected float cardsOrganizeDuration = 0.2f;
@@ -31,8 +29,8 @@ public class CardHand3DView : CardHandView {
         if (cardPool == null)
             throw new UnassignedReferenceException(nameof(cardPool));
 
+        layout = new Grid3DLayout(settings);
         ClearContainer();
-        layout = new Linear3DLayout(settings);
     }
 
     #region Card View Management 
@@ -41,6 +39,7 @@ public class CardHand3DView : CardHandView {
             //card3DView.transform.SetParent(cardsContainer); pool already placed on this container but maybe be global?
             cardView.transform.position = cardsContainer.position + spawnOffset;
             cardView.transform.rotation = cardsContainer.rotation;
+            cardLayoutData.Add(cardView, default);
         }
     }
 
@@ -77,7 +76,7 @@ public class CardHand3DView : CardHandView {
 
 
         Transform target = card3DView.innerBody;
-        Vector3 hoverPosition = data.position + hoverOffset;
+        Vector3 hoverPosition = data.Position + hoverOffset;
         //Soon will rotate to face the player
         Vector3 targetRotation = Vector3.zero; // we align so player dont need to tilt his head
 
@@ -103,38 +102,44 @@ public class CardHand3DView : CardHandView {
 
         Sequence returnSequence = DOTween.Sequence();
         returnSequence.Join(target.DOLocalMove(Vector3.zero, cardHoverDuration));
-        returnSequence.Join(card3DView.transform.DOLocalRotate(data.rotation.eulerAngles, cardHoverDuration));
+        returnSequence.Join(card3DView.transform.DOLocalRotate(data.Rotation.eulerAngles, cardHoverDuration));
 
         card3DView.DoSequenceInner(returnSequence).Forget(); ;
     }
     #endregion
 
     #region Layout Poistioning
-    public override void UpdateCardPositions(List<CardView> cardViews) {
-        if (cardViews == null) return;
+    public override void UpdateCardPositions() {
+        ItemLayoutInfo[] items = new ItemLayoutInfo[cardLayoutData.Count];
+        List<CardView> cardViews = cardLayoutData.Keys.ToList();
 
-        var result = layout.CalculateLayout(cardViews.Count);
+        for (int i = 0; i < cardViews.Count; i++) {
+            items[i] = new ItemLayoutInfo($"{cardViews[i].name}_i", settings.itemSizes);
+        }
+
+        var result = layout.Calculate(items);
+
         var points = result.Points;
         // Î÷èùóºìî çàñòàð³ë³ äàí³
         CleanupLayoutData(cardViews);
 
-        for (int i = 0; i < points.Count && i < cardViews.Count; i++) {
+        for (int i = 0; i < points.Length && i < cardViews.Count; i++) {
             var cardPoint = points[i];
             var cardView = cardViews[i];
-            int cardOrder = cardPoint.orderIndex;
 
             if (cardView == null) continue;
             //cardPoint.position = cardsContainer.TransformPoint(cardPoint.position); we dont need to transform it in world position
             cardLayoutData[cardView] = cardPoint;
 
-            cardView.SetRenderOrder(baseRenderOrder + cardOrder);
+            cardView.SetRenderOrder(baseRenderOrder + i);
 
             AnimateToPosition(cardView, cardPoint);
         }
     }
+
     public Vector3? GetOriginalCardPosition(CardView cardView) {
         return cardLayoutData.TryGetValue(cardView, out var data)
-            ? data.position
+            ? data.Position
             : null;
     }
 
@@ -157,10 +162,10 @@ public class CardHand3DView : CardHandView {
         Transform cardTransform = cardView.transform;
         Sequence layoutSequence = DOTween.Sequence();
 
-        layoutSequence.Join(cardTransform.DOLocalMove(cardPoint.position, cardsOrganizeDuration)
+        layoutSequence.Join(cardTransform.DOLocalMove(cardPoint.Position, cardsOrganizeDuration)
                                     .SetEase(Ease.OutQuad)
                                     .SetLink(cardTransform.gameObject));
-        layoutSequence.Join(cardTransform.DOLocalRotate(cardPoint.rotation.eulerAngles, cardsOrganizeDuration)
+        layoutSequence.Join(cardTransform.DOLocalRotate(cardPoint.Rotation.eulerAngles, cardsOrganizeDuration)
                                     .SetEase(Ease.OutQuad)
                                     .SetLink(cardTransform.gameObject));
         cardView.DoSequence(layoutSequence).Forget();

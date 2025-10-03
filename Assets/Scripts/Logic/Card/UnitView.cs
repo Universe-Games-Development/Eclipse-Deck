@@ -1,55 +1,40 @@
 ﻿using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public abstract class UnitView : MonoBehaviour {
-    
+
     public virtual void Highlight(bool enable) {
         // Базова реалізація підсвічування
     }
 }
 
-public abstract class InteractableView : UnitView {
-    public event Action<UnitView, bool> OnHoverChanged;
-    public event Action<UnitView> OnClicked;
-    private InteractiveUnitInputProviderBase _inputProvider;
+public class LayoutView : MonoBehaviour {
+    ILayout3DHandler layout;
 
-    protected virtual void Awake() {
-        if (_inputProvider == null) {
-            Initialize();
+    [SerializeField] public LayoutSettings settings;
+    [SerializeField] Transform itemsContainer;
+
+    public event Action OnUpdateRequest;
+    [SerializeField] float updateTime = 1f;
+    [SerializeField] bool doUpdate = false;
+    private float lastTime;
+
+    protected void Awake() {
+        layout = new Grid3DLayout(settings);
+    }
+
+    private void Update() {
+        if (!doUpdate) return;
+        lastTime += Time.deltaTime;
+        if (lastTime > updateTime) {
+            OnUpdateRequest?.Invoke();
+            lastTime = 0;
         }
     }
 
-    public void Initialize(InteractiveUnitInputProviderBase inputProvider = null) {
-        _inputProvider = inputProvider ?? FindDefaultInputProvider();
+    public void UpdatePositions() {
 
-        if (_inputProvider != null) {
-            _inputProvider.OnClicked += HandleClicked;
-            _inputProvider.OnCursorEnter += HandleCursorEnter;
-            _inputProvider.OnCursorExit += HandleCursorExit;
-        }
-    }
-    private InteractiveUnitInputProviderBase FindDefaultInputProvider() {
-        var provider = GetComponentInChildren<InteractiveUnitInputProviderBase>();
-        if (provider == null) {
-            Debug.LogError($"No {nameof(InteractiveUnitInputProviderBase)} found for {nameof(UnitView)} on {gameObject.name}");
-        }
-        return provider;
-    }
-
-    private void HandleClicked() => OnClicked?.Invoke(this);
-    private void HandleCursorEnter() => OnHoverChanged?.Invoke(this, true);
-    private void HandleCursorExit() => OnHoverChanged?.Invoke(this, false);
-
-    public void SetInteractable(bool interactable) {
-        _inputProvider?.SetInteractable(interactable);
-    }
-
-    private void OnDestroy() {
-        if (_inputProvider != null) {
-            _inputProvider.OnClicked -= HandleClicked;
-            _inputProvider.OnCursorEnter -= HandleCursorEnter;
-            _inputProvider.OnCursorExit -= HandleCursorExit;
-        }
     }
 }
 

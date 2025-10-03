@@ -9,29 +9,30 @@ using Zenject;
 
 public class ZoneView : AreaView {
     [SerializeField] private TextMeshProUGUI text;
-    [SerializeField] private Transform _creaturesContainer;
+    [SerializeField] public Transform _creaturesContainer;
     [SerializeField] private Renderer zoneRenderer;
     [SerializeField] private Color unAssignedColor;
     [SerializeField] private Button removeCreatureButton;
 
-    private ILayout3DHandler _layout;
-    [SerializeField] private LayoutSettings settings;
-
-    // НОВЕ: Список істот в зоні на рівні View
-    private readonly List<CreatureView> _creatureViews = new();
-    public IReadOnlyList<CreatureView> CreatureViews => _creatureViews;
+    
+    [SerializeField] public LayoutSettings settings;
     [Inject] IComponentPool<CreatureView> creaturePool;
+    [SerializeField] private List<CreatureView> creatureViews = new();
+
+    private ILayout3DHandler _layout;
 
     public event Action OnRemoveDebugRequest;
-    public Vector3 additionalOffset = new Vector3(2, 0, 3);
 
     [SerializeField] bool doTestUpdate = false;
     [SerializeField] float updateDelay = 1f;
     private float updateTimer;
+    public event Action OnUpdateRequest;
 
     protected override void Awake() {
         base.Awake();
-        InitializeLayout();
+
+        _layout = new Grid3DLayout(settings);
+
         SetupUI();
     }
 
@@ -39,18 +40,10 @@ public class ZoneView : AreaView {
         if (doTestUpdate) {
             updateTimer += Time.deltaTime;
             if (updateTimer > updateDelay) {
-                CalculateSize(CreatureViews.Count);
+                OnUpdateRequest?.Invoke();
                 updateTimer = 0f;
             }
         }
-    }
-
-    private void InitializeLayout() {
-        if (settings == null) {
-            Debug.LogWarning("Settings layout null for ", gameObject);
-            return;
-        }
-        _layout = new Linear3DLayout(settings);
     }
 
     private void SetupUI() {
@@ -67,30 +60,36 @@ public class ZoneView : AreaView {
     public void AddCreatureView(CreatureView creatureView) {
         if (creatureView == null) return;
 
+        creatureViews.Add(creatureView);
         creatureView.transform.SetParent(_creaturesContainer);
-        _creatureViews.Add(creatureView);
-
-        UpdateVisualState();
     }
 
     public void RemoveCreatureView(CreatureView creatureView) {
         if (creatureView == null) return;
 
+        creatureViews.Remove(creatureView);
         creaturePool.Release(creatureView);
-        _creatureViews.Remove(creatureView);
-        UpdateVisualState();
     }
 
     public async UniTask RearrangeCreatures(float duration = 0.5f) {
-        var positions = GetCreaturePoints(_creatureViews.Count);
         var tasks = new List<UniTask>();
 
-        for (int i = 0; i < _creatureViews.Count; i++) {
-            if (i < positions.Count) {
-                CreatureView view = _creatureViews[i];
-                LayoutPoint point = positions[i];
+        ItemLayoutInfo[] items = new ItemLayoutInfo[creatureViews.Count];
 
-                Tweener moveTween = view.transform.DOMove(point.position, duration)
+        for (int i = 0; i < creatureViews.Count; i++) {
+            items[i] = new ItemLayoutInfo($"{creatureViews[i].name}_i", settings.itemSizes);
+        }
+
+        LayoutResult layoutResult = _layout.Calculate(items);
+        LayoutPoint[] positions = layoutResult.Points;
+
+        for (int i = 0; i < creatureViews.Count; i++) {
+            if (i < positions.Length) {
+                CreatureView view = creatureViews[i];
+                LayoutPoint point = positions[i];
+                Vector3 localPosition = _creaturesContainer.TransformPoint(point.Position);
+
+                Tweener moveTween = view.transform.DOMove(localPosition, duration)
                                     .SetEase(Ease.OutQuad)
                                     .SetLink(view.gameObject);
 
@@ -101,50 +100,31 @@ public class ZoneView : AreaView {
         await UniTask.WhenAll(tasks);
     }
     
-    private void UpdateVisualState() {
-        UpdateSummonedCount(_creatureViews.Count);
-    }
-
     public void UpdateSummonedCount(int count) {
         if (text != null) {
             text.text = $"Units: {count}";
         }
     }
-    
-    public List<LayoutPoint> GetCreaturePoints(int count) {
-        LayoutResult layoutResult = _layout.CalculateLayout(count);
-        var transformedPoints = new List<LayoutPoint>();
-
-        foreach (var point in layoutResult.Points) {
-            Vector3 worldPosition = _creaturesContainer.TransformPoint(point.position);
-            transformedPoints.Add(new LayoutPoint(worldPosition, point.rotation, point.orderIndex, point.rowIndex, point.columnIndex));
-        }
-
-        return transformedPoints;
-    }
     #endregion
-
-    public Vector3 CalculateSize(int creaturesCapacity) {
-        float areaWidth = settings.ItemWidth;
-        float areaLength = settings.ItemLength;
-
-        var layoutResult = _layout.CalculateLayout(creaturesCapacity);
-        LayoutMetadata metadata = layoutResult.Metadata;
-
-        float totalLength = metadata.TotalLength;
-        float totalWidth = metadata.TotalWidth;
-
-        Vector3 localScale = transform.localScale;
-        Vector3 newScale = new Vector3(totalWidth, localScale.y, totalLength) + additionalOffset;
-       
-        return newScale;
-    }
-
-    public Vector3 GetSize() => transform.localScale;
 
     public void ChangeColor(Color newColor) {
         Color color = newColor != null ? newColor : unAssignedColor;
         zoneRenderer.material.color = color;
+    }
+
+    public Vector3 CalculateSize(int maxCreatures) {
+        ItemLayoutInfo[] items = new ItemLayoutInfo[maxCreatures];
+
+        for (int i = 0; i < maxCreatures; i++) {
+            items[i] = new ItemLayoutInfo($"{i}", settings.itemSizes);
+        }
+
+        LayoutResult layoutResult = _layout.Calculate(items);
+        LayoutMetadata metadata = layoutResult.Metadata;
+
+        float totalLength = metadata.TotalLength;
+        float totalWidth = metadata.TotalWidth;
+        return new Vector3(totalWidth, 1f, totalLength);
     }
 }
 

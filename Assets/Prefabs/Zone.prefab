@@ -293,7 +293,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1737841015575427125
 RectTransform:
   m_ObjectHideFlags: 0
@@ -680,9 +680,8 @@ MonoBehaviour:
   unAssignedColor: {r: 0, g: 0, b: 0, a: 0}
   removeCreatureButton: {fileID: 7246343501865716745}
   settings: {fileID: 11400000, guid: f96e107f4125b3a49834cbf2d6e0e4cd, type: 2}
-  additionalOffset: {x: 2, y: 0, z: 3}
   doTestUpdate: 0
-  updateDelay: 1
+  updateDelay: 0.5
 --- !u!1 &8177796444869227810
 GameObject:
   m_ObjectHideFlags: 0

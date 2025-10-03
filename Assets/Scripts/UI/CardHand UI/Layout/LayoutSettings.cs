@@ -6,8 +6,7 @@ public class LayoutSettings : ScriptableObject {
     public float MaxTotalWidth = 3.0f;
 
     [Header ("Item settings")]
-    public float ItemWidth = 1.0f;
-    public float ItemLength = 1.4f;
+    public Vector3 itemSizes = Vector3.one;
 
 
     [Header ("Layout Settings")]
@@ -30,5 +29,7 @@ public class LayoutSettings : ScriptableObject {
     [Range(0f, 5f)]
     public float RotationOffset = 1.0f;
 
-    
+    public bool UseMinimalDimensions;
+    public bool AlignByLargestInRow;
+    public bool CompressPositionsByTotalWidth;
 }

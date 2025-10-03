@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -17,13 +18,10 @@ public class Board : UnitModel {
     public event EventHandler<ColumnRemovedEvent> ColumnRemoved;
     public event EventHandler<ColumnAddedEvent> ColumnAdded;
 
-    public Board(BoardConfiguration configuration = null) {
-        if (configuration == null) return;
-
-        configuration.Validate();
+    public Board(int rows, int columns) {
         
-        for (int i = 0; i < configuration.RowCount; i++) {
-            _rows.Add(new Row(i, configuration.RowConfigurations[i]));
+        for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+            _rows.Add(new Row(columns, rowIndex));
         }
     }
 
@@ -108,6 +106,13 @@ public class Board : UnitModel {
             .ToList();
     }
 
+    public List<Cell> GetAllCells() {
+        List<Cell> cells = new List<Cell>();
+        foreach (var row in _rows) {
+            cells.AddRange(row.Cells);
+        }
+        return cells;
+    }
 
     /// <summary>
     /// Safely enumerates all cells in a column

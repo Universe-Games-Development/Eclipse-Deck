@@ -12,13 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e46ab4df47f4cc468bc39a57f6f5b73, type: 3}
   m_Name: BoardLayout
   m_EditorClassIdentifier: 
-  MaxTotalWidth: 12
-  ItemWidth: 2
-  ItemLength: 1.4
+  MaxTotalWidth: 100
+  itemSizes: {x: 1, y: 1, z: 1}
   DepthOffset: 0
   VerticalOffset: 0
-  ItemSpacing: 0.5
   PositionVariation: 0
-  RowSpacing: 1.5
+  ColumnSpacing: 0.2
+  RowSpacing: 0.2
   MaxRotationAngle: 0
   RotationOffset: 0
+  UseMinimalDimensions: 0
+  AlignByLargestInRow: 1
+  CompressPositionsByTotalWidth: 0

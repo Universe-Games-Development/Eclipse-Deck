@@ -7,6 +7,7 @@ public abstract class CardView : InteractableView {
     [SerializeField] protected MovementComponent movementComponent;
     [SerializeField] protected CardTiltController tiltController;
     [SerializeField] public Transform innerBody;
+    
 
     #region Unity Lifecycle
 
