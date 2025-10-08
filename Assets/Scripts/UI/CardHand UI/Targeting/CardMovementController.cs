@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Zenject;
 
 public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
     [Header("Movement Settings")]
@@ -15,7 +14,6 @@ public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
 
     public void StartTargeting() {
         if (cardPresenter != null) {
-            cardPresenter.SetInteractable(false);
             cardPresenter.ModifyRenderOrder(playRenderOrderBoost);
             cardPresenter.ToggleTiltMovement(true);
         }
@@ -30,9 +28,9 @@ public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
 
     public void StopTargeting() {
         if (cardPresenter != null) {
-            cardPresenter.SetInteractable(true);
             cardPresenter.ModifyRenderOrder(-playRenderOrderBoost);
             cardPresenter.ToggleTiltMovement(false);
+            cardPresenter.StopMovement();
         }
     }
 
@@ -55,5 +53,9 @@ public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
         }
 
         return new Vector3(boardPosition.x, targetCardHeight, boardPosition.z);
+    }
+
+    public void UpdateHoverStatus(TargetValidationState state) {
+        
     }
 }

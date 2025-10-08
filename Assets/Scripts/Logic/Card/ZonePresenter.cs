@@ -1,10 +1,27 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zenject;
 
-public class ZonePresenter : UnitPresenter, IDisposable {
+public class AreaPresenter : InteractablePresenter {
+    public Action<Vector3> OnSizeChanged;
+    public AreaView AreaView;
+    public AreaPresenter(UnitModel model, AreaView view) : base(model, view) {
+        AreaView = view;
+    }
+
+    public Vector3 CurrentSize { get; protected set; }
+
+    public void ChangeSize(Vector3 size) {
+        AreaView.SetSize(size);
+        CurrentSize = size;
+        OnSizeChanged?.Invoke(size);
+    }
+}
+
+public class ZonePresenter : AreaPresenter, IDisposable {
     public Zone Zone;
     public ZoneView ZoneView;
 
@@ -12,20 +29,22 @@ public class ZonePresenter : UnitPresenter, IDisposable {
     [Inject] private IVisualTaskFactory _visualTaskFactory;
     [Inject] private IVisualManager _visualManager;
 
+    
+    private List<CreaturePresenter> creatures = new();
+    
+
     public ZonePresenter(Zone zone, ZoneView zoneView) : base(zone, zoneView) {
         Zone = zone;
         ZoneView = zoneView;
 
         Zone.OnCreaturePlaced += HandleCreaturePlacement;
         Zone.OnCreatureRemoved += HandleCreatureRemove;
+
         ZoneView.OnRemoveDebugRequest += TryRemoveCreatureDebug;
 
-        InitializeVisuals();
-    }
-
-    private void InitializeVisuals() {
         ZoneView.ChangeColor(Zone.OwnerId != null ? Color.green : Color.black);
-        ZoneView.UpdateSize(Zone.MaxCreatures);
+
+        UpdateSize();
     }
 
     private void TryRemoveCreatureDebug() {
@@ -34,25 +53,51 @@ public class ZonePresenter : UnitPresenter, IDisposable {
     }
 
     private void HandleCreaturePlacement(Creature creature) {
-        var addTask = new AddCreatureToZoneVisualTask(creature, this, _unitRegistry);
-        var rearrangeTask = new RearrangeZoneVisualTask(ZoneView);
+        if (!_unitRegistry.TryGetPresenterByModel<CreaturePresenter>(creature, out var presenter)) {
+            Debug.LogWarning("Failed to find presenter for : " + creature);
+        }
 
+        creatures.Add(presenter);
+        ZoneView.UpdateSummonedCount(Zone.Creatures.Count);
+
+        var addTask = new AddCreatureToZoneVisualTask(creature, this, _unitRegistry);
         _visualManager.Push(addTask);
-        _visualManager.Push(rearrangeTask);
+        RearrangeCreatures();
     }
 
     private void HandleCreatureRemove(Creature creature) {
-        CreaturePresenter creaturePresenter = _unitRegistry.GetPresenter<CreaturePresenter>(creature);
-        if (creaturePresenter != null) {
-            ZoneView.RemoveCreatureView(creaturePresenter.CreatureView);
-            _unitRegistry.Unregister(creaturePresenter);
+        if (!_unitRegistry.TryGetPresenterByModel<CreaturePresenter>(creature, out var presenter)) {
+            Debug.LogWarning("Failed to find presenter for : " + creature);
         }
 
-        var rearrangeTask = new RearrangeZoneVisualTask(ZoneView);
+        if (presenter != null) {
+            creatures.Remove(presenter);
+            ZoneView.RemoveCreatureView(presenter.CreatureView);
+            _unitRegistry.Unregister(presenter);
+        }
+        ZoneView.UpdateSummonedCount(Zone.Creatures.Count);
+        RearrangeCreatures();
+    }
+
+    private void UpdateVisuals() {
+        RearrangeCreatures();
+        UpdateSize();
+    }
+
+    public void RearrangeCreatures() {
+        var rearrangeTask = new RearrangeZoneVisualTask(ZoneView, 0.1f);
         _visualManager.Push(rearrangeTask);
     }
 
-    public void Dispose() {
+    private void UpdateSize() {
+        Vector3 size = ZoneView.CalculateRequiredSize(Zone.MaxCreatures);
+
+        ChangeSize(size);
+    }
+
+
+    public override void Dispose() {
+        base.Dispose();
         ZoneView.OnRemoveDebugRequest -= TryRemoveCreatureDebug;
         Zone.OnCreaturePlaced -= HandleCreaturePlacement;
         Zone.OnCreatureRemoved -= HandleCreatureRemove;
@@ -62,7 +107,6 @@ public class ZonePresenter : UnitPresenter, IDisposable {
 public class RearrangeZoneVisualTask : VisualTask {
     private readonly ZoneView _zoneView;
     private readonly float _duration;
-
     public RearrangeZoneVisualTask(ZoneView zoneView, float duration = 0.5f) {
         _zoneView = zoneView;
         _duration = duration;

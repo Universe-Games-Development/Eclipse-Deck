@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 /// <summary>
 /// Основной класс игровой доски
@@ -12,16 +11,15 @@ public class Board : UnitModel {
     public IReadOnlyList<Row> Rows => _rows.AsReadOnly();
     public int RowCount => _rows.Count;
 
+    public int ColumnCount => _rows.First().CellCount;
+
     public event EventHandler<ColumnRemovedEvent> ColumnRemoved;
     public event EventHandler<ColumnAddedEvent> ColumnAdded;
 
-    public Board(BoardConfiguration configuration = null) {
-        if (configuration == null) return;
-
-        configuration.Validate();
+    public Board(int rows, int columns) {
         
-        for (int i = 0; i < configuration.RowCount; i++) {
-            _rows.Add(new Row(i, configuration.RowConfigurations[i]));
+        for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+            _rows.Add(new Row(columns, rowIndex));
         }
     }
 
@@ -41,9 +39,7 @@ public class Board : UnitModel {
     }
 
     public void AssignAreaModelToCell(Cell cell, UnitModel model) {
-        if (cell != null) {
-            cell.AssignUnit(model);
-        }
+        cell?.AssignUnit(model);
     }
 
     #region Column API
@@ -51,12 +47,13 @@ public class Board : UnitModel {
     /// <summary>
     /// Adds a new column to all rows
     /// </summary>
-    public OperationResult AddColumn() { 
+    public bool AddColumn() { 
         List<Cell> newColumn = new();
         for (int i = 0; i < _rows.Count; i++) {
             var newCell = _rows[i].AddCell();
             if (newCell == null) {
-                return OperationResult.Failed($"Failed to add cell to row {i}: {newCell}");
+                return false;
+                //return OperationResult.Failed($"Failed to add cell to row {i}: {newCell}");
             }
             newColumn.Add(newCell);
         }
@@ -64,19 +61,21 @@ public class Board : UnitModel {
         int newColumnIndex = GetCurrentColumnsCount() - 1;
         ColumnAdded?.Invoke(this, new ColumnAddedEvent(newColumn, newColumnIndex));
 
-        return OperationResult.Success();
+        return true;
     }
 
     /// <summary>
     /// Removes a column from all rows
     /// </summary>
-    public OperationResult RemoveColumn(int columnIndex) {
+    public bool RemoveColumn(int columnIndex) {
         if (_rows.Count == 0) {
-            return OperationResult.Failed("Board is empty");
+            return false;
+            //return OperationResult.Failed("Board is empty");
         }
 
         if (GetCurrentColumnsCount() <= 1) {
-            return OperationResult.Failed("Cannot delete the last column");
+            return false;
+            //return OperationResult.Failed("Cannot delete the last column");
         }
 
         List<Cell> removedColumn = new();
@@ -87,12 +86,13 @@ public class Board : UnitModel {
 
             var removedCell = row.RemoveCell(columnIndex);
             if (removedCell == null) {
-                return OperationResult.Failed($"Failed to remove cell from row {rowIndex}");
+                return false;
+               // return OperationResult.Failed($"Failed to remove cell from row {rowIndex}");
             }
         }
 
         ColumnRemoved?.Invoke(this, new ColumnRemovedEvent(removedColumn, columnIndex));
-        return OperationResult.Success();
+        return true;
     }
 
     /// <summary>
@@ -104,6 +104,13 @@ public class Board : UnitModel {
             .ToList();
     }
 
+    public List<Cell> GetAllCells() {
+        List<Cell> cells = new List<Cell>();
+        foreach (var row in _rows) {
+            cells.AddRange(row.Cells);
+        }
+        return cells;
+    }
 
     /// <summary>
     /// Safely enumerates all cells in a column

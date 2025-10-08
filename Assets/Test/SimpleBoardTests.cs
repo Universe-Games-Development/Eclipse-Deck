@@ -17,15 +17,7 @@ public class SimpleBoardTests : MonoBehaviour
 
     private Board SetupInitialBoard() {
 
-        var config = new BoardConfiguration()
-
-            .AddRow(2, 3, 2)
-
-            .AddRow(1, 4, 1)
-
-            .AddRow(3, 2, 3);
-
-        return new Board(config);
+        return new Board(2, 2);
 
     }
 

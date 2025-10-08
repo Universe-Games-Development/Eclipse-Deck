@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -11,14 +10,12 @@ public class Row {
     public IReadOnlyList<Cell> Cells => _cells.AsReadOnly();
     public int CellCount => _cells.Count;
 
-    public Row(int rowIndex, IEnumerable<int> cellAreas) {
+    public Row(int columns, int rowIndex) {
         Index = rowIndex;
         _cells = new List<Cell>();
 
-        int cellIndex = 0;
-        foreach (var areas in cellAreas) {
-            _cells.Add(new Cell(rowIndex, cellIndex));
-            cellIndex++;
+        for (int i = 0; i < columns; i++) {
+            _cells.Add(new Cell(rowIndex, i));
         }
     }
 
@@ -35,11 +32,6 @@ public class Row {
             return null;
 
         _cells.RemoveAt(cellIndex);
-
-        // Обновляем индексы оставшихся колонок
-        for (int i = cellIndex; i < _cells.Count; i++) {
-            _cells[i].UpdateCellIndex(i);
-        }
 
         return cell;
     }

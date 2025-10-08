@@ -1,6 +1,6 @@
 ﻿using System;
 
-public interface IMannable {
+public interface IManaSystem {
     public Mana Mana { get; }
 }
 public interface IHealthable {

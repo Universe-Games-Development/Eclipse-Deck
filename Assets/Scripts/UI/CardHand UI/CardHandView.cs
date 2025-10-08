@@ -4,6 +4,7 @@ using UnityEngine;
 
 public abstract class CardHandView : UnitView {
     [SerializeField] protected bool allowMultipleHover = true;
+    
 
     public Action<CardView> OnCardClicked { get; internal set; }
     public Action<CardView, bool> OnCardHovered { get; internal set; }
@@ -32,7 +33,7 @@ public abstract class CardHandView : UnitView {
     protected abstract void HandleCardViewRemoval(CardView cardView);
     protected abstract void HandleCardHovered(CardView cardView);
     protected abstract void HandleClearCardHovered(CardView cardView);
-    public abstract void UpdateCardPositions(List<CardView> cardViews);
+    public abstract void UpdateCardPositions();
 }
 
 

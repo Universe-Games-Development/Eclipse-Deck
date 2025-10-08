@@ -1,26 +1,28 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using System;
+using System.Linq;
 using UnityEngine;
 using Zenject;
-using static UnityEngine.UI.Image;
 
 [OperationFor(typeof(SummonOperationData))]
 public class SummonCreatureOperation : GameOperation {
     private const string SpawnPlaceKey = "spawnZone";
     private readonly SummonOperationData _data;
 
-    private readonly ICreatureFactory creatureFactory;
+    private readonly IEntityFactory entityFactory;
+    private readonly ITargetFiller targetFiller;
+    [Inject] IOperationFactory operationFactory;
 
-    public SummonCreatureOperation(SummonOperationData data, ICreatureFactory creatureFactory) {
+    public SummonCreatureOperation(UnitModel source, SummonOperationData data, IEntityFactory entityFactory, ITargetFiller targetFiller) : base (source) {
         _data = data;
-        this.creatureFactory = creatureFactory;
-
-        PlaceRequirement allyZone = TargetRequirements.AllyPlace;
-        AddTarget(SpawnPlaceKey, allyZone);
+        this.entityFactory = entityFactory;
+        this.targetFiller = targetFiller;
+        
+        AddTarget(new TargetInfo(SpawnPlaceKey, TargetRequirements.AllyPlace));
     }
 
-    public override bool Execute() {
+    public override async UniTask<bool> Execute() {
         if (!TryGetTypedTarget(SpawnPlaceKey, out Zone zone)) {
             Debug.LogError($"Valid {SpawnPlaceKey} not found");
             return false;
@@ -31,18 +33,34 @@ public class SummonCreatureOperation : GameOperation {
             return false;
         }
 
+        if (zone.IsFull()) {
+            SacrificeCreatureOperation sacrificeCreatureOperation = operationFactory.Create<SacrificeCreatureOperation>(Source);
+            TargetInfo targetInfo = sacrificeCreatureOperation.GetTargets().First();
+            // if received null return false
+            TargetFillResult targetFillResult = await targetFiller.TryFillTargetAsync(targetInfo, Source, false);
+            if (!targetFillResult.IsSuccess) {
+                return false;
+            }
+
+            sacrificeCreatureOperation.SetTarget(targetInfo.Key, targetFillResult.Unit);
+            bool success = await sacrificeCreatureOperation.Execute();
+            if (!success) return false;
+        }
+
+
         // 1. Створюємо істоту
-        Creature _creature = creatureFactory.CreateModel(creatureCard);
+        Creature _creature = entityFactory.CreateCreatureFromCard(creatureCard);
         if (_creature == null) return false;
 
         // 2. Створюємо візуальну задачу
 
         var summonTask = visualTaskFactory.Create<SummonFromCardVisualTask>(
-            _creature, _data.visualTemplate
+            _creature, _data.visualData
         );
 
         visualManager.Push(summonTask);
 
+        await UniTask.DelayFrame(1);
         // 3. Виконуємо логіку
         return zone.TryPlaceCreature(_creature);
     }
@@ -60,7 +78,6 @@ public class SummonFromCardVisualTask : VisualTask, IDisposable {
     [Inject] IUnitSpawner<Creature, CreatureView, CreaturePresenter> _creatureSpawner;
 
     private CardPresenter _tempCardCopy;
-    private bool _isDisposed = false;
     private Vector3 _spawnPosition;
 
     public SummonFromCardVisualTask(Creature creature, SummonVisualData data,
@@ -77,11 +94,6 @@ public class SummonFromCardVisualTask : VisualTask, IDisposable {
     }
 
     public override async UniTask<bool> Execute() {
-        if (_isDisposed) {
-            Debug.LogError("Attempting to execute disposed SummonFromCardVisualTask");
-            return false;
-        }
-
         try {
             // 1. Видаляємо тимчасову копію карти
             if (_tempCardCopy != null) {
@@ -98,9 +110,6 @@ public class SummonFromCardVisualTask : VisualTask, IDisposable {
             await PlayMaterializationEffect(creatureView);
 
             return true;
-        } catch (Exception ex) {
-            Debug.LogError($"Summon visualization failed: {ex.Message}");
-            return false;
         } finally {
             // Cleanup у будь-якому випадку
             SafeCleanupTempCard();
@@ -176,20 +185,39 @@ public class SummonFromCardVisualTask : VisualTask, IDisposable {
     }
 
     public void Dispose() {
-        if (_isDisposed) return;
-
         SafeCleanupTempCard();
-        _isDisposed = true;
-
-        GC.SuppressFinalize(this);
-    }
-
-    ~SummonFromCardVisualTask() {
-        if (!_isDisposed) {
-            Debug.LogWarning("SummonFromCardVisualTask was not properly disposed");
-            Dispose();
-        }
     }
 }
 
+public class SacrificeOperationData : OperationData {
+}
 
+public class SacrificeCreatureOperation : GameOperation {
+    private const string TargetCreatureKey = "targetCreature";
+    public SacrificeCreatureOperation(UnitModel source, Zone zone = null) : base (source) {
+        TargetRequirement<Creature> targetRequirement;
+        if (zone != null) {
+            targetRequirement = new RequirementBuilder<Creature>()
+                .WithCondition(new ZoneCondition(zone))
+                .Build();
+        } else {
+            targetRequirement = new RequirementBuilder<Creature>().Build();
+        }
+
+        SimpleTargetInstruction simpleTargetInstruction = new SimpleTargetInstruction("Select creature to sacrifice");
+        AddTarget(new TargetInfo(TargetCreatureKey, targetRequirement, simpleTargetInstruction));
+    }
+
+    public override async UniTask<bool> Execute() {
+        if (!TryGetTypedTarget(TargetCreatureKey, out Creature creature)) {
+            Debug.LogError($"Valid {TargetCreatureKey} not found");
+            return false;
+        }
+
+        creature.Die();
+
+
+        await UniTask.CompletedTask;
+        return true;
+    }
+}

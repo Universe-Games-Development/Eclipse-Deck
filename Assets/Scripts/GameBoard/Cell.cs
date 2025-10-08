@@ -1,30 +1,36 @@
 using System;
-using UnityEngine;
 
 /// <summary>
 /// Represents a cell with a specific number of areas
 /// </summary>
-public class Cell : UnitModel {
-    public int RowIndex { get; }
-    public int Index { get; private set; }
+public class Cell {
+    public string Id { get; }
+    public readonly int ColumnIndex;
+    public readonly int RowIndex;
     public UnitModel AssignedUnit { get; private set; }
 
-    public event Action<Cell, UnitModel> OnUnitAssigned;
+    public event Action<UnitModel> OnUnitChanged;
+    public bool IsEmpty => AssignedUnit == null;
 
-    public Cell(int rowIndex, int cellIndex) {
+    public Cell(int rowIndex, int columnIndex) {
         RowIndex = rowIndex;
-        Index = cellIndex;
-        Id = $"Cell_{rowIndex}_{cellIndex}";
+        ColumnIndex = columnIndex;
+        Id = $"Cell_{rowIndex}_{columnIndex}";
     }
 
     public void AssignUnit(UnitModel unit) {
         if (AssignedUnit == unit) return;
 
         AssignedUnit = unit;
-        OnUnitAssigned?.Invoke(this, unit);
+        OnUnitChanged?.Invoke(unit);
     }
 
-    public void UpdateCellIndex(int newCellIndex) {
-        Index = newCellIndex;
+    public void ReleaseUnit() {
+        if (AssignedUnit == null) return;
+
+        var unitToRelease = AssignedUnit;
+        AssignedUnit = null;
+
+        OnUnitChanged?.Invoke(null);
     }
 }

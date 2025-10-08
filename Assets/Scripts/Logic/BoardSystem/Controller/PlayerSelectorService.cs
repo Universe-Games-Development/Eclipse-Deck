@@ -4,22 +4,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
+
 
 public class PlayerSelectorService : ITargetSelectionService, IDisposable {
     public event Action<TargetSelectionRequest> OnSelectionStarted;
     public event Action<TargetSelectionRequest, UnitModel> OnSelectionCompleted;
     public event Action<TargetSelectionRequest> OnSelectionCancelled;
 
-    private readonly IUnitRegistry _unitRegistry;
-    private readonly SelectorView _selectionView;
+    
     private TargetSelectionRequest _currentRequest;
     private TaskCompletionSource<UnitModel> _currentTask;
     private CancellationTokenRegistration _cancellationRegistration;
 
-    public PlayerSelectorService(SelectorView selectionView, IUnitRegistry unitRegistry) {
+    private readonly IEventBus<IEvent> eventBus;
+    private readonly IUnitRegistry _unitRegistry;
+    private readonly SelectorView _selectionView;
+
+    public PlayerSelectorService(SelectorView selectionView, IUnitRegistry unitRegistry, IEventBus<IEvent> eventBus) {
         _selectionView = selectionView;
         _unitRegistry = unitRegistry;
+        this.eventBus = eventBus;
+
         _selectionView.OnTargetsSelected += OnTargetSelected;
+        eventBus.SubscribeTo<HoverUnitEvent>(HandleUnitHover);
+    }
+
+    private void HandleUnitHover(ref HoverUnitEvent eventData) {
+        if (_currentRequest == null) return;
+
+        if (eventData.IsHovered) {
+            ValidationContext validationContext = new(_currentRequest.Source.OwnerId);
+            bool isValidToRequest = _currentRequest.Target.Requirement.IsValid(eventData.UnitPresenter.Model, validationContext);
+            TargetValidationState state = isValidToRequest ? TargetValidationState.Valid : TargetValidationState.WrongTarget;
+            _selectionView.UpdateHoverStatus(state);
+        } else {
+            _selectionView.UpdateHoverStatus(TargetValidationState.None);
+        }
     }
 
     public async UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest request, CancellationToken cancellationToken) {
@@ -63,13 +84,34 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
         return _selectionView.CreateArrowTargeting(request);
     }
 
-    private bool IsZoneTarget(TypedTargetBase target) => target.TargetType == typeof(Zone);
+    private bool IsZoneTarget(TargetInfo target) {
+        ITargetRequirement requirement = target.Requirement;
+        bool isZoneReq = requirement is TargetRequirement<Zone>;
+        return isZoneReq;
+    }
 
-    private void OnTargetSelected(List<UnitView> views) {
-        var models = views
-            .Select(view => _unitRegistry.GetPresenterByView(view)?.Model)
-            .Where(model => model != null)
-            .ToList();
+    private void OnTargetSelected(GameObject[] objects) {
+        List<UnitView> views = new();
+
+        foreach (var hitObj in objects) {
+            if (hitObj.TryGetComponent(out IUnitProvider provider)) {
+                var view = provider.UnitView;
+                if (view != null) {
+                    views.Add(view);
+                }
+            } else if (hitObj.TryGetComponent(out UnitView directView)) {
+                views.Add(directView);
+            }
+        }
+
+        List<UnitModel> models = new();
+        for (int i = 0; i < views.Count; i++) {
+            UnitModel unitModel = _unitRegistry.GetModelByView(views[i]);
+            if (unitModel != null)
+            models.Add(unitModel);
+
+
+        }
 
         var context = new ValidationContext(_currentRequest.Source.OwnerId);
 
@@ -101,6 +143,7 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
 
     private void StopTargeting() {
         _selectionView.StopTargeting();
+        _currentRequest = null;
     }
 
     public void Dispose() {
@@ -113,11 +156,18 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
 }
 
 public class TargetSelectionRequest {
-    public UnitModel Source { get; } // Карта, істота, гравець
-    public TypedTargetBase Target { get; }
+    public TargetInfo Target { get; }
+    public UnitModel Source { get; } // Карта, істота, гравець, ніхто
 
-    public TargetSelectionRequest(UnitModel initiator, TypedTargetBase target) {
-        Source = initiator;
+    public TargetSelectionRequest(TargetInfo target, UnitModel initiator = null) {
         Target = target;
+        Source = initiator;
     }
+}
+
+
+public enum TargetValidationState {
+    None,
+    Valid,
+    WrongTarget,
 }

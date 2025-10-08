@@ -1087,7 +1087,8 @@ GameObject:
   - component: {fileID: 6672949540244191898}
   - component: {fileID: 6585816273941797280}
   - component: {fileID: 6497592486819746803}
-  - component: {fileID: 7332583862399396814}
+  - component: {fileID: 2847370298832758582}
+  - component: {fileID: 5520850654331216758}
   m_Layer: 10
   m_Name: HandCard
   m_TagString: Untagged
@@ -1183,7 +1184,23 @@ MonoBehaviour:
   clickScaleDown: 0.95
   clickDuration: 0.1
   clickReturnDuration: 0.15
---- !u!65 &7332583862399396814
+--- !u!114 &2847370298832758582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5035915735796379205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91bb716d6d12f1549a503b941469ddd2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _unitView: {fileID: 7219568571880624990}
+  _isInteractable: 1
+  _enableClick: 1
+  _enableHover: 1
+--- !u!65 &5520850654331216758
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

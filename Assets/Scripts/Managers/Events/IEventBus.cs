@@ -1,4 +1,6 @@
-﻿public interface IEventBus<TBaseEvent> {
+﻿using System;
+
+public interface IEventBus<TBaseEvent> {
     bool CurrentEventIsConsumed { get; }
     bool IsEventBeingRaised { get; }
 

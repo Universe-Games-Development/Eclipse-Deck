@@ -1,140 +1,110 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Zenject;
 
-public abstract class GameOperation {
+public abstract class GameOperation : IExecutableTask {
     [Inject] protected readonly IVisualManager visualManager;
     [Inject] protected readonly IVisualTaskFactory visualTaskFactory;
 
-    protected Dictionary<string, TypedTargetBase> typedTargets = new();
-    public bool IsMandatory { get; set; } = false;
-    public UnitModel Source { get; set; }
+    private readonly Dictionary<string, object> filledTargets = new();
+    private readonly List<TargetInfo> targetInfos = new();
 
-    public abstract bool Execute();
-
-    // Generic метод для додавання typed targets
-    protected void AddTarget<T>(string key, IGenericRequirement<T> requirement) {
-        var typedTarget = new TypedTarget<T>(key, requirement);
-        typedTargets[key] = typedTarget;
+    protected GameOperation(UnitModel source) {
+        Source = source;
     }
 
-    // Type-safe метод для отримання targets
+    public bool IsMandatory { get; set; }
+    public UnitModel Source { get; private set; }
+
+    public abstract UniTask<bool> Execute();
+
+    protected void AddTarget(TargetInfo targetInfo) {
+        targetInfos.Add(targetInfo);
+    }
+
     protected bool TryGetTypedTarget<T>(string key, out T result) {
-        if (typedTargets.TryGetValue(key, out var targetBase) &&
-            targetBase is TypedTarget<T> typedTarget) {
-            result = typedTarget.Unit;
-            return typedTarget.HasTarget;
+        if (filledTargets.TryGetValue(key, out var unit) && unit is T casted) {
+            result = casted;
+            return true;
         }
 
         result = default;
         return false;
     }
 
-    public void SetTypedTarget<T>(string key, T target) {
-        if (typedTargets.TryGetValue(key, out var targetBase)) {
-            if (targetBase.TargetType != typeof(T)) {
-                throw new ArgumentException($"Type mismatch for target '{key}'. " +
-                    $"Expected {targetBase.TargetType}, got {typeof(T)}");
-            }
-            targetBase.SetTarget(target);
+    public void SetTarget(string key, object target) {
+        if (!filledTargets.TryGetValue(key, out var targetBase)) {
+            filledTargets[key] = target;
         } else {
-            throw new KeyNotFoundException($"Target with key '{key}' not found");
+            throw new Exception($"Target already set");
         }
     }
+
     public void SetTargets(IReadOnlyDictionary<string, object> filledTargets) {
         foreach (var kvp in filledTargets) {
-            if (typedTargets.ContainsKey(kvp.Key)) {
-                typedTargets[kvp.Key].SetTarget(kvp.Value);
-            } else {
-                throw new KeyNotFoundException($"Target with key '{kvp.Key}' not found");
-            }
+            SetTarget(kvp.Key, kvp.Value);
         }
     }
 
-    public bool IsReady() => !HasUnfilledTargets();
+    public bool IsReady() => !HaveUnfilledTargets();
 
-    public bool HasUnfilledTargets() {
-        if (typedTargets == null || typedTargets.Count == 0)
-            return false;
-
-        return typedTargets.Values.Any(target => !target.HasTarget);
+    public bool HaveUnfilledTargets() {
+        return filledTargets.Count != targetInfos.Count;
     }
 
     public void SetSource(UnitModel source) {
         Source = source;
     }
 
-    public IEnumerable<string> GetTargetKeys() => typedTargets.Keys;
-    public List<TypedTargetBase> GetTargets() => typedTargets.Values.ToList();
-
-    public Type GetTargetType(string key) {
-        return typedTargets.TryGetValue(key, out var target)
-            ? target.TargetType
-            : null;
-    }
-
-    public bool IsTargetValid(string key) {
-        return typedTargets.TryGetValue(key, out var target) && target.IsValid(target.GetTarget());
-    }
+    public IEnumerable<string> GetTargetKeys() => filledTargets.Keys;
+    public List<TargetInfo> GetTargets() => targetInfos.ToList();
 }
 
-public abstract class TypedTargetBase {
+
+public class TargetInfo {
+   
     public string Key { get; }
-    public abstract Type TargetType { get; }
-    public abstract bool HasTarget { get; }
+    public object Unit { get; private set; }
 
-    protected TypedTargetBase(string key) {
+    public ITargetRequirement Requirement { get; }
+    public ITargetInstruction Instruction { get; }
+
+    public bool HasTarget => Unit != null;
+
+    public TargetInfo(string key, ITargetRequirement requirement, ITargetInstruction instruction = null) {
         Key = key;
-    }
-
-    public abstract void SetTarget(object target);
-    public abstract object GetTarget();
-    public abstract ValidationResult IsValid(object value = null, ValidationContext context = null);
-    public abstract bool CanTarget(object potentialTarget, ValidationContext context = null);
-    public abstract TargetSelector GetTargetSelector();
-
-    public abstract string GetInstruction();
-}
-
-public class TypedTarget<T> : TypedTargetBase {
-    public IGenericRequirement<T> Requirement { get; }
-    public T Unit { get; private set; }
-
-    public override Type TargetType => typeof(T);
-    public override bool HasTarget => Unit != null;
-
-    public TypedTarget(string key, IGenericRequirement<T> requirement) : base(key) {
         Requirement = requirement;
+        Instruction = instruction ?? new AutoGeneratedInstruction(requirement);
     }
 
-    public override void SetTarget(object target) {
-        if (target is T typedTarget) {
-            Unit = typedTarget;
-        } else if (target == null) {
-            Unit = default;
-        } else {
-            throw new ArgumentException($"Invalid target type. Expected {typeof(T)}, got {target?.GetType()}");
-        }
+    public void SetTarget(object target) {
+        Unit = target;
     }
 
-    public override object GetTarget() => Unit;
+    public object GetTarget() => Unit;
 
-    public override ValidationResult IsValid(object value = null, ValidationContext context = null) {
-        T targetToValidate = value is T typedValue ? typedValue : Unit;
-        return Requirement.IsValid(targetToValidate, context);
+    public ValidationResult IsValid(object value = null, ValidationContext context = null) {
+        return Requirement.IsValid(value, context);
     }
 
-    public override bool CanTarget(object potentialTarget, ValidationContext context = null) {
-        return potentialTarget is T typedTarget &&
-               Requirement.IsValid(typedTarget, context).IsValid;
+    public TargetSelector GetTargetSelector() {
+        return Requirement.RequiredSelector;
     }
 
-    public override TargetSelector GetTargetSelector() {
-        return Requirement.GetTargetSelector();
+    public string GetInstruction(InstructionContext context = null) {
+        context ??= new InstructionContext(Requirement);
+        return Instruction.GetInstruction(context);
     }
 
-    public override string GetInstruction() {
-        return Requirement.GetInstruction();
+    public string GetShortHint(InstructionContext context = null) {
+        context ??= new InstructionContext(Requirement);
+        return Instruction.GetShortHint(context);
+    }
+
+    public string GetDetailedHelp(InstructionContext context = null) {
+        context ??= new InstructionContext(Requirement);
+        return Instruction.GetDetailedHelp(context);
     }
 }

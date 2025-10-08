@@ -4,4 +4,5 @@ public interface ITargetingVisualization {
     void StartTargeting();
     void UpdateTargeting(Vector3 cursorPosition);
     void StopTargeting();
+    void UpdateHoverStatus(TargetValidationState state);
 }

@@ -1,6 +1,9 @@
 ﻿using System;
+using Unity.VisualScripting;
+using Zenject;
 
 public class Creature : UnitModel, IHealthable {
+    public Action OnDeath;
     public Health Health { get; private set; }
     public Attack Attack { get; private set; }
     public CreatureCardData Data { get; private set; }
@@ -10,6 +13,7 @@ public class Creature : UnitModel, IHealthable {
 
     public CreatureCard SourceCard => sourceCard;
     public Zone CurrentZone => currentZone;
+    [Inject] IEventBus<IEvent> eventBus;
 
     public string Name { get; private set; }
     public Creature(CreatureCard card) {
@@ -42,5 +46,11 @@ public class Creature : UnitModel, IHealthable {
 
     public void SetName(string name) {
         Name = name;
+    }
+
+    public void Die() {
+        eventBus.Raise(new DeathEvent(this));
+
+        OnDeath?.Invoke();
     }
 }

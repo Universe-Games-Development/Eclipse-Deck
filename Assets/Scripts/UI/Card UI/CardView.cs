@@ -1,24 +1,18 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using System;
 using System.Threading;
 using UnityEngine;
 
-public abstract class CardView : UnitView {
-
-    public Action<CardView> OnCardClicked;
-    public Action<CardView, bool> OnHoverChanged;
-
-    public string Id { get; set; }
-    private bool _isInteractive = true;
-
+public abstract class CardView : InteractableView {
     [SerializeField] protected MovementComponent movementComponent;
     [SerializeField] protected CardTiltController tiltController;
     [SerializeField] public Transform innerBody;
+    
 
     #region Unity Lifecycle
 
-    protected virtual void Awake() {
+    protected override void Awake() {
+        base.Awake();
         ValidateComponents();
     }
 
@@ -36,25 +30,6 @@ public abstract class CardView : UnitView {
 
     protected virtual void CleanupResources() {
         DOTween.Kill(this); // Очищаем все анимации, связанные с этим объектом
-    }
-
-    #endregion
-
-    #region Mouse Interaction (базовая реализация)
-
-    protected virtual void HandleMouseEnter() {
-        if (!_isInteractive) return;
-        OnHoverChanged?.Invoke(this, true);
-    }
-
-    protected virtual void HandleMouseExit() {
-        if (!_isInteractive) return;
-        OnHoverChanged?.Invoke(this, false);
-    }
-
-    protected virtual void HandleMouseDown() {
-        if (!_isInteractive) return;
-        OnCardClicked?.Invoke(this);
     }
 
     #endregion
@@ -83,8 +58,8 @@ public abstract class CardView : UnitView {
     /// <summary>
     /// Почати фізичний рух (для драгу, таргетингу)
     /// </summary>
-    public void DoPhysicsMovement(Vector3 initialPosition) {
-        movementComponent?.UpdateContinuousTarget(initialPosition);
+    public void DoPhysicsMovement(Vector3 targetPosition) {
+        movementComponent?.UpdateContinuousTarget(targetPosition);
     }
 
     /// <summary>
@@ -111,8 +86,4 @@ public abstract class CardView : UnitView {
     #endregion
 
     public abstract void SetHoverState(bool isHovered);
-
-    public void SetInteractable(bool value) {
-        _isInteractive = value;
-    }
 }

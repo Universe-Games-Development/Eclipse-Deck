@@ -1,25 +1,31 @@
 ﻿using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class UnitView : MonoBehaviour {
+public abstract class UnitView : MonoBehaviour {
+
     public virtual void Highlight(bool enable) {
-        // Реалізація підсвічування
+        // Базова реалізація підсвічування
     }
 }
 
+
+
 public abstract class UnitPresenter {
-    public UnitModel Model;
-    public UnitView View;
+    public UnitModel Model { get; }
+    public UnitView View { get; }
 
     protected UnitPresenter(UnitModel model, UnitView view) {
         Model = model;
         View = view;
     }
 
-    public void Highlight(bool isEnabled) {
-        Debug.Log($"Highlighting unit {Model.GetName()} - {isEnabled}");
+
+    public virtual void Highlight(bool isEnabled) {
+        View.Highlight(isEnabled);
     }
 }
+
 
 public class UnitModel {
     public string Id;
@@ -36,3 +42,4 @@ public class UnitModel {
         return this.ToString();
     }
 }
+

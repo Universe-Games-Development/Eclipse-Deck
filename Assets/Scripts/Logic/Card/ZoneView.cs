@@ -1,55 +1,47 @@
 ﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using System;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
 public class ZoneView : AreaView {
-    [SerializeField] private TextMeshPro text;
-    [SerializeField] private Transform _creaturesContainer;
+    [Header("UI")]
+    [SerializeField] private TextMeshProUGUI text;
     [SerializeField] private Renderer zoneRenderer;
     [SerializeField] private Color unAssignedColor;
     [SerializeField] private Button removeCreatureButton;
 
-    private ILayout3DHandler _layout;
-    [SerializeField] private LayoutSettings settings;
+    [Header("Layout")]
+    [SerializeField] private ZoneLayoutComponent layoutComponent;
+    [SerializeField] private Transform creaturesContainer;
 
-    // НОВЕ: Список істот в зоні на рівні View
-    private readonly List<CreatureView> _creatureViews = new();
-    public IReadOnlyList<CreatureView> CreatureViews => _creatureViews;
-    [Inject] IComponentPool<CreatureView> creaturePool;
+    [Header("Pool")]
+    [Inject] private IComponentPool<CreatureView> creaturePool;
+
+    [Header("Animation")]
+    [SerializeField] private float rearrangeDuration = 0.5f;
 
     public event Action OnRemoveDebugRequest;
-    public Vector3 additionalOffset = new Vector3(2, 0, 3);
 
-    [SerializeField] bool doTestUpdate = false;
-    [SerializeField] float updateDelay = 1f;
-    private float updateTimer;
+    protected override void Awake() {
+        base.Awake();
 
-    private void Awake() {
-        InitializeLayout();
+        ValidateReferences();
+        SetupLayoutComponent();
         SetupUI();
     }
 
-    private void Update() {
-        if (doTestUpdate) {
-            updateTimer += Time.deltaTime;
-            if (updateTimer > updateDelay) {
-                UpdateSize(CreatureViews.Count);
-                updateTimer = 0f;
-            }
-        }
+    private void ValidateReferences() {
+        if (layoutComponent == null)
+            throw new UnassignedReferenceException(nameof(layoutComponent));
+        if (creaturesContainer == null)
+            throw new UnassignedReferenceException(nameof(creaturesContainer));
     }
 
-    private void InitializeLayout() {
-        if (settings == null) {
-            Debug.LogWarning("Settings layout null for ", gameObject);
-            return;
-        }
-        _layout = new Linear3DLayout(settings);
+    private void SetupLayoutComponent() {
+        layoutComponent.OnLayoutCalculated += HandleLayoutCalculated;
+        layoutComponent.OnItemPositioned += HandleCreaturePositioned;
     }
 
     private void SetupUI() {
@@ -62,49 +54,33 @@ public class ZoneView : AreaView {
         }
     }
 
-    // НОВЕ: Додавання істоти до зони
+    #region Creatures
+
     public void AddCreatureView(CreatureView creatureView) {
         if (creatureView == null) return;
 
-        creatureView.transform.SetParent(_creaturesContainer);
-        _creatureViews.Add(creatureView);
+        // Layout component сам встановить parent
+        layoutComponent.AddItem(creatureView, recalculate: true);
 
-        UpdateVisualState();
+        // Анімуємо на позицію
+        layoutComponent.AnimateToLayoutPosition(creatureView).Forget();
     }
 
-    // НОВЕ: Видалення істоти з зони
     public void RemoveCreatureView(CreatureView creatureView) {
         if (creatureView == null) return;
 
-        creaturePool.Release(creatureView);
-        _creatureViews.Remove(creatureView);
-        UpdateVisualState();
+        // Видаляємо з layout
+        layoutComponent.RemoveItem(creatureView, recalculate: true);
+
+        // Анімуємо решту створінь
+        RearrangeCreatures(rearrangeDuration).Forget();
+
+        // Повертаємо в pool
+        creaturePool?.Release(creatureView);
     }
 
-    // НОВЕ: Переміщення всіх істот на нові позиції
     public async UniTask RearrangeCreatures(float duration = 0.5f) {
-        var positions = GetCreaturePoints(_creatureViews.Count);
-        var tasks = new List<UniTask>();
-
-        for (int i = 0; i < _creatureViews.Count; i++) {
-            if (i < positions.Count) {
-                CreatureView view = _creatureViews[i];
-                LayoutPoint point = positions[i];
-
-                Tweener moveTween = view.transform.DOMove(point.position, duration)
-                                    .SetEase(Ease.OutQuad)
-                                    .SetLink(view.gameObject);
-
-                tasks.Add(view.DoTweener(moveTween));
-            }
-        }
-
-        await UniTask.WhenAll(tasks);
-    }
-
-    // НОВЕ: Оновлення візуального стану
-    private void UpdateVisualState() {
-        UpdateSummonedCount(_creatureViews.Count);
+        await layoutComponent.AnimateAllToLayoutPositions(duration);
     }
 
     public void UpdateSummonedCount(int count) {
@@ -113,39 +89,49 @@ public class ZoneView : AreaView {
         }
     }
 
-    public List<LayoutPoint> GetCreaturePoints(int count) {
-        LayoutResult layoutResult = _layout.CalculateLayout(count);
-        var transformedPoints = new List<LayoutPoint>();
-
-        foreach (var point in layoutResult.Points) {
-            Vector3 worldPosition = _creaturesContainer.TransformPoint(point.position);
-            transformedPoints.Add(new LayoutPoint(worldPosition, point.rotation, point.orderIndex, point.rowIndex, point.columnIndex));
-        }
-
-        return transformedPoints;
+    public Vector3? GetCreaturePosition(CreatureView creature) {
+        return layoutComponent.GetPosition(creature);
     }
 
-    public Vector3 UpdateSize(int creaturesCapacity) {
-        float areaWidth = settings.ItemWidth;
-        float areaLength = settings.ItemLength;
+    #endregion
 
-        var layoutResult = _layout.CalculateLayout(creaturesCapacity);
-        LayoutMetadata metadata = layoutResult.Metadata;
-
-        float totalLength = metadata.TotalLength;
-        float totalWidth = metadata.TotalWidth;
-
-        Vector3 localScale = transform.localScale;
-        Vector3 newScale = new Vector3(totalWidth, localScale.y, totalLength) + additionalOffset;
-        SetScale(newScale);
-
-        return newScale;
-    }
-
-    public Vector3 GetSize() => transform.localScale;
+    #region Zone
 
     public void ChangeColor(Color newColor) {
-        Color color = newColor != null ? newColor : unAssignedColor;
-        zoneRenderer.material.color = color;
+        Color color = newColor != Color.clear ? newColor : unAssignedColor;
+        if (zoneRenderer != null) {
+            zoneRenderer.material.color = color;
+        }
+    }
+
+    public Vector3 CalculateRequiredSize(int maxCreatures) {
+        return layoutComponent.CalculateRequiredSize(maxCreatures);
+    }
+
+    #endregion
+
+    #region Layout Events
+
+    private void HandleLayoutCalculated(LayoutResult result) {
+        Debug.Log($"Zone layout: {result.Metadata.TotalItems} creatures, " +
+                  $"size: {result.Metadata.TotalWidth:F2}x{result.Metadata.TotalLength:F2}");
+    }
+
+    private void HandleCreaturePositioned(CreatureView creature, LayoutPoint point) {
+        // Custom логіка при позиціонуванні створіння
+    }
+
+    #endregion
+
+    protected void OnDestroy() {
+        if (layoutComponent != null) {
+            layoutComponent.OnLayoutCalculated -= HandleLayoutCalculated;
+            layoutComponent.OnItemPositioned -= HandleCreaturePositioned;
+            layoutComponent.ClearItems();
+        }
+
+        if (removeCreatureButton != null) {
+            removeCreatureButton.onClick.RemoveAllListeners();
+        }
     }
 }
