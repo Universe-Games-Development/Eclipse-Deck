@@ -7,10 +7,6 @@ public class BoardUI : MonoBehaviour
     [SerializeField] BoardPresenter boardPresenter;
 
     private void Awake() {
-        recalculateButton.onClick.AddListener(() => DoRefresh());
-    }
-
-    private void DoRefresh() {
-        boardPresenter.RecalculateLayout();
+       // recalculateButton.onClick.AddListener(() => );
     }
 }

@@ -37,17 +37,10 @@ public class ZonePresenter : AreaPresenter, IDisposable {
         Zone = zone;
         ZoneView = zoneView;
 
-        if (zoneView.settings == null) {
-            Debug.LogWarning("Settings layout null for " + this);
-            return;
-        }
-
-
         Zone.OnCreaturePlaced += HandleCreaturePlacement;
         Zone.OnCreatureRemoved += HandleCreatureRemove;
 
         ZoneView.OnRemoveDebugRequest += TryRemoveCreatureDebug;
-        ZoneView.OnUpdateRequest += UpdateVisuals;
 
         ZoneView.ChangeColor(Zone.OwnerId != null ? Color.green : Color.black);
 
@@ -65,7 +58,7 @@ public class ZonePresenter : AreaPresenter, IDisposable {
         }
 
         creatures.Add(presenter);
-       
+        ZoneView.UpdateSummonedCount(Zone.Creatures.Count);
 
         var addTask = new AddCreatureToZoneVisualTask(creature, this, _unitRegistry);
         _visualManager.Push(addTask);
@@ -82,6 +75,7 @@ public class ZonePresenter : AreaPresenter, IDisposable {
             ZoneView.RemoveCreatureView(presenter.CreatureView);
             _unitRegistry.Unregister(presenter);
         }
+        ZoneView.UpdateSummonedCount(Zone.Creatures.Count);
         RearrangeCreatures();
     }
 
@@ -96,7 +90,7 @@ public class ZonePresenter : AreaPresenter, IDisposable {
     }
 
     private void UpdateSize() {
-        Vector3 size = ZoneView.CalculateSize(Zone.MaxCreatures);
+        Vector3 size = ZoneView.CalculateRequiredSize(Zone.MaxCreatures);
 
         ChangeSize(size);
     }

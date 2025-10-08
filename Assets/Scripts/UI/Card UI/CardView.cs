@@ -58,8 +58,8 @@ public abstract class CardView : InteractableView {
     /// <summary>
     /// Почати фізичний рух (для драгу, таргетингу)
     /// </summary>
-    public void DoPhysicsMovement(Vector3 initialPosition) {
-        movementComponent?.UpdateContinuousTarget(initialPosition);
+    public void DoPhysicsMovement(Vector3 targetPosition) {
+        movementComponent?.UpdateContinuousTarget(targetPosition);
     }
 
     /// <summary>

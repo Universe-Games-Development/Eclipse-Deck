@@ -635,6 +635,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4534884136029562287}
   - component: {fileID: 3346397950381541669}
+  - component: {fileID: 257057399082506499}
   m_Layer: 10
   m_Name: Zone
   m_TagString: Untagged
@@ -675,13 +676,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _bodyToScale: {fileID: 7388589042160449539}
   text: {fileID: 4564341979818141754}
-  _creaturesContainer: {fileID: 4476722948096056295}
   zoneRenderer: {fileID: 2695066022899055051}
   unAssignedColor: {r: 0, g: 0, b: 0, a: 0}
   removeCreatureButton: {fileID: 7246343501865716745}
-  settings: {fileID: 11400000, guid: f96e107f4125b3a49834cbf2d6e0e4cd, type: 2}
+  layoutComponent: {fileID: 257057399082506499}
+  creaturesContainer: {fileID: 4476722948096056295}
+  rearrangeDuration: 0.5
+--- !u!114 &257057399082506499
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7960872108213578189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 942e45990fb93df4489d20fff23b172c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultItemSize: {x: 1, y: 1, z: 1}
+  organizeDuration: 0.3
+  organizeEase: 6
   doTestUpdate: 0
-  updateDelay: 0.5
+  updateDelay: 1
+  layoutSettings: {fileID: 11400000, guid: fea07b809d7c5e34c855b471576e702e, type: 2}
 --- !u!1 &8177796444869227810
 GameObject:
   m_ObjectHideFlags: 0

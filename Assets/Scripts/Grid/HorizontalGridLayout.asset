@@ -10,17 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2e46ab4df47f4cc468bc39a57f6f5b73, type: 3}
-  m_Name: BoardLayout
+  m_Name: HorizontalGridLayout
   m_EditorClassIdentifier: 
-  MaxTotalWidth: 100
-  itemSizes: {x: 1, y: 1, z: 1}
+  MaxTotalWidth: 12
   DepthOffset: 0
   VerticalOffset: 0
-  PositionVariation: 0
-  ColumnSpacing: 0.2
-  RowSpacing: 0.2
+  ItemSpacing: 1
   MaxRotationAngle: 0
-  RotationOffset: 0
-  UseMinimalDimensions: 0
-  AlignByLargestInRow: 1
-  CompressPositionsByTotalWidth: 0
+  compressionMode: 0

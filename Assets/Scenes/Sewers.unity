@@ -6507,7 +6507,7 @@ MonoBehaviour:
     enableFileLogging: 0
     enableTimestamps: 1
     enableStackTrace: 0
-    enabledCategories: -1
+    enabledCategories: 0
     debugColor: {r: 1, g: 1, b: 1, a: 1}
     infoColor: {r: 0, g: 1, b: 1, a: 1}
     warningColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
@@ -6941,6 +6941,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 135300a16b1ce2e4297213b9c01472f9, type: 3}
+--- !u!1 &1942162267
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1942162268}
+  m_Layer: 0
+  m_Name: Cells
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1942162268
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1942162267}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2100769151}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1942615721
 GameObject:
   m_ObjectHideFlags: 0
@@ -7548,6 +7579,7 @@ GameObject:
   - component: {fileID: 2100769153}
   - component: {fileID: 2100769154}
   - component: {fileID: 2100769155}
+  - component: {fileID: 2100769157}
   m_Layer: 0
   m_Name: GameBoard Visual
   m_TagString: Untagged
@@ -7569,6 +7601,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1665751836}
+  - {fileID: 1942162268}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2100769153
@@ -7583,10 +7616,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33cf2817a7f955b41aaf43c4f6df8a3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layoutSettings: {fileID: 11400000, guid: b8a7831c1279a0d4b9176b595c66ac3a, type: 2}
+  cellParent: {fileID: 1942162268}
   cellFactory: {fileID: 2100769154}
-  updateTime: 1
-  doUpdate: 0
+  layoutComponent: {fileID: 2100769157}
+  initialRows: 8
+  initialColumns: 8
+  createOnAwake: 0
+  cellCreationDelay: 0.05
+  animateCellCreation: 1
 --- !u!114 &2100769154
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7627,9 +7664,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardView: {fileID: 2100769153}
   minSize: 1
-  maxSize: 8
-  colums: 2
-  rows: 2
+  maxSize: 1
+  colums: 7
+  rows: 7
+  doPopulate: 0
+--- !u!114 &2100769157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100769150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7721be6fd1166714bae4fc8ab6675eea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultItemSize: {x: 1, y: 1, z: 1}
+  organizeDuration: 0.3
+  organizeEase: 6
+  doTestUpdate: 1
+  updateDelay: 0.75
+  gridSettings: {fileID: 11400000, guid: 044b91c65a836e246b0a3b70d004d927, type: 2}
+  initialRows: 3
+  initialColumns: 3
+  autoExpand: 1
+  autoShrink: 0
+  maxRows: 20
+  maxColumns: 20
 --- !u!1 &2139604162
 GameObject:
   m_ObjectHideFlags: 0
@@ -8063,13 +8125,12 @@ MonoBehaviour:
   allowMultipleHover: 1
   cardsContainer: {fileID: 845252587502666978}
   cardPool: {fileID: 5221237754621633819}
-  settings: {fileID: 11400000, guid: 2c9cfad15f929df4fa25e9b8d0aa0fd4, type: 2}
-  cardsOrganizeDuration: 0.2
-  baseRenderOrder: 2800
+  layoutComponent: {fileID: 8418556749380161858}
+  spawnOffset: {x: 0, y: 1, z: 0}
   hoverRenderOrderBoost: 50
   cardHoverDuration: 0.2
   hoverOffset: {x: 0, y: 1, z: 2.5}
-  spawnOffset: {x: 0, y: 1, z: 0}
+  baseRenderOrder: 2800
 --- !u!1 &2484146214613676242
 GameObject:
   m_ObjectHideFlags: 0
@@ -8871,6 +8932,7 @@ GameObject:
   - component: {fileID: 3468754925073448261}
   - component: {fileID: 2379312896532368615}
   - component: {fileID: 8418556749380161857}
+  - component: {fileID: 8418556749380161858}
   m_Layer: 0
   m_Name: 3DHand
   m_TagString: Untagged
@@ -9445,6 +9507,24 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d9bb2260dcbade64a9daae32cb456242, type: 2}
   - {fileID: 11400000, guid: 590ec25c64753964486e7a1bcecdad54, type: 2}
   - {fileID: 11400000, guid: f677013f1c3887148aca1e823ddf5026, type: 2}
+--- !u!114 &8418556749380161858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5898249275676813735}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33eb41f60f310aa46a7f1fe933ec5f71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultItemSize: {x: 1, y: 1, z: 1}
+  organizeDuration: 0.3
+  organizeEase: 6
+  doTestUpdate: 0
+  updateDelay: 1
+  layoutSettings: {fileID: 11400000, guid: f91a8d69fdf3cd04288b36995156f263, type: 2}
 --- !u!1 &8487517151249224844
 GameObject:
   m_ObjectHideFlags: 0

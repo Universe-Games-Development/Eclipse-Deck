@@ -10,17 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2e46ab4df47f4cc468bc39a57f6f5b73, type: 3}
-  m_Name: ZoneLayoutSettings
+  m_Name: HandLayout
   m_EditorClassIdentifier: 
-  MaxTotalWidth: 19.6
-  itemSizes: {x: 2, y: 1, z: 4}
-  DepthOffset: 0
-  VerticalOffset: 0
-  PositionVariation: 0
-  ColumnSpacing: 0.54
-  RowSpacing: 0
-  MaxRotationAngle: 16.6
-  RotationOffset: 0.67
-  UseMinimalDimensions: 0
-  AlignByLargestInRow: 0
-  CompressPositionsByTotalWidth: 0
+  MaxTotalWidth: 12
+  DepthOffset: -0.06
+  VerticalOffset: 0.01
+  ItemSpacing: 0.2
+  MaxRotationAngle: 15
+  compressionMode: 2

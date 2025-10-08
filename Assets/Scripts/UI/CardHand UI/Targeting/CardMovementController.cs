@@ -30,6 +30,7 @@ public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
         if (cardPresenter != null) {
             cardPresenter.ModifyRenderOrder(-playRenderOrderBoost);
             cardPresenter.ToggleTiltMovement(false);
+            cardPresenter.StopMovement();
         }
     }
 

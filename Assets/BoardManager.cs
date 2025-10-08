@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using UnityEngine;
 using Zenject;
@@ -21,11 +20,13 @@ public class BoardManager : MonoBehaviour
 
     private Board board;
     private BoardPresenter boardPresenter;
+    [SerializeField] bool doPopulate = false;
 
     private void Start() {
         board = SetupInitialBoard(rows, colums);
         boardPresenter = presenterFactory.CreatePresenter<BoardPresenter>(board, boardView);
         boardPresenter.CreateBoard();
+        if (doPopulate)
         PopulateCells();
     }
 

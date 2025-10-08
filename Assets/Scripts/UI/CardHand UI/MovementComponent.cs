@@ -36,6 +36,7 @@ public class MovementComponent : MonoBehaviour {
     private void Update() {
         if (_isContinuousMoveActive) {
             PerformContinuousMove();
+
         }
 
         UpdateVelocity();
@@ -75,8 +76,11 @@ public class MovementComponent : MonoBehaviour {
     /// Выполняет последовательность твинов
     /// </summary>
     public async UniTask ExecuteTweenSequence(Sequence sequence, CancellationToken externalToken = default) {
+        if (_isContinuousMoveActive) {
+            Debug.Log($"AnimateItem start. IsContinuousMoveActive: {_isContinuousMoveActive}");
+        }
         StopMovement();
-
+        
         _moveCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
 
         SetMovementState(MovementState.Moving);
