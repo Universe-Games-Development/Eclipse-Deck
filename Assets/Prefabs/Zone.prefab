@@ -636,6 +636,7 @@ GameObject:
   - component: {fileID: 4534884136029562287}
   - component: {fileID: 3346397950381541669}
   - component: {fileID: 257057399082506499}
+  - component: {fileID: 5095438800732689760}
   m_Layer: 10
   m_Name: Zone
   m_TagString: Untagged
@@ -674,7 +675,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9387e8510713014a939ad7f2b586f0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bodyToScale: {fileID: 7388589042160449539}
   text: {fileID: 4564341979818141754}
   zoneRenderer: {fileID: 2695066022899055051}
   unAssignedColor: {r: 0, g: 0, b: 0, a: 0}
@@ -682,6 +682,7 @@ MonoBehaviour:
   layoutComponent: {fileID: 257057399082506499}
   creaturesContainer: {fileID: 4476722948096056295}
   rearrangeDuration: 0.5
+  ownBody: {fileID: 5095438800732689760}
 --- !u!114 &257057399082506499
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -694,12 +695,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 942e45990fb93df4489d20fff23b172c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultItemSize: {x: 1, y: 1, z: 1}
+  defaultItemSize: {x: 3, y: 1, z: 4}
+  animationMode: 0
   organizeDuration: 0.3
   organizeEase: 6
+  itemsContainer: {fileID: 0}
   doTestUpdate: 0
   updateDelay: 1
   layoutSettings: {fileID: 11400000, guid: fea07b809d7c5e34c855b471576e702e, type: 2}
+--- !u!114 &5095438800732689760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7960872108213578189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb04fd3267854c448b4d80d58b5fb2d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _bodyToScale: {fileID: 7388589042160449539}
 --- !u!1 &8177796444869227810
 GameObject:
   m_ObjectHideFlags: 0

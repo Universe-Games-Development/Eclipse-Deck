@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
+using UnityEngine;
 
 public class CellLayoutComponent : GridLayoutComponent<Cell3DView> {
 
@@ -42,5 +42,9 @@ public class CellLayoutComponent : GridLayoutComponent<Cell3DView> {
         }
 
         return neighbors.ToArray();
+    }
+
+    protected override Vector3 GetItemSize(Cell3DView cell) {
+        return cell.Size;
     }
 }

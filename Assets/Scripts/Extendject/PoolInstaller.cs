@@ -6,7 +6,8 @@ public class PoolInstaller : MonoInstaller {
     public PoolManager poolManagerPrefab;
     public ComponentPool<CardView> cardPoolPrefab;
     public ComponentPool<CreatureView> creaturePoolPrefab;
-    public ComponentPool<ZoneView> zonePrefab;
+    public ComponentPool<ZoneView> zonePoolPrefab;
+    public ComponentPool<Cell3DView> cellPoolPrefab;
 
     public override void InstallBindings() {
         // Реєструємо PoolManager як синглтон
@@ -23,12 +24,17 @@ public class PoolInstaller : MonoInstaller {
 
         Container.Bind<IComponentPool<ZoneView>>()
             .To<ZonePool>()
-            .FromComponentInNewPrefab(zonePrefab)
+            .FromComponentInNewPrefab(zonePoolPrefab)
             .AsSingle();
 
         Container.Bind<IComponentPool<CreatureView>>()
             .To<CreaturePool>()
             .FromComponentInNewPrefab(creaturePoolPrefab)
+            .AsSingle();
+
+        Container.Bind<IComponentPool<Cell3DView>>()
+            .To<CellPool>()
+            .FromComponentInNewPrefab(cellPoolPrefab)
             .AsSingle();
     }
 }

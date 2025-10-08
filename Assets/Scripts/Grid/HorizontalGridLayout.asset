@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e46ab4df47f4cc468bc39a57f6f5b73, type: 3}
   m_Name: HorizontalGridLayout
   m_EditorClassIdentifier: 
-  MaxTotalWidth: 12
+  MaxTotalWidth: 23
   DepthOffset: 0
   VerticalOffset: 0
   ItemSpacing: 1

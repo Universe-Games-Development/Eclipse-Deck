@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public class ZoneView : AreaView {
+public class ZoneView : InteractableView, IArea {
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI text;
     [SerializeField] private Renderer zoneRenderer;
@@ -24,9 +24,19 @@ public class ZoneView : AreaView {
 
     public event Action OnRemoveDebugRequest;
 
+    #region IArea 
+    [SerializeField] private AreaBody ownBody;
+    public event Action<Vector3> OnSizeChanged;
+
+    public Vector3 Size => ownBody.Size;
+    public void Resize(Vector3 newSize) {
+        ownBody.Resize(newSize);
+        OnSizeChanged?.Invoke(newSize);
+    }
+    #endregion
+
     protected override void Awake() {
         base.Awake();
-
         ValidateReferences();
         SetupLayoutComponent();
         SetupUI();
@@ -54,11 +64,14 @@ public class ZoneView : AreaView {
         }
     }
 
+    
+
     #region Creatures
 
     public void AddCreatureView(CreatureView creatureView) {
         if (creatureView == null) return;
 
+        creatureView.transform.SetParent(creaturesContainer);
         // Layout component сам встановить parent
         layoutComponent.AddItem(creatureView, recalculate: true);
 

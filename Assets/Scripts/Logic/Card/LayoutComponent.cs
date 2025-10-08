@@ -6,6 +6,28 @@ using System.Linq;
 using System.Threading;
 using UnityEngine;
 
+#region Animation Modes
+
+/// <summary>
+/// Режими анімації для layout компонентів
+/// </summary>
+public enum LayoutAnimationMode {
+    /// <summary>
+    /// Анімація кожного елемента окремо (повільніше, але точніше)
+    /// </summary>
+    Individual,
+
+    /// <summary>
+    /// Анімація через батьківські Transform (швидше, оптимізовано)
+    /// Елементи рухаються разом з батьківським контейнером
+    /// </summary>
+    Hierarchical
+}
+
+#endregion
+
+#region Base Layout Component
+
 /// <summary>
 /// Базовий компонент для всіх layouts з спільною анімаційною логікою
 /// </summary>
@@ -15,12 +37,16 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
     [SerializeField] protected Vector3 defaultItemSize = Vector3.one;
 
     [Header("Animation")]
+    [SerializeField] protected LayoutAnimationMode animationMode = LayoutAnimationMode.Individual;
     [SerializeField] protected float organizeDuration = 0.3f;
     [SerializeField] protected Ease organizeEase = Ease.OutQuad;
 
+    [Header("Containers")]
+    [SerializeField] protected Transform itemsContainer;
+
     protected readonly Dictionary<T, LayoutPoint> itemLayoutData = new();
 
-    private CancellationTokenSource _layoutAnimationCts;
+    protected CancellationTokenSource _layoutAnimationCts;
     private readonly Dictionary<T, CancellationTokenSource> _itemAnimationTokens = new();
 
     public Action<LayoutResult> OnLayoutCalculated;
@@ -35,8 +61,9 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
 
     protected virtual void Awake() {
         _layoutAnimationCts = new CancellationTokenSource();
+        EnsureItemsContainer();
     }
-   
+
     private void Update() {
         if (doTestUpdate) {
             updateTimer += Time.deltaTime;
@@ -48,6 +75,15 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
         }
     }
 
+    protected void EnsureItemsContainer() {
+        if (itemsContainer == null) {
+            var containerObj = new GameObject("ItemsContainer");
+            itemsContainer = containerObj.transform;
+            itemsContainer.SetParent(transform, false);
+            itemsContainer.localPosition = Vector3.zero;
+            itemsContainer.localRotation = Quaternion.identity;
+        }
+    }
 
     #region Abstract Core Methods
 
@@ -57,6 +93,7 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
     public abstract int GetItemCount();
     public abstract bool AddItem(T item, bool recalculate = true);
     public abstract bool RemoveItem(T item, bool recalculate = true);
+
     public virtual async UniTask AddItemAnimated(T item, float? duration = null) {
         AddItem(item);
         await AnimateToLayoutPosition(item, duration);
@@ -64,20 +101,18 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
 
     #endregion
 
-    #region Layout Data Management (спільна для всіх)
+    #region Layout Data Management
 
     protected void UpdateLayoutData(LayoutResult result) {
         var points = result.Points;
         var items = GetAllItems();
 
-        // Очищення застарілих даних
         var itemsSet = new HashSet<T>(items);
         var keysToRemove = itemLayoutData.Keys.Where(k => !itemsSet.Contains(k)).ToList();
         foreach (var key in keysToRemove) {
             itemLayoutData.Remove(key);
         }
 
-        // Оновлення даних
         for (int i = 0; i < points.Length && i < items.Count; i++) {
             itemLayoutData[items[i]] = points[i];
             OnItemPositioned?.Invoke(items[i], points[i]);
@@ -92,7 +127,7 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
 
     #endregion
 
-    #region Position Queries (спільні для всіх)
+    #region Position Queries
 
     public LayoutPoint? GetLayoutPoint(T item) {
         return itemLayoutData.TryGetValue(item, out var point) ? point : null;
@@ -103,10 +138,19 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
 
     #endregion
 
-    #region Animation (спільна логіка)
+    #region Animation - Abstract для перевизначення
+
     public async UniTask AnimateAllToLayoutPositions(float? customDuration = null) {
         CancelAllAnimations();
 
+        if (animationMode == LayoutAnimationMode.Hierarchical) {
+            await AnimateHierarchical(customDuration);
+        } else {
+            await AnimateIndividual(customDuration);
+        }
+    }
+
+    private async UniTask AnimateIndividual(float? customDuration) {
         var tasks = GetAllItems()
             .Where(item => itemLayoutData.ContainsKey(item))
             .Select(item => AnimateToLayoutPosition(item, customDuration));
@@ -115,6 +159,8 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
             await UniTask.WhenAll(tasks).AttachExternalCancellation(_layoutAnimationCts.Token);
         } catch (OperationCanceledException) { }
     }
+
+    protected abstract UniTask AnimateHierarchical(float? customDuration);
 
     public async UniTask AnimateToLayoutPosition(T item, float? customDuration = null) {
         if (!itemLayoutData.TryGetValue(item, out var point)) {
@@ -180,6 +226,8 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
 
     public bool IsAnimating => _itemAnimationTokens.Count > 0;
     public IReadOnlyDictionary<T, LayoutPoint> LayoutData => itemLayoutData;
+    public Transform ItemsContainer => itemsContainer;
+    public LayoutAnimationMode AnimationMode => animationMode;
 
     #endregion
 
@@ -189,9 +237,13 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : Component {
     }
 }
 
+#endregion
+
+#region Linear Layout Component
 
 /// <summary>
 /// Layout для послідовного розміщення елементів
+/// У Hierarchical режимі анімує itemsContainer замість окремих елементів
 /// </summary>
 public abstract class LinearLayoutComponent<T> : LayoutComponent<T> where T : Component {
     [Header("Linear Layout")]
@@ -199,6 +251,10 @@ public abstract class LinearLayoutComponent<T> : LayoutComponent<T> where T : Co
 
     protected ILinearLayout layout;
     protected readonly List<T> orderedItems = new();
+
+    // Зберігаємо початкові локальні позиції елементів відносно контейнера
+    private readonly Dictionary<T, Vector3> _itemLocalPositions = new();
+    private readonly Dictionary<T, Quaternion> _itemLocalRotations = new();
 
     protected override void Awake() {
         base.Awake();
@@ -214,6 +270,10 @@ public abstract class LinearLayoutComponent<T> : LayoutComponent<T> where T : Co
         if (item == null || orderedItems.Contains(item)) return false;
 
         orderedItems.Add(item);
+
+        // Прив'язуємо до контейнера
+        item.transform.SetParent(itemsContainer, true);
+
         OnItemAdded?.Invoke(item);
 
         if (recalculate) RecalculateLayout();
@@ -226,6 +286,9 @@ public abstract class LinearLayoutComponent<T> : LayoutComponent<T> where T : Co
 
         CancelItemAnimation(item);
         itemLayoutData.Remove(item);
+        _itemLocalPositions.Remove(item);
+        _itemLocalRotations.Remove(item);
+
         OnItemRemoved?.Invoke(item);
 
         if (recalculate) RecalculateLayout();
@@ -235,6 +298,8 @@ public abstract class LinearLayoutComponent<T> : LayoutComponent<T> where T : Co
     public virtual void ClearItems() {
         CancelAllAnimations();
         orderedItems.Clear();
+        _itemLocalPositions.Clear();
+        _itemLocalRotations.Clear();
         ClearLayoutData();
     }
 
@@ -269,15 +334,69 @@ public abstract class LinearLayoutComponent<T> : LayoutComponent<T> where T : Co
 
         var result = layout.Calculate(items);
         UpdateLayoutData(result);
+
+        // Оновлюємо локальні позиції для Hierarchical режиму
+        if (animationMode == LayoutAnimationMode.Hierarchical) {
+            UpdateItemLocalPositions();
+        }
+    }
+
+    #endregion
+
+    #region Hierarchical Animation
+
+    protected override async UniTask AnimateHierarchical(float? customDuration) {
+        if (orderedItems.Count == 0) return;
+
+        // Розставляємо елементи у локальних координатах контейнера
+        SetItemsToLocalPositions();
+
+        // Анімуємо контейнер (завжди в (0,0,0) у нашому випадку)
+        // Оскільки елементи вже в правильних локальних позиціях
+        var duration = customDuration ?? organizeDuration;
+
+        var sequence = DOTween.Sequence()
+            .Join(itemsContainer.DOLocalMove(Vector3.zero, duration))
+            .Join(itemsContainer.DOLocalRotate(Vector3.zero, duration))
+            .SetEase(organizeEase)
+            .SetLink(gameObject);
+
+        try {
+            await sequence.Play().ToUniTask(TweenCancelBehaviour.Kill, _layoutAnimationCts.Token);
+        } catch (OperationCanceledException) { }
+    }
+
+    private void UpdateItemLocalPositions() {
+        _itemLocalPositions.Clear();
+        _itemLocalRotations.Clear();
+
+        foreach (var item in orderedItems) {
+            if (itemLayoutData.TryGetValue(item, out var point)) {
+                _itemLocalPositions[item] = point.Position;
+                _itemLocalRotations[item] = point.Rotation;
+            }
+        }
+    }
+
+    private void SetItemsToLocalPositions() {
+        foreach (var item in orderedItems) {
+            if (_itemLocalPositions.TryGetValue(item, out var pos) &&
+                _itemLocalRotations.TryGetValue(item, out var rot)) {
+                item.transform.localPosition = pos;
+                item.transform.localRotation = rot;
+            }
+        }
     }
 
     #endregion
 }
 
+#endregion
+
 
 /// <summary>
 /// Layout для сіткового розміщення з автоматичним керуванням
-/// Містить всю бізнес-логіку роботи з сіткою
+/// У Hierarchical режимі створює Transform контейнери для кожного ряду
 /// </summary>
 public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Component {
     [Header("Grid Layout")]
@@ -293,6 +412,10 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
 
     protected IGridLayout layout;
     protected Grid2D<T> grid;
+
+    // Для Hierarchical режиму - контейнери рядів
+    private readonly Dictionary<int, Transform> _rowContainers = new();
+    private readonly Dictionary<int, LayoutPoint> _rowLayoutPoints = new();
 
     public event Action<int, int> OnGridResized;
 
@@ -310,7 +433,6 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
     public virtual void AddItem(T item, int row, int col, bool recalculate = true) {
         if (item == null) return;
 
-        // Автоматичне розширення якщо потрібно
         if (!grid.IsValid(row, col)) {
             if (autoExpand) {
                 ExpandToFit(row, col);
@@ -320,20 +442,27 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
             }
         }
 
-        // Перевірка зайнятості
         var existing = grid.Get(row, col);
         if (existing != null && existing != item) {
             Debug.LogWarning($"Position ({row}, {col}) occupied by {existing.name}");
             return;
         }
 
-        // Видалити з попередньої позиції
         var oldPos = grid.FindPosition(item);
         if (oldPos.HasValue) {
             grid.Set(oldPos.Value.row, oldPos.Value.col, null);
         }
 
         grid.Set(row, col, item);
+
+        // Прив'язуємо до правильного контейнера
+        if (animationMode == LayoutAnimationMode.Hierarchical) {
+            var rowContainer = GetOrCreateRowContainer(row);
+            item.transform.SetParent(rowContainer, true);
+        } else {
+            item.transform.SetParent(itemsContainer, true);
+        }
+
         OnItemAdded?.Invoke(item);
 
         if (recalculate) RecalculateLayout();
@@ -386,7 +515,6 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
         var currentPos = grid.FindPosition(item);
         if (!currentPos.HasValue) return;
 
-        // Розширення якщо потрібно
         if (!grid.IsValid(newRow, newCol)) {
             if (!autoExpand || !ExpandToFit(newRow, newCol)) {
                 Debug.LogWarning($"Cannot move to ({newRow}, {newCol})");
@@ -403,6 +531,12 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
         grid.Set(currentPos.Value.row, currentPos.Value.col, null);
         grid.Set(newRow, newCol, item);
 
+        // Оновлюємо батьківський контейнер
+        if (animationMode == LayoutAnimationMode.Hierarchical && currentPos.Value.row != newRow) {
+            var newRowContainer = GetOrCreateRowContainer(newRow);
+            item.transform.SetParent(newRowContainer, true);
+        }
+
         if (recalculate) RecalculateLayout();
     }
 
@@ -413,6 +547,18 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
         grid.Set(row1, col1, item2);
         grid.Set(row2, col2, item1);
 
+        // Оновлюємо батьківські контейнери
+        if (animationMode == LayoutAnimationMode.Hierarchical && row1 != row2) {
+            if (item1 != null) {
+                var container1 = GetOrCreateRowContainer(row2);
+                item1.transform.SetParent(container1, true);
+            }
+            if (item2 != null) {
+                var container2 = GetOrCreateRowContainer(row1);
+                item2.transform.SetParent(container2, true);
+            }
+        }
+
         if (recalculate) RecalculateLayout();
     }
 
@@ -420,6 +566,64 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
         CancelAllAnimations();
         grid.Clear();
         ClearLayoutData();
+        ClearRowContainers();
+    }
+
+    #endregion
+
+    #region Row Container Management
+
+    private Transform GetOrCreateRowContainer(int rowIndex) {
+        if (_rowContainers.TryGetValue(rowIndex, out var container) && container != null) {
+            return container;
+        }
+
+        var rowObj = new GameObject($"Row_{rowIndex}");
+        container = rowObj.transform;
+        container.SetParent(itemsContainer, false);
+        container.localPosition = Vector3.zero;
+        container.localRotation = Quaternion.identity;
+
+        _rowContainers[rowIndex] = container;
+        return container;
+    }
+
+    private void ClearRowContainers() {
+        foreach (var container in _rowContainers.Values) {
+            if (container != null) {
+                Destroy(container.gameObject);
+            }
+        }
+        _rowContainers.Clear();
+        _rowLayoutPoints.Clear();
+    }
+
+    private void CleanupEmptyRowContainers() {
+        var rowsToRemove = new List<int>();
+
+        foreach (var kvp in _rowContainers) {
+            int rowIndex = kvp.Key;
+            bool hasItems = false;
+
+            for (int col = 0; col < grid.ColumnCount; col++) {
+                if (grid.Get(rowIndex, col) != null) {
+                    hasItems = true;
+                    break;
+                }
+            }
+
+            if (!hasItems) {
+                if (kvp.Value != null) {
+                    Destroy(kvp.Value.gameObject);
+                }
+                rowsToRemove.Add(rowIndex);
+            }
+        }
+
+        foreach (var row in rowsToRemove) {
+            _rowContainers.Remove(row);
+            _rowLayoutPoints.Remove(row);
+        }
     }
 
     #endregion
@@ -440,12 +644,11 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
     }
 
     private bool TryExpandGrid() {
-        // Розширюємо по одному рядку/стовпцю
         int newRows = Mathf.Min(grid.RowCount + 1, maxRows);
         int newCols = Mathf.Min(grid.ColumnCount + 1, maxColumns);
 
         if (newRows == grid.RowCount && newCols == grid.ColumnCount) {
-            return false; // Досягнуто максимуму
+            return false;
         }
 
         ResizeGrid(newRows, newCols, recalculate: false);
@@ -471,9 +674,95 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
         if (newRows == grid.RowCount && newCols == grid.ColumnCount) return;
 
         grid.Resize(newRows, newCols);
+
+        if (animationMode == LayoutAnimationMode.Hierarchical) {
+            CleanupEmptyRowContainers();
+        }
+
         OnGridResized?.Invoke(newRows, newCols);
 
         if (recalculate) RecalculateLayout();
+    }
+
+    #endregion
+
+    #region Hierarchical Animation
+
+    protected override async UniTask AnimateHierarchical(float? customDuration) {
+        if (GetItemCount() == 0) return;
+
+        // Крок 1: Розставити елементи у локальних координатах їх row контейнерів
+        SetItemsToRowLocalPositions();
+
+        // Крок 2: Анімувати row контейнери
+        var duration = customDuration ?? organizeDuration;
+        var tasks = new List<UniTask>();
+
+        foreach (var kvp in _rowContainers) {
+            int rowIndex = kvp.Key;
+            var container = kvp.Value;
+
+            if (container != null && _rowLayoutPoints.TryGetValue(rowIndex, out var point)) {
+                var sequence = DOTween.Sequence()
+                    .Join(container.DOLocalMove(point.Position, duration))
+                    .Join(container.DOLocalRotate(point.Rotation.eulerAngles, duration))
+                    .SetEase(organizeEase)
+                    .SetLink(container.gameObject);
+
+                tasks.Add(sequence.Play().ToUniTask(TweenCancelBehaviour.Kill, _layoutAnimationCts.Token));
+            }
+        }
+
+        try {
+            await UniTask.WhenAll(tasks);
+        } catch (OperationCanceledException) { }
+    }
+
+    private void SetItemsToRowLocalPositions() {
+        // Обчислюємо позиції рядів та локальні позиції елементів
+        _rowLayoutPoints.Clear();
+
+        foreach (var (row, col, item) in grid.EnumerateAll()) {
+            if (item == null) continue;
+
+            if (!itemLayoutData.TryGetValue(item, out var itemPoint)) continue;
+
+            // Отримуємо або обчислюємо позицію ряду
+            if (!_rowLayoutPoints.TryGetValue(row, out var rowPoint)) {
+                rowPoint = CalculateRowLayoutPoint(row);
+                _rowLayoutPoints[row] = rowPoint;
+            }
+
+            // Обчислюємо локальну позицію елемента відносно ряду
+            Vector3 localPos = itemPoint.Position - rowPoint.Position;
+            Quaternion localRot = Quaternion.Inverse(rowPoint.Rotation) * itemPoint.Rotation;
+
+            item.transform.localPosition = localPos;
+            item.transform.localRotation = localRot;
+        }
+    }
+
+    private LayoutPoint CalculateRowLayoutPoint(int rowIndex) {
+        // Знаходимо середню позицію всіх елементів у ряді
+        Vector3 avgPosition = Vector3.zero;
+        Quaternion avgRotation = Quaternion.identity;
+        int count = 0;
+
+        for (int col = 0; col < grid.ColumnCount; col++) {
+            var item = grid.Get(rowIndex, col);
+            if (item != null && itemLayoutData.TryGetValue(item, out var point)) {
+                avgPosition += point.Position;
+                // Для простоти беремо ротацію першого елемента
+                if (count == 0) avgRotation = point.Rotation;
+                count++;
+            }
+        }
+
+        if (count > 0) {
+            avgPosition /= count;
+        }
+
+        return new LayoutPoint(avgPosition, avgRotation, $"Row_{rowIndex}", rowIndex, 0, Vector3.zero);
     }
 
     #endregion
@@ -555,6 +844,12 @@ public abstract class GridLayoutComponent<T> : LayoutComponent<T> where T : Comp
     public int TotalCells => grid.RowCount * grid.ColumnCount;
     public int OccupiedCells => grid.CountOccupied();
     public int FreeCells => TotalCells - OccupiedCells;
+    public IReadOnlyDictionary<int, Transform> RowContainers => _rowContainers;
 
     #endregion
+
+    protected override void OnDestroy() {
+        base.OnDestroy();
+        ClearRowContainers();
+    }
 }

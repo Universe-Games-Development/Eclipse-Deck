@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 2591656740473365407}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.0008087, y: 0.39977083, z: -2.6293795}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -48,3 +48,4 @@ MonoBehaviour:
   maxSize: 50
   collectionCheck: 1
   prefab: {fileID: 7219568571880624990, guid: a72c9323b29420e42838e928346268a9, type: 3}
+  poolParent: {fileID: 0}

@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   horizontalSettings: {fileID: 11400000, guid: 5107a9499ba4fea4480e1a6f0b8715b2, type: 2}
   verticalSettings: {fileID: 11400000, guid: 362d12fa416ccd64aa83552d8cd61cb5, type: 2}
+  alignmentMode: 1

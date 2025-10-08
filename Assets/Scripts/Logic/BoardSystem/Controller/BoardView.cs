@@ -3,11 +3,15 @@ using DG.Tweening;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public class BoardView : MonoBehaviour {
+
+    [Header("Pool")]
+    [Inject] private IComponentPool<Cell3DView> cellPool;
+
     [Header("Components")]
     [SerializeField] Transform cellParent;
-    [SerializeField] private CellFactory cellFactory;
     [SerializeField] private CellLayoutComponent layoutComponent;
 
     [Header("Board Settings")]
@@ -35,8 +39,8 @@ public class BoardView : MonoBehaviour {
     }
 
     private void ValidateReferences() {
-        if (cellFactory == null) {
-            throw new UnassignedReferenceException(nameof(cellFactory));
+        if (cellPool == null) {
+            throw new UnassignedReferenceException(nameof(cellPool));
         }
         if (layoutComponent == null) {
             throw new UnassignedReferenceException(nameof(layoutComponent));
@@ -114,7 +118,7 @@ public class BoardView : MonoBehaviour {
         }
 
         // Створити клітинку через factory
-        Cell3DView cell = cellFactory.CreateCell();
+        Cell3DView cell = cellPool.Get();
         cell.transform.SetParent(cellParent);
         cell.name = $"Cell_{row}_{column}";
 
@@ -123,6 +127,7 @@ public class BoardView : MonoBehaviour {
 
         // Анімувати до позиції
         if (recalculate) {
+            layoutComponent.RecalculateLayout();
             layoutComponent.AnimateToLayoutPosition(cell).Forget();
         }
 
@@ -140,13 +145,18 @@ public class BoardView : MonoBehaviour {
         if (animate) {
             // Анімація видалення перед фактичним видаленням
             AnimateCellRemoval(cell).ContinueWith(() => {
-                layoutComponent.RemoveAt(row, column);
-                OnCellRemoved?.Invoke(cell);
+                OnCellRemove(cell, row, column);
             }).Forget();
         } else {
-            layoutComponent.RemoveAt(row, column);
-            OnCellRemoved?.Invoke(cell);
+            OnCellRemove(cell, row, column);
         }
+    }
+
+    private void OnCellRemove(Cell3DView cell, int row, int column) {
+        layoutComponent.RemoveAt(row, column);
+        OnCellRemoved?.Invoke(cell);
+        cell.Clear();
+        cellPool.Release(cell);
     }
 
     /// <summary>
@@ -257,6 +267,11 @@ public class BoardView : MonoBehaviour {
             .SetEase(Ease.InBack);
 
         await sequence.Play().ToUniTask();
+    }
+
+    public async UniTask UpdateLayout() {
+        layoutComponent.RecalculateLayout();
+        await layoutComponent.AnimateAllToLayoutPositions();
     }
 
     #endregion

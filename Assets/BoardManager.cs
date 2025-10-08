@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -22,21 +23,55 @@ public class BoardManager : MonoBehaviour
     private BoardPresenter boardPresenter;
     [SerializeField] bool doPopulate = false;
 
+    [SerializeField] bool doTestZoneSizes = false;
+    [SerializeField] int zoneTryes = 3;
+    [SerializeField] float updateDelay = 3.0f;
+    List<Zone> zones = new();
+
     private void Start() {
         board = SetupInitialBoard(rows, colums);
         boardPresenter = presenterFactory.CreatePresenter<BoardPresenter>(board, boardView);
         boardPresenter.CreateBoard();
-        if (doPopulate)
-        PopulateCells();
+
+        if (doPopulate) {
+            zones = CreateZones(board.GetAllCells().Count);
+            PopulateCells(zones);
+        }
+        
+
+        if (doPopulate && doTestZoneSizes) {
+            DoTestZoneChangeSize().Forget();
+        }
+    }
+
+    private async UniTask DoTestZoneChangeSize() {
+        for (int i = 0; i < zoneTryes; i++) {
+            await UniTask.WaitForSeconds(updateDelay);
+
+            for (int zoneIndex = 0; zoneIndex < zones.Count; zoneIndex++) {
+                int randomSize = Random.Range(minSize, maxSize);
+                zones[zoneIndex].ChangeSize(randomSize);
+            }
+
+            bool doRemoveColumn = Random.Range(0, 3) > 1;
+            if (doRemoveColumn) {
+                int columns = board.GetCurrentColumnsCount() - 1;
+                Debug.Log($"REMOVE {columns}");
+                board.RemoveColumn(columns);
+            } else {
+                board.AddColumn();
+                Debug.Log("ADD");
+            }
+            
+        }
     }
 
     private Board SetupInitialBoard(int rows, int colums) {
         return new Board(rows, colums);
     }
 
-    private void PopulateCells() {
+    private void PopulateCells(List<Zone> zones) {
         List<Cell> cells = board.GetAllCells();
-        List<Zone> zones = CreateZones(cells.Count);
 
         for (int i = 0; i < cells.Count; i++) {
             ZonePresenter zonePresenter = SpawnTestZone(zones[i]);
@@ -47,7 +82,7 @@ public class BoardManager : MonoBehaviour
     private List<Zone> CreateZones(int zonesCount) {
         List<Zone> zones = new();
         for (int i = 0; i < zonesCount; i++) {
-            int randomSize = Random.Range(minSize, maxSize);
+            int randomSize = Random.Range(minSize, maxSize); 
             zones.Add(CreateZone(randomSize));
         }
         return zones;

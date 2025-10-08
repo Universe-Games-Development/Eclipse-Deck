@@ -5,23 +5,7 @@ using System.Linq;
 using UnityEngine;
 using Zenject;
 
-public class AreaPresenter : InteractablePresenter {
-    public Action<Vector3> OnSizeChanged;
-    public AreaView AreaView;
-    public AreaPresenter(UnitModel model, AreaView view) : base(model, view) {
-        AreaView = view;
-    }
-
-    public Vector3 CurrentSize { get; protected set; }
-
-    public void ChangeSize(Vector3 size) {
-        AreaView.SetSize(size);
-        CurrentSize = size;
-        OnSizeChanged?.Invoke(size);
-    }
-}
-
-public class ZonePresenter : AreaPresenter, IDisposable {
+public class ZonePresenter : InteractablePresenter, IDisposable {
     public Zone Zone;
     public ZoneView ZoneView;
 
@@ -39,12 +23,19 @@ public class ZonePresenter : AreaPresenter, IDisposable {
 
         Zone.OnCreaturePlaced += HandleCreaturePlacement;
         Zone.OnCreatureRemoved += HandleCreatureRemove;
+        Zone.ONMaxCreaturesChanged += HandleSizeUpdate;
 
         ZoneView.OnRemoveDebugRequest += TryRemoveCreatureDebug;
 
         ZoneView.ChangeColor(Zone.OwnerId != null ? Color.green : Color.black);
 
-        UpdateSize();
+        HandleSizeUpdate(Zone.MaxCreatures);
+    }
+
+    private void HandleSizeUpdate(int maxSize) {
+        Vector3 size = ZoneView.CalculateRequiredSize(maxSize);
+
+        ZoneView.Resize(size);
     }
 
     private void TryRemoveCreatureDebug() {
@@ -79,20 +70,9 @@ public class ZonePresenter : AreaPresenter, IDisposable {
         RearrangeCreatures();
     }
 
-    private void UpdateVisuals() {
-        RearrangeCreatures();
-        UpdateSize();
-    }
-
     public void RearrangeCreatures() {
         var rearrangeTask = new RearrangeZoneVisualTask(ZoneView, 0.1f);
         _visualManager.Push(rearrangeTask);
-    }
-
-    private void UpdateSize() {
-        Vector3 size = ZoneView.CalculateRequiredSize(Zone.MaxCreatures);
-
-        ChangeSize(size);
     }
 
 
@@ -101,6 +81,7 @@ public class ZonePresenter : AreaPresenter, IDisposable {
         ZoneView.OnRemoveDebugRequest -= TryRemoveCreatureDebug;
         Zone.OnCreaturePlaced -= HandleCreaturePlacement;
         Zone.OnCreatureRemoved -= HandleCreatureRemove;
+        Zone.ONMaxCreaturesChanged -= HandleSizeUpdate;
     }
 }
 

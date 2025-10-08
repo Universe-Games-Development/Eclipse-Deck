@@ -80,7 +80,7 @@ public readonly struct GridRow<T> {
 
 public readonly struct ItemLayoutInfo {
     public readonly string Id;
-    public readonly Vector3 VisualSize;  // Готові візуальні розміри
+    public readonly Vector3 VisualSize;
 
     public ItemLayoutInfo(string id, Vector3 visualSize) {
         Id = id;
@@ -104,6 +104,11 @@ public readonly struct LayoutPoint {
         Row = row;
         Column = col;
         Dimensions = dims;
+    }
+
+    // Helper для створення копії з новою позицією
+    public LayoutPoint WithPosition(Vector3 newPosition) {
+        return new LayoutPoint(newPosition, Rotation, Id, Row, Column, Dimensions);
     }
 }
 
@@ -138,51 +143,129 @@ public readonly struct LayoutResult {
 
     public static LayoutResult Empty => new LayoutResult(Array.Empty<LayoutPoint>(), new LayoutMetadata(0, 0, 0, 0f, 0f, 1f, false));
 }
+
 #endregion
 
-#region Axis Mapping Helper
+#region Grid Alignment Modes
 
 /// <summary>
-/// Допоміжний клас для маппінгу осей між різними layout'ами
+/// Режим вирівнювання елементів у сітці
 /// </summary>
-public static class AxisMapper {
+public enum GridAlignmentMode {
     /// <summary>
-    /// Конвертує позицію з одного простору в інший
-    /// sourceAxis визначає яка вісь source стає якою віссю в target
+    /// Кожен ряд центрується незалежно (за замовчуванням)
+    /// Елементи можуть не співпадати по колонках
     /// </summary>
-    public static Vector3 MapPosition(Vector3 source, AxisMapping mapping) {
-        return mapping switch {
-            AxisMapping.XYZ_to_XYZ => source, // Без змін
-            AxisMapping.XYZ_to_ZYX => new Vector3(source.z, source.y, source.x), // X↔Z
-            AxisMapping.XYZ_to_XZY => new Vector3(source.x, source.z, source.y), // Y↔Z
-            _ => source
-        };
-    }
+    IndependentRows,
 
     /// <summary>
-    /// Конвертує обертання з одного простору в інший
+    /// Всі колонки вирівнюються по найширшому елементу
+    /// Елементи чітко відповідають своїм колонкам
     /// </summary>
-    public static Quaternion MapRotation(Quaternion source, AxisMapping mapping) {
-        Vector3 euler = source.eulerAngles;
-
-        return mapping switch {
-            AxisMapping.XYZ_to_XYZ => source,
-            AxisMapping.XYZ_to_ZYX => Quaternion.Euler(euler.z, euler.y, euler.x),
-            AxisMapping.XYZ_to_XZY => Quaternion.Euler(euler.x, euler.z, euler.y),
-            _ => source
-        };
-    }
-}
-
-public enum AxisMapping {
-    XYZ_to_XYZ, // Стандартне (без змін)
-    XYZ_to_ZYX, // X стає Z, Z стає X (для вертикального layout)
-    XYZ_to_XZY  // Y стає Z, Z стає Y
+    AlignedColumns
 }
 
 #endregion
 
-#region Updated Grid3DLayout with Proper Axis Handling
+#region Column Width Calculator
+
+/// <summary>
+/// Обчислює максимальні ширини колонок для вирівнювання
+/// </summary>
+public static class ColumnWidthCalculator {
+    /// <summary>
+    /// Обчислює максимальну ширину для кожної колонки
+    /// </summary>
+    public static float[] CalculateColumnWidths(Grid<ItemLayoutInfo> gridData) {
+        if (gridData.IsEmpty) return Array.Empty<float>();
+
+        // Знаходимо максимальну кількість колонок
+        int maxColumns = 0;
+        foreach (var row in gridData.Rows) {
+            maxColumns = Mathf.Max(maxColumns, row.Count);
+        }
+
+        var columnWidths = new float[maxColumns];
+
+        // Для кожної колонки знаходимо максимальну ширину
+        for (int col = 0; col < maxColumns; col++) {
+            float maxWidth = 0f;
+
+            foreach (var row in gridData.Rows) {
+                if (col < row.Count) {
+                    maxWidth = Mathf.Max(maxWidth, row.Cells[col].VisualSize.x);
+                }
+            }
+
+            columnWidths[col] = maxWidth;
+        }
+
+        return columnWidths;
+    }
+
+    /// <summary>
+    /// Перераховує позиції елементів з врахуванням ширин колонок
+    /// </summary>
+    public static LayoutPoint[] RealignToColumns(
+        LayoutPoint[] points,
+        float[] columnWidths,
+        float spacing,
+        int maxColumnsPerRow) {
+
+        if (points.Length == 0 || columnWidths.Length == 0) return points;
+
+        var realignedPoints = new LayoutPoint[points.Length];
+
+        // Обчислюємо загальну ширину сітки
+        float totalWidth = 0f;
+        for (int i = 0; i < columnWidths.Length; i++) {
+            totalWidth += columnWidths[i];
+            if (i < columnWidths.Length - 1) {
+                totalWidth += spacing;
+            }
+        }
+
+        // Перераховуємо позиції для кожного елемента
+        for (int i = 0; i < points.Length; i++) {
+            var point = points[i];
+            int col = point.Column;
+
+            // Обчислюємо X позицію на основі колонок
+            float xPos = CalculateColumnXPosition(col, columnWidths, spacing, totalWidth);
+
+            // Створюємо новий point з оновленою позицією
+            var newPosition = new Vector3(xPos, point.Position.y, point.Position.z);
+            realignedPoints[i] = point.WithPosition(newPosition);
+        }
+
+        return realignedPoints;
+    }
+
+    private static float CalculateColumnXPosition(
+        int columnIndex,
+        float[] columnWidths,
+        float spacing,
+        float totalWidth) {
+
+        // Стартова позиція (ліва границя)
+        float startX = -totalWidth * 0.5f;
+
+        // Додаємо ширини попередніх колонок і spacing
+        float xPos = startX;
+        for (int i = 0; i < columnIndex; i++) {
+            xPos += columnWidths[i] + spacing;
+        }
+
+        // Додаємо половину ширини поточної колонки (центруємо в колонці)
+        xPos += columnWidths[columnIndex] * 0.5f;
+
+        return xPos;
+    }
+}
+
+#endregion
+
+#region Updated Grid3DLayout with Alignment Modes
 
 public class Grid3DLayout : IGridLayout {
     private readonly GridLayoutSettings _settings;
@@ -231,7 +314,12 @@ public class Grid3DLayout : IGridLayout {
         // Крок 3: Об'єднати результати з правильним маппінгом осей
         var allPoints = CombineLayoutsWithAxisMapping(gridData, rowLayouts, verticalLayoutResult);
 
-        // Крок 4: Створити метадані
+        // Крок 4: Вирівнювання колонок (якщо потрібно)
+        if (_settings.alignmentMode == GridAlignmentMode.AlignedColumns) {
+            allPoints = AlignColumnsIfNeeded(gridData, allPoints);
+        }
+
+        // Крок 5: Створити метадані
         var metadata = CreateMetadata(gridData, rowLayouts, allPoints);
 
         return new LayoutResult(allPoints, metadata);
@@ -252,22 +340,18 @@ public class Grid3DLayout : IGridLayout {
         int rowCount = rowLayouts.Length;
         var rowHeights = new float[rowCount];
 
-        // Отримуємо висоту кожного ряду
         for (int i = 0; i < rowCount; i++) {
             rowHeights[i] = GetRowHeight(rowLayouts[i]);
         }
 
-        // Створюємо ItemLayoutInfo для вертикального layout
-        // ВАЖЛИВО: Для вертикального layout використовуємо X як "ширину" ряду
         var rowItems = new ItemLayoutInfo[rowCount];
         for (int i = 0; i < rowCount; i++) {
             rowItems[i] = new ItemLayoutInfo(
                 $"Row_{i}",
-                new Vector3(rowHeights[i], 0f, 0f) // Висота ряду йде в X
+                new Vector3(rowHeights[i], 0f, 0f)
             );
         }
 
-        // Розраховуємо вертикальний layout
         return _verticalLayout.Calculate(rowItems);
     }
 
@@ -293,33 +377,21 @@ public class Grid3DLayout : IGridLayout {
             var rowPoints = rowLayouts[rowIndex].Points;
             var verticalPoint = verticalPoints[rowIndex];
 
-            // Маппінг вертикальної позиції: X→Z, Y→Y, Z→додатковий offset
-            // Вертикальний layout видає:
-            // - X: основна позиція ряду (стає Z)
-            // - Y: depth offset від веєра (стає додатковий Y)
-            // - Z: vertical offset від веєра (ігноруємо або додаємо до Z)
             Vector3 mappedVerticalPos = new Vector3(
-                0f,                          // X не використовується
-                verticalPoint.Position.y,    // Y (depth offset) залишається
-                verticalPoint.Position.x     // X стає Z (основна позиція ряду)
+                0f,
+                verticalPoint.Position.y,
+                verticalPoint.Position.x
             );
 
-            // Маппінг вертикального обертання: обертання навколо Y
             Quaternion mappedVerticalRot = verticalPoint.Rotation;
 
             foreach (var point in rowPoints) {
-                // Комбінуємо позиції
-                // Horizontal дає: (X-позицію, Y-depth, Z-vertical offset)
-                // Vertical дає: (0, Y-depth, Z-позицію ряду)
                 Vector3 finalPosition = new Vector3(
-                    point.Position.x,                      // X від horizontal
-                    point.Position.y + mappedVerticalPos.y, // Y комбінуємо (depth offsets)
-                    mappedVerticalPos.z + point.Position.z  // Z від vertical + offset від horizontal
+                    point.Position.x,
+                    point.Position.y + mappedVerticalPos.y,
+                    mappedVerticalPos.z + point.Position.z
                 );
 
-                // Комбінуємо обертання: спочатку horizontal, потім vertical
-                // Це дає ефект що елементи обертаються навколо центру ряду,
-                // а потім весь ряд обертається навколо центру grid
                 Quaternion finalRotation = mappedVerticalRot * point.Rotation;
 
                 allPoints[pointIndex] = new LayoutPoint(
@@ -336,6 +408,25 @@ public class Grid3DLayout : IGridLayout {
         }
 
         return allPoints;
+    }
+
+    private LayoutPoint[] AlignColumnsIfNeeded(Grid<ItemLayoutInfo> gridData, LayoutPoint[] points) {
+        // Обчислюємо ширини колонок
+        var columnWidths = ColumnWidthCalculator.CalculateColumnWidths(gridData);
+
+        // Знаходимо максимальну кількість колонок
+        int maxColumns = 0;
+        foreach (var row in gridData.Rows) {
+            maxColumns = Mathf.Max(maxColumns, row.Count);
+        }
+
+        // Перераховуємо позиції
+        return ColumnWidthCalculator.RealignToColumns(
+            points,
+            columnWidths,
+            _settings.horizontalSettings.ItemSpacing,
+            maxColumns
+        );
     }
 
     private LayoutMetadata CreateMetadata(
@@ -396,7 +487,7 @@ public class Grid3DLayout : IGridLayout {
 
 #endregion
 
-#region Linear3DLayout (без змін)
+#region Linear3DLayout
 
 public class Linear3DLayout : ILinearLayout {
     private readonly LinearLayoutSettings _settings;
@@ -554,6 +645,8 @@ public class Linear3DLayout : ILinearLayout {
 
 #endregion
 
+#region Compression Strategies
+
 public interface ICompressionStrategy {
     CompressionResult Calculate(float totalItemsWidth, float idealSpacing, int itemCount, float maxWidth);
 }
@@ -617,3 +710,5 @@ public static class CompressionStrategyFactory {
         return _strategies.TryGetValue(mode, out var strategy) ? strategy : _strategies[CompressionMode.ReduceSpacing];
     }
 }
+
+#endregion

@@ -2483,10 +2483,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Zone (4)
       objectReference: {fileID: 0}
-    - target: {fileID: 7960872108213578189, guid: a2aa70240a553974fb6787bff9fd789e, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6575,7 +6571,8 @@ MonoBehaviour:
   poolManagerPrefab: {fileID: 4567074288442617086, guid: 7ac3a136c7057f842bb651d6e74227eb, type: 3}
   cardPoolPrefab: {fileID: 5750584231336505023, guid: 78867da2d8a3d0043a14b80e2721c66c, type: 3}
   creaturePoolPrefab: {fileID: 5348190992646437761, guid: c9d86dfc516830c4f97cf26e7eb7839e, type: 3}
-  zonePrefab: {fileID: -8306620480434182900, guid: 87047701194f2a142b20ad338f9d5fc8, type: 3}
+  zonePoolPrefab: {fileID: -8306620480434182900, guid: 87047701194f2a142b20ad338f9d5fc8, type: 3}
+  cellPoolPrefab: {fileID: 2140742844302530610, guid: a1b6e548c7abfdd4a83d9b30064870cc, type: 3}
 --- !u!1 &1882889603
 GameObject:
   m_ObjectHideFlags: 0
@@ -6697,7 +6694,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bb4edf608d2dce4fab431689f74f176, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardOffset: {x: 0, y: 2, z: 0}
+  cardOffset: {x: 0, y: 3, z: 0}
   useCameraRayPositioning: 1
   playRenderOrderBoost: 50
 --- !u!114 &1895360928
@@ -7577,7 +7574,6 @@ GameObject:
   - component: {fileID: 2100769151}
   - component: {fileID: 2100769156}
   - component: {fileID: 2100769153}
-  - component: {fileID: 2100769154}
   - component: {fileID: 2100769155}
   - component: {fileID: 2100769157}
   m_Layer: 0
@@ -7617,26 +7613,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cellParent: {fileID: 1942162268}
-  cellFactory: {fileID: 2100769154}
   layoutComponent: {fileID: 2100769157}
   initialRows: 8
   initialColumns: 8
   createOnAwake: 0
   cellCreationDelay: 0.05
   animateCellCreation: 1
---- !u!114 &2100769154
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2100769150}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb072b2cb1bb6de4a9567bebff14fb8f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cellPrefab: {fileID: 1602220013362781559, guid: 135300a16b1ce2e4297213b9c01472f9, type: 3}
 --- !u!114 &2100769155
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7664,10 +7646,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardView: {fileID: 2100769153}
   minSize: 1
-  maxSize: 1
-  colums: 7
-  rows: 7
-  doPopulate: 0
+  maxSize: 10
+  colums: 10
+  rows: 10
+  doPopulate: 1
+  doTestZoneSizes: 1
+  zoneTryes: 50
+  updateDelay: 2
 --- !u!114 &2100769157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7681,8 +7666,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultItemSize: {x: 1, y: 1, z: 1}
+  animationMode: 1
   organizeDuration: 0.3
   organizeEase: 6
+  itemsContainer: {fileID: 1942162268}
   doTestUpdate: 1
   updateDelay: 0.75
   gridSettings: {fileID: 11400000, guid: 044b91c65a836e246b0a3b70d004d927, type: 2}
@@ -9520,8 +9507,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultItemSize: {x: 1, y: 1, z: 1}
+  animationMode: 0
   organizeDuration: 0.3
   organizeEase: 6
+  itemsContainer: {fileID: 0}
   doTestUpdate: 0
   updateDelay: 1
   layoutSettings: {fileID: 11400000, guid: f91a8d69fdf3cd04288b36995156f263, type: 2}

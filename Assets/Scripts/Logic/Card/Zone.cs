@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zenject;
 
 
 public class Zone : AreaModel, IDisposable {
     private const int MIN_CREATURES = 1;
-    public int MaxCreatures { get; }
+    public int MaxCreatures { get; private set; }
     public event Action<Creature> OnCreaturePlaced;
     public event Action<Creature> OnCreatureRemoved;
+    public event Action<int> ONMaxCreaturesChanged;
 
     private readonly List<Creature> _creatures = new();
     public IReadOnlyList<Creature> Creatures => _creatures.AsReadOnly();
@@ -21,6 +21,13 @@ public class Zone : AreaModel, IDisposable {
         
 
         eventBus.SubscribeTo<DeathEvent>(OnDeath);
+    }
+
+    public void ChangeSize(int newSize) {
+        if (newSize < 0) return;
+
+        MaxCreatures = newSize;
+        ONMaxCreaturesChanged?.Invoke(newSize);
     }
 
     private void OnDeath(ref DeathEvent eventData) {

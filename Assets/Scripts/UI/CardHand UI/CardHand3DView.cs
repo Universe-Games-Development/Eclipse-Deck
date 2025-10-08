@@ -151,9 +151,9 @@ public class CardHand3DView : CardHandView {
             cardViews[i].SetRenderOrder(baseRenderOrder + i);
         }
         // Можна логувати або обробляти метадані
-        Debug.Log($"Layout calculated: {result.Metadata.TotalItems} items, " +
-                  $"width: {result.Metadata.TotalWidth:F2}, " +
-                  $"compressed: {result.Metadata.IsCompressed}");
+        //Debug.Log($"Layout calculated: {result.Metadata.TotalItems} items, " +
+        //          $"width: {result.Metadata.TotalWidth:F2}, " +
+        //          $"compressed: {result.Metadata.IsCompressed}");
     }
 
     private void HandleItemPositioned(CardView card, LayoutPoint point) {
