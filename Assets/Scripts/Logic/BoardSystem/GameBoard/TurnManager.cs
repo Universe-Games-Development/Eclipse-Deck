@@ -5,12 +5,12 @@ using Zenject;
 
 
 public class TurnManager : IDisposable {
-    public Action<OpponentPresenter> OnOpponentChanged;
+    public Action<Opponent> OnOpponentChanged;
     public Action<TurnEndEvent> OnTurnEnd;
     public Action<TurnStartEvent> OnTurnStart;
 
-    private List<OpponentPresenter> currentOpponents = new(2);
-    public OpponentPresenter ActiveOpponent { get; private set; }
+    private List<Opponent> currentOpponents = new(2);
+    public Opponent ActiveOpponent { get; private set; }
     public int TurnCounter { get; private set; }
 
     private IEventBus<IEvent> eventBus;
@@ -24,17 +24,17 @@ public class TurnManager : IDisposable {
         this.eventBus = eventBus;
     }
 
-    public void InitTurns(List<OpponentPresenter> registeredOpponents) {
+    public void InitTurns(List<Opponent> registeredOpponents) {
         RoundCounter = 0;
         TurnCounter = 0;
         completedTurnsInRound = 0;
-        currentOpponents = new List<OpponentPresenter>(registeredOpponents);
+        currentOpponents = new List<Opponent>(registeredOpponents);
         currentOpponents.TryGetRandomElement(out var player);
         SwitchToNextOpponent(player);
         isDisabled = false;
     }
 
-    public bool EndTurnRequest(OpponentPresenter requester) {
+    public bool EndTurnRequest(Opponent requester) {
         if (inTransition || isDisabled) {
             Debug.LogWarning($"Turn cannot be ended right now. Transition: {inTransition}, Disabled: {isDisabled}");
             return false;
@@ -78,7 +78,7 @@ public class TurnManager : IDisposable {
         eventBus.Raise(turnStartEvent);
     }
 
-    private void SwitchToNextOpponent(OpponentPresenter starterOpponent = null) {
+    private void SwitchToNextOpponent(Opponent starterOpponent = null) {
         var previous = ActiveOpponent;
         ActiveOpponent = (starterOpponent != null && currentOpponents.Contains(starterOpponent))
             ? starterOpponent
@@ -89,7 +89,7 @@ public class TurnManager : IDisposable {
         eventBus.Raise(new OpponentTurnChangedEvent(previous, ActiveOpponent));
     }
 
-    private OpponentPresenter GetNextOpponent() {
+    private Opponent GetNextOpponent() {
         if (currentOpponents.Count == 0) return null;
         int index = (currentOpponents.IndexOf(ActiveOpponent) + 1) % currentOpponents.Count;
         return currentOpponents[index];
@@ -109,34 +109,34 @@ public class TurnManager : IDisposable {
 
 
 public struct TurnEndEvent : IEvent {
-    public OpponentPresenter endTurnOpponent;
+    public Opponent endTurnOpponent;
 
-    public TurnEndEvent(OpponentPresenter endTurnOpponent) {
+    public TurnEndEvent(Opponent endTurnOpponent) {
         this.endTurnOpponent = endTurnOpponent;
     }
 }
 public struct OpponentTurnChangedEvent : IEvent {
-    public OpponentPresenter activeOpponent;
-    public OpponentPresenter endTurnOpponent;
+    public Opponent activeOpponent;
+    public Opponent endTurnOpponent;
 
-    public OpponentTurnChangedEvent(OpponentPresenter previous, OpponentPresenter next) {
+    public OpponentTurnChangedEvent(Opponent previous, Opponent next) {
         this.activeOpponent = previous;
         this.endTurnOpponent = next;
     }
 }
 public struct TurnStartEvent : IEvent {
-    public OpponentPresenter StartingOpponent { get; private set; }
+    public Opponent StartingOpponent { get; private set; }
     public int TurnNumber { get; private set; }
-    public TurnStartEvent(int turnCount, OpponentPresenter startTurnOpponent) {
+    public TurnStartEvent(int turnCount, Opponent startTurnOpponent) {
         StartingOpponent = startTurnOpponent;
         TurnNumber = turnCount;
     }
 }
 
 public struct RoundStartEvent : IEvent {
-    public OpponentPresenter StartingOpponent { get; private set; }
+    public Opponent StartingOpponent { get; private set; }
     public int RoundNumber { get; private set; }
-    public RoundStartEvent(int roundCount, OpponentPresenter startingOpponent) {
+    public RoundStartEvent(int roundCount, Opponent startingOpponent) {
         RoundNumber = roundCount;
         StartingOpponent = startingOpponent;
     }

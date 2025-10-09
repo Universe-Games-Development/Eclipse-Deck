@@ -4,14 +4,17 @@ using System.Threading;
 using System.Threading.Tasks;
 
 public interface ITargetSelectionService {
+    public event Action<TargetSelectionRequest> OnSelectionStarted;
+    public event Action<TargetSelectionRequest, UnitModel> OnSelectionCompleted;
+    public event Action<TargetSelectionRequest> OnSelectionCancelled;
     void CancelCurrentSelection();
     UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken);
 }
 
 public abstract class BaseTargetSelector : ITargetSelectionService {
-    public Action<TargetSelectionRequest> OnSelectionRequested { get; set; }
-    public Action<TargetSelectionRequest, UnitModel> OnSelectionFinished { get; set; }
-    public Action<TargetSelectionRequest> OnSelectionCancelled { get; set; } // Нова реалізація
+    public event Action<TargetSelectionRequest> OnSelectionStarted;
+    public event Action<TargetSelectionRequest, UnitModel> OnSelectionCompleted;
+    public event Action<TargetSelectionRequest> OnSelectionCancelled;
 
     private TaskCompletionSource<UnitModel> _currentSelectionTask;
     private CancellationTokenSource _currentCancellation;
@@ -34,7 +37,7 @@ public abstract class BaseTargetSelector : ITargetSelectionService {
         _currentSelectionTask = new TaskCompletionSource<UnitModel>();
         _isCancelledBySelector = false;
 
-        OnSelectionRequested?.Invoke(selectionRequest);
+        OnSelectionStarted?.Invoke(selectionRequest);
 
         // Обробка скасування
         _currentCancellation.Token.Register(() => {
@@ -62,7 +65,7 @@ public abstract class BaseTargetSelector : ITargetSelectionService {
     public void ConfirmSelection(UnitModel target) {
         if (_currentSelectionTask != null && !_currentSelectionTask.Task.IsCompleted) {
             _currentSelectionTask.TrySetResult(target);
-            OnSelectionFinished?.Invoke(_currentRequest, target);
+            OnSelectionCompleted?.Invoke(_currentRequest, target);
         }
     }
 

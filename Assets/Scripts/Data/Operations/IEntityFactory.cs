@@ -20,6 +20,10 @@ public class EntityFactory : IEntityFactory {
     }
 
     public Creature CreateCreatureFromCard(CreatureCard card) {
-        return Create<Creature>(card); ;
+        Health creatureHealth = new(card.Health);
+        Attack creatureAttack = new(card.Attack);
+        Cost creatureCost = new(card.Cost);
+
+        return Create<Creature>(card.Data, creatureHealth, creatureAttack, creatureCost, card.Id); ;
     }
 }

@@ -6,16 +6,15 @@ public class AreaBody : MonoBehaviour , IArea {
 
     public event Action<Vector3> OnSizeChanged;
 
-    private Transform BodyToScale => _bodyToScale != null ? _bodyToScale : transform;
-
-    public Vector3 Size => BodyToScale.localScale;
+    public Vector3 Size => _bodyToScale.localScale;
 
     protected void Awake() {
         if (_bodyToScale == null)
             _bodyToScale = transform;
     }
 
-    public Transform GetBody() => BodyToScale;
+    public Transform GetBody() => _bodyToScale;
+
     public void SetBody(Transform body) {
         // Apply previous size
         if (_bodyToScale != null) {
@@ -26,9 +25,9 @@ public class AreaBody : MonoBehaviour , IArea {
     }
 
     public void Resize(Vector3 newSize) {
-        if (BodyToScale == null) return;
+        if (_bodyToScale == null) return;
 
-        BodyToScale.localScale = newSize;
+        _bodyToScale.localScale = newSize;
         OnSizeChanged?.Invoke(newSize);
     }
 }

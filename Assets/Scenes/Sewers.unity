@@ -2483,6 +2483,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Zone (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 7960872108213578189, guid: a2aa70240a553974fb6787bff9fd789e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7646,13 +7650,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardView: {fileID: 2100769153}
   minSize: 1
-  maxSize: 10
-  colums: 10
-  rows: 10
+  maxSize: 4
+  colums: 2
+  rows: 2
   doPopulate: 1
-  doTestZoneSizes: 1
-  zoneTryes: 50
-  updateDelay: 2
+  doRandomChanges: 0
+  zoneTryes: 3
 --- !u!114 &2100769157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7667,11 +7670,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultItemSize: {x: 1, y: 1, z: 1}
   animationMode: 1
-  organizeDuration: 0.3
+  organizeDuration: 0.2
   organizeEase: 6
+  enableLazyExecution: 1
+  positionThreshold: 0.001
   itemsContainer: {fileID: 1942162268}
-  doTestUpdate: 1
-  updateDelay: 0.75
+  showDebugInfo: 0
+  doTestUpdate: 0
+  updateDelay: 2
   gridSettings: {fileID: 11400000, guid: 044b91c65a836e246b0a3b70d004d927, type: 2}
   initialRows: 3
   initialColumns: 3
@@ -9510,7 +9516,10 @@ MonoBehaviour:
   animationMode: 0
   organizeDuration: 0.3
   organizeEase: 6
+  enableLazyExecution: 1
+  positionThreshold: 0.001
   itemsContainer: {fileID: 0}
+  showDebugInfo: 0
   doTestUpdate: 0
   updateDelay: 1
   layoutSettings: {fileID: 11400000, guid: f91a8d69fdf3cd04288b36995156f263, type: 2}
@@ -9800,6 +9809,7 @@ MonoBehaviour:
   playerData: {fileID: 11400000, guid: e1e26df24ffbfba41a215be2891d5112, type: 2}
   handView: {fileID: 2379312896532368615}
   opponentView: {fileID: 7112636217526397956}
+  SelectionDisplay: {fileID: 1895360928}
 --- !u!1 &9148399642170058457
 GameObject:
   m_ObjectHideFlags: 0

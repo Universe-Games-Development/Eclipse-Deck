@@ -85,7 +85,7 @@ public class CardBattleInfo : MonoBehaviour {
         UpdateRoundInfo(eventData.RoundNumber);
     }
 
-    private void OnOpponentChanged(OpponentPresenter boardPlayer) {
+    private void OnOpponentChanged(Opponent boardPlayer) {
         // ќновлюЇмо ≥нформац≥ю про активного гравц€
         if (activeOpponentText != null) {
             activeOpponentText.text = string.Format(activeOpponentFormat, boardPlayer);
@@ -101,7 +101,7 @@ public class CardBattleInfo : MonoBehaviour {
         isInitialized = true;
     }
 
-    private void UpdateTurnInfo(int turnNumber, OpponentPresenter boardPlayer) {
+    private void UpdateTurnInfo(int turnNumber, Opponent boardPlayer) {
         if (turnCounterText != null) {
             turnCounterText.text = string.Format(turnTextFormat, turnNumber);
         }

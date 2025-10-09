@@ -1,5 +1,4 @@
 ﻿using System;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public abstract class UnitView : MonoBehaviour {
@@ -9,11 +8,10 @@ public abstract class UnitView : MonoBehaviour {
     }
 }
 
-
-
 public abstract class UnitPresenter {
     public UnitModel Model { get; }
     public UnitView View { get; }
+   
 
     protected UnitPresenter(UnitModel model, UnitView view) {
         Model = model;
@@ -32,6 +30,8 @@ public class UnitModel {
     public virtual string OwnerId { get; protected set; }
     public Action<string> OnChangedOwner;
 
+    public string UnitName { get; protected set; }
+
     public void ChangeOwner(string newOwnerId) {
         if (string.IsNullOrEmpty(newOwnerId) || newOwnerId == OwnerId) return;
         OwnerId = newOwnerId;
@@ -39,7 +39,7 @@ public class UnitModel {
     }
 
     public virtual string GetName() {
-        return this.ToString();
+        return string.IsNullOrEmpty(UnitName) ? ToString() : UnitName;
     }
 }
 

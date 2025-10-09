@@ -13,7 +13,7 @@ public class Health : Attribute {
     public Health(Attribute attribute) : base(attribute) {
     }
 
-    public void TakeDamage(int damage, IDamageDealer source = null) {
+    public void TakeDamage(int damage, IAttacker source = null) {
         if (IsDead) return;
 
         Subtract(damage);

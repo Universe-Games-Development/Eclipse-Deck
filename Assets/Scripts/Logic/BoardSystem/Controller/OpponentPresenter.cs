@@ -13,7 +13,7 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
     [Inject] public IEventBus<IEvent> eventBus;
     
 
-    [Inject] public readonly IPresenterFactory presenterFactory;
+    [Inject] protected readonly IPresenterFactory presenterFactory;
     [Inject] public IUnitRegistry unitRegistry;
 
     public Opponent Opponent { get; private set; }
@@ -36,7 +36,6 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
     }
 
     #endregion
-
 
     #region Card Management
     
@@ -72,14 +71,11 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
     }
 }
 
-public class PlayerPresenter : OpponentPresenter {
-    [Inject] public ICardPlayService cardPlayService;
-    [Inject] ITargetFiller targetFiller;
-
-    private PlayerState currentState;
-
+public class PlayerPresenter : OpponentPresenter, IInputService {
     public PlayerView PlayerView;
-    public PlayerSelectorService SelectorService;
+    
+    public event Action<Card> OnCardSelected;
+    public event Action OnEndTurnClicked;
 
     public PlayerPresenter(Opponent opponent, PlayerView playerView) : base(opponent, playerView) {
         PlayerView = playerView;
@@ -87,137 +83,39 @@ public class PlayerPresenter : OpponentPresenter {
 
     public override void Initialize() {
         base.Initialize();
-        SelectorService = presenterFactory.CreatePresenter<PlayerSelectorService>(PlayerView.SelectionDisplay);
-        SelectorService.OnSelectionStarted += OnSelectionStarted;
-        SelectorService.OnSelectionCompleted += OnSelectionCompleted;
-        SelectorService.OnSelectionCancelled += OnSelectionCancelled;
-        cardPlayService.OnCardPlayFinished += OnCardPlayFinished;
-
-        targetFiller.RegisterSelector(Opponent.Id, SelectorService);
         
-        SwitchState(new IdleState());
+        Opponent.OnCardPlayStarted += OnCardPlayStarted;
+        Opponent.OnCardPlayFinished += OnCardPlayFinished;
+        HandPresenter.OnHandCardClicked += HandleHandCardSelected;
+
+        
+    }
+
+    private void HandleHandCardSelected(CardPresenter presenter) {
+        OnCardSelected?.Invoke(presenter.Card);
     }
 
     private void OnCardPlayFinished(Card card, CardPlayResult result) {
-        if (result.IsSuccess && HandPresenter.Contains(card)) {
-            HandPresenter.RemoveCard(card);
-        } else {
+        if (!result.IsSuccess ) {
             HandPresenter.SetInteractiveCard(card, true);
         }
         
         HandPresenter.UpdateCardsOrder();
+        HandPresenter.SetInteractable(true);
     }
 
-    private void OnSelectionStarted(TargetSelectionRequest request) {
-        SwitchState(new BusyState(request));
-    }
-
-    private void OnSelectionCompleted(TargetSelectionRequest request, UnitModel target) {
-        SwitchState(new IdleState());
-    }
-
-    private void OnSelectionCancelled(TargetSelectionRequest request) {
-        SwitchState(new IdleState());
-    }
-
-    public void SwitchState(PlayerState newState) {
-        if (newState == null) {
-            Debug.LogError("Attempting to switch to null state");
-            return;
-        }
-
-        if (currentState?.GetType() == newState.GetType()) {
-            return;
-        }
-
-        currentState?.Exit();
-        currentState = newState;
-        currentState.Presenter = this;
-        currentState.Enter();
-
-        Debug.Log($"State changed to: {currentState.GetType().Name}");
-    }
+    private void OnCardPlayStarted(Card card) {
+        HandPresenter.SetInteractiveCard(card, false);
+        HandPresenter.SetInteractable(false);
+    } 
 
     public override void Dispose() {
         base.Dispose();
-        targetFiller.UnregisterSelector(Opponent.Id);
+
+        Opponent.OnCardPlayStarted -= OnCardPlayStarted;
+        Opponent.OnCardPlayFinished -= OnCardPlayFinished;
+        HandPresenter.OnHandCardClicked -= HandleHandCardSelected;
     }
 }
 
 
-public class PlayerState : State {
-    public PlayerPresenter Presenter;
-}
-
-public class PassiveState : PlayerState {
-    // Implementation here
-}
-
-public class IdleState : PlayerState {
-    HandPresenter handPresenter;
-
-    public override void Enter() {
-        base.Enter();
-        handPresenter = Presenter.HandPresenter;
-        handPresenter.SetInteractable(true);
-        handPresenter.OnHandCardClicked += OnCardClicked;
-    }
-
-    private void OnCardClicked(CardPresenter card) {
-        if (card == null) return;
-        handPresenter.SetInteractiveCard(card.Card, false);
-        Presenter.cardPlayService.PlayCardAsync(card.Card).Forget();
-    }
-
-
-    public override void Exit() {
-        base.Exit();
-
-        if (handPresenter != null) {
-            handPresenter.OnHandCardClicked -= OnCardClicked;
-        }
-    }
-}
-
-public class BusyState : PlayerState {
-    private readonly TargetSelectionRequest _request;
-    
-    private HandPresenter handPresenter;
-    private PlayerSelectorService SelectorPresenter;
-    private ICardPlayService cardPlayService;
-
-   
-    public BusyState(TargetSelectionRequest request) {
-        _request = request;
-    }
-
-    public override void Enter() {
-        base.Enter();
-
-        handPresenter = Presenter.HandPresenter;
-        cardPlayService = Presenter.cardPlayService;
-        SelectorPresenter = Presenter.SelectorService;
-
-
-        handPresenter.SetInteractable(false);
-        if (_request.Source is Card card && cardPlayService.IsPlayingCard(card)) {
-            CardPresenter cardPresenter = Presenter.unitRegistry.GetPresenter<CardPresenter>(card);
-        }
-
-        SelectorPresenter.OnSelectionCompleted += HandleFinishedSelection;
-        SelectorPresenter.OnSelectionCancelled += HandleCanceledSelection;
-    }
-
-    private void HandleCanceledSelection(TargetSelectionRequest request) {
-        Presenter.SwitchState(new IdleState());
-    }
-
-    private void HandleFinishedSelection(TargetSelectionRequest request, UnitModel model) {
-        Presenter.SwitchState(new IdleState());
-    }
-
-    public override void Exit() {
-        base.Exit();
-        handPresenter.SetInteractable(true);
-    }
-}

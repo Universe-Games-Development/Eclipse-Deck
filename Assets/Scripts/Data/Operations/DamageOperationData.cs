@@ -26,7 +26,7 @@ public class DamageOperation : GameOperation {
         }
 
         // Тепер target вже має тип IHealthable!
-        target.Health.TakeDamage(data.damage);
+        target.TakeDamage(data.damage);
         await UniTask.DelayFrame(1);
         return true;
     }

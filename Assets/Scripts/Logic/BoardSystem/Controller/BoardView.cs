@@ -23,7 +23,6 @@ public class BoardView : MonoBehaviour {
     [SerializeField] private float cellCreationDelay = 0.05f;
     [SerializeField] private bool animateCellCreation = true;
 
-    // Події дошки
     public event Action<Cell3DView> OnCellCreated;
     public event Action<Cell3DView> OnCellRemoved;
     public event Action<Cell3DView, Cell3DView> OnCellsSwapped;
@@ -53,7 +52,6 @@ public class BoardView : MonoBehaviour {
     /// Створити всю дошку
     /// </summary>
     public async UniTask CreateBoard() {
-        // Очищуємо попередню дошку
         ClearBoard();
 
         // Встановлюємо розмір сітки
@@ -62,7 +60,7 @@ public class BoardView : MonoBehaviour {
         // Створюємо клітинки
         for (int row = 0; row < initialRows; row++) {
             for (int col = 0; col < initialColumns; col++) {
-                CreateCell(row, col, recalculate: false);
+                await CreateCellAsync(row, col, doLayout: false);
 
                 if (animateCellCreation && cellCreationDelay > 0) {
                     await UniTask.Delay(TimeSpan.FromSeconds(cellCreationDelay));
@@ -109,26 +107,23 @@ public class BoardView : MonoBehaviour {
     /// <summary>
     /// Створити одну клітинку
     /// </summary>
-    public Cell3DView CreateCell(int row, int column, bool recalculate = true) {
+    public async UniTask<Cell3DView> CreateCellAsync(
+        int row, int column, bool doLayout = true) {
 
-        // Перевірити чи позиція вже зайнята
         if (layoutComponent.IsCellOccupied(row, column)) {
             Debug.LogWarning($"Cell at ({row}, {column}) already exists");
             return layoutComponent.GetCellAt(row, column);
         }
 
-        // Створити клітинку через factory
         Cell3DView cell = cellPool.Get();
         cell.transform.SetParent(cellParent);
         cell.name = $"Cell_{row}_{column}";
 
-        // Додати в layout
-        layoutComponent.AddItem(cell, row, column, recalculate);
+        layoutComponent.AddItem(cell, row, column, false);
 
-        // Анімувати до позиції
-        if (recalculate) {
+        if (doLayout) {
             layoutComponent.RecalculateLayout();
-            layoutComponent.AnimateToLayoutPosition(cell).Forget();
+            await layoutComponent.AnimateToLayoutPosition(cell);
         }
 
         OnCellCreated?.Invoke(cell);
@@ -138,26 +133,20 @@ public class BoardView : MonoBehaviour {
     /// <summary>
     /// Видалити клітинку
     /// </summary>
-    public void RemoveCell(int row, int column, bool animate = true) {
+    public async UniTask RemoveCellAsync(int row, int column, bool animate = true) {
         var cell = layoutComponent.GetCellAt(row, column);
         if (cell == null) return;
 
         if (animate) {
-            // Анімація видалення перед фактичним видаленням
-            AnimateCellRemoval(cell).ContinueWith(() => {
-                OnCellRemove(cell, row, column);
-            }).Forget();
-        } else {
-            OnCellRemove(cell, row, column);
+            await AnimateCellRemoval(cell);
         }
-    }
 
-    private void OnCellRemove(Cell3DView cell, int row, int column) {
         layoutComponent.RemoveAt(row, column);
         OnCellRemoved?.Invoke(cell);
         cell.Clear();
         cellPool.Release(cell);
     }
+
 
     /// <summary>
     /// Отримати клітинку за позицією
@@ -269,15 +258,12 @@ public class BoardView : MonoBehaviour {
         await sequence.Play().ToUniTask();
     }
 
-    public async UniTask UpdateLayout() {
+    public async UniTask UpdateLayoutAsync() {
         layoutComponent.RecalculateLayout();
         await layoutComponent.AnimateAllToLayoutPositions();
     }
 
     #endregion
 
-    #region Properties
     public bool IsAnimating => layoutComponent.IsAnimating;
-
-    #endregion
 }

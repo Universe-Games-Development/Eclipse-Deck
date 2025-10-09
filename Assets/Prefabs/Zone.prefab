@@ -699,7 +699,7 @@ MonoBehaviour:
   animationMode: 0
   organizeDuration: 0.3
   organizeEase: 6
-  itemsContainer: {fileID: 0}
+  itemsContainer: {fileID: 4476722948096056295}
   doTestUpdate: 0
   updateDelay: 1
   layoutSettings: {fileID: 11400000, guid: fea07b809d7c5e34c855b471576e702e, type: 2}

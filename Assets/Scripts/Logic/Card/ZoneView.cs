@@ -64,35 +64,37 @@ public class ZoneView : InteractableView, IArea {
         }
     }
 
-    
-
     #region Creatures
 
-    public void AddCreatureView(CreatureView creatureView) {
+    /// <summary>
+    /// Додає CreatureView без перерахунку layout (для batch операцій)
+    /// </summary>
+    public async UniTask AddCreatureView(CreatureView creatureView, bool animateToPosition = true) {
         if (creatureView == null) return;
 
         creatureView.transform.SetParent(creaturesContainer);
-        // Layout component сам встановить parent
-        layoutComponent.AddItem(creatureView, recalculate: true);
+        // recalculate: false - не перераховуємо, щоб уникнути подвійного обчислення
+        layoutComponent.AddItem(creatureView, recalculate: false);
 
-        // Анімуємо на позицію
-        layoutComponent.AnimateToLayoutPosition(creatureView).Forget();
+        if (animateToPosition) {
+            await layoutComponent.AnimateToLayoutPosition(creatureView);
+        }
     }
 
-    public void RemoveCreatureView(CreatureView creatureView) {
+    public async UniTask RemoveCreatureView(CreatureView creatureView) {
         if (creatureView == null) return;
 
-        // Видаляємо з layout
-        layoutComponent.RemoveItem(creatureView, recalculate: true);
-
-        // Анімуємо решту створінь
-        RearrangeCreatures(rearrangeDuration).Forget();
-
+        // Видаляємо з layout без перерахунку
+        layoutComponent.RemoveItem(creatureView, recalculate: false);
         // Повертаємо в pool
         creaturePool?.Release(creatureView);
+
+        // Анімуємо решту створінь
+        await RearrangeCreatures(rearrangeDuration);
     }
 
     public async UniTask RearrangeCreatures(float duration = 0.5f) {
+        layoutComponent.RecalculateLayout();
         await layoutComponent.AnimateAllToLayoutPositions(duration);
     }
 

@@ -55,12 +55,10 @@ public class SummonCreatureOperation : GameOperation {
         // 2. Створюємо візуальну задачу
 
         var summonTask = visualTaskFactory.Create<SummonFromCardVisualTask>(
-            _creature, _data.visualData
+            _creature, creatureCard, _data.visualData
         );
 
         visualManager.Push(summonTask);
-
-        await UniTask.DelayFrame(1);
         // 3. Виконуємо логіку
         return zone.TryPlaceCreature(_creature);
     }
@@ -70,6 +68,8 @@ public class SummonCreatureOperation : GameOperation {
 // Transform Card into Creature
 public class SummonFromCardVisualTask : VisualTask, IDisposable {
     private readonly Creature _creature;
+    private readonly CreatureCard _creatureCard;
+
     private readonly SummonVisualData _data;
     private readonly IUnitRegistry _unitRegistry;
     private readonly IUnitSpawner<Card, CardView, CardPresenter> _cardSpawner;
@@ -80,11 +80,12 @@ public class SummonFromCardVisualTask : VisualTask, IDisposable {
     private CardPresenter _tempCardCopy;
     private Vector3 _spawnPosition;
 
-    public SummonFromCardVisualTask(Creature creature, SummonVisualData data,
+    public SummonFromCardVisualTask(Creature creature, CreatureCard card, SummonVisualData data,
         IUnitRegistry unitRegistry, IUnitSpawner<Card, CardView, CardPresenter> cardSpawner,
         ICardFactory cardFactory) {
 
         _creature = creature;
+        _creatureCard = card;
         _data = data;
         _unitRegistry = unitRegistry;
         _cardSpawner = cardSpawner;
@@ -117,9 +118,9 @@ public class SummonFromCardVisualTask : VisualTask, IDisposable {
     }
 
     private CardPresenter CreateVisualCopy(Creature creature) {
-        var originalPresenter = _unitRegistry.GetPresenter<CardPresenter>(creature.SourceCard);
+        var originalPresenter = _unitRegistry.GetPresenter<CardPresenter>(_creatureCard);
         if (originalPresenter?.View == null) {
-            throw new InvalidOperationException($"Original card presenter not found for {creature.SourceCard}");
+            throw new InvalidOperationException($"Original card presenter not found for {creature}");
         }
 
         // Зберігаємо позицію одразу, поки оригінал ще існує

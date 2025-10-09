@@ -1,12 +1,15 @@
 ﻿using System;
 
 public interface IManaSystem {
-    public Mana Mana { get; }
-}
-public interface IHealthable {
-    public Health Health { get; }
 }
 
-public interface IDamageDealer {
-    public Attack Attack { get; }
+public interface IHealthable {
+    bool IsDead { get; }
+    int CurrentHealth{ get; }
+
+    void TakeDamage(int damage);
+}
+
+public interface IAttacker {
+    int CurrentAttack { get; }
 }

@@ -77,7 +77,7 @@ public class MinHealthCondition : ITargetCondition<IHealthable> {
     }
 
     public ValidationResult Validate(IHealthable model, ValidationContext context) {
-        if (model.Health.Current < minHealth) {
+        if (model.CurrentHealth < minHealth) {
             return ValidationResult.Error($"Target must have at least {minHealth} health");
         }
         return ValidationResult.Success;
@@ -86,7 +86,7 @@ public class MinHealthCondition : ITargetCondition<IHealthable> {
 public class AliveCondition : ITargetCondition<IHealthable> {
 
     public ValidationResult Validate(IHealthable model, ValidationContext context) {
-        if (model.Health.IsDead) {
+        if (model.IsDead) {
             return ValidationResult.Error($"Target must have alive");
         }
         return ValidationResult.Success;

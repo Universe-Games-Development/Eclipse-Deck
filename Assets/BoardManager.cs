@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using UnityEngine;
 using Zenject;
@@ -22,47 +23,41 @@ public class BoardManager : MonoBehaviour
     private Board board;
     private BoardPresenter boardPresenter;
     [SerializeField] bool doPopulate = false;
+    [SerializeField] bool doRandomChanges = false;
 
-    [SerializeField] bool doTestZoneSizes = false;
     [SerializeField] int zoneTryes = 3;
-    [SerializeField] float updateDelay = 3.0f;
-    List<Zone> zones = new();
 
     private void Start() {
         board = SetupInitialBoard(rows, colums);
         boardPresenter = presenterFactory.CreatePresenter<BoardPresenter>(board, boardView);
-        boardPresenter.CreateBoard();
 
         if (doPopulate) {
-            zones = CreateZones(board.GetAllCells().Count);
-            PopulateCells(zones);
+            PopulateCells();
         }
-        
 
-        if (doPopulate && doTestZoneSizes) {
-            DoTestZoneChangeSize().Forget();
+        boardPresenter.CreateBoard();
+        StartTestChanges();
+    }
+
+    public void StartTestChanges() {
+        if (!doPopulate) return;
+
+        if (doRandomChanges) {
+            DoRandomColumnChanges();
         }
     }
 
-    private async UniTask DoTestZoneChangeSize() {
+    private void DoRandomColumnChanges() {
         for (int i = 0; i < zoneTryes; i++) {
-            await UniTask.WaitForSeconds(updateDelay);
-
-            for (int zoneIndex = 0; zoneIndex < zones.Count; zoneIndex++) {
-                int randomSize = Random.Range(minSize, maxSize);
-                zones[zoneIndex].ChangeSize(randomSize);
-            }
-
             bool doRemoveColumn = Random.Range(0, 3) > 1;
             if (doRemoveColumn) {
                 int columns = board.GetCurrentColumnsCount() - 1;
-                Debug.Log($"REMOVE {columns}");
+                //Debug.Log($"REMOVE {columns}");
                 board.RemoveColumn(columns);
             } else {
                 board.AddColumn();
-                Debug.Log("ADD");
+                //Debug.Log("ADD");
             }
-            
         }
     }
 
@@ -70,31 +65,30 @@ public class BoardManager : MonoBehaviour
         return new Board(rows, colums);
     }
 
-    private void PopulateCells(List<Zone> zones) {
+    private void PopulateCells() {
         List<Cell> cells = board.GetAllCells();
+
+        List<Zone> zones = CreatePlayerZones(cells.Count);
 
         for (int i = 0; i < cells.Count; i++) {
             ZonePresenter zonePresenter = SpawnTestZone(zones[i]);
-            boardPresenter.AssignArea(cells[i], zones[i]);
         }
+        boardPresenter.AssignAreas(cells, zones);
     }
 
-    private List<Zone> CreateZones(int zonesCount) {
-        List<Zone> zones = new();
-        for (int i = 0; i < zonesCount; i++) {
-            int randomSize = Random.Range(minSize, maxSize); 
-            zones.Add(CreateZone(randomSize));
-        }
-        return zones;
-    }
-
-    private Zone CreateZone(int size = 1) {
+    private List<Zone> CreatePlayerZones(int zonesCount) {
         List<Opponent> opponents = opponentRegistry.GetOpponents();
         Opponent player = opponents.First();
+        
+        List<Zone> zones = new();
+        for (int i = 0; i < zonesCount; i++) {
+            int randomSize = Random.Range(minSize, maxSize);
+            Zone zone = entityFactory.Create<Zone>(randomSize);
 
-        Zone zone = entityFactory.Create<Zone>(size);
-        zone.ChangeOwner(player.Id);
-        return zone;
+            zone.ChangeOwner(player.Id);
+            zones.Add(zone);
+        }
+        return zones;
     }
 
     private ZonePresenter SpawnTestZone(Zone zone) {

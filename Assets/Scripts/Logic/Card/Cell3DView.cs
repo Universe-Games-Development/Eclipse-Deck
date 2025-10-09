@@ -8,13 +8,14 @@ public class Cell3DView : InteractableView, IArea {
     [SerializeField] private Vector3 areaOffset = Vector3.zero;
     [SerializeField] public Vector3 cellPadding = new Vector3(0.2f, 0f, 0.2f);
 
-    private UnitView assignedBody;
+    [Header ("Serialized for Runtime Debug")]
+    [SerializeField] private UnitView assignedBody;
 
     #region IArea 
     [SerializeField] private AreaBody ownBody;
     public event Action<Vector3> OnSizeChanged;
 
-    public Vector3 Size => ownBody.Size;
+    public Vector3 Size => ownBody ? ownBody.Size : Vector3.one;
     public void Resize(Vector3 newSize) {
         ownBody.Resize(newSize);
         OnSizeChanged?.Invoke(newSize);
@@ -34,11 +35,12 @@ public class Cell3DView : InteractableView, IArea {
 
     public void RemoveAreaView() {
         if (assignedBody == null) return;
-        Destroy(assignedBody);
+        Destroy(assignedBody.gameObject);
     }
 
     public void Clear() {
         RemoveAreaView();
+        Resize(Vector3.one);
     }
 }
 

@@ -118,7 +118,7 @@ public class CardHand3DView : CardHandView {
         returnSequence.Join(target.DOLocalMove(Vector3.zero, cardHoverDuration));
         returnSequence.Join(card3DView.transform.DOLocalRotate(originalRotation.Value.eulerAngles, cardHoverDuration));
 
-        Debug.Log("Return sequence");
+        //Debug.Log("Return sequence");
         card3DView.DoSequenceInner(returnSequence).Forget();
     }
 

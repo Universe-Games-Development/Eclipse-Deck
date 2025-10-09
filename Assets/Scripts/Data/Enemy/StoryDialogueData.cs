@@ -70,7 +70,7 @@ public class StoryDialogue : BaseDialogue {
     }
 
     private void OnTurnStart(ref TurnStartEvent eventData) {
-        bool isOwnTurn = eventData.StartingOpponent.Opponent != speaker.Opponent;
+        bool isOwnTurn = eventData.StartingOpponent != speaker.Opponent;
         if (isOwnTurn == storyDialogueData.triggerOnOwnTurn) return;
 
         Queue<string> messages = storyDialogueData.GetContextPages(eventData, storyDialogueData.triggerOnRound);

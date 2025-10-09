@@ -1,10 +1,6 @@
 using System;
 using UnityEngine;
-using Zenject;
 
-/// <summary>
-/// Manages individual cell's logic and visual representation
-/// </summary>
 public class CellPresenter : IDisposable {
     public Cell Cell { get; }
     public Cell3DView CellView { get; }
@@ -13,30 +9,33 @@ public class CellPresenter : IDisposable {
 
     private IArea assignedArea;
     
-
-    [Inject]
     private IUnitRegistry _unitRegistry;
 
-    public CellPresenter(Cell model, Cell3DView view) {
+    public CellPresenter(Cell model, Cell3DView view, IUnitRegistry _unitRegistry) {
         Cell = model;
         CellView = view;
+        this._unitRegistry = _unitRegistry;
 
         Cell.OnUnitChanged += HandleUnitChanged;
+        HandleUnitChanged(Cell.AssignedUnit);
     }
 
     private void HandleUnitChanged(UnitModel newUnit) {
-        if (newUnit == null) return;
-
-        UnitPresenter assignedPresenter = _unitRegistry.GetPresenter<UnitPresenter>(newUnit);
-        if (!(assignedPresenter.View is IArea area)) return;
-
-
+        if (newUnit == null) return; // Якщо вміст видалено, тут логіка завершується
 
         if (assignedArea != null) {
             assignedArea.OnSizeChanged -= HandleAreaSizeChanged;
             assignedArea = null;
+            CellView.RemoveAreaView(); // Важливо: видалити старий View
+                                       // Додатково: скинути розмір комірки до мінімального
+                                       // UpdateCellSize(Vector3.zero); 
         }
 
+        // Крок 2: Додавання нового вмісту
+        UnitPresenter assignedPresenter = _unitRegistry.GetPresenter<UnitPresenter>(newUnit);
+        if (!(assignedPresenter.View is IArea area)) return;
+
+        assignedArea = area;
         area.OnSizeChanged += HandleAreaSizeChanged;
         CellView.AddArea(assignedPresenter.View);
 

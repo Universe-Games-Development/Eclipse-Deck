@@ -37,8 +37,8 @@ public abstract class Card : UnitModel {
 }
 
 
-public class CreatureCard : Card, IHealthable {
-    public CreatureCardData CreatureCardData => (CreatureCardData)Data;
+public class CreatureCard : Card, IHealthable, IAttacker {
+    public CreatureCardData CreatureCardData { get; private set; }
 
     public Health Health { get; private set; }
     public Attack Attack { get; private set; }
@@ -46,9 +46,25 @@ public class CreatureCard : Card, IHealthable {
     public CreatureCard(CreatureCardData cardData, Health health, Attack attack)
         : base(cardData) {
 
+        CreatureCardData = cardData;
         Health = health;
         Attack = attack;
     }
+
+    #region IAttacker
+    public int CurrentAttack => Attack.Current;
+
+    #endregion
+
+    #region IHealthable
+    public bool IsDead => Health.IsDead;
+
+    public int CurrentHealth => Health.Current;
+
+    public void TakeDamage(int damage) {
+        Health.TakeDamage(damage);
+    }
+    #endregion
 
     public override string ToString() {
         return $"{CreatureCardData.Name} Hp: {Health}";

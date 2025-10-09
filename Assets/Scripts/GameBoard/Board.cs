@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+
 /// <summary>
 /// ќсновной класс игровой доски
 /// </summary>
@@ -13,11 +14,10 @@ public class Board : UnitModel {
 
     public int ColumnCount => _rows.First().CellCount;
 
-    public event EventHandler<ColumnRemovedEvent> ColumnRemoved;
-    public event EventHandler<ColumnAddedEvent> ColumnAdded;
+    // ”н≥версальна под≥€ дл€ зм≥н структури дошки
+    public event EventHandler<BoardStructureChangedEvent> StructureChanged;
 
     public Board(int rows, int columns) {
-        
         for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
             _rows.Add(new Row(columns, rowIndex));
         }
@@ -47,19 +47,24 @@ public class Board : UnitModel {
     /// <summary>
     /// Adds a new column to all rows
     /// </summary>
-    public bool AddColumn() { 
+    public bool AddColumn() {
         List<Cell> newColumn = new();
         for (int i = 0; i < _rows.Count; i++) {
             var newCell = _rows[i].AddCell();
             if (newCell == null) {
                 return false;
-                //return OperationResult.Failed($"Failed to add cell to row {i}: {newCell}");
             }
             newColumn.Add(newCell);
         }
 
         int newColumnIndex = GetCurrentColumnsCount() - 1;
-        ColumnAdded?.Invoke(this, new ColumnAddedEvent(newColumn, newColumnIndex));
+
+        // ¬икликаЇмо Їдину под≥ю з≥ списком доданих €чейок
+        StructureChanged?.Invoke(this, new BoardStructureChangedEvent(
+            addedCells: newColumn,
+            removedCells: new List<Cell>(),
+            affectedIndex: newColumnIndex
+        ));
 
         return true;
     }
@@ -70,28 +75,30 @@ public class Board : UnitModel {
     public bool RemoveColumn(int columnIndex) {
         if (_rows.Count == 0) {
             return false;
-            //return OperationResult.Failed("Board is empty");
         }
 
         if (GetCurrentColumnsCount() <= 1) {
             return false;
-            //return OperationResult.Failed("Cannot delete the last column");
         }
 
         List<Cell> removedColumn = new();
 
-        // Use the helper - much cleaner!
         foreach (var (cell, row, rowIndex) in EnumerateColumn(columnIndex)) {
             removedColumn.Add(cell);
 
             var removedCell = row.RemoveCell(columnIndex);
             if (removedCell == null) {
                 return false;
-               // return OperationResult.Failed($"Failed to remove cell from row {rowIndex}");
             }
         }
 
-        ColumnRemoved?.Invoke(this, new ColumnRemovedEvent(removedColumn, columnIndex));
+        // ¬икликаЇмо Їдину под≥ю з≥ списком видалених €чейок
+        StructureChanged?.Invoke(this, new BoardStructureChangedEvent(
+            addedCells: new List<Cell>(),
+            removedCells: removedColumn,
+            affectedIndex: columnIndex
+        ));
+
         return true;
     }
 
@@ -136,22 +143,33 @@ public class Board : UnitModel {
 }
 
 
-public struct ColumnRemovedEvent : IEvent {
-    public List<Cell> RemovedColumn { get; }
-    public int OldCellIndex { get; internal set; }
 
-    public ColumnRemovedEvent(List<Cell> removedColumn, int cellIndex) {
-        RemovedColumn = removedColumn;
-        OldCellIndex = cellIndex;
-    }
-}
+/// <summary>
+/// ”н≥версальна под≥€ дл€ зм≥н структури дошки
+/// </summary>
+public struct BoardStructureChangedEvent : IEvent {
+    /// <summary>
+    /// ячейки, €к≥ були додан≥
+    /// </summary>
+    public List<Cell> AddedCells { get; }
 
-public struct ColumnAddedEvent : IEvent {
-    public List<Cell> NewColumn { get; }
-    public int NewColumnIndex { get; internal set; }
+    /// <summary>
+    /// ячейки, €к≥ були видален≥
+    /// </summary>
+    public List<Cell> RemovedCells { get; }
 
-    public ColumnAddedEvent(List<Cell> newColumn, int columnIndex) {
-        NewColumn = newColumn;
-        NewColumnIndex = columnIndex;
+    /// <summary>
+    /// ≤ндекс затронутого р€дка/колонки (опц≥онально)
+    /// </summary>
+    public int AffectedIndex { get; }
+
+    public BoardStructureChangedEvent(
+        List<Cell> addedCells,
+        List<Cell> removedCells,
+        int affectedIndex = -1) {
+
+        AddedCells = addedCells ?? new List<Cell>();
+        RemovedCells = removedCells ?? new List<Cell>();
+        AffectedIndex = affectedIndex;
     }
 }

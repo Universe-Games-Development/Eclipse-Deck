@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Zenject;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
-using UnityEditor.Build.Pipeline.Tasks;
 
 public class BoardPresenter : IDisposable {
     public BoardView BoardView;
@@ -11,10 +10,8 @@ public class BoardPresenter : IDisposable {
 
     private Dictionary<Cell, CellPresenter> cellPresenters = new();
 
-    // Кеш для швидкого доступу до ячейок по індексах
-    private Dictionary<(int row, int col), CellPresenter> cellPresentersByIndex = new();
-
     [Inject] IPresenterFactory presenterFactory;
+    [Inject] IVisualManager visualManager;
 
     public BoardPresenter(Board board, BoardView boardView) {
         Board = board;
@@ -24,50 +21,89 @@ public class BoardPresenter : IDisposable {
 
     private void SubscribeToEvents() {
         if (Board != null) {
-            Board.ColumnRemoved += HandleColumnRemoved;
-            Board.ColumnAdded += HandleColumnAdded;
+            Board.StructureChanged += HandleNewSctructure;
         }
     }
 
     private void UnsubscribeFromEvents() {
         if (Board != null) {
-            Board.ColumnRemoved += HandleColumnRemoved;
-            Board.ColumnAdded += HandleColumnAdded;
+            Board.StructureChanged -= HandleNewSctructure;
         }
     }
 
-    private void HandleColumnRemoved(object sender, ColumnRemovedEvent eventData) {
-        List<Cell> removedColumn = eventData.RemovedColumn;
-
-        foreach (Cell cell in removedColumn) {
-            BoardView.RemoveCell(cell.RowIndex, cell.ColumnIndex, false);
-        }
-        BoardView.UpdateLayout().Forget();
+    private void HandleNewSctructure(object sender, BoardStructureChangedEvent eventData) {
+        HandleCellsRemoved(eventData.RemovedCells);
+        HandleCellsAdded(eventData.AddedCells);
     }
 
-    private void HandleColumnAdded(object sender, ColumnAddedEvent eventData) {
-        List<Cell> newColumn = eventData.NewColumn;
+    private void HandleCellsRemoved(List<Cell> removedCells) {
+        var removeColumnTask = new UniversalVisualTask(async () => {
+            var removalTasks = new List<UniTask>();
 
-        foreach (Cell cell in newColumn) {
-            BoardView.CreateCell(cell.RowIndex, cell.ColumnIndex, false);
-        }
-        BoardView.UpdateLayout().Forget();
+            foreach (var cell in removedCells) {
+                if (cellPresenters.TryGetValue(cell, out var presenter)) {
+                    // Видалення презентера/кешу (синхронна дія)
+                    presenter.OnSizeChanged -= HandleCellSizeChanged;
+                    cellPresenters.Remove(cell);
+                    presenter.Dispose();
+                }
+                // Збираємо асинхронні завдання видалення View
+                removalTasks.Add(BoardView.RemoveCellAsync(cell.RowIndex, cell.ColumnIndex, false));
+            }
+
+            // Чекаємо завершення паралельного видалення всіх View
+            await UniTask.WhenAll(removalTasks);
+            await BoardView.UpdateLayoutAsync();
+            return true;
+        }, $"Remove cells {removedCells.Count}");
+
+        visualManager.Push(removeColumnTask);
+    }
+
+    private void HandleCellsAdded(List<Cell> addedCells) {
+        var addColumnTask = new UniversalVisualTask(async () => {
+            var creationTasks = new List<UniTask>();
+
+            // Створюємо комірки та їх презентери
+            foreach (var cell in addedCells) {
+                var task = CreateCellWithPresenterAsync(cell);
+                creationTasks.Add(task);
+            }
+
+            await UniTask.WhenAll(creationTasks);
+            await BoardView.UpdateLayoutAsync();
+
+            return true;
+        }, $"Add cells {addedCells.Count}");
+
+        visualManager.Push(addColumnTask);
+    }
+
+    private async UniTask CreateCellWithPresenterAsync(Cell cell) {
+        var cellView = await BoardView.CreateCellAsync(cell.RowIndex, cell.ColumnIndex, false);
+        CreateCellPresenter(cell, cellView);
     }
 
     public void CreateBoard() {
-        for (int rowIndex = 0; rowIndex < Board.RowCount; rowIndex++) {
-            var row = Board.GetRow(rowIndex);
-            for (int cellIndex = 0; cellIndex < row.CellCount; cellIndex++) {
-                var cell = row.GetCell(cellIndex);
-                if (cell == null) continue;
+        var createBoardTask = new UniversalVisualTask(async () => {
+            var creationTasks = new List<UniTask>();
 
-                var cellView = BoardView.CreateCell(cell.RowIndex, cell.ColumnIndex, false);
-                CellPresenter cellPresenter = CreateCellPresenter(cell, cellView);
+            for (int rowIndex = 0; rowIndex < Board.RowCount; rowIndex++) {
+                var row = Board.GetRow(rowIndex);
+                for (int cellIndex = 0; cellIndex < row.CellCount; cellIndex++) {
+                    var cell = row.GetCell(cellIndex);
+                    if (cell == null) continue;
 
-                cellPresentersByIndex[(rowIndex, cellIndex)] = cellPresenter;
+                    var task = CreateCellWithPresenterAsync(cell);
+                    creationTasks.Add(task);
+                }
             }
-        }
-        BoardView.UpdateLayout().Forget();
+
+            await UniTask.WhenAll(creationTasks);
+            await BoardView.UpdateLayoutAsync();
+        }, $"Create Board");
+
+        visualManager.Push(createBoardTask);
     }
 
     private CellPresenter CreateCellPresenter(Cell cell, Cell3DView view) {
@@ -83,8 +119,13 @@ public class BoardPresenter : IDisposable {
         return cellPresenter;
     }
 
+    public void UpdateLayout() {
+        UniversalVisualTask universalVisualTask = new(BoardView.UpdateLayoutAsync, "Layout Update");
+        visualManager.Push(universalVisualTask);
+    }
+
     private void HandleCellSizeChanged(CellPresenter presenter, Vector3 size) {
-        BoardView.UpdateLayout().Forget();
+        UpdateLayout();
     }
 
     public void AssignArea(int row, int column, Zone zone) {
@@ -95,13 +136,23 @@ public class BoardPresenter : IDisposable {
         Board.AssignAreaModelToCell(cell, zone);
     }
 
+    public void AssignAreas(List<Cell> cells, List<Zone> zones) {
+        if (zones.Count < cells.Count) return;
+
+        for (int i = 0; i < cells.Count; i++) {
+            cells[i].AssignUnit(zones[i]);
+        }
+        UpdateLayout();
+    } 
+
     public void Dispose() {
         foreach (var presenter in cellPresenters.Values) {
+            presenter.OnSizeChanged -= HandleCellSizeChanged;
             presenter.Dispose();
         }
 
         cellPresenters.Clear();
-        cellPresentersByIndex.Clear();
         UnsubscribeFromEvents();
     }
 }
+
