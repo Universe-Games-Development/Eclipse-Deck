@@ -1,11 +1,10 @@
-using Cysharp.Threading.Tasks;
 using System;
-using System.Threading;
-using UnityEngine;
+using System.Collections.Generic;
+using Zenject;
 
 public class Opponent : UnitModel, IHealthable, IManaSystem, IDisposable {
     public override string OwnerId {
-        get { return Id; }
+        get { return InstanceId; }
     }
 
     public Action<Card, CardPlayResult> OnCardPlayFinished;
@@ -22,20 +21,24 @@ public class Opponent : UnitModel, IHealthable, IManaSystem, IDisposable {
     private ICardPlayService cardPlayService;
     private IEventBus<IEvent> eventBus;
 
+    //Deck Generation
+    [Inject] private CardProvider _cardProvider;
+    [Inject] private ICardFactory _cardFactory;
+
     public Opponent(OpponentData data, Deck deck, CardHand hand, ICardPlayService cardPlayService, IEventBus<IEvent> eventBus) {
         Data = data ?? throw new ArgumentNullException(nameof(data));
         Deck = deck ?? throw new ArgumentNullException(nameof(deck));
         Hand = hand ?? throw new ArgumentNullException(nameof(hand));
 
-        Id = $"{Data.Name}_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+        InstanceId = $"{Data.Name}_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
 
         Health = new Health(data.Health);
         Mana = new Mana(data.Mana);
         CardSpendable = new CardSpendable(Mana, Health);
 
         
-        Deck.ChangeOwner(Id);
-        Hand.ChangeOwner(Id);
+        Deck.ChangeOwner(InstanceId);
+        Hand.ChangeOwner(InstanceId);
 
         this.cardPlayService = cardPlayService;
         this.eventBus = eventBus;
@@ -94,153 +97,35 @@ public class Opponent : UnitModel, IHealthable, IManaSystem, IDisposable {
     public void Dispose() {
         cardPlayService.OnCardPlayFinished -= HandleCardPlayFinished;
     }
-}
 
-
-
-public interface IOpponentController {
-    void StartTurn();
-    void EndTurn();
-    UniTask<UnitModel> SelectTargetAsync(TargetSelectionRequest selectionRequst, CancellationToken cancellationToken);
-}
-
-public interface IInputService {
-    event Action<Card> OnCardSelected;
-    event Action OnEndTurnClicked;
-}
-
-public class PlayerController : IOpponentController, IDisposable {
-    private readonly Opponent player;
-    private readonly ITargetSelectionService selectionService;
-    private readonly IInputService inputService;
-
-    private PlayerState currentState;
-    private PlayerState previousState;
-
-    public PlayerController(
-        Opponent player,
-        ITargetSelectionService selectionService,
-        IInputService inputService) // Додаємо в конструктор
-    {
-        this.player = player ?? throw new ArgumentNullException(nameof(player));
-        this.selectionService = selectionService ?? throw new ArgumentNullException(nameof(selectionService));
-        this.inputService = inputService ?? throw new ArgumentNullException(nameof(inputService));
-
-        inputService.OnEndTurnClicked += EndTurn;
-
-        // Початковий стан
-        SwitchState(new IdleState());
+    public void FillDeckWithRandomCards(int amount) {
+        var cards = GenerateRandomCards(amount);
+        Deck.AddRange(cards);
     }
 
-    public void StartTurn() {
-        player.RestoreMana();
-        player.DrawCard();
-        SwitchState(new IdleState());
-    }
+    public List<Card> GenerateRandomCards(int amount) {
+        CardCollection collection = new();
+        List<CardData> unlockedCards = _cardProvider.GetRandomUnlockedCards(amount);
 
-    public void EndTurn() {
-        SwitchState(new PassiveState());
-        player.EndTurn();
-    }
+        if (unlockedCards.Count == 0)
+            return new List<Card>();
 
-    public void PlayCard(Card card) {
-        player.PlayCard(card);
-    }
-
-    public async UniTask<UnitModel> SelectTargetAsync(
-        TargetSelectionRequest selectionRequest,
-        CancellationToken cancellationToken) {
-        SwitchState(new BusyState());
-        UnitModel unitModel = await selectionService.SelectTargetAsync(selectionRequest, cancellationToken);
-        ReturnToPreviousState();
-        return unitModel;
-    }
-
-    public void SwitchState(PlayerState newState) {
-        if (newState == null) {
-            Debug.LogError("Attempting to switch to null state");
-            return;
+        // випадковий набір карт
+        for (int i = 0; i < amount; i++) {
+            var randomIndex = UnityEngine.Random.Range(0, unlockedCards.Count);
+            var randomCard = unlockedCards[randomIndex];
+            collection.AddCardToCollection(randomCard);
         }
 
-        if (currentState?.GetType() == newState.GetType()) {
-            return;
+        // створення інстансів
+        List<Card> cards = new();
+        foreach (var entry in collection.cardEntries) {
+            for (int i = 0; i < entry.Value; i++) {
+                Card newCard = _cardFactory.CreateCard(entry.Key);
+                if (newCard != null)
+                    cards.Add(newCard);
+            }
         }
-        previousState = currentState ?? new PassiveState();
-        currentState?.Exit();
-
-        currentState = newState;
-        currentState.Initialize(this, inputService, selectionService); // Передаємо залежності
-        currentState.Enter();
-
-        Debug.Log($"State changed to: {currentState.GetType().Name}");
-    }
-
-    public void ReturnToPreviousState() {
-        if (previousState != null) {
-            SwitchState(previousState);
-        } else {
-            SwitchState(new IdleState());
-        }
-    }
-
-    public void Dispose() {
-        currentState?.Exit();
-        inputService.OnEndTurnClicked -= EndTurn;
-    }
-}
-
-public abstract class PlayerState : State {
-    protected PlayerController Controller { get; private set; }
-    protected IInputService InputService { get; private set; }
-    protected ITargetSelectionService SelectionService { get; private set; }
-
-    public void Initialize(
-    PlayerController controller,
-    IInputService inputService,
-    ITargetSelectionService selectionService) {
-        Controller = controller ?? throw new ArgumentNullException(nameof(controller));
-        InputService = inputService ?? throw new ArgumentNullException(nameof(inputService));
-        SelectionService = selectionService ?? throw new ArgumentNullException(nameof(selectionService));
-    }
-}
-
-public class PassiveState : PlayerState {
-    // Гравець не може нічого робити (не його хід)
-    public override void Enter() {
-        base.Enter();
-        Debug.Log("Player is in passive state (not their turn)");
-    }
-
-    public override void Exit() {
-        base.Exit();
-    }
-}
-
-public class IdleState : PlayerState {
-    public override void Enter() {
-        base.Enter();
-        InputService.OnCardSelected += HandleCardSelection;
-        Debug.Log("Player can now play cards");
-    }
-
-    private void HandleCardSelection(Card card) {
-        if (card == null) return;
-        Controller.PlayCard(card);
-    }
-
-    public override void Exit() {
-        base.Exit();
-        InputService.OnCardSelected -= HandleCardSelection;
-    }
-}
-
-public class BusyState : PlayerState {
-    public override void Enter() {
-        base.Enter();
-        Debug.Log("Player is busy selecting target");
-    }
-
-    public override void Exit() {
-        base.Exit();
+        return cards;
     }
 }

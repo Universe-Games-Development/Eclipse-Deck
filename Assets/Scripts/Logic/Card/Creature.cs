@@ -20,7 +20,7 @@ public class Creature : UnitModel, IHealthable, IAttacker {
 
         UnitName = Data.Name;
 
-        Id = System.Guid.NewGuid().ToString();
+        InstanceId = System.Guid.NewGuid().ToString();
     }
 
     public bool CanAttack() {

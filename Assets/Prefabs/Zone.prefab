@@ -680,7 +680,6 @@ MonoBehaviour:
   unAssignedColor: {r: 0, g: 0, b: 0, a: 0}
   removeCreatureButton: {fileID: 7246343501865716745}
   layoutComponent: {fileID: 257057399082506499}
-  creaturesContainer: {fileID: 4476722948096056295}
   rearrangeDuration: 0.5
   ownBody: {fileID: 5095438800732689760}
 --- !u!114 &257057399082506499
@@ -697,9 +696,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultItemSize: {x: 3, y: 1, z: 4}
   animationMode: 0
-  organizeDuration: 0.3
+  organizeDuration: 0.2
   organizeEase: 6
+  enableLazyExecution: 1
+  positionThreshold: 0.001
   itemsContainer: {fileID: 4476722948096056295}
+  showDebugInfo: 0
   doTestUpdate: 0
   updateDelay: 1
   layoutSettings: {fileID: 11400000, guid: fea07b809d7c5e34c855b471576e702e, type: 2}

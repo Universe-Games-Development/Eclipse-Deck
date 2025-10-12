@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+п»їusing Cysharp.Threading.Tasks;
 using DG.Tweening;
 using System;
 using System.Collections.Generic;
@@ -23,6 +23,8 @@ public class BoardView : MonoBehaviour {
     [SerializeField] private float cellCreationDelay = 0.05f;
     [SerializeField] private bool animateCellCreation = true;
 
+    [Inject] private IVisualManager _visualManager;
+
     public event Action<Cell3DView> OnCellCreated;
     public event Action<Cell3DView> OnCellRemoved;
     public event Action<Cell3DView, Cell3DView> OnCellsSwapped;
@@ -33,7 +35,7 @@ public class BoardView : MonoBehaviour {
         ValidateReferences();
 
         if (createOnAwake) {
-            CreateBoard().Forget();
+            CreateBoard();
         }
     }
 
@@ -46,21 +48,106 @@ public class BoardView : MonoBehaviour {
         }
     }
 
-    #region Board Creation & Management
+    #region Public Synchronous API (РґР»СЏ Presenter'С–РІ)
 
     /// <summary>
-    /// Створити всю дошку
+    /// РЎРёРЅС…СЂРѕРЅРЅРёР№ РјРµС‚РѕРґ РґР»СЏ СЃС‚РІРѕСЂРµРЅРЅСЏ РґРѕС€РєРё
     /// </summary>
-    public async UniTask CreateBoard() {
+    public void CreateBoard() {
+        var createTask = new UniversalVisualTask(
+            CreateBoardInternal,
+            "Create Board"
+        );
+        _visualManager.Push(createTask);
+    }
+
+    /// <summary>
+    /// РЎРёРЅС…СЂРѕРЅРЅРёР№ РјРµС‚РѕРґ РґР»СЏ РѕРЅРѕРІР»РµРЅРЅСЏ layout
+    /// </summary>
+    public void UpdateLayout() {
+        var layoutTask = new UniversalVisualTask(
+            UpdateLayoutInternal,
+            "Layout Update"
+        );
+        _visualManager.Push(layoutTask);
+    }
+
+    /// <summary>
+    /// вњ… РЎРўР’РћР РРўР CellView Р‘Р•Р— РїРѕР·РёС†С–РѕРЅСѓРІР°РЅРЅСЏ (РґР»СЏ РЅРµРіР°Р№РЅРѕРіРѕ РІРёРєРѕСЂРёСЃС‚Р°РЅРЅСЏ)
+    /// </summary>
+    public Cell3DView CreateCellView() {
+        Cell3DView cell = cellPool.Get();
+        cell.transform.SetParent(cellParent);
+        cell.name = "Cell_Temp";
+        cell.gameObject.SetActive(false); // рџ‘€ РџСЂРёС…РѕРІСѓС”РјРѕ РґРѕ РїРѕР·РёС†С–РѕРЅСѓРІР°РЅРЅСЏ
+
+        return cell;
+    }
+
+    /// <summary>
+    /// вњ… Р”РћР”РђРўР CellView РќРђ РєРѕРЅРєСЂРµС‚РЅСѓ РїРѕР·РёС†С–СЋ (С‡РµСЂРµР· visualManager)
+    /// </summary>
+    public void AddCellView(Cell3DView cellView, int row, int column, bool doLayout = true) {
+        var addCellTask = new UniversalVisualTask(
+            () => AddCellViewInternal(cellView, row, column, doLayout),
+            $"Add Cell View to ({row}, {column})"
+        );
+        _visualManager.Push(addCellTask);
+    }
+
+    /// <summary>
+    /// РЎРёРЅС…СЂРѕРЅРЅРёР№ РјРµС‚РѕРґ РґР»СЏ РІРёРґР°Р»РµРЅРЅСЏ РєР»С–С‚РёРЅРєРё
+    /// </summary>
+    public void RemoveCell(int row, int column, bool animate = true) {
+        var removeCellTask = new UniversalVisualTask(
+            () => RemoveCellInternal(row, column, animate),
+            $"Remove Cell ({row}, {column})"
+        );
+        _visualManager.Push(removeCellTask);
+    }
+
+    // Р†РЅС€С– РјРµС‚РѕРґРё Р·Р°Р»РёС€Р°СЋС‚СЊСЃСЏ Р±РµР· Р·РјС–РЅ...
+    public void ResizeBoard(int newRows, int newColumns) {
+        var resizeTask = new UniversalVisualTask(
+            () => ResizeBoardInternal(newRows, newColumns),
+            $"Resize Board to {newRows}x{newColumns}"
+        );
+        _visualManager.Push(resizeTask);
+    }
+
+    public void SwapCells(int fromRow, int fromCol, int toRow, int toCol) {
+        var swapTask = new UniversalVisualTask(
+            () => SwapCellsInternal(fromRow, fromCol, toRow, toCol),
+            $"Swap Cells ({fromRow},{fromCol}) <-> ({toRow},{toCol})"
+        );
+        _visualManager.Push(swapTask);
+    }
+
+    public void MoveCell(int fromRow, int fromCol, int toRow, int toCol) {
+        var moveTask = new UniversalVisualTask(
+            () => MoveCellInternal(fromRow, fromCol, toRow, toCol),
+            $"Move Cell ({fromRow},{fromCol}) -> ({toRow},{toCol})"
+        );
+        _visualManager.Push(moveTask);
+    }
+
+    #endregion
+
+    #region Internal Async Implementation
+
+    /// <summary>
+    /// Р’РЅСѓС‚СЂС–С€РЅСЏ Р°СЃРёРЅС…СЂРѕРЅРЅР° СЂРµР°Р»С–Р·Р°С†С–СЏ СЃС‚РІРѕСЂРµРЅРЅСЏ РґРѕС€РєРё
+    /// </summary>
+    private async UniTask<bool> CreateBoardInternal() {
         ClearBoard();
 
-        // Встановлюємо розмір сітки
+        // Р’СЃС‚Р°РЅРѕРІР»СЋС”РјРѕ СЂРѕР·РјС–СЂ СЃС–С‚РєРё
         layoutComponent.ResizeGrid(initialRows, initialColumns, recalculate: false);
 
-        // Створюємо клітинки
+        // РЎС‚РІРѕСЂСЋС”РјРѕ РєР»С–С‚РёРЅРєРё
         for (int row = 0; row < initialRows; row++) {
             for (int col = 0; col < initialColumns; col++) {
-                await CreateCellAsync(row, col, doLayout: false);
+                await CreateCellInternal(row, col, doLayout: false);
 
                 if (animateCellCreation && cellCreationDelay > 0) {
                     await UniTask.Delay(TimeSpan.FromSeconds(cellCreationDelay));
@@ -68,51 +155,49 @@ public class BoardView : MonoBehaviour {
             }
         }
 
-        // Один раз перераховуємо layout після створення всіх клітинок
         layoutComponent.RecalculateLayout();
 
-        // Анімуємо всі клітинки
         if (animateCellCreation) {
             await layoutComponent.AnimateAllToLayoutPositions();
         }
 
         OnBoardCreated?.Invoke();
         Debug.Log($"Board created: {initialRows}x{initialColumns}");
+        return true;
     }
 
     /// <summary>
-    /// Очистити всю дошку
+    /// вњ… Р’РЅСѓС‚СЂС–С€РЅСЏ Р°СЃРёРЅС…СЂРѕРЅРЅР° СЂРµР°Р»С–Р·Р°С†С–СЏ РґРѕРґР°РІР°РЅРЅСЏ РІР¶Рµ СЃС‚РІРѕСЂРµРЅРѕРіРѕ CellView
     /// </summary>
-    public void ClearBoard() {
-        layoutComponent.ClearItems();
-        OnBoardCleared?.Invoke();
-    }
-
-    /// <summary>
-    /// Змінити розмір дошки
-    /// </summary>
-    public async UniTask ResizeBoard(int newRows, int newColumns) {
-        if (newRows == initialRows && newColumns == initialColumns) return;
-
-        initialRows = newRows;
-        initialColumns = newColumns;
-
-        await CreateBoard();
-    }
-
-    #endregion
-
-    #region Cell Operations
-
-    /// <summary>
-    /// Створити одну клітинку
-    /// </summary>
-    public async UniTask<Cell3DView> CreateCellAsync(
-        int row, int column, bool doLayout = true) {
-
+    private async UniTask<bool> AddCellViewInternal(Cell3DView cellView, int row, int column, bool doLayout = true) {
         if (layoutComponent.IsCellOccupied(row, column)) {
             Debug.LogWarning($"Cell at ({row}, {column}) already exists");
-            return layoutComponent.GetCellAt(row, column);
+            return false;
+        }
+
+        // РђРєС‚РёРІСѓС”РјРѕ С– РЅР°Р»Р°С€С‚РѕРІСѓС”РјРѕ View
+        cellView.gameObject.SetActive(true);
+        cellView.name = $"Cell_{row}_{column}";
+
+        // Р”РѕРґР°С”РјРѕ РґРѕ layout
+        layoutComponent.AddItem(cellView, row, column, false);
+
+        if (doLayout) {
+            layoutComponent.RecalculateLayout();
+            await layoutComponent.AnimateToLayoutPosition(cellView);
+        }
+
+        OnCellCreated?.Invoke(cellView);
+        return true;
+    }
+
+    /// <summary>
+    /// Р’РЅСѓС‚СЂС–С€РЅСЏ Р°СЃРёРЅС…СЂРѕРЅРЅР° СЂРµР°Р»С–Р·Р°С†С–СЏ СЃС‚РІРѕСЂРµРЅРЅСЏ РєР»С–С‚РёРЅРєРё (РґР»СЏ CreateBoard)
+    /// </summary>
+    private async UniTask<bool> CreateCellInternal(int row, int column, bool doLayout = true) {
+        if (layoutComponent.IsCellOccupied(row, column)) {
+            Debug.LogWarning($"Cell at ({row}, {column}) already exists");
+            return false;
         }
 
         Cell3DView cell = cellPool.Get();
@@ -127,15 +212,19 @@ public class BoardView : MonoBehaviour {
         }
 
         OnCellCreated?.Invoke(cell);
-        return cell;
+        return true;
     }
 
-    /// <summary>
-    /// Видалити клітинку
-    /// </summary>
-    public async UniTask RemoveCellAsync(int row, int column, bool animate = true) {
-        var cell = layoutComponent.GetCellAt(row, column);
-        if (cell == null) return;
+    // Р†РЅС€С– РІРЅСѓС‚СЂС–С€РЅС– РјРµС‚РѕРґРё Р·Р°Р»РёС€Р°СЋС‚СЊСЃСЏ Р±РµР· Р·РјС–РЅ...
+    private async UniTask<bool> UpdateLayoutInternal() {
+        layoutComponent.RecalculateLayout();
+        await layoutComponent.AnimateAllToLayoutPositions();
+        return true;
+    }
+
+    private async UniTask<bool> RemoveCellInternal(int row, int column, bool animate = true) {
+        var cell = GetCell(row, column);
+        if (cell == null) return false;
 
         if (animate) {
             await AnimateCellRemoval(cell);
@@ -145,112 +234,83 @@ public class BoardView : MonoBehaviour {
         OnCellRemoved?.Invoke(cell);
         cell.Clear();
         cellPool.Release(cell);
+        return true;
     }
 
+    private async UniTask<bool> ResizeBoardInternal(int newRows, int newColumns) {
+        if (newRows == initialRows && newColumns == initialColumns) return true;
 
-    /// <summary>
-    /// Отримати клітинку за позицією
-    /// </summary>
-    public Cell3DView GetCell(int row, int column) {
-        return layoutComponent.GetCellAt(row, column);
+        initialRows = newRows;
+        initialColumns = newColumns;
+
+        await CreateBoardInternal();
+        return true;
     }
 
-    /// <summary>
-    /// Отримати позицію клітинки
-    /// </summary>
-    public (int row, int column)? GetCellPosition(Cell3DView cell) {
-        return layoutComponent.GetItemPosition(cell);
-    }
-
-    /// <summary>
-    /// Перевірити чи позиція зайнята
-    /// </summary>
-    public bool IsCellOccupied(int row, int column) {
-        return layoutComponent.IsCellOccupied(row, column);
-    }
-
-    /// <summary>
-    /// Отримати всі зайняті позиції
-    /// </summary>
-    public IEnumerable<(int row, int column, Cell3DView cell)> GetOccupiedCells() {
-        return layoutComponent.GetOccupiedPositions();
-    }
-
-    #endregion
-
-    #region Cell Interactions
-
-    /// <summary>
-    /// Поміняти місцями дві клітинки
-    /// </summary>
-    public async UniTask SwapCells(int fromRow, int fromCol, int toRow, int toCol) {
+    private async UniTask<bool> SwapCellsInternal(int fromRow, int fromCol, int toRow, int toCol) {
         var cell1 = GetCell(fromRow, fromCol);
         var cell2 = GetCell(toRow, toCol);
 
         if (cell1 == null || cell2 == null) {
             Debug.LogWarning("Cannot swap - one or both cells are null");
-            return;
+            return false;
         }
 
-        // Анімуємо обмін одночасно
         var task1 = layoutComponent.AnimateToLayoutPosition(cell1);
         var task2 = layoutComponent.AnimateToLayoutPosition(cell2);
 
         await UniTask.WhenAll(task1, task2);
-
         OnCellsSwapped?.Invoke(cell1, cell2);
+        return true;
     }
 
-    /// <summary>
-    /// Перемістити клітинку
-    /// </summary>
-    public async UniTask MoveCell(int fromRow, int fromCol, int toRow, int toCol) {
+    private async UniTask<bool> MoveCellInternal(int fromRow, int fromCol, int toRow, int toCol) {
         var cell = GetCell(fromRow, fromCol);
-        if (cell == null) return;
+        if (cell == null) return false;
 
         if (IsCellOccupied(toRow, toCol)) {
             Debug.LogWarning($"Target position ({toRow}, {toCol}) is occupied");
-            return;
+            return false;
         }
 
         layoutComponent.MoveItem(cell, toRow, toCol);
         await layoutComponent.AnimateToLayoutPosition(cell);
+        return true;
     }
 
-    /// <summary>
-    /// Отримати сусідні клітинки
-    /// </summary>
+    #endregion
+
+    #region Utility Methods
+
+    public Cell3DView GetCell(int row, int column) {
+        return layoutComponent.GetCellAt(row, column);
+    }
+
+    public (int row, int column)? GetCellPosition(Cell3DView cell) {
+        return layoutComponent.GetItemPosition(cell);
+    }
+
+    public bool IsCellOccupied(int row, int column) {
+        return layoutComponent.IsCellOccupied(row, column);
+    }
+
+    public IEnumerable<(int row, int column, Cell3DView cell)> GetOccupiedCells() {
+        return layoutComponent.GetOccupiedPositions();
+    }
+
     public Cell3DView[] GetNeighborCells(int row, int column) {
         return layoutComponent.GetNeighborCells(row, column);
     }
 
-    #endregion
-
-    #region Board State & Validation
-    /// <summary>
-    /// Отримати кількість зайнятих клітинок
-    /// </summary>
     public int GetOccupiedCellCount() {
         return layoutComponent.OccupiedCells;
     }
 
-
-    /// <summary>
-    /// Перевірити чи дошка порожня
-    /// </summary>
     public bool IsBoardEmpty() {
         return GetOccupiedCellCount() == 0;
     }
 
-    #endregion
-
-    #region Animation Helpers
-
-    /// <summary>
-    /// Анімація видалення клітинки
-    /// </summary>
     private async UniTask AnimateCellRemoval(Cell3DView cell) {
-        // Можна додати ефект зникнення, масштабування тощо
         var sequence = DOTween.Sequence()
             .Append(cell.transform.DOScale(Vector3.zero, 0.3f))
             .SetEase(Ease.InBack);
@@ -258,12 +318,12 @@ public class BoardView : MonoBehaviour {
         await sequence.Play().ToUniTask();
     }
 
-    public async UniTask UpdateLayoutAsync() {
-        layoutComponent.RecalculateLayout();
-        await layoutComponent.AnimateAllToLayoutPositions();
+    public void ClearBoard() {
+        layoutComponent.ClearItems();
+        OnBoardCleared?.Invoke();
     }
 
-    #endregion
-
     public bool IsAnimating => layoutComponent.IsAnimating;
+
+    #endregion
 }

@@ -7651,8 +7651,8 @@ MonoBehaviour:
   boardView: {fileID: 2100769153}
   minSize: 1
   maxSize: 4
-  colums: 2
-  rows: 2
+  colums: 5
+  rows: 5
   doPopulate: 1
   doRandomChanges: 0
   zoneTryes: 3
@@ -7677,7 +7677,7 @@ MonoBehaviour:
   itemsContainer: {fileID: 1942162268}
   showDebugInfo: 0
   doTestUpdate: 0
-  updateDelay: 2
+  updateDelay: 1.19
   gridSettings: {fileID: 11400000, guid: 044b91c65a836e246b0a3b70d004d927, type: 2}
   initialRows: 3
   initialColumns: 3
@@ -8115,7 +8115,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2517a2af1f96214ab7599342be42464, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  allowMultipleHover: 1
   cardsContainer: {fileID: 845252587502666978}
   cardPool: {fileID: 5221237754621633819}
   layoutComponent: {fileID: 8418556749380161858}
@@ -9277,7 +9276,8 @@ MonoBehaviour:
   HealthDisplay: {fileID: 6698457023692098168}
   HandDisplay: {fileID: 2379312896532368615}
   DeckDisplay: {fileID: 1584720718}
-  SelectionDisplay: {fileID: 1895360928}
+  selectionDisplay: {fileID: 1895360928}
+  cardHandView: {fileID: 2379312896532368615}
 --- !u!1 &7179270317780674426
 GameObject:
   m_ObjectHideFlags: 0
@@ -9456,7 +9456,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67aaf7c9bd1778041989f798717c124d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  allowMultipleHover: 1
   cardSpawnPoint: {fileID: 4530274868173590095}
   ghostLayoutParent: {fileID: 6428371350538840862}
   cardPrefab: {fileID: 5551150626542711930, guid: f5d88699ec964134d942221e9fc84d1e, type: 3}

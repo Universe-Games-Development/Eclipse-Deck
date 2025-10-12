@@ -3,7 +3,7 @@ using UnityEngine;
 
 // Cells will update its size depends on others AreaView inside it
 // Logic in CellPresenter
-public class Cell3DView : InteractableView, IArea {
+public class Cell3DView : UnitView, IArea {
 
     [SerializeField] private Vector3 areaOffset = Vector3.zero;
     [SerializeField] public Vector3 cellPadding = new Vector3(0.2f, 0f, 0.2f);

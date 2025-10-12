@@ -1,22 +1,54 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using System;
 using System.Threading;
 using UnityEngine;
 
-public abstract class CardView : InteractableView {
+public abstract class CardView : UnitView {
+    public event Action<CardView> OnClicked;
+    public event Action<CardView, bool> OnHoverChanged;
+
     [SerializeField] protected MovementComponent movementComponent;
     [SerializeField] protected CardTiltController tiltController;
     [SerializeField] public Transform innerBody;
-    
+
+    [SerializeField] InteractableBody interactableBody;
 
     #region Unity Lifecycle
 
-    protected override void Awake() {
-        base.Awake();
+    protected virtual void Awake() {
         ValidateComponents();
+        SubscribeToInteractableBody();
+    }
+
+    private void SubscribeToInteractableBody() {
+        if (interactableBody == null) {
+            Debug.LogError($"InteractableBody not assigned on {gameObject.name}", this);
+            return;
+        }
+
+        interactableBody.OnClicked += HandleBodyClicked;
+        interactableBody.OnHoverChanged += HandleBodyHovered;
+    }
+
+    private void HandleBodyHovered(bool value) {
+        OnHoverChanged?.Invoke(this, value);
+    }
+
+    private void HandleBodyClicked() {
+        OnClicked?.Invoke(this);
+    }
+
+    public void SetInteractable(bool value) {
+        interactableBody?.SetInteractable(value);
     }
 
     protected virtual void OnDestroy() {
+        if (interactableBody != null) {
+            interactableBody.OnClicked -= HandleBodyClicked;
+            interactableBody.OnHoverChanged -= HandleBodyHovered;
+        }
+
         CleanupResources();
     }
 
@@ -33,6 +65,8 @@ public abstract class CardView : InteractableView {
     }
 
     #endregion
+
+    public abstract void UpdateDisplay(CardDisplayContext context);
 
     #region Movement API - основне для інших модулів
 
@@ -73,8 +107,6 @@ public abstract class CardView : InteractableView {
         tiltController.ToggleTiling(enable);
     }
     #endregion
-
-    public abstract void UpdateDisplay(CardDisplayContext context);
 
     #region Render Order Management
     public abstract void SetRenderOrder(int sortingOrder);

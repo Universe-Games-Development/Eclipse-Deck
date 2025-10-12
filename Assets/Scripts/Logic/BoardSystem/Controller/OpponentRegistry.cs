@@ -14,7 +14,7 @@ public class OpponentRegistry : IOpponentRegistry {
     private readonly Dictionary<string, Opponent> _opponents = new();
 
     public void RegisterOpponent(Opponent newOpponent) {
-        string opponentId = newOpponent.Id;
+        string opponentId = newOpponent.InstanceId;
         if (_opponents.ContainsKey(opponentId)) {
             Debug.LogWarning($"Opponent already registered with Id {opponentId}");
             return;
@@ -40,10 +40,10 @@ public class OpponentRegistry : IOpponentRegistry {
 
     // --- Шорткати для зручності ---
     public void UnregisterOpponent(Opponent opponent)
-        => UnregisterOpponent(opponent.Id);
+        => UnregisterOpponent(opponent.InstanceId);
 
     public Opponent GetAgainstOpponentId(Opponent opponent)
-        => GetAgainstOpponentId(opponent.Id);
+        => GetAgainstOpponentId(opponent.InstanceId);
 
     public List<Opponent> GetOpponents() {
         return _opponents.Values.ToList();

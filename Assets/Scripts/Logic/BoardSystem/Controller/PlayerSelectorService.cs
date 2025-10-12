@@ -147,6 +147,7 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
     }
 
     public void Dispose() {
+        eventBus.UnsubscribeFrom<HoverUnitEvent>(HandleUnitHover);
         _selectionView.OnTargetsSelected -= OnTargetSelected;
         _cancellationRegistration.Dispose();
         StopTargeting();

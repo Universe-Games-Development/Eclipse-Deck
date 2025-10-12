@@ -66,7 +66,7 @@ public class CardHandUIView : CardHandView {
         }
     }
 
-    protected void OnDestroy() {
+    protected override void OnDestroy() {
         updatePositionCts?.Cancel();
         updatePositionCts?.Dispose();
 
@@ -94,11 +94,12 @@ public class CardHandUIView : CardHandView {
         throw new NotImplementedException();
     }
 
-    public override void RegisterView(CardView cardView) {
+
+    public override void UpdateCardPositions() {
         throw new NotImplementedException();
     }
 
-    public override void UpdateCardPositions() {
+    protected override void OnRegisterView(CardView cardView) {
         throw new NotImplementedException();
     }
 }

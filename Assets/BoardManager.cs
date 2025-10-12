@@ -35,7 +35,6 @@ public class BoardManager : MonoBehaviour
             PopulateCells();
         }
 
-        boardPresenter.CreateBoard();
         StartTestChanges();
     }
 
@@ -68,24 +67,28 @@ public class BoardManager : MonoBehaviour
     private void PopulateCells() {
         List<Cell> cells = board.GetAllCells();
 
-        List<Zone> zones = CreatePlayerZones(cells.Count);
+        List<Zone> zones = CreateZones(cells.Count);
 
-        for (int i = 0; i < cells.Count; i++) {
-            ZonePresenter zonePresenter = SpawnTestZone(zones[i]);
+        List<Opponent> opponents = opponentRegistry.GetOpponents();
+        if (opponents == null || opponents.Count == 0) {
+            Debug.LogWarning("Failed to get opponents");
+            return;
         }
+        Opponent player = opponents.First();
+
+        for (int i = 0; i < cells.Count && i < zones.Count; i++) {
+            ZonePresenter zonePresenter = SpawnTestZone(zones[i]);
+            zones[i].ChangeOwner(player.OwnerId);
+        }
+        if (zones.Count > 0)
         boardPresenter.AssignAreas(cells, zones);
     }
 
-    private List<Zone> CreatePlayerZones(int zonesCount) {
-        List<Opponent> opponents = opponentRegistry.GetOpponents();
-        Opponent player = opponents.First();
-        
+    private List<Zone> CreateZones(int zonesCount) {
         List<Zone> zones = new();
         for (int i = 0; i < zonesCount; i++) {
             int randomSize = Random.Range(minSize, maxSize);
             Zone zone = entityFactory.Create<Zone>(randomSize);
-
-            zone.ChangeOwner(player.Id);
             zones.Add(zone);
         }
         return zones;

@@ -5,7 +5,7 @@ public class CellPresenter : IDisposable {
     public Cell Cell { get; }
     public Cell3DView CellView { get; }
 
-    public event Action<CellPresenter, Vector3> OnSizeChanged;
+    public event Action<CellPresenter> OnSizeChanged;
 
     private IArea assignedArea;
     
@@ -52,7 +52,7 @@ public class CellPresenter : IDisposable {
 
         if (Vector3.Distance(CellView.Size, desiredSize) > 0.01f) {
             CellView.Resize(desiredSize);
-            OnSizeChanged?.Invoke(this, desiredSize);
+            OnSizeChanged?.Invoke(this);
         }
     }
 

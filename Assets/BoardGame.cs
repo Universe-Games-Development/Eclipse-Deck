@@ -26,19 +26,17 @@ public class BoardGame : MonoBehaviour
     private void TestInit() {
         player = opponentFactory.CreatePlayer(playerData);
 
-        opponentRegistry.RegisterOpponent(player);
-        PlayerPresenter playerPresenter = presenterFactory.CreateUnitPresenter<PlayerPresenter>(player, opponentView);
-        playerPresenter.Initialize();
-
         SelectorService = container.Instantiate<PlayerSelectorService>(new object[] { SelectionDisplay });
-        targetFiller.RegisterSelector(player.Id, SelectorService);
+        targetFiller.RegisterSelector(player.InstanceId, SelectorService);
+        PlayerPresenter playerPresenter = presenterFactory.CreateUnitPresenter<PlayerPresenter>(player, opponentView, SelectorService);
+        playerPresenter.Initialize();
+        opponentRegistry.RegisterOpponent(player);
 
-        container.Instantiate<PlayerController>(new object[] { player, playerPresenter, SelectorService });
     }
 
     public void OnDestroy() {
         if (player != null)
-        targetFiller.UnregisterSelector(player.Id);
+        targetFiller.UnregisterSelector(player.InstanceId);
     }
 }
 

@@ -18,3 +18,22 @@ public struct DeathEvent : IEvent {
         DeadUnit = deadUnit;
     }
 }
+
+
+public readonly struct HoverUnitEvent : IEvent {
+    public UnitPresenter UnitPresenter { get; }
+    public bool IsHovered { get; }
+
+    public HoverUnitEvent(UnitPresenter unitPresenter, bool isHovered) {
+        UnitPresenter = unitPresenter;
+        IsHovered = isHovered;
+    }
+}
+
+public readonly struct ClickUnitEvent : IEvent {
+    public UnitPresenter UnitPresenter { get; }
+
+    public ClickUnitEvent(UnitPresenter unitPresenter) {
+        UnitPresenter = unitPresenter;
+    }
+}

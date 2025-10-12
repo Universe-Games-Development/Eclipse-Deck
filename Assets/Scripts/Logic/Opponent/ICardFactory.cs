@@ -14,7 +14,7 @@ public class CardFactory: ICardFactory {
             SpellCardData spellData => CreateSpellCard(spellData),
             _ => throw new ArgumentException($"Unsupported card data type: {cardData.GetType()}")
         };
-        card.Id = $"Card_{Guid.NewGuid()}";
+        card.InstanceId = $"Card_{Guid.NewGuid()}";
         return card;
     }
 

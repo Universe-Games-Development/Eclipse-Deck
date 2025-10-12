@@ -7,31 +7,35 @@ public class CardMovementTargeting : MonoBehaviour, ITargetingVisualization {
     [SerializeField] private int playRenderOrderBoost = 50;
 
     private CardPresenter cardPresenter;
+    private CardView cardView;
 
     public void Initialize(CardPresenter presenter) {
         cardPresenter = presenter;
+        cardView = cardPresenter.CardView;
     }
 
     public void StartTargeting() {
-        if (cardPresenter != null) {
-            cardPresenter.ModifyRenderOrder(playRenderOrderBoost);
-            cardPresenter.ToggleTiltMovement(true);
+        if (cardView != null) {
+            cardView.ModifyRenderOrder(playRenderOrderBoost);
+            cardView.ToggleTiling(true);
         }
     }
 
     public void UpdateTargeting(Vector3 cursorPosition) {
-        if (cardPresenter != null) {
+        if (cardView != null) {
             Vector3 targetPosition = CalculateCardPosition(cursorPosition);
-            cardPresenter.DoPhysicsMovement(targetPosition);
+            cardView.DoPhysicsMovement(targetPosition);
         }
     }
 
     public void StopTargeting() {
-        if (cardPresenter != null) {
-            cardPresenter.ModifyRenderOrder(-playRenderOrderBoost);
-            cardPresenter.ToggleTiltMovement(false);
-            cardPresenter.StopMovement();
+        if (cardView != null) {
+            cardView.ModifyRenderOrder(-playRenderOrderBoost);
+            cardView.ToggleTiling(false);
+            cardView.StopMovement();
         }
+        cardPresenter = null;
+        cardView = null;
     }
 
     private Vector3 CalculateCardPosition(Vector3 boardPosition) {

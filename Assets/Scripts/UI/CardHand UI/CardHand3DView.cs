@@ -21,11 +21,27 @@ public class CardHand3DView : CardHandView {
     [Header("Card Specific")]
     [SerializeField] private int baseRenderOrder = 2800;
 
+    #region Unity Lifecycle
+
     protected void Awake() {
         ValidateReferences();
         SetupLayoutComponent();
         ClearContainer();
     }
+
+    protected override void OnDestroy() {
+        base.OnDestroy(); // Важливо викликати базову логіку!
+
+        if (layoutComponent != null) {
+            layoutComponent.OnLayoutCalculated -= HandleLayoutCalculated;
+            layoutComponent.OnItemPositioned -= HandleItemPositioned;
+            layoutComponent.ClearItems();
+        }
+    }
+
+    #endregion
+
+    #region Initialization
 
     private void ValidateReferences() {
         if (cardsContainer == null)
@@ -37,16 +53,27 @@ public class CardHand3DView : CardHandView {
     }
 
     private void SetupLayoutComponent() {
-        // Підписуємось на події layout
         layoutComponent.OnLayoutCalculated += HandleLayoutCalculated;
         layoutComponent.OnItemPositioned += HandleItemPositioned;
     }
 
-    #region Card View Management
+    private void ClearContainer() {
+        foreach (Transform child in cardsContainer) {
+            if (child != null) {
+                Destroy(child.gameObject);
+            }
+        }
+    }
 
-    public override void RegisterView(CardView cardView) {
-        if (cardView == null) return;
+    #endregion
 
+    #region Card View Management (Base Class Overrides)
+
+    public override CardView CreateCardView() {
+        return cardPool.Get();
+    }
+
+    protected override void OnRegisterView(CardView cardView) {
         // Встановлюємо початкову позицію
         cardView.transform.position = cardsContainer.position + spawnOffset;
         cardView.transform.rotation = cardsContainer.rotation;
@@ -57,10 +84,6 @@ public class CardHand3DView : CardHandView {
 
         // Анімуємо на позицію
         layoutComponent.AnimateToLayoutPosition(cardView).Forget();
-    }
-
-    public override CardView CreateCardView() {
-        return cardPool.Get();
     }
 
     protected override void HandleCardViewRemoval(CardView cardView) {
@@ -76,7 +99,7 @@ public class CardHand3DView : CardHandView {
 
     #endregion
 
-    #region Hover
+    #region Hover (Base Class Overrides)
 
     protected override void HandleCardHovered(CardView cardView) {
         if (!(cardView is Card3DView card3DView)) return;
@@ -97,7 +120,7 @@ public class CardHand3DView : CardHandView {
         hoverSequence.Join(target.DOLocalMove(hoverOffset, cardHoverDuration));
         hoverSequence.Join(card3DView.transform.DOLocalRotate(targetRotation, cardHoverDuration));
 
-        card3DView.DoSequenceInner(hoverSequence).Forget();
+        hoverSequence.Play();
     }
 
     protected override void HandleClearCardHovered(CardView cardView) {
@@ -118,8 +141,7 @@ public class CardHand3DView : CardHandView {
         returnSequence.Join(target.DOLocalMove(Vector3.zero, cardHoverDuration));
         returnSequence.Join(card3DView.transform.DOLocalRotate(originalRotation.Value.eulerAngles, cardHoverDuration));
 
-        //Debug.Log("Return sequence");
-        card3DView.DoSequenceInner(returnSequence).Forget();
+        returnSequence.Play();
     }
 
     #endregion
@@ -127,8 +149,6 @@ public class CardHand3DView : CardHandView {
     #region Layout Positioning
 
     public override void UpdateCardPositions() {
-        // Layout component автоматично перераховує при додаванні/видаленні
-        // Але можна примусово перерахувати:
         layoutComponent.RecalculateLayout();
         layoutComponent.AnimateAllToLayoutPositions().Forget();
     }
@@ -146,14 +166,10 @@ public class CardHand3DView : CardHandView {
     #region Layout Events
 
     private void HandleLayoutCalculated(LayoutResult result) {
-        System.Collections.Generic.IReadOnlyList<CardView> cardViews = layoutComponent.GetAllItems();
+        var cardViews = layoutComponent.GetAllItems();
         for (int i = 0; i < cardViews.Count; i++) {
             cardViews[i].SetRenderOrder(baseRenderOrder + i);
         }
-        // Можна логувати або обробляти метадані
-        //Debug.Log($"Layout calculated: {result.Metadata.TotalItems} items, " +
-        //          $"width: {result.Metadata.TotalWidth:F2}, " +
-        //          $"compressed: {result.Metadata.IsCompressed}");
     }
 
     private void HandleItemPositioned(CardView card, LayoutPoint point) {
@@ -162,20 +178,4 @@ public class CardHand3DView : CardHandView {
     }
 
     #endregion
-
-    private void ClearContainer() {
-        foreach (Transform child in cardsContainer) {
-            if (child != null) {
-                Destroy(child.gameObject);
-            }
-        }
-    }
-
-    protected void OnDestroy() {
-        if (layoutComponent != null) {
-            layoutComponent.OnLayoutCalculated -= HandleLayoutCalculated;
-            layoutComponent.OnItemPositioned -= HandleItemPositioned;
-            layoutComponent.ClearItems();
-        }
-    }
 }

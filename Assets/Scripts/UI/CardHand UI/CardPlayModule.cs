@@ -37,7 +37,7 @@ public class CardPlayService : ICardPlayService {
         }
 
         var session = new CardPlaySession(card, _operationFactory, _operationManager, _eventBus);
-        _activeSessions[card.Id] = session;
+        _activeSessions[card.InstanceId] = session;
 
         try {
             var result = await session.ExecuteAsync(cancellationToken);
@@ -45,14 +45,14 @@ public class CardPlayService : ICardPlayService {
             return result;
         } finally {
             session.Dispose();
-            _activeSessions.Remove(card.Id);
+            _activeSessions.Remove(card.InstanceId);
         }
     }
 
-    public bool IsPlayingCard(Card card) => card != null && _activeSessions.ContainsKey(card.Id);
+    public bool IsPlayingCard(Card card) => card != null && _activeSessions.ContainsKey(card.InstanceId);
 
     public void CancelCardPlay(Card card) {
-        if (card != null && _activeSessions.TryGetValue(card.Id, out var session)) {
+        if (card != null && _activeSessions.TryGetValue(card.InstanceId, out var session)) {
             session.Cancel();
         }
     }

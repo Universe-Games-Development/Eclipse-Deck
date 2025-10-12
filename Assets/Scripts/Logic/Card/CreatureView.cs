@@ -3,7 +3,7 @@ using DG.Tweening;
 using System.Threading;
 using UnityEngine;
 
-public class CreatureView : InteractableView {
+public class CreatureView : UnitView {
     [SerializeField] MovementComponent movementComponent;
     [SerializeField] private Renderer cardRenderer;
     [SerializeField] MovementComponent innerMovementComponent;
@@ -13,11 +13,7 @@ public class CreatureView : InteractableView {
     private Material _instancedMaterial;
     private int _defaultRenderQueue;
 
-    
-
-    protected override void Awake() {
-        base.Awake();
-
+    protected void Awake() {
         displayComponents = GetComponentsInChildren<CardDisplayComponent>();
         
         InitializeMaterials();

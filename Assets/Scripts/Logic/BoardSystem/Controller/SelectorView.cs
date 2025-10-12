@@ -140,6 +140,7 @@ public class SelectorView : MonoBehaviour {
     #endregion
 
     private void OnDestroy() {
+        if (boardInputs.LeftClick != null)
         boardInputs.LeftClick.canceled -= OnLeftClickUp;
         _messageCancellation?.Cancel();
         _messageCancellation?.Dispose();

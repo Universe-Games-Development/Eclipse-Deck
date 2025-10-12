@@ -6,6 +6,10 @@ public abstract class UnitView : MonoBehaviour {
     public virtual void Highlight(bool enable) {
         // Базова реалізація підсвічування
     }
+
+    public virtual void Toggle(bool value) {
+        gameObject.SetActive(value);
+    }
 }
 
 public abstract class UnitPresenter {
@@ -22,11 +26,12 @@ public abstract class UnitPresenter {
     public virtual void Highlight(bool isEnabled) {
         View.Highlight(isEnabled);
     }
+
 }
 
 
 public class UnitModel {
-    public string Id;
+    public string InstanceId;
     public virtual string OwnerId { get; protected set; }
     public Action<string> OnChangedOwner;
 

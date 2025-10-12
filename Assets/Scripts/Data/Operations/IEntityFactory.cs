@@ -15,7 +15,7 @@ public class EntityFactory : IEntityFactory {
 
     public T Create<T>(params object[] args) where T : UnitModel {
         T unit = _container.Instantiate<T>(args);
-        unit.Id = $"{typeof(T)}_{Guid.NewGuid()}";
+        unit.InstanceId = $"{typeof(T)}_{Guid.NewGuid()}";
         return unit;
     }
 
@@ -24,6 +24,6 @@ public class EntityFactory : IEntityFactory {
         Attack creatureAttack = new(card.Attack);
         Cost creatureCost = new(card.Cost);
 
-        return Create<Creature>(card.Data, creatureHealth, creatureAttack, creatureCost, card.Id); ;
+        return Create<Creature>(card.Data, creatureHealth, creatureAttack, creatureCost, card.InstanceId); ;
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-public class CreaturePresenter : InteractablePresenter {
+public class CreaturePresenter : UnitPresenter {
     public Creature Creature;
     public CreatureView CreatureView;
 

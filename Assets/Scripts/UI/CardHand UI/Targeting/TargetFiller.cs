@@ -176,7 +176,7 @@ public class OperationTargetsFiller : ITargetFiller {
     private ITargetSelectionService GetOpponentSelector(string initiatorId) {
         var opponent = _opponentRegistry.GetAgainstOpponentId(initiatorId);
         return opponent != null
-            ? _registeredSelectors.GetValueOrDefault(opponent.Id, _fallbackSelector)
+            ? _registeredSelectors.GetValueOrDefault(opponent.InstanceId, _fallbackSelector)
             : _fallbackSelector;
     }
 

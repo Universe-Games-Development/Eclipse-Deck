@@ -1,6 +1,5 @@
-using Cysharp.Threading.Tasks;
+п»їusing Cysharp.Threading.Tasks;
 using DG.Tweening;
-using System;
 using System.Linq;
 using UnityEngine;
 using Zenject;
@@ -10,185 +9,72 @@ public class SummonCreatureOperation : GameOperation {
     private const string SpawnPlaceKey = "spawnZone";
     private readonly SummonOperationData _data;
 
-    private readonly IEntityFactory entityFactory;
-    private readonly ITargetFiller targetFiller;
-    [Inject] IOperationFactory operationFactory;
+    [Inject] private readonly IEntityFactory _entityFactory;
+    [Inject] private readonly ITargetFiller _targetFiller;
+    [Inject] private readonly IOperationFactory _operationFactory;
+    [Inject] private readonly IUnitRegistry _unitRegistry;
 
-    public SummonCreatureOperation(UnitModel source, SummonOperationData data, IEntityFactory entityFactory, ITargetFiller targetFiller) : base (source) {
+    [Inject] IUnitSpawner<Creature, CreatureView, CreaturePresenter> _creatureSpawner;
+
+    public SummonCreatureOperation(UnitModel source, SummonOperationData data) : base(source) {
         _data = data;
-        this.entityFactory = entityFactory;
-        this.targetFiller = targetFiller;
-        
         AddTarget(new TargetInfo(SpawnPlaceKey, TargetRequirements.AllyPlace));
     }
 
     public override async UniTask<bool> Execute() {
         if (!TryGetTypedTarget(SpawnPlaceKey, out Zone zone)) {
-            Debug.LogError($"Valid {SpawnPlaceKey} not found");
             return false;
         }
 
         if (Source is not CreatureCard creatureCard) {
-            Debug.LogError($"{this}: Creature card is null");
             return false;
         }
 
-        if (zone.IsFull()) {
-            SacrificeCreatureOperation sacrificeCreatureOperation = operationFactory.Create<SacrificeCreatureOperation>(Source);
-            TargetInfo targetInfo = sacrificeCreatureOperation.GetTargets().First();
-            // if received null return false
-            TargetFillResult targetFillResult = await targetFiller.TryFillTargetAsync(targetInfo, Source, false);
-            if (!targetFillResult.IsSuccess) {
-                return false;
-            }
-
-            sacrificeCreatureOperation.SetTarget(targetInfo.Key, targetFillResult.Unit);
-            bool success = await sacrificeCreatureOperation.Execute();
-            if (!success) return false;
+        // РџРµСЂРµРІС–СЂРєР° РјС–СЃС†СЏ С– Р¶РµСЂС‚РІРѕРїСЂРёРЅРѕС€РµРЅРЅСЏ
+        if (zone.IsFull() && !await TrySacrificeCreature(zone)) {
+            return false;
         }
 
+        if (!zone.CanSummonCreature()) {
+            return false;
+        }
 
-        // 1. Створюємо істоту
-        Creature _creature = entityFactory.CreateCreatureFromCard(creatureCard);
-        if (_creature == null) return false;
+        // 1. РЎС‚РІРѕСЂСЋС”РјРѕ РјРѕРґРµР»СЊ С–СЃС‚РѕС‚Рё
+        Creature creature = _entityFactory.CreateCreatureFromCard(creatureCard);
 
-        // 2. Створюємо візуальну задачу
+        // 2. вњ… РЎРўР’РћР Р®Р„РњРћ PRESENTER РћР”Р РђР—РЈ (Р°Р»Рµ View РЅРµР°РєС‚РёРІРЅРµ)
+        Vector3 spawnPosition = Vector3.zero;
+        if (_unitRegistry.TryGetViewByModel(creatureCard, out CardView view)) {
+            spawnPosition = view.transform.position;
+        }
+        var creaturePresenter = _creatureSpawner.SpawnUnit(creature, registerInSystems: true);
+        creaturePresenter.CreatureView.gameObject.SetActive(false); // рџ‘€ РџСЂРёС…РѕРІСѓС”РјРѕ
+        creaturePresenter.CreatureView.transform.position = spawnPosition;
 
-        var summonTask = visualTaskFactory.Create<SummonFromCardVisualTask>(
-            _creature, creatureCard, _data.visualData
-        );
+        // 3. Р”РѕРґР°С”РјРѕ РІ Р·РѕРЅСѓ (Р»РѕРіС–РєР°)
+        if (!zone.TrySummonCreature(creature)) {
+            _creatureSpawner.RemoveUnit(creaturePresenter); // Cleanup СЏРєС‰Рѕ РЅРµ РІРґР°Р»РѕСЃСЏ
+            return false;
+        }
 
-        visualManager.Push(summonTask);
-        // 3. Виконуємо логіку
-        return zone.TryPlaceCreature(_creature);
+        return true;
+    }
+
+    private async UniTask<bool> TrySacrificeCreature(Zone zone) {
+        var sacrificeOp = _operationFactory.Create<SacrificeCreatureOperation>(Source, zone);
+        var targetInfo = sacrificeOp.GetTargets().First();
+
+        var fillResult = await _targetFiller.TryFillTargetAsync(targetInfo, Source, false);
+        if (!fillResult.IsSuccess) {
+            return false;
+        }
+
+        sacrificeOp.SetTarget(targetInfo.Key, fillResult.Unit);
+        return await sacrificeOp.Execute();
     }
 }
 
 
-// Transform Card into Creature
-public class SummonFromCardVisualTask : VisualTask, IDisposable {
-    private readonly Creature _creature;
-    private readonly CreatureCard _creatureCard;
-
-    private readonly SummonVisualData _data;
-    private readonly IUnitRegistry _unitRegistry;
-    private readonly IUnitSpawner<Card, CardView, CardPresenter> _cardSpawner;
-    private readonly ICardFactory _cardFactory;
-
-    [Inject] IUnitSpawner<Creature, CreatureView, CreaturePresenter> _creatureSpawner;
-
-    private CardPresenter _tempCardCopy;
-    private Vector3 _spawnPosition;
-
-    public SummonFromCardVisualTask(Creature creature, CreatureCard card, SummonVisualData data,
-        IUnitRegistry unitRegistry, IUnitSpawner<Card, CardView, CardPresenter> cardSpawner,
-        ICardFactory cardFactory) {
-
-        _creature = creature;
-        _creatureCard = card;
-        _data = data;
-        _unitRegistry = unitRegistry;
-        _cardSpawner = cardSpawner;
-        _cardFactory = cardFactory;
-
-        _tempCardCopy = CreateVisualCopy(creature);
-    }
-
-    public override async UniTask<bool> Execute() {
-        try {
-            // 1. Видаляємо тимчасову копію карти
-            if (_tempCardCopy != null) {
-                _cardSpawner.RemoveUnit(_tempCardCopy);
-                _tempCardCopy = null;
-            }
-
-            // 2. Створюємо істоту на тій самій позиції
-            var creaturePresenter = _creatureSpawner.SpawnUnit(_creature);
-            var creatureView = creaturePresenter.CreatureView;
-            creatureView.transform.position = _spawnPosition;
-
-            // 3. Анімація материалізації
-            await PlayMaterializationEffect(creatureView);
-
-            return true;
-        } finally {
-            // Cleanup у будь-якому випадку
-            SafeCleanupTempCard();
-        }
-    }
-
-    private CardPresenter CreateVisualCopy(Creature creature) {
-        var originalPresenter = _unitRegistry.GetPresenter<CardPresenter>(_creatureCard);
-        if (originalPresenter?.View == null) {
-            throw new InvalidOperationException($"Original card presenter not found for {creature}");
-        }
-
-        // Зберігаємо позицію одразу, поки оригінал ще існує
-        _spawnPosition = originalPresenter.View.transform.position;
-
-        // Створюємо копію карти
-        var copyCard = _cardFactory.CreateCard(originalPresenter.Card.Data);
-        var visualCardCopy = _cardSpawner.SpawnUnit(copyCard, registerInSystems: false); // Не реєструємо в системах
-
-        // Налаштовуємо візуальну копію
-        visualCardCopy.View.transform.position = _spawnPosition;
-        visualCardCopy.View.transform.rotation = originalPresenter.View.transform.rotation;
-
-        // Можливо, треба зменшити альфу або додати візуальний індикатор що це копія
-        // visualCardCopy.View.SetAlpha(0.8f); 
-
-        return visualCardCopy;
-    }
-
-    private async UniTask PlayMaterializationEffect(CreatureView creatureView) {
-        // 1. Створюємо партикл ефект
-        GameObject effect = null;
-        if (_data.materializationEffect != null) {
-            effect = GameObject.Instantiate(
-                _data.materializationEffect,
-                creatureView.transform.position,
-                Quaternion.identity
-            );
-        }
-
-        try {
-            // 2. Анімація з'явлення істоти
-            creatureView.transform.localScale = Vector3.zero;
-
-            var scaleTween = creatureView.transform
-                .DOScale(Vector3.one, _data.materializationDuration)
-                .SetEase(Ease.OutBack);
-
-            await creatureView.DoTweener(scaleTween);
-
-            // 3. Додаткова затримка якщо потрібно
-            if (_data.materializationDelay > 0) {
-                await UniTask.Delay((int)(_data.materializationDelay * 1000));
-            }
-        } finally {
-            // Очищуємо ефект
-            if (effect != null) {
-                GameObject.Destroy(effect, _data.effectLifetime);
-            }
-        }
-    }
-
-    private void SafeCleanupTempCard() {
-        if (_tempCardCopy != null) {
-            try {
-                _cardSpawner.RemoveUnit(_tempCardCopy);
-            } catch (Exception ex) {
-                Debug.LogWarning($"Failed to cleanup temp card: {ex.Message}");
-            } finally {
-                _tempCardCopy = null;
-            }
-        }
-    }
-
-    public void Dispose() {
-        SafeCleanupTempCard();
-    }
-}
 
 public class SacrificeOperationData : OperationData {
 }

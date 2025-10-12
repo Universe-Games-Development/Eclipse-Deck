@@ -10,7 +10,7 @@ public class Zone : AreaModel, IDisposable {
     public int MaxCreatures { get; private set; }
 
     // Events
-    public event Action<Creature> OnCreaturePlaced;
+    public event Action<Creature> OnCreatureSummoned;
     public event Action<Creature> OnCreatureRemoved;
     public event Action<int> ONMaxCreaturesChanged;
 
@@ -78,11 +78,11 @@ public class Zone : AreaModel, IDisposable {
         }
     }
 
-    public bool TryPlaceCreature(Creature creature) {
+    public bool TrySummonCreature(Creature creature) {
         if (_creatures.Count >= MaxCreatures) return false;
 
         _creatures.Add(creature);
-        OnCreaturePlaced?.Invoke(creature);
+        OnCreatureSummoned?.Invoke(creature);
         return true;
     }
 
@@ -105,5 +105,9 @@ public class Zone : AreaModel, IDisposable {
 
     public void Dispose() {
         eventBus.UnsubscribeFrom<DeathEvent>(OnDeath);
+    }
+
+    public bool CanSummonCreature() {
+        return !IsFull();
     }
 }

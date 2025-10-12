@@ -12,7 +12,7 @@ public abstract class Card : UnitModel {
     {
         Data = cardData;
         Cost = new Cost(cardData.cost);
-        Id = $"{Data.Name}_{Guid.NewGuid()}";
+        InstanceId = $"{Data.Name}_{Guid.NewGuid()}";
         _operationDatas = cardData.operationsData;
     }
 
