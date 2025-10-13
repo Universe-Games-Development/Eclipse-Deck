@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 
 public abstract class VisualTask : IExecutableTask {
+    public float TimeModifier { get; set; } = 1f;
     public abstract UniTask<bool> Execute();
 }
 

@@ -246,13 +246,13 @@ MonoBehaviour:
     isWalkable: 1
   - x: 3
     y: 2
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 3
     y: 3
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
@@ -282,19 +282,19 @@ MonoBehaviour:
     isWalkable: 1
   - x: 3
     y: 8
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 3
     y: 9
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 3
     y: 10
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
@@ -318,25 +318,25 @@ MonoBehaviour:
     isWalkable: 1
   - x: 4
     y: 2
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 4
     y: 3
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 4
     y: 4
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 4
     y: 5
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
@@ -354,25 +354,25 @@ MonoBehaviour:
     isWalkable: 1
   - x: 4
     y: 8
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 4
     y: 9
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 4
     y: 10
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 4
     y: 11
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
@@ -390,55 +390,55 @@ MonoBehaviour:
     isWalkable: 1
   - x: 5
     y: 2
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 5
     y: 3
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 5
     y: 4
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 5
     y: 5
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 5
     y: 6
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 5
     y: 7
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 5
     y: 8
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 5
     y: 9
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 5
     y: 10
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
@@ -468,43 +468,43 @@ MonoBehaviour:
     isWalkable: 1
   - x: 6
     y: 3
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 6
     y: 4
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 6
     y: 5
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 6
     y: 6
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 6
     y: 7
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 6
     y: 8
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 6
     y: 9
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
@@ -552,25 +552,25 @@ MonoBehaviour:
     isWalkable: 1
   - x: 7
     y: 5
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 7
     y: 6
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 7
     y: 7
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1
   - x: 7
     y: 8
-    exists: 1
+    exists: 0
     terrainType: 0
     elevation: 0
     isWalkable: 1

@@ -7618,11 +7618,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cellParent: {fileID: 1942162268}
   layoutComponent: {fileID: 2100769157}
-  initialRows: 8
-  initialColumns: 8
-  createOnAwake: 0
-  cellCreationDelay: 0.05
-  animateCellCreation: 1
+  removalDuration: 0.3
+  removalEase: 26
+  cellsOrganizeDuration: 0.3
 --- !u!114 &2100769155
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7649,13 +7647,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boardView: {fileID: 2100769153}
-  minSize: 1
+  minSize: 2
   maxSize: 4
-  colums: 5
-  rows: 5
+  colums: 2
+  rows: 2
   doPopulate: 1
   doRandomChanges: 0
-  zoneTryes: 3
+  zoneTryes: 16
 --- !u!114 &2100769157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7683,8 +7681,8 @@ MonoBehaviour:
   initialColumns: 3
   autoExpand: 1
   autoShrink: 0
-  maxRows: 20
-  maxColumns: 20
+  maxRows: 100
+  maxColumns: 100
 --- !u!1 &2139604162
 GameObject:
   m_ObjectHideFlags: 0

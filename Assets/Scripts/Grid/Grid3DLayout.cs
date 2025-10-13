@@ -86,6 +86,8 @@ public readonly struct ItemLayoutInfo {
         Id = id;
         VisualSize = visualSize;
     }
+
+    public static ItemLayoutInfo Empty => new ItemLayoutInfo(string.Empty, Vector3.zero);
 }
 
 [Serializable]
