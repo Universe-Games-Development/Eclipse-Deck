@@ -47,10 +47,14 @@ public class OpponentPresenter : UnitPresenter, IDisposable {
     }
 }
 
+// Enemy AI
+public class EnemyPresenter : OpponentPresenter {
+    public EnemyPresenter(Opponent opponent, OpponentView opponentView) : base(opponent, opponentView) {
+    }
+}
+
 public class PlayerPresenter : OpponentPresenter {
     public PlayerView PlayerView;
-    
-    //public event Action OnEndTurnClicked;
 
     private readonly ITargetSelectionService selectionService;
 
@@ -133,8 +137,8 @@ public abstract class PlayerState : State {
     }
 }
 
+// Гравець не може нічого робити (не його хід)
 public class PassiveState : PlayerState {
-    // Гравець не може нічого робити (не його хід)
     public override void Enter() {
         base.Enter();
         Debug.Log("Player is in passive state (not their turn)");

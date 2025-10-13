@@ -65,11 +65,3 @@ public class HandDebug : MonoBehaviour {
     }
 
 }
-
-
-public class GameController {
-
-    public CreaturePresenter SpawnCreature() {
-        return null;
-    }
-}

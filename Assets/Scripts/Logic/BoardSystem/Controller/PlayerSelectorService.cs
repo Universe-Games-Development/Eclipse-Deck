@@ -6,13 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
-
 public class PlayerSelectorService : ITargetSelectionService, IDisposable {
     public event Action<TargetSelectionRequest> OnSelectionStarted;
     public event Action<TargetSelectionRequest, UnitModel> OnSelectionCompleted;
     public event Action<TargetSelectionRequest> OnSelectionCancelled;
 
-    
     private TargetSelectionRequest _currentRequest;
     private TaskCompletionSource<UnitModel> _currentTask;
     private CancellationTokenRegistration _cancellationRegistration;

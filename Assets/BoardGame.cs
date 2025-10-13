@@ -3,41 +3,18 @@ using Zenject;
 
 public class BoardGame : MonoBehaviour
 {
-    [Inject] IPresenterFactory presenterFactory;
-    [Inject] IOpponentFactory opponentFactory;
     [Inject] IOpponentRegistry opponentRegistry;
-    [Inject] DiContainer container;
-    [Inject] ITargetFiller targetFiller;
-    [SerializeField] public OpponentRegistry OpponentsRepresentation;
-    [SerializeField] PlayerData playerData;
+    [SerializeField] BoardManager boardManager;
 
-    [SerializeField] CardHandView handView;
-    [SerializeField] OpponentView opponentView;
+    public void StartBattle(Opponent player1, Opponent player2) {
+        opponentRegistry.RegisterOpponent(player1);
+        opponentRegistry.RegisterOpponent(player2);
 
-    public PlayerSelectorService SelectorService;
-    
-    public SelectorView SelectionDisplay;
+        boardManager.CreateBoard(2, 2);
+        boardManager.SpawnSummongZones(2);
+        boardManager.AssignRowTo(0, player1);
+        boardManager.AssignRowTo(1, player2);
 
-    private Opponent player;
-    private void Awake() {
-        TestInit();
-    }
-
-    private void TestInit() {
-        player = opponentFactory.CreatePlayer(playerData);
-
-        SelectorService = container.Instantiate<PlayerSelectorService>(new object[] { SelectionDisplay });
-        targetFiller.RegisterSelector(player.InstanceId, SelectorService);
-        PlayerPresenter playerPresenter = presenterFactory.CreateUnitPresenter<PlayerPresenter>(player, opponentView, SelectorService);
-        playerPresenter.Initialize();
-        opponentRegistry.RegisterOpponent(player);
-
-    }
-
-    public void OnDestroy() {
-        if (player != null)
-        targetFiller.UnregisterSelector(player.InstanceId);
+        Debug.Log("Battle Started!");
     }
 }
-
-

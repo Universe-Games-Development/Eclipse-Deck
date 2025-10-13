@@ -119,9 +119,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 258795483621435103}
-  - component: {fileID: 51170939575711222}
-  - component: {fileID: 6157458490630827906}
-  - component: {fileID: 2090815509159624961}
+  - component: {fileID: 6207791916567119502}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -145,7 +143,7 @@ Transform:
   - {fileID: 695467905055771171}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &51170939575711222
+--- !u!114 &6207791916567119502
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -154,36 +152,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 4201078646512272121}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ac1e23b19879d440b0939881611138d, type: 3}
+  m_Script: {fileID: 11500000, guid: 14bac4462e9d7a94daeb5b579da34590, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  View: {fileID: 6157458490630827906}
---- !u!114 &6157458490630827906
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4201078646512272121}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94d5f41e26fe2144da7ede22d97f23e2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animator: {fileID: 0}
-  useDoTween: 1
-  splineMover: {fileID: 2090815509159624961}
---- !u!114 &2090815509159624961
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4201078646512272121}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7016f72d47a031446bd14f6c51b3c7ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  duration: 2
-  alignToDirection: 1
+  HealthDisplay: {fileID: 0}
+  HandDisplay: {fileID: 0}
+  DeckDisplay: {fileID: 0}

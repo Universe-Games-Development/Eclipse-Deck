@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-
 public class OperationTargetsFiller : ITargetFiller {
     private readonly ITargetValidator _targetValidator;
     private readonly ILogger _logger;
@@ -18,30 +17,36 @@ public class OperationTargetsFiller : ITargetFiller {
     private readonly int _maxRetryAttempts;
     private readonly TimeSpan _selectorTimeout;
 
-    public OperationTargetsFiller(
-        ITargetValidator targetValidator,
-        ILogger logger,
-        IOpponentRegistry opponentRegistry,
-        ITargetSelectionService fallbackSelector = null,
-        int maxRetryAttempts = 1,
-        float selectorTimeoutSeconds = 10f) {
+    public OperationTargetsFiller( ITargetValidator targetValidator, ILogger logger,
+        IOpponentRegistry opponentRegistry, ITargetSelectionService fallbackSelector = null,
+        int maxRetryAttempts = 1, float selectorTimeoutSeconds = 10f) {
 
         _targetValidator = targetValidator ?? throw new ArgumentNullException(nameof(targetValidator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _opponentRegistry = opponentRegistry ?? throw new ArgumentNullException(nameof(opponentRegistry));
 
-        _fallbackSelector = fallbackSelector ?? new HumanTargetSelector();
+        _fallbackSelector = fallbackSelector ?? new RandomTargetSelector();
         _maxRetryAttempts = maxRetryAttempts;
         _selectorTimeout = TimeSpan.FromSeconds(selectorTimeoutSeconds);
     }
 
-    public bool CanFillTargets(List<TargetInfo> targets) {
-        return targets?.Any() == true && _targetValidator.CanValidateAllTargets(targets);
+
+    public bool CanFillTargets(List<TargetInfo> targets, string ownerId) {
+        if (targets?.Any() != true) {
+            return false;
+        }
+
+        // Є хоча б один selector (не рахуючи fallback)
+        if (!_registeredSelectors.Any()) {
+            return false;
+        }
+
+        // Перевіряємо через validator чи існують валідні цілі
+        // Тут можна передати ownerId якщо він відомий, або null для загальної перевірки
+        return _targetValidator.CanValidateAllTargets(targets, ownerId);
     }
 
-    public async UniTask<TargetOperationResult> FillTargetsAsync(
-        TargetOperationRequest request,
-        CancellationToken cancellationToken = default) {
+    public async UniTask<TargetOperationResult> FillTargetsAsync(TargetOperationRequest request, CancellationToken cancellationToken = default) {
 
         if (!IsValidRequest(request)) {
             return TargetOperationResult.Failure("Invalid request parameters");
@@ -66,9 +71,7 @@ public class OperationTargetsFiller : ITargetFiller {
         }
     }
 
-    private async UniTask<TargetOperationResult> ProcessTargetsAsync(
-        TargetOperationRequest request,
-        CancellationToken cancellationToken) {
+    private async UniTask<TargetOperationResult> ProcessTargetsAsync(TargetOperationRequest request, CancellationToken cancellationToken) {
 
         var startTime = DateTime.UtcNow;
         var filledTargets = new Dictionary<string, object>();
@@ -162,6 +165,19 @@ public class OperationTargetsFiller : ITargetFiller {
         return TargetFillResult.Failed();
     }
 
+    private bool IsValidRequest(TargetOperationRequest request) {
+        if (request?.Targets?.Any() != true) {
+            _logger.LogWarning("Cannot process empty target request", LogCategory.TargetsFiller);
+            return false;
+        }
+
+        if (request.Source == null) {
+            _logger.LogWarning("Request requires source but none provided", LogCategory.TargetsFiller);
+            return false;
+        }
+
+        return true;
+    }
 
     private ITargetSelectionService GetSelectorForTarget(TargetInfo typeTarget, string initiatorId) {
         var selectorType = typeTarget.GetTargetSelector();
@@ -178,20 +194,6 @@ public class OperationTargetsFiller : ITargetFiller {
         return opponent != null
             ? _registeredSelectors.GetValueOrDefault(opponent.InstanceId, _fallbackSelector)
             : _fallbackSelector;
-    }
-
-    private bool IsValidRequest(TargetOperationRequest request) {
-        if (request?.Targets?.Any() != true) {
-            _logger.LogWarning("Cannot process empty target request", LogCategory.TargetsFiller);
-            return false;
-        }
-
-        if (request.Source == null) {
-            _logger.LogWarning("Request requires source but none provided", LogCategory.TargetsFiller);
-            return false;
-        }
-
-        return true;
     }
 
     public void RegisterSelector(string playerId, ITargetSelectionService selectionService) {

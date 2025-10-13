@@ -84,9 +84,8 @@ public abstract class BaseTargetSelector : ITargetSelectionService {
     }
 }
 
-public class HumanTargetSelector : BaseTargetSelector {
-
-    protected override async UniTask StartSelectionAsync(TargetSelectionRequest request, CancellationToken cancellationToken) {
-        await UniTask.CompletedTask;
+public class RandomTargetSelector : BaseTargetSelector {
+    protected override UniTask StartSelectionAsync(TargetSelectionRequest request, CancellationToken cancellationToken) {
+        throw new NotImplementedException();
     }
 }

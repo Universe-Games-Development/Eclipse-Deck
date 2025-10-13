@@ -1,6 +1,5 @@
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using UnityEngine;
 using Zenject;
@@ -28,14 +27,48 @@ public class BoardManager : MonoBehaviour
     [SerializeField] int zoneTryes = 3;
 
     private void Start() {
+        //StartInitialTest();
+    }
+
+    public void CreateBoard(int rows, int colums) {
         board = SetupInitialBoard(rows, colums);
         boardPresenter = presenterFactory.CreatePresenter<BoardPresenter>(board, boardView);
+    }
+
+    public void AssignRowTo(int rowIndex, Opponent player) {
+        Row row = board.GetRow(rowIndex);
+        foreach (var cell in row.Cells) {
+            if (cell.AssignedUnit != null)
+            cell.AssignedUnit.ChangeOwner(player.OwnerId);
+        }
+    }
+
+
+    public void SpawnSummongZones(int columns) {
+        for (int i = 0; i < columns; i++) {
+            List<Cell> cells = board.GetColumn(i);
+
+            for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++) {
+                Zone zone = CreateZone();
+                cells[cellIndex].AssignUnit(zone);
+            }
+        }
+    }
+
+
+    private void StartInitialTest() {
+        CreateBoard(rows,colums);
 
         if (doPopulate) {
             PopulateCells();
         }
 
         StartTestChanges();
+    }
+
+
+    private Board SetupInitialBoard(int rows, int colums) {
+        return new Board(rows, colums);
     }
 
     public void StartTestChanges() {
@@ -60,38 +93,48 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private Board SetupInitialBoard(int rows, int colums) {
-        return new Board(rows, colums);
-    }
 
     private void PopulateCells() {
         List<Cell> cells = board.GetAllCells();
 
         List<Zone> zones = CreateZones(cells.Count);
+        foreach (var zone in zones) {
+            ZonePresenter zonePresenter = SpawnTestZone(zone);
+        }
 
+        if (zones.Count > 0)
+            boardPresenter.AssignAreas(cells, zones);
+
+        AssignOwners(zones);
+    }
+
+    private bool AssignOwners(List<Zone> zones) {
         List<Opponent> opponents = opponentRegistry.GetOpponents();
         if (opponents == null || opponents.Count == 0) {
             Debug.LogWarning("Failed to get opponents");
-            return;
+            return false;
         }
         Opponent player = opponents.First();
 
-        for (int i = 0; i < cells.Count && i < zones.Count; i++) {
-            ZonePresenter zonePresenter = SpawnTestZone(zones[i]);
+        for (int i = 0; i < zones.Count; i++) {
             zones[i].ChangeOwner(player.OwnerId);
         }
-        if (zones.Count > 0)
-        boardPresenter.AssignAreas(cells, zones);
+
+        return true;
     }
 
     private List<Zone> CreateZones(int zonesCount) {
         List<Zone> zones = new();
         for (int i = 0; i < zonesCount; i++) {
-            int randomSize = Random.Range(minSize, maxSize);
-            Zone zone = entityFactory.Create<Zone>(randomSize);
+            Zone zone = CreateZone();
             zones.Add(zone);
         }
         return zones;
+    }
+
+    private Zone CreateZone() {
+        int randomSize = Random.Range(minSize, maxSize);
+        return entityFactory.Create<Zone>(randomSize);
     }
 
     private ZonePresenter SpawnTestZone(Zone zone) {
@@ -100,4 +143,5 @@ public class BoardManager : MonoBehaviour
         presenter.View.transform.position = Vector3.zero;
         return presenter;
     }
+
 }

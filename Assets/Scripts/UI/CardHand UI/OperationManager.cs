@@ -49,7 +49,7 @@ public class OperationManager : BaseQueueManager<GameOperation>, IOperationManag
     private bool ValidateOperation(GameOperation operation) {
         List<TargetInfo> typedTargetBases = operation.GetTargets();
 
-        if (!operationFiller.CanFillTargets(typedTargetBases)) {
+        if (!operationFiller.CanFillTargets(typedTargetBases, operation.Source.OwnerId)) {
             logger.LogWarning($"{operation} cannot be executed - targets cannot be filled", LogCategory);
             return false;
         }

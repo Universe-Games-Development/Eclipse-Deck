@@ -32,12 +32,12 @@ public class CellPresenter : IDisposable {
         }
 
         // Крок 2: Додавання нового вмісту
-        UnitPresenter assignedPresenter = _unitRegistry.GetPresenter<UnitPresenter>(newUnit);
-        if (!(assignedPresenter.View is IArea area)) return;
+        UnitView assignedView = _unitRegistry.GetViewByModel<UnitView>(newUnit);
+        if (!(assignedView is IArea area)) return;
 
         assignedArea = area;
         area.OnSizeChanged += HandleAreaSizeChanged;
-        CellView.AddArea(assignedPresenter.View);
+        CellView.AddArea(assignedView);
 
         // Immediately update size based on new content
         UpdateCellSize(area.Size);

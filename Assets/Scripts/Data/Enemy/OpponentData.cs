@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-
+[CreateAssetMenu(fileName = "OpponentData", menuName = "TGE/Opponent")]
 public class OpponentData : ScriptableObject {
     [Header("Presentation")]
     [Tooltip("Усі вороги/гравці мають View на базі OpponentView")]

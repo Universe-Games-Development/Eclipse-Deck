@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Zenject;
 
 public interface IOpponentRegistry {
     void RegisterOpponent(Opponent newOpponent);
-
     void UnregisterOpponent(string opponentId);
     Opponent GetAgainstOpponentId(string opponentId);
     List<Opponent> GetOpponents();
 }
 
 public class OpponentRegistry : IOpponentRegistry {
+    [Inject] ITargetFiller targetFiller;
     private readonly Dictionary<string, Opponent> _opponents = new();
 
     public void RegisterOpponent(Opponent newOpponent) {
