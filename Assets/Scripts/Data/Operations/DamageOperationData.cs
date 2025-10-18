@@ -1,27 +1,25 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using static Unity.VisualScripting.Member;
 
-public class DamageOperationData : OperationData {
+[CreateAssetMenu(fileName = "Damage", menuName = "Operations/Damage")]
+public class DamageOperationData : OperationData<DamageOperation> {
     public int damage = 6;
     [SerializeField] private Fireball fireballPrefab;
 }
 
-[OperationFor(typeof(DamageOperationData))]
 public class DamageOperation : GameOperation {
-    private const string TargetKey = "target";
     private readonly DamageOperationData data;
 
     public DamageOperation(UnitModel source, DamageOperationData data) : base(source) {
         this.data = data;
 
-        AddTarget(new TargetInfo(TargetKey, TargetRequirements.EnemyCreature));
+        AddTarget(new TargetInfo(TargetKeys.Target, TargetRequirements.EnemyCreature));
     }
 
     public override async UniTask<bool> Execute() {
         // Type-safe отримання target без кастів!
-        if (!TryGetTypedTarget<IHealthable>(TargetKey, out var target)) {
-            Debug.LogError($"Valid {TargetKey} not found for damage operation");
+        if (!TryGetTypedTarget<IHealthable>(TargetKeys.Target, out var target)) {
+            Debug.LogError($"Valid {TargetKeys.Target} not found for damage operation");
             return false;
         }
 

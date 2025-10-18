@@ -7,6 +7,7 @@ public class ZonePresenter : UnitPresenter, IDisposable {
     public Zone Zone;
     public ZoneView ZoneView;
     [Inject] private IUnitRegistry _unitRegistry;
+    [Inject] IOpponentRegistry opponentRegistry;
 
     public ZonePresenter(Zone zone, ZoneView zoneView) : base(zone, zoneView) {
         Zone = zone;
@@ -28,7 +29,16 @@ public class ZonePresenter : UnitPresenter, IDisposable {
     }
 
     private void HandleOwnerChanged(string ownerId) {
-        ZoneView.ChangeColor(ownerId != null ? Color.green : Color.black);
+        if (string.IsNullOrEmpty(ownerId)) {
+            ZoneView.ChangeColor(Color.black);
+            return;
+        }
+
+        Opponent oppponent = opponentRegistry.GetOpponentById(ownerId);
+
+        Color color = oppponent != null ? oppponent.Data.Color : Color.black;
+
+        ZoneView.ChangeColor(color);
     }
 
     private void HandleSizeUpdate(int maxSize) {

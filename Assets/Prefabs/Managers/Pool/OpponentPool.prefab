@@ -47,5 +47,5 @@ MonoBehaviour:
   defaultCapacity: 10
   maxSize: 50
   collectionCheck: 1
-  prefab: {fileID: 6207791916567119502, guid: d8999df6fe6955846ace2094bc69c47d, type: 3}
+  prefab: {fileID: 4951314825447332607, guid: 9c83e0a750b7c354aa7824201122b86e, type: 3}
   poolParent: {fileID: 0}

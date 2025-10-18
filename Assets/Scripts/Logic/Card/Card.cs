@@ -64,6 +64,8 @@ public class CreatureCard : Card, IHealthable, IAttacker {
     public void TakeDamage(int damage) {
         Health.TakeDamage(damage);
     }
+
+    public float BaseValue => Health.BaseMaximum;
     #endregion
 
     public override string ToString() {

@@ -29,7 +29,7 @@ public class Health : Attribute {
         if (IsDead || amount <= 0) return;
 
         // Відновлюємо здоров'я тільки до базового значення
-        int mainDifference = BaseValue - MainValue;
+        int mainDifference = BaseMaximum - MainValue;
 
         if (mainDifference > 0) {
             // Обмежуємо лікування базовим значенням

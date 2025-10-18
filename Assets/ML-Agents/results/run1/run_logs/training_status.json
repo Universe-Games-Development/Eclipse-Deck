@@ -1,0 +1,29 @@
+{
+    "Color Chooser": {
+        "checkpoints": [
+            {
+                "steps": 416,
+                "file_path": "results\\run1\\Color Chooser\\Color Chooser-416.onnx",
+                "reward": -0.625,
+                "creation_time": 1760642611.5866833,
+                "auxillary_file_paths": [
+                    "results\\run1\\Color Chooser\\Color Chooser-416.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 416,
+            "file_path": "results\\run1\\Color Chooser.onnx",
+            "reward": -0.625,
+            "creation_time": 1760642611.5866833,
+            "auxillary_file_paths": [
+                "results\\run1\\Color Chooser\\Color Chooser-416.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

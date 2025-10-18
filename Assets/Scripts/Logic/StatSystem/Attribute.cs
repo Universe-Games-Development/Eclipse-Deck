@@ -124,10 +124,10 @@ public class AttributeModifier {
 
 public class Attribute {
     // Базове значення атрибуту
-    public int BaseValue { get; private set; }
+    public int BaseMaximum { get; private set; }
 
     // Загальне максимальне значення (база + модифікатори)
-    public int TotalValue => BaseValue + AttributeModifier.TotalValue;
+    public int TotalValue => BaseMaximum + AttributeModifier.TotalValue;
 
     // Основне значення атрибуту
     protected int _mainValue;
@@ -136,7 +136,7 @@ public class Attribute {
         private set {
             int oldValue = _mainValue;
             // Забезпечуємо, що значення не падає нижче MinValue
-            _mainValue = Math.Max(MinValue, Math.Min(value, BaseValue));
+            _mainValue = Math.Max(MinValue, Math.Min(value, BaseMaximum));
             if (oldValue != _mainValue) {
                 OnMainValueChanged?.Invoke(this, new ModifierChangedEvent(oldValue, _mainValue));
             }
@@ -159,15 +159,15 @@ public class Attribute {
 
     public Attribute(int baseValue, int minValue = -999) {
         MinValue = minValue;
-        BaseValue = Math.Max(minValue, baseValue);
-        _mainValue = BaseValue;
+        BaseMaximum = Math.Max(minValue, baseValue);
+        _mainValue = BaseMaximum;
         AttributeModifier = new AttributeModifier();
         SubscribeToModifierEvents();
     }
 
     public Attribute(Attribute attribute) {
         MinValue = attribute.MinValue;
-        BaseValue = attribute.BaseValue;
+        BaseMaximum = attribute.BaseMaximum;
         _mainValue = attribute.MainValue;
         AttributeModifier = attribute.AttributeModifier;
         SubscribeToModifierEvents();
@@ -182,8 +182,8 @@ public class Attribute {
 
         AttributeModifier.OnTotalValueChanged += (s, e) =>
             OnTotalValueChanged?.Invoke(this, new AttributeTotalChangedEvent(
-                BaseValue + e.OldValue,
-                BaseValue + e.NewValue,
+                BaseMaximum + e.OldValue,
+                BaseMaximum + e.NewValue,
                 e.Difference));
     }
 
@@ -220,7 +220,7 @@ public class Attribute {
     }
 
     private int Restore(int restoreAmount) {
-        int mainDifference = BaseValue - MainValue;
+        int mainDifference = BaseMaximum - MainValue;
         int excess = restoreAmount;
 
         if (mainDifference > 0) {
@@ -238,7 +238,7 @@ public class Attribute {
         int oldTotal = Current;
 
         // Спочатку відновлюємо основне значення до максимуму
-        int mainDifference = BaseValue - MainValue;
+        int mainDifference = BaseMaximum - MainValue;
 
 
         int excess = Restore(amount);
@@ -289,8 +289,8 @@ public class Attribute {
         }
 
         // if effect was possitive
-        if (Current > BaseValue) {
-            int canDecrease = Math.Min(Current - BaseValue, amount);
+        if (Current > BaseMaximum) {
+            int canDecrease = Math.Min(Current - BaseMaximum, amount);
             ApplyDamage(canDecrease);
             AttributeModifier.Decrease(canDecrease);
         }
@@ -301,26 +301,26 @@ public class Attribute {
         if (newBaseValue < MinValue)
             return false;
 
-        int oldValue = BaseValue;
-        BaseValue = newBaseValue;
+        int oldValue = BaseMaximum;
+        BaseMaximum = newBaseValue;
 
         // Якщо поточне основне значення більше за нове базове, обмежуємо його
-        if (MainValue > BaseValue) {
-            MainValue = BaseValue;
+        if (MainValue > BaseMaximum) {
+            MainValue = BaseMaximum;
         }
 
-        OnBaseValueChanged?.Invoke(this, new ModifierChangedEvent(oldValue, BaseValue));
+        OnBaseValueChanged?.Invoke(this, new ModifierChangedEvent(oldValue, BaseMaximum));
         OnTotalValueChanged?.Invoke(this, new AttributeTotalChangedEvent(
             oldValue + AttributeModifier.TotalValue,
-            BaseValue + AttributeModifier.TotalValue,
-            BaseValue - oldValue));
+            BaseMaximum + AttributeModifier.TotalValue,
+            BaseMaximum - oldValue));
 
         return true;
     }
 
     // Відновити основне значення до максимуму
     public void RestoreToBase() {
-        MainValue = BaseValue;
+        MainValue = BaseMaximum;
     }
 
     // Скинути всі значення
@@ -330,7 +330,7 @@ public class Attribute {
     }
 
     public override string ToString() {
-        return $"Base: {BaseValue}, Main: {MainValue}, " +
+        return $"Base: {BaseMaximum}, Main: {MainValue}, " +
                $"Modifier (Total/Current): {AttributeModifier.TotalValue}/{AttributeModifier.CurrentValue}, " +
                $"Total: {TotalValue}, Current: {Current}";
     }

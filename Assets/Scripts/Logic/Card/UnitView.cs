@@ -42,9 +42,5 @@ public class UnitModel {
         OwnerId = newOwnerId;
         OnChangedOwner?.Invoke(newOwnerId);
     }
-
-    public virtual string GetName() {
-        return string.IsNullOrEmpty(UnitName) ? ToString() : UnitName;
-    }
 }
 

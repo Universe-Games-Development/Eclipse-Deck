@@ -12,7 +12,7 @@ public class Cost : Attribute {
         // Якщо вказано початкову вартість, встановлюємо її
         if (initialCost > 0) {
             // Віднімаємо від максимального, оскільки в новій системі MainValue починається з BaseValue
-            Subtract(BaseValue - Math.Min(initialCost, maxCost));
+            Subtract(BaseMaximum - Math.Min(initialCost, maxCost));
         }
     }
 

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a02d30e48d558b49b6f9eb62599ede4, type: 3}
+  m_Name: DeckConfig
+  m_EditorClassIdentifier: 
+  Cards:
+  - CardData: {fileID: 11400000, guid: 590ec25c64753964486e7a1bcecdad54, type: 2}
+    Quantity: 4
+  - CardData: {fileID: 11400000, guid: f677013f1c3887148aca1e823ddf5026, type: 2}
+    Quantity: 4
+  - CardData: {fileID: 11400000, guid: d9bb2260dcbade64a9daae32cb456242, type: 2}
+    Quantity: 4
+  UseRandomGeneration: 1
+  RandomCardCount: 20

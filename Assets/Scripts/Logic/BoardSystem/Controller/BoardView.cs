@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zenject;
-using static UnityEngine.Rendering.DebugUI.Table;
 
 public class BoardView : MonoBehaviour {
 

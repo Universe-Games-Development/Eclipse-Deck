@@ -35,7 +35,6 @@ public class ValidationContext {
 
 public class TargetRequirement<T> : ITargetRequirement {
     private List<ITargetCondition<T>> _targetConditions = new();
-    private List<ICondition> _simpleConditions = new();
 
     public TargetSelector RequiredSelector { get; protected set; }
     public bool AllowSameTargetMultipleTimes { get; set; } = false;
@@ -54,13 +53,6 @@ public class TargetRequirement<T> : ITargetRequirement {
         return this;
     }
 
-    public TargetRequirement<T> AddCondition(ICondition condition) {
-        if (condition != null) {
-            _simpleConditions.Add(condition);
-        }
-        return this;
-    }
-
     public TargetRequirement<T> WithSelector(TargetSelector selector) {
         RequiredSelector = selector;
         return this;
@@ -75,12 +67,6 @@ public class TargetRequirement<T> : ITargetRequirement {
         if (!(selected is T casted)) {
             return ValidationResult.Error($"Expected {typeof(T).Name}, got {selected.GetType().Name}");
         }
-
-        foreach (var condition in _simpleConditions) {
-            var result = condition.Validate(context);
-            if (!result.IsValid) return result;
-        }
-
 
         foreach (var condition in _targetConditions) {
             var result = condition.Validate(casted, context);
@@ -169,9 +155,6 @@ public class RequirementBuilder<T> {
         foreach (var condition in _targetConditions)
             requirement.AddTargetCondition(condition);
 
-        foreach (var condition in _globalConditions)
-            requirement.AddCondition(condition);
-
         return requirement;
     }
 
@@ -187,14 +170,14 @@ public static class TargetRequirements {
 
     private static readonly TargetRequirement<Creature> _allyCreature =
         new RequirementBuilder<Creature>()
-            .WithCondition(new OwnershipCondition(OwnershipType.Enemy))
+            .WithCondition(new OwnershipCondition(OwnershipType.Ally))
             .WithCondition(new AliveCondition())
             .Build();
 
     private static readonly TargetRequirement<Creature> _anyCreature =
         new RequirementBuilder<Creature>()
             .WithCondition(new AliveCondition())
-            .WithCondition(new OwnershipCondition(OwnershipType.Enemy))
+            .WithCondition(new OwnershipCondition(OwnershipType.Any))
             .Build();
 
     private static readonly TargetRequirement<Zone> _allyPlace =

@@ -1,0 +1,47 @@
+{
+    "Color Chooser": {
+        "checkpoints": [
+            {
+                "steps": 584,
+                "file_path": "results\\color-chooser1\\Color Chooser\\Color Chooser-584.onnx",
+                "reward": -0.702054794520548,
+                "creation_time": 1760641721.54064,
+                "auxillary_file_paths": [
+                    "results\\color-chooser1\\Color Chooser\\Color Chooser-584.pt"
+                ]
+            },
+            {
+                "steps": 13336,
+                "file_path": "results\\color-chooser1\\Color Chooser\\Color Chooser-13336.onnx",
+                "reward": 0.7228260869565217,
+                "creation_time": 1760644803.3383703,
+                "auxillary_file_paths": [
+                    "results\\color-chooser1\\Color Chooser\\Color Chooser-13336.pt"
+                ]
+            },
+            {
+                "steps": 46904,
+                "file_path": "results\\color-chooser1\\Color Chooser\\Color Chooser-46904.onnx",
+                "reward": 1.0,
+                "creation_time": 1760645037.3408344,
+                "auxillary_file_paths": [
+                    "results\\color-chooser1\\Color Chooser\\Color Chooser-46904.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 46904,
+            "file_path": "results\\color-chooser1\\Color Chooser.onnx",
+            "reward": 1.0,
+            "creation_time": 1760645037.3408344,
+            "auxillary_file_paths": [
+                "results\\color-chooser1\\Color Chooser\\Color Chooser-46904.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

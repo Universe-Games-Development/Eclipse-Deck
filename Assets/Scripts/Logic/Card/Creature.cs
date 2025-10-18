@@ -43,6 +43,8 @@ public class Creature : UnitModel, IHealthable, IAttacker {
 
     public int CurrentHealth => Health.Current;
 
+    public float BaseValue => Health.BaseMaximum;
+
     public void TakeDamage(int damage) {
         Health.TakeDamage(damage);
     }

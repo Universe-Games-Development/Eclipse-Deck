@@ -118,8 +118,6 @@ public class Deck : CardContainer {
     }
 }
 
-
-
 public struct OnCardDrawn : IEvent {
     public Card card;
     public Opponent owner;

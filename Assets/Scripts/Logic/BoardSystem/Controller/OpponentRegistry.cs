@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zenject;
@@ -8,6 +9,7 @@ public interface IOpponentRegistry {
     void UnregisterOpponent(string opponentId);
     Opponent GetAgainstOpponentId(string opponentId);
     List<Opponent> GetOpponents();
+    Opponent GetOpponentById(string ownerId);
 }
 
 public class OpponentRegistry : IOpponentRegistry {
@@ -48,6 +50,10 @@ public class OpponentRegistry : IOpponentRegistry {
 
     public List<Opponent> GetOpponents() {
         return _opponents.Values.ToList();
+    }
+
+    public Opponent GetOpponentById(string ownerId) {
+        return _opponents.GetValueOrDefault(ownerId); ;
     }
 }
 

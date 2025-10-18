@@ -47,12 +47,9 @@ public abstract class CardHandView : UnitView {
     /// </summary>
     public abstract CardView CreateCardView();
 
-    /// <summary>
-    /// Реєструє CardView в руці з прив'язкою до cardInstanceId
-    /// </summary>
-    public virtual void RegisterView(CardView cardView, string cardInstanceId) {
+    public virtual void AddCardView(CardView cardView, string cardInstanceId) {
         if (cardView == null) {
-            Debug.LogWarning("Trying to register null CardView");
+            Debug.LogWarning("Trying to add null CardView");
             return;
         }
 
@@ -61,33 +58,45 @@ public abstract class CardHandView : UnitView {
             return;
         }
 
-        // Зберігаємо маппінг
+        RegisterCard(cardView, cardInstanceId);
+
+        // Викликаємо спеціалізовану логіку реєстрації
+        AddCard(cardView);
+    }
+
+    public virtual void RemoveCardView(CardView cardView) {
+        if (cardView == null) return;
+        UnregisterCard(cardView);
+
+        // Викликаємо спеціалізовану логіку видалення
+        RemoveCard(cardView);
+    }
+
+    public virtual void AddCardViews(List<CardView> cardViews) {
+
+    }
+
+    public virtual void RemoveCardViews(List<CardView> cardViews) {
+
+    }
+
+    private void RegisterCard(CardView cardView, string cardInstanceId) {
         cardViewToIdMap[cardView] = cardInstanceId;
 
         // Підписуємось на події CardView
         cardView.OnClicked += HandleCardViewClicked;
         cardView.OnHoverChanged += HandleCardViewHoverChanged;
-
-        // Викликаємо спеціалізовану логіку реєстрації
-        OnRegisterView(cardView);
     }
 
-    /// <summary>
-    /// Видаляє CardView з руки
-    /// </summary>
-    public virtual void RemoveCardView(CardView cardView) {
-        if (cardView == null) return;
-
-        // Відписуємось від подій
+    private void UnregisterCard(CardView cardView) {
         cardView.OnClicked -= HandleCardViewClicked;
         cardView.OnHoverChanged -= HandleCardViewHoverChanged;
 
         // Видаляємо з маппінгу
         cardViewToIdMap.Remove(cardView);
+    } 
 
-        // Викликаємо спеціалізовану логіку видалення
-        HandleCardViewRemoval(cardView);
-    }
+    
     #endregion
 
     #region Event Handlers
@@ -134,12 +143,16 @@ public abstract class CardHandView : UnitView {
     /// <summary>
     /// Викликається після реєстрації CardView (для setup позицій, анімацій тощо)
     /// </summary>
-    protected abstract void OnRegisterView(CardView cardView);
+    protected abstract void AddCard(CardView cardView);
 
     /// <summary>
     /// Викликається при видаленні CardView (для cleanup, повернення в pool тощо)
     /// </summary>
-    protected abstract void HandleCardViewRemoval(CardView cardView);
+    protected abstract void RemoveCard(CardView cardView);
+
+    protected abstract void AddCards(List<CardView> cardViews);
+
+    protected abstract void RemoveCards(List<CardView> cardViews);
 
     /// <summary>
     /// Викликається при наведенні на карту (для hover анімацій)
