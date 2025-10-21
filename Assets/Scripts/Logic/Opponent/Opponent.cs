@@ -9,7 +9,6 @@ public class Opponent : UnitModel, IHealthable, IManaSystem, IDisposable {
 
     public Action<Card, CardPlayResult> OnCardPlayFinished;
     public Action<Card> OnCardPlayStarted;
-    public event Action<Card> OnCardActivated;
 
     public Health Health { get; private set; }
     public Mana Mana { get; private set; }
@@ -42,6 +41,13 @@ public class Opponent : UnitModel, IHealthable, IManaSystem, IDisposable {
         this.cardPlayService = cardPlayService;
         this.eventBus = eventBus;
         cardPlayService.OnCardPlayFinished += HandleCardPlayFinished;
+        cardPlayService.OnCardActivated += HandleActivatedCard;
+    }
+
+    private void HandleActivatedCard(Card card) {
+        if (!Hand.Contains(card)) return;
+
+        Hand.Remove(card);
     }
 
     public void FillDeck() {
@@ -50,10 +56,6 @@ public class Opponent : UnitModel, IHealthable, IManaSystem, IDisposable {
     }
 
     private void HandleCardPlayFinished(Card card, CardPlayResult result) {
-        if (result.IsSuccess && Hand.Contains(card)) {
-            Hand.Remove(card);
-        }
-
         OnCardPlayFinished?.Invoke(card, result);
     }
 

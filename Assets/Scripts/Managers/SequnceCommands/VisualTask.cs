@@ -4,7 +4,7 @@ using UnityEngine;
 
 public abstract class VisualTask : IExecutableTask {
     public float TimeModifier { get; set; } = 1f;
-    public abstract UniTask<bool> Execute();
+    public abstract UniTask<bool> ExecuteAsync();
 }
 
 public class UniversalVisualTask : VisualTask {
@@ -37,7 +37,7 @@ public class UniversalVisualTask : VisualTask {
         }, description) {
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         if (_taskFunction == null) {
             Debug.LogWarning("UniversalVisualTask has null task function");
             return false;

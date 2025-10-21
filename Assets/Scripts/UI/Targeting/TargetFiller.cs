@@ -5,195 +5,239 @@ using System.Linq;
 using System.Threading;
 
 public interface ITargetFiller {
-    bool CanFillTargets(List<TargetInfo> targets, string ownerId);
-    UniTask<TargetOperationResult> FillTargetsAsync(TargetOperationRequest request, CancellationToken cancellationToken = default);
+    UniTask<TargetsFillResult> FillTargetsAsync(OperationData operationData, UnitModel requestSource, CancellationToken cancellationToken = default);
+    bool CanFillTargets(OperationData operationData, string ownerId);
     void RegisterSelector(string playerId, ITargetSelectionService selectionService);
-    UniTask<TargetFillResult> TryFillTargetAsync(TargetInfo target, UnitModel requestSource, bool isMandatory, CancellationToken cancellationToken = default);
     void UnregisterSelector(string playerId);
 }
 
 public class OperationTargetsFiller : ITargetFiller {
-    private readonly ITargetValidator _targetValidator;
     private readonly ILogger _logger;
     private readonly IOpponentRegistry _opponentRegistry;
-
+    private readonly ITargetValidator _targetValidator;
     private readonly Dictionary<string, ITargetSelectionService> _registeredSelectors = new();
     private readonly CancellationTokenSource _globalCancellationSource = new();
     private readonly ITargetSelectionService _fallbackSelector;
-
-    // Налаштування
-    private readonly int _maxRetryAttempts;
     private readonly TimeSpan _selectorTimeout;
 
-    public OperationTargetsFiller( ITargetValidator targetValidator, ILogger logger,
-        IOpponentRegistry opponentRegistry, ITargetSelectionService fallbackSelector = null,
-        int maxRetryAttempts = 1, float selectorTimeoutSeconds = 10f) {
+    // ✅ Налаштування retry
+    private readonly int _maxRetryAttempts;
+    private readonly TimeSpan _retryDelay;
+
+    public OperationTargetsFiller(
+            ITargetValidator targetValidator,
+            ILogger logger,
+            IOpponentRegistry opponentRegistry,
+            ITargetSelectionService fallbackSelector = null,
+            int maxRetryAttempts = 1,
+            float selectorTimeoutSeconds = 10f,
+            float retryDelaySeconds = 0.5f) {
 
         _targetValidator = targetValidator ?? throw new ArgumentNullException(nameof(targetValidator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _opponentRegistry = opponentRegistry ?? throw new ArgumentNullException(nameof(opponentRegistry));
-
         _fallbackSelector = fallbackSelector ?? new RandomTargetSelector();
-        _maxRetryAttempts = maxRetryAttempts;
         _selectorTimeout = TimeSpan.FromSeconds(selectorTimeoutSeconds);
+        _maxRetryAttempts = maxRetryAttempts;
+        _retryDelay = TimeSpan.FromSeconds(retryDelaySeconds);
     }
 
-
-    public bool CanFillTargets(List<TargetInfo> targets, string ownerId) {
-        if (targets?.Any() != true) {
-            return false;
-        }
-
-        // Є хоча б один selector (не рахуючи fallback)
-        if (!_registeredSelectors.Any()) {
-            return false;
-        }
-
-        // Перевіряємо через validator чи існують валідні цілі
-        // Тут можна передати ownerId якщо він відомий, або null для загальної перевірки
-        return _targetValidator.CanValidateAllTargets(targets, ownerId);
-    }
-
-    public async UniTask<TargetOperationResult> FillTargetsAsync(TargetOperationRequest request, CancellationToken cancellationToken = default) {
-
-        if (!IsValidRequest(request)) {
-            return TargetOperationResult.Failure("Invalid request parameters");
+    public async UniTask<TargetsFillResult> FillTargetsAsync(
+        OperationData operationData,
+        UnitModel requestSource,
+        CancellationToken cancellationToken = default) {
+        if (!CanFillTargets(operationData, requestSource.OwnerId)) {
+            return TargetsFillResult.Failure("Invalid request parameters");
         }
 
         using var combinedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
             cancellationToken, _globalCancellationSource.Token);
 
-        _logger.LogInfo($"Starting target operation: {request.Targets.Count} targets, mandatory: {request.IsMandatory}",
-            LogCategory.TargetsFiller);
-
-        try {
-            var result = await ProcessTargetsAsync(request, combinedTokenSource.Token);
-            _logger.LogInfo($"Target operation completed: {result.Status.IsSuccess}", LogCategory.TargetsFiller);
-            return result;
-        } catch (OperationCanceledException) {
-            _logger.LogInfo("Target operation cancelled", LogCategory.TargetsFiller);
-            return TargetOperationResult.Failure("Operation was cancelled");
-        } catch (Exception ex) {
-            _logger.LogError($"Target operation failed: {ex.Message}", LogCategory.TargetsFiller);
-            return TargetOperationResult.Failure(ex.Message);
-        }
-    }
-
-    private async UniTask<TargetOperationResult> ProcessTargetsAsync(TargetOperationRequest request, CancellationToken cancellationToken) {
-
         var startTime = DateTime.UtcNow;
-        var filledTargets = new Dictionary<string, object>();
+        var targets = new Dictionary<TargetKeys, object>();
 
-        for (int i = 0; i < request.Targets.Count; i++) {
-            var target = request.Targets[i];
-            
+        _logger.LogInfo(
+            $"Starting target filling for {operationData.name}: {operationData.targetRequirements.Count} requirements",
+            LogCategory.TargetsFiller
+        );
 
-            var result = await TryFillTargetAsync(target, request.Source, request.IsMandatory, cancellationToken);
+        // ✅ Build всі runtime requirements спочатку
+        var runtimeRequirements = operationData.BuildRuntimeRequirements();
 
-            if (result.IsSuccess && result.Unit != null) {
-                filledTargets[target.Key] = result.Unit;
-            } else if (request.IsMandatory && result.Unit == null) {
-                var duration = DateTime.UtcNow - startTime;
-                return TargetOperationResult.Failure(
-                    $"Failed to fill mandatory target: {target.Key}",
-                    duration);
+        for (int i = 0; i < operationData.targetRequirements.Count; i++) {
+            var requirementData = operationData.targetRequirements[i];
+            var runtimeRequirement = runtimeRequirements[i];
+
+            _logger.LogInfo(
+                $"[{i + 1}/{operationData.targetRequirements.Count}] Filling target: " +
+                $"Key={requirementData.TargetKey}, Selector={requirementData.RequiredSelector}",
+                LogCategory.TargetsFiller
+            );
+
+            // ✅ Select with validation and retries
+            var selectedTarget = await TrySelectValidTarget(
+                operationData,
+                requirementData,
+                runtimeRequirement,
+                requestSource,
+                targets, // previously selected targets
+                combinedTokenSource.Token
+            );
+
+            if (selectedTarget == null) {
+                return TargetsFillResult.Failure(
+                    $"Failed to select valid target for '{requirementData.TargetKey}'",
+                    DateTime.UtcNow - startTime
+                );
             }
+
+            targets.Add(requirementData.TargetKey, selectedTarget);
+
+            _logger.LogInfo(
+                $"✓ Target selected: {requirementData.TargetKey} = {selectedTarget}",
+                LogCategory.TargetsFiller
+            );
         }
 
+        var targetRegistry = new TargetRegistry(targets);
         var totalDuration = DateTime.UtcNow - startTime;
 
-        if (filledTargets.Count == request.Targets.Count) {
-            return TargetOperationResult.Success(filledTargets, totalDuration);
-        } else if (filledTargets.Count > 0 || !request.IsMandatory) {
-            // Часткове заповнення - ок для необов'язкових
-            return TargetOperationResult.Success(filledTargets, totalDuration);
-        } else {
-            return TargetOperationResult.Failure("No targets were filled", totalDuration);
-        }
+        _logger.LogInfo(
+            $"✓ Target filling completed successfully in {totalDuration.TotalSeconds:F2}s",
+            LogCategory.TargetsFiller
+        );
+
+        return TargetsFillResult.Success(targetRegistry, totalDuration);
     }
 
-    public async UniTask<TargetFillResult> TryFillTargetAsync(TargetInfo target, UnitModel requestSource, bool isMandatory, CancellationToken cancellationToken = default) {
+    // ✅ Ключовий метод - select з validation і retry
+    private async UniTask<object> TrySelectValidTarget(
+        OperationData operationData,
+        ITargetRequirementData requirementData,
+        ITargetRequirement runtimeRequirement,
+        UnitModel requestSource,
+        Dictionary<TargetKeys, object> previouslySelectedTargets,
+        CancellationToken cancellationToken) {
+        var selector = GetSelectorForTarget(requirementData, requestSource.OwnerId);
+        var validationContext = CreateValidationContext(requestSource, previouslySelectedTargets);
 
-        var selector = GetSelectorForTarget(target, requestSource.OwnerId);
+        // Create request with runtime requirement
+        var request = new TargetSelectionRequest(
+            operationData,
+            requirementData,
+            runtimeRequirement,
+            requestSource,
+            validationContext
+        );
 
         for (int attempt = 0; attempt < _maxRetryAttempts; attempt++) {
-            try {
+            if (cancellationToken.IsCancellationRequested) {
+                _logger.LogInfo("Target selection cancelled by user", LogCategory.TargetsFiller);
+                return null;
+            }
 
-                using var timeoutSource = new CancellationTokenSource(_selectorTimeout);
-                using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken, timeoutSource.Token);
-
-                TargetSelectionRequest targetSelectionRequest = new TargetSelectionRequest(target, requestSource);
-                var selectedUnit = await selector.SelectTargetAsync(targetSelectionRequest, linkedSource.Token);
-
-                if (selectedUnit == null) {
-                    // Для необов'язкових - це ок
-                    return TargetFillResult.Failed();
-                }
-
-                var validationResult = target.IsValid(
-                    selectedUnit,
-                    new ValidationContext(requestSource.OwnerId));
-
-                if (validationResult.IsValid) {
-                    return TargetFillResult.Success(selectedUnit);
-                }
-
+            if (attempt > 0) {
                 _logger.LogWarning(
-                    $"Invalid target {selectedUnit} for {target.Key} (attempt {attempt + 1}/{_maxRetryAttempts}): {validationResult.ErrorMessage}",
-                    LogCategory.TargetsFiller);
+                    $"Retry attempt {attempt + 1}/{_maxRetryAttempts} for target '{requirementData.TargetKey}'",
+                    LogCategory.TargetsFiller
+                );
 
+                // Short delay before retry
+                await UniTask.Delay(_retryDelay, cancellationToken: cancellationToken);
+            }
 
-            } catch (OperationCanceledException) {
-                return TargetFillResult.Failed();
-                throw;
-            } catch (TimeoutException) {
-                selector.CancelCurrentSelection();
+            // 1. Let selector choose
+            object selectedTarget = await SelectWithTimeout(
+                selector,
+                request,
+                cancellationToken
+            );
+
+            if (selectedTarget == null) {
                 _logger.LogWarning(
-                    $"Selector timeout for {target.Key} (attempt {attempt + 1}/{_maxRetryAttempts})",
-                    LogCategory.TargetsFiller);
+                    $"Selector returned null for '{requirementData.TargetKey}'",
+                    LogCategory.TargetsFiller
+                );
 
-                // Якщо це обов'язковий і selector не відповідає - спробуємо fallback
-                if (isMandatory && selector != _fallbackSelector) {
-                    _logger.LogInfo($"Switching to fallback selector for mandatory target {target.Key}",
-                        LogCategory.TargetsFiller);
-                    selector = _fallbackSelector;
-                    continue;
+                if (attempt == _maxRetryAttempts - 1) {
+                    return null; // Final attempt failed
                 }
+                continue; // Retry
+            }
 
-                return TargetFillResult.Failed();
-            } catch (Exception ex) {
+            // 2. ✅ Validate selected target
+            var validationResult = runtimeRequirement.IsValid(selectedTarget, validationContext);
+
+            if (validationResult.IsValid) {
+                // ✅ Valid target selected!
+                return selectedTarget;
+            }
+
+            // ❌ Invalid target selected
+            _logger.LogWarning(
+                $"Selected target is invalid: {validationResult.ErrorMessage}",
+                LogCategory.TargetsFiller
+            );
+
+            // Last attempt?
+            if (attempt == _maxRetryAttempts - 1) {
                 _logger.LogError(
-                    $"Error selecting target {target.Key} (attempt {attempt + 1}/{_maxRetryAttempts}): {ex.Message}",
-                    LogCategory.TargetsFiller);
-
-                return TargetFillResult.Failed();
+                    $"Failed to select valid target after {_maxRetryAttempts} attempts",
+                    LogCategory.TargetsFiller
+                );
+                return null;
             }
         }
 
-        return TargetFillResult.Failed();
+        return null;
     }
 
-    private bool IsValidRequest(TargetOperationRequest request) {
-        if (request?.Targets?.Any() != true) {
-            _logger.LogWarning("Cannot process empty target request", LogCategory.TargetsFiller);
-            return false;
-        }
+    private async UniTask<object> SelectWithTimeout(
+        ITargetSelectionService selector,
+        TargetSelectionRequest request,
+        CancellationToken cancellationToken) {
+        using var timeoutCts = new CancellationTokenSource(_selectorTimeout);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellationToken,
+            timeoutCts.Token
+        );
 
-        if (request.Source == null) {
-            _logger.LogWarning("Request requires source but none provided", LogCategory.TargetsFiller);
-            return false;
+        try {
+            return await selector.SelectTargetAsync(request, linkedCts.Token);
+        } catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested) {
+            _logger.LogWarning(
+                $"Target selection timed out after {_selectorTimeout.TotalSeconds}s",
+                LogCategory.TargetsFiller
+            );
+            return null;
+        } catch (Exception ex) {
+            _logger.LogError(
+                $"Error during target selection: {ex.Message}",
+                LogCategory.TargetsFiller
+            );
+            return null;
         }
-
-        return true;
     }
 
-    private ITargetSelectionService GetSelectorForTarget(TargetInfo typeTarget, string initiatorId) {
-        var selectorType = typeTarget.GetTargetSelector();
+    private ValidationContext CreateValidationContext(
+        UnitModel requestSource,
+        Dictionary<TargetKeys, object> previouslySelectedTargets) {
+        return new ValidationContext(
+            requestSource.OwnerId,
+            extra: new {
+                PreviousTargets = previouslySelectedTargets,
+                RequestSource = requestSource
+            }
+        );
+    }
 
-        return selectorType switch {
+    private ITargetSelectionService GetSelectorForTarget(
+        ITargetRequirementData requirement,
+        string initiatorId) {
+        return requirement.RequiredSelector switch {
             TargetSelector.Initiator => _registeredSelectors.GetValueOrDefault(initiatorId, _fallbackSelector),
             TargetSelector.Opponent => GetOpponentSelector(initiatorId),
+            TargetSelector.Auto => _fallbackSelector,
             _ => _fallbackSelector
         };
     }
@@ -205,19 +249,23 @@ public class OperationTargetsFiller : ITargetFiller {
             : _fallbackSelector;
     }
 
+    public bool CanFillTargets(OperationData operationData, string ownerId) {
+        var targets = operationData.targetRequirements;
+        if (targets == null || !targets.Any()) {
+            return false;
+        }
+
+        if (!_registeredSelectors.Any()) {
+            return false;
+        }
+
+        return _targetValidator.CanValidateAllTargets(operationData, ownerId);
+    }
+
     public void RegisterSelector(string playerId, ITargetSelectionService selectionService) {
-        if (string.IsNullOrEmpty(playerId)) {
-            _logger.LogWarning("Cannot register selector with null or empty player ID", LogCategory.TargetsFiller);
+        if (string.IsNullOrEmpty(playerId) || selectionService == null) {
+            _logger.LogWarning("Invalid selector registration parameters", LogCategory.TargetsFiller);
             return;
-        }
-
-        if (selectionService == null) {
-            _logger.LogWarning($"Cannot register null selector for player {playerId}", LogCategory.TargetsFiller);
-            return;
-        }
-
-        if (_registeredSelectors.ContainsKey(playerId)) {
-            _logger.LogWarning($"Selector already registered for player {playerId}, replacing", LogCategory.TargetsFiller);
         }
 
         _registeredSelectors[playerId] = selectionService;
@@ -227,8 +275,6 @@ public class OperationTargetsFiller : ITargetFiller {
     public void UnregisterSelector(string playerId) {
         if (_registeredSelectors.Remove(playerId)) {
             _logger.LogInfo($"Unregistered selector for player {playerId}", LogCategory.TargetsFiller);
-        } else {
-            _logger.LogWarning($"No selector found to unregister for player {playerId}", LogCategory.TargetsFiller);
         }
     }
 
@@ -239,54 +285,49 @@ public class OperationTargetsFiller : ITargetFiller {
     }
 }
 
-// Допоміжна структура для результату заповнення одного таргету
-public readonly struct TargetFillResult {
-    public bool IsSuccess { get; }
-    public object Unit { get; }
-
-    private TargetFillResult(bool success, object unit) {
-        IsSuccess = success;
-        Unit = unit;
-    }
-
-    public static TargetFillResult Success(object unit) => new(true, unit);
-    public static TargetFillResult Failed() => new(false, null);
-}
-
-// === Simplified Data Objects ===
-
-public class TargetOperationRequest {
-    public TargetOperationRequest(List<TargetInfo> namedTargets, bool isMandatory, UnitModel source) {
-        Targets = namedTargets ?? throw new ArgumentNullException(nameof(namedTargets));
-        IsMandatory = isMandatory;
-        Source = source ?? throw new ArgumentNullException(nameof(source));
-        OperationId = Guid.NewGuid().ToString();
-    }
-
-    public List<TargetInfo> Targets { get; }
-    public bool IsMandatory { get; }
-    public UnitModel Source { get; }
-    public string OperationId { get; }
-}
-
-public class TargetOperationResult {
+public class TargetsFillResult {
     public OperationResult Status { get; private set; }
-    public IReadOnlyDictionary<string, object> FilledTargets { get; private set; }
+    public TargetRegistry TargetRegistry { get; private set; }
     public TimeSpan Duration { get; private set; }
 
-    private TargetOperationResult(OperationResult status, Dictionary<string, object> targets = null, TimeSpan duration = default) {
+    private TargetsFillResult(OperationResult status, TargetRegistry targetRegistry = null, TimeSpan duration = default) {
         Status = status;
-        FilledTargets = targets ?? new Dictionary<string, object>();
+        TargetRegistry = targetRegistry;
         Duration = duration;
     }
 
-    public static TargetOperationResult Success(Dictionary<string, object> targets, TimeSpan duration) =>
-        new(OperationResult.Success(), targets, duration: duration);
+    public static TargetsFillResult Success(TargetRegistry targetRegistry, TimeSpan duration) =>
+        new(OperationResult.Success(), targetRegistry, duration: duration);
 
-    public static TargetOperationResult Failure(string error = null, TimeSpan duration = default) {
-        return new TargetOperationResult(OperationResult.Failure(error), duration : duration);
+    public static TargetsFillResult Failure(string error = null, TimeSpan duration = default) =>
+        new(OperationResult.Failure(error), duration : duration);
+    
+}
+
+public class TargetSelectionRequest {
+    // Data layer
+    public OperationData OperationData { get; }
+    public ITargetRequirementData RequirementData { get; }
+
+    // ✅ Runtime requirement для pre-filtering
+    public ITargetRequirement RuntimeRequirement { get; }
+
+    public UnitModel RequestSource { get; }
+    public ValidationContext ValidationContext { get; }
+
+    public TargetSelectionRequest(
+        OperationData operationData,
+        ITargetRequirementData requirementData,
+        ITargetRequirement runtimeRequirement,
+        UnitModel requestSource,
+        ValidationContext validationContext) { // ✅ Отримуємо ззовні
+
+        OperationData = operationData;
+        RequirementData = requirementData;
+        RuntimeRequirement = runtimeRequirement;
+        RequestSource = requestSource;
+        ValidationContext = validationContext; // ✅ Зберігаємо
     }
-
 }
 
 public enum TargetSelector {
@@ -295,6 +336,6 @@ public enum TargetSelector {
     AnyPlayer,  // Будь-який гравець (для рідкісних випадків)
     SpecificPlayer, // Для складних випадків (з можливістю вказати конкретного гравця)
     AllPlayers,
-    NextPlayer
+    NextPlayer,
+    Auto
 }
-

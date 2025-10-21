@@ -6,6 +6,7 @@ public class TargetHighlightingService : MonoBehaviour {
     [Header("Highlight Settings")]
 
     [Inject] private IUnitRegistry unitRegistry;
+    [Inject] ITargetValidator targetValidator;
 
     private HashSet<UnitView> highlightedUnits = new();
     private float lastUpdateTime;
@@ -18,23 +19,14 @@ public class TargetHighlightingService : MonoBehaviour {
     }
 
     private void OnTargetSelectionStarted(TargetSelectionRequest request) {
-        foreach (var model in unitRegistry.GetAllModels<UnitModel>()) {
-            if (IsValidTarget(model, request)) {
-                HighlightUnit(model, true);
-            }
+        ITargetRequirement targetRequirement = request.RequirementData.BuildRuntime();
+
+        List<UnitModel> unitModels = targetValidator.GetValidTargetsFor(targetRequirement, request.ValidationContext.InitiatorId);
+
+        foreach (var model in unitModels) {
+            HighlightUnit(model, true);
         }
     }
-
-    private bool IsValidTarget(UnitModel unit, TargetSelectionRequest request) {
-        var player = unit.OwnerId;
-        if (player == null) {
-            //Debug.LogWarning($"player is null for {unit}");
-        }
-
-
-        return request.Target.IsValid(unit, new ValidationContext(request.Source.OwnerId));
-    }
-
 
     public void HighlightUnit(UnitModel unit, bool isEnabled) {
         if (unit == null) return;

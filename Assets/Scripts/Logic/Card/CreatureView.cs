@@ -125,5 +125,4 @@ public class CreatureView : UnitView {
             _instancedMaterial.SetFloat("_FrameMask", isEnabled ? 0f : -1f);
         }
     }
-
 }

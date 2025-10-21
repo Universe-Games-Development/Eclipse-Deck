@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public abstract class CardHandView : UnitView {
@@ -72,8 +73,11 @@ public abstract class CardHandView : UnitView {
         RemoveCard(cardView);
     }
 
-    public virtual void AddCardViews(List<CardView> cardViews) {
-
+    public virtual void AddCardViews(Dictionary<string, CardView> cardViews) {
+        foreach (var pair in cardViews) {
+            RegisterCard(pair.Value, pair.Key);
+        }
+        AddCards(cardViews.Values.ToList());
     }
 
     public virtual void RemoveCardViews(List<CardView> cardViews) {

@@ -89,6 +89,7 @@ public class CardHand3DView : CardHandView {
             cardOrganizeDuration
         );
         _visualManager.Push(addTask);
+        UpdateCardPositions();
     }
 
     protected override void RemoveCard(CardView cardView) {
@@ -99,14 +100,21 @@ public class CardHand3DView : CardHandView {
             cardOrganizeDuration
         );
         _visualManager.Push(removeTask);
+        UpdateCardPositions();
     }
 
     protected override void AddCards(List<CardView> cardViews) {
-
+        var addTask = new AddCardsVisualTask(
+            cardViews,
+            layoutComponent,
+            cardOrganizeDuration
+        );
+        _visualManager.Push(addTask);
+        UpdateCardPositions();
     }
 
     protected override void RemoveCards(List<CardView> cardViews) {
-
+        UpdateCardPositions();
     }
 
     public override void UpdateCardPositions() {
@@ -188,7 +196,6 @@ public class CardHand3DView : CardHandView {
 public class AddCardVisualTask : VisualTask {
     private readonly CardView _cardView;
     private readonly CardHandLayoutComponent _layout;
-    private readonly float _animationDuration;
 
     public AddCardVisualTask(
         CardView cardView,
@@ -196,27 +203,45 @@ public class AddCardVisualTask : VisualTask {
         float animationDuration = 0.3f) {
         _cardView = cardView;
         _layout = layout;
-        _animationDuration = animationDuration;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         _cardView.gameObject.SetActive(true);
         // Додаємо в layout і перераховуємо позиції
         _layout.AddItem(_cardView, recalculate: true);
-
-        // Анімуємо на позицію
-        float duration = _animationDuration * TimeModifier;
-        await _layout.AnimateToLayoutPosition(_cardView, duration);
 
         return true;
     }
 }
 
+public class AddCardsVisualTask : VisualTask {
+    private readonly List<CardView> _cards;
+    private readonly CardHandLayoutComponent _layout;
+
+    public AddCardsVisualTask(
+        List<CardView> cards,
+        CardHandLayoutComponent layout,
+        float animationDuration = 0.3f) {
+        _cards = cards;
+        _layout = layout;
+    }
+
+    public override async UniTask<bool> ExecuteAsync() {
+        foreach (var card in _cards) {
+            card.gameObject.SetActive(true);
+            _layout.AddItem(card, recalculate: false);
+        }
+
+        await UniTask.CompletedTask;
+        return true;
+    }
+}
+
+// Burn effect needs duration soon
 public class RemoveCardVisualTask : VisualTask {
     private readonly CardView _cardView;
     private readonly CardHandLayoutComponent _layout;
     private readonly CardPool _cardPool;
-    private readonly float _animationDuration;
 
     public RemoveCardVisualTask(
         CardView cardView,
@@ -226,23 +251,18 @@ public class RemoveCardVisualTask : VisualTask {
         _cardView = cardView;
         _layout = layout;
         _cardPool = cardPool;
-        _animationDuration = animationDuration;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         // Видаляємо з layout
-        _layout.RemoveItem(_cardView, recalculate: true);
-
-        // Анімуємо решту карт
-        float duration = _animationDuration * TimeModifier;
-        await _layout.AnimateAllToLayoutPositions(duration);
-
-        // Повертаємо в pool
+        _layout.RemoveItem(_cardView, recalculate: false);
         _cardPool.Release(_cardView);
 
+        await UniTask.CompletedTask;
         return true;
     }
 }
+
 
 public class UpdateCardLayoutVisualTask : VisualTask {
     private readonly CardHandLayoutComponent _layout;
@@ -255,8 +275,9 @@ public class UpdateCardLayoutVisualTask : VisualTask {
         _animationDuration = animationDuration;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         _layout.RecalculateLayout();
+
         float duration = _animationDuration * TimeModifier;
         await _layout.AnimateAllToLayoutPositions(duration);
         return true;

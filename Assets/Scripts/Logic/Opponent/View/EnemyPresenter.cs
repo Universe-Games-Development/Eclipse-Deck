@@ -170,16 +170,13 @@ public class AIController : IAIController, IDisposable {
         }
     }
 
-    // ============================================
-    // ТАКТИЧНИЙ РІВЕНЬ (ITargetSelectionService)
-    // ============================================
 
     public async UniTask<UnitModel> SelectTargetAsync(
         TargetSelectionRequest request,
         CancellationToken cancellationToken) {
         OnSelectionStarted?.Invoke(request);
         _logger?.LogInfo(
-            $"AI selecting target for {request.Target.Key} (card: {_currentCard})",
+            $"AI selecting target for {request.RequirementData.TargetKey} (card: {_currentCard})",
             LogCategory.AI);
 
         // Симулюємо "думання" про вибір цілі
@@ -195,7 +192,7 @@ public class AIController : IAIController, IDisposable {
         };
 
         // Отримуємо валідні цілі
-        var validTargets = GetValidTargets(request.Target, request.Source);
+        List<UnitModel> validTargets = null;
 
         if (validTargets.Count == 0) {
             _logger?.LogWarning("AI: No valid targets found", LogCategory.AI);
@@ -210,53 +207,6 @@ public class AIController : IAIController, IDisposable {
         OnSelectionCompleted?.Invoke(request, bestTarget);
         _logger?.LogInfo($"AI selected target: {bestTarget?.InstanceId}", LogCategory.AI);
         return bestTarget;
-    }
-
-    private List<UnitModel> GetValidTargets(TargetInfo targetInfo, UnitModel source) {
-        var validTargets = new List<UnitModel>();
-        var context = new ValidationContext(source.OwnerId);
-
-        var allUnits = GetAllPotentialTargets(targetInfo);
-
-        foreach (var unit in allUnits) {
-            var validationResult = targetInfo.IsValid(unit, context);
-            if (validationResult.IsValid) {
-                validTargets.Add(unit);
-            }
-        }
-
-        return validTargets;
-    }
-
-    private IEnumerable<UnitModel> GetAllPotentialTargets(TargetInfo targetInfo) {
-        var selector = targetInfo.GetTargetSelector();
-
-        switch (selector) {
-            case TargetSelector.Opponent:
-                var opponent = _opponentRegistry.GetAgainstOpponentId(_aiOpponent.InstanceId);
-                if (opponent != null) {
-                    yield return opponent;
-                }
-                break;
-
-            case TargetSelector.Initiator:
-                yield return _aiOpponent;
-                break;
-
-            case TargetSelector.AllPlayers:
-                var allOpponents = _opponentRegistry.GetOpponents();
-                foreach (var opp in allOpponents) {
-                    yield return opp;
-                }
-                break;
-
-            default:
-                var allUnits = _unitRegistry.GetAllModels<UnitModel>();
-                foreach (var unit in allUnits) {
-                    yield return unit;
-                }
-                break;
-        }
     }
 
     private UnitModel SelectBestTarget(List<UnitModel> validTargets, AIDecisionContext context) {
@@ -281,27 +231,6 @@ public class AIController : IAIController, IDisposable {
     private float EvaluateTarget(UnitModel target, AIDecisionContext context) {
         float score = 0f;
 
-        // Якщо це пошкодження
-        if (IsOffensiveTarget(context.TargetRequest)) {
-            // Обираємо найслабшого ворога
-            if (target is IHealthable healthable && target.OwnerId != _aiOpponent.OwnerId) {
-                float healthPercent = healthable.CurrentHealth / (float)healthable.BaseValue;
-                score += (1f - healthPercent) * 50f; // Чим менше HP, тим краще
-
-                // Якщо можемо вбити - дуже добре
-                if (healthable.CurrentHealth <= GetDamageAmount(context.CurrentCard)) {
-                    score += 100f;
-                }
-            }
-        }
-        // Якщо це лікування
-        else if (IsHealingTarget(context.TargetRequest)) {
-            // Лікуємо себе якщо поранені
-            if (target == _aiOpponent) {
-                float healthPercent = _aiOpponent.CurrentHealth / (float)_aiOpponent.Health.TotalValue;
-                score += (1f - healthPercent) * 60f; // Чим менше HP, тим важливіше
-            }
-        }
 
         // Трохи випадковості
         score += UnityEngine.Random.Range(-5f, 5f);
@@ -309,14 +238,6 @@ public class AIController : IAIController, IDisposable {
         return score;
     }
 
-    private bool IsOffensiveTarget(TargetSelectionRequest request) {
-        // Перевіряємо чи це атакуюча операція
-        return request.Target.GetTargetSelector() == TargetSelector.Opponent;
-    }
-
-    private bool IsHealingTarget(TargetSelectionRequest request) {
-        return request.Target.GetTargetSelector() == TargetSelector.Initiator;
-    }
 
     private int GetDamageAmount(Card card) {
         // Простий підрахунок пошкоджень (можна покращити)

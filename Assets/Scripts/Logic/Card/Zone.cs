@@ -106,8 +106,4 @@ public class Zone : AreaModel, IDisposable {
     public void Dispose() {
         eventBus.UnsubscribeFrom<DeathEvent>(OnDeath);
     }
-
-    public bool CanSummonCreature() {
-        return !IsFull();
-    }
 }

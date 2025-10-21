@@ -190,7 +190,7 @@ public class AddCellBatchVisualTask : VisualTask {
         _animationDuration = animationDuration;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         if (_cellsData == null || _cellsData.Count == 0) {
             return false;
         }
@@ -223,7 +223,7 @@ public class RemoveCellBatchVisualTask : VisualTask {
         _boardView = boardView;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         var removalTasks = new List<UniTask>();
 
         for (int i = 0; i < cellsData.Count; i++) {
@@ -276,7 +276,7 @@ public class AddCellVisualTask : VisualTask {
         _onComplete = onComplete;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         // Перевірка чи позиція вільна
         if (_layout.IsCellOccupied(_row, _column)) {
             Debug.LogWarning($"Cell at ({_row}, {_column}) already exists");
@@ -323,7 +323,7 @@ public class RemoveCellVisualTask : VisualTask {
         _onComplete = onComplete;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         var cell = _boardView.GetCell(_row, _column);
         if (cell == null) return false;
 
@@ -370,7 +370,7 @@ public class SwapCellsVisualTask : VisualTask {
         _onComplete = onComplete;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         var cell1 = _layout.GetCellAt(_fromRow, _fromCol);
         var cell2 = _layout.GetCellAt(_toRow, _toCol);
 
@@ -415,7 +415,7 @@ public class MoveCellVisualTask : VisualTask {
         _animationDuration = animationDuration;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         var cell = _layout.GetCellAt(_fromRow, _fromCol);
         if (cell == null) return false;
 
@@ -446,7 +446,7 @@ public class UpdateLayoutVisualTask : VisualTask {
         _animationDuration = animationDuration;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         _layout.RecalculateLayout();
         float duration = _animationDuration * TimeModifier;
         await _layout.AnimateAllToLayoutPositions(duration);
@@ -474,7 +474,7 @@ public class ClearBoardVisualTask : VisualTask {
         _onComplete = onComplete;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         var occupiedCells = _boardView.GetOccupiedCells().ToList();
 
         if (occupiedCells.Count == 0) {

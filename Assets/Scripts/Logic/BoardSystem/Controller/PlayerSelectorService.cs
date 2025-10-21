@@ -32,8 +32,13 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
         if (_currentRequest == null) return;
 
         if (eventData.IsHovered) {
-            ValidationContext validationContext = new(_currentRequest.Source.OwnerId);
-            bool isValidToRequest = _currentRequest.Target.Requirement.IsValid(eventData.UnitPresenter.Model, validationContext);
+            ValidationContext validationContext = new(_currentRequest.RequestSource.OwnerId);
+
+            ITargetRequirementData requirementData = _currentRequest.RequirementData;
+            ITargetRequirement targetRequirement = requirementData.BuildRuntime();
+
+            bool isValidToRequest = targetRequirement.IsValid(eventData.UnitPresenter.Model, validationContext);
+
             TargetValidationState state = isValidToRequest ? TargetValidationState.Valid : TargetValidationState.WrongTarget;
             _selectionView.UpdateHoverStatus(state);
         } else {
@@ -68,11 +73,11 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
         var visualization = ChooseVisualization(request);
         _selectionView.StartTargeting(visualization);
         _selectionView.HideErrorMessage();
-        _selectionView.ShowMessage(request.Target.GetInstruction());
+        _selectionView.ShowMessage(request.RequirementData.Instruction);
     }
 
     private ITargetingVisualization ChooseVisualization(TargetSelectionRequest request) {
-        if (request.Source is Card card && IsZoneTarget(request.Target)) {
+        if (request.RequestSource is Card card && IsZoneTarget(request.RequirementData)) {
             var cardPresenter = _unitRegistry.GetPresenter<CardPresenter>(card);
             if (cardPresenter != null) {
                 return _selectionView.CreateCardMovementTargeting(cardPresenter);
@@ -82,10 +87,8 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
         return _selectionView.CreateArrowTargeting(request);
     }
 
-    private bool IsZoneTarget(TargetInfo target) {
-        ITargetRequirement requirement = target.Requirement;
-        bool isZoneReq = requirement is TargetRequirement<Zone>;
-        return isZoneReq;
+    private bool IsZoneTarget(ITargetRequirementData targetData) {
+        return targetData is ZoneTargetRequirementData;
     }
 
     private void OnTargetSelected(GameObject[] objects) {
@@ -111,14 +114,14 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
 
         }
 
-        var context = new ValidationContext(_currentRequest.Source.OwnerId);
+        var context = new ValidationContext(_currentRequest.RequestSource.OwnerId);
 
         var optionalTarget = models.FirstOrDefault(model =>
-            _currentRequest.Target.IsValid(model, context));
+            _currentRequest.RuntimeRequirement.IsValid(model, context));
 
         if (optionalTarget == null) {
             var firstInvalid = models.FirstOrDefault();
-            var result = _currentRequest.Target.IsValid(firstInvalid, context);
+            var result = _currentRequest.RuntimeRequirement.IsValid(firstInvalid, context);
             _selectionView.ShowTemporaryError(result.ErrorMessage ?? "No valid targets found").Forget();
         }
 
@@ -154,15 +157,6 @@ public class PlayerSelectorService : ITargetSelectionService, IDisposable {
     
 }
 
-public class TargetSelectionRequest {
-    public TargetInfo Target { get; }
-    public UnitModel Source { get; } // Карта, істота, гравець, ніхто
-
-    public TargetSelectionRequest(TargetInfo target, UnitModel initiator = null) {
-        Target = target;
-        Source = initiator;
-    }
-}
 
 
 public enum TargetValidationState {

@@ -6,7 +6,7 @@ using Zenject;
 
 public interface IOperationFactory {
     TOperation Create<TOperation>(params object[] args) where TOperation : GameOperation;
-    GameOperation Create(OperationData data, UnitModel source);
+    GameOperation Create(OperationData data, TargetRegistry targetRegistry);
 }
 
 public class OperationFactory : IOperationFactory {
@@ -17,10 +17,10 @@ public class OperationFactory : IOperationFactory {
     }
 
 
-    public GameOperation Create(OperationData data, UnitModel source) {
+    public GameOperation Create(OperationData data, TargetRegistry targetRegistry) {
         if (data == null) throw new ArgumentNullException(nameof(data));
 
-        return data.CreateOperation(this, source);
+        return data.CreateOperation(this, targetRegistry);
     }
 
     public TOperation Create<TOperation>(params object[] args) where TOperation : GameOperation {

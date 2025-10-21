@@ -1,37 +1,35 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Sacrifice", menuName = "Operations/Sacrifice")]
-public class SacrificeOperationData : OperationData<SummonCreatureOperation> {
+public class SacrificeOperationData : OperationData {
+    public override GameOperation CreateOperation(IOperationFactory factory, TargetRegistry targetRegistry) {
+        Creature creature = targetRegistry.Get<Creature>(TargetKeys.MainTarget);
+        return factory.Create<SacrificeCreatureOperation>(this, creature);
+    }
 
+    protected override void BuildDefaultRequirements() {
+        CreatureTargetRequirementData creatureTargetRequirementData = new CreatureTargetRequirementData {
+            targetKey = TargetKeys.MainTarget,
+            selector = TargetSelector.Initiator,
+            conditions = new List<ISerializableTargetCondition<Creature>> {
+                        new AliveConditionData(),
+                        new OwnershipConditionData { ownershipType = OwnershipType.Ally }
+                    }
+        };
+
+        AddRequirement(creatureTargetRequirementData);
+    }
 }
 
 public class SacrificeCreatureOperation : GameOperation {
-    private const string TargetCreatureKey = "targetCreature";
-    public SacrificeCreatureOperation(UnitModel source, Zone zone = null) : base(source) {
-        TargetRequirement<Creature> targetRequirement;
-        if (zone != null) {
-            targetRequirement = new RequirementBuilder<Creature>()
-                .WithCondition(new ZoneCondition(zone))
-                .Build();
-        } else {
-            targetRequirement = new RequirementBuilder<Creature>().Build();
-        }
-
-        SimpleTargetInstruction simpleTargetInstruction = new SimpleTargetInstruction("Select creature to sacrifice");
-        AddTarget(new TargetInfo(TargetCreatureKey, targetRequirement, simpleTargetInstruction));
+    private Creature creature;
+    public SacrificeCreatureOperation(SacrificeOperationData data, Creature creature) {
     }
 
-    public override async UniTask<bool> Execute() {
-        if (!TryGetTypedTarget(TargetCreatureKey, out Creature creature)) {
-            Debug.LogError($"Valid {TargetCreatureKey} not found");
-            return false;
-        }
-
+    public override bool Execute() {
         creature.Die();
 
-
-        await UniTask.CompletedTask;
         return true;
     }
 }

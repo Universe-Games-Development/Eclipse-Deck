@@ -4,20 +4,22 @@ using Zenject;
 
 public interface ITargetValidator {
     // Перевіряє чи всі цілі можуть бути заповнені
-    bool CanValidateAllTargets(List<TargetInfo> targets, string ownerId);
+    bool CanValidateAllTargets(OperationData operationData, string ownerId);
 
     // Отримує всі валідні юніти для конкретної цілі
-    List<UnitModel> GetValidTargetsFor(TargetInfo target, string ownerId);
+    List<UnitModel> GetValidTargetsFor(ITargetRequirement target, string ownerId);
 
     // Перевіряє чи конкретний юніт валідний для цілі
-    ValidationResult ValidateTarget(TargetInfo target, UnitModel unit, string ownerId);
+    ValidationResult ValidateTarget(ITargetRequirement target, UnitModel unit, string ownerId);
 }
 
 public class TargetValidator : ITargetValidator {
     [Inject] private IUnitRegistry _unitRegistry;
     [Inject] private ILogger _logger;
 
-    public bool CanValidateAllTargets(List<TargetInfo> targets, string ownerId) {
+    public bool CanValidateAllTargets(OperationData operationData, string ownerId) {
+        List<ITargetRequirement> targets = operationData.BuildRuntimeRequirements();
+
         if (targets?.Any() != true) {
             return false;
         }
@@ -28,7 +30,7 @@ public class TargetValidator : ITargetValidator {
             // Якщо це обов'язкова ціль і немає валідних варіантів
             if (validTargets.Count == 0) {
                 _logger.LogWarning(
-                    $"No valid targets found for {target.Key} (owner: {ownerId})");
+                    $"No valid targets found for {target} (owner: {ownerId})");
                 return false;
             }
         }
@@ -36,7 +38,7 @@ public class TargetValidator : ITargetValidator {
         return true;
     }
 
-    public List<UnitModel> GetValidTargetsFor(TargetInfo target, string ownerId) {
+    public List<UnitModel> GetValidTargetsFor(ITargetRequirement target, string ownerId) {
         var validModels = new List<UnitModel>();
         var allModels = _unitRegistry.GetAllModels<UnitModel>();
         var context = new ValidationContext(ownerId);
@@ -51,7 +53,7 @@ public class TargetValidator : ITargetValidator {
         return validModels;
     }
 
-    public ValidationResult ValidateTarget(TargetInfo target, UnitModel unit, string ownerId) {
+    public ValidationResult ValidateTarget(ITargetRequirement target, UnitModel unit, string ownerId) {
         var context = new ValidationContext(ownerId);
         return target.IsValid(unit, context);
     }

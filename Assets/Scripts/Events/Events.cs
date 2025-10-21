@@ -51,30 +51,6 @@ public readonly struct CardActivatedEvent : IEvent {
     }
 }
 
-public readonly struct CardPlayResult {
-    public bool IsSuccess { get; }
-    public bool IsCancelled { get; }
-    public string ErrorMessage { get; }
-    public int CompletedOperations { get; }
-
-    private CardPlayResult(bool isSuccess, bool isCancelled, string errorMessage, int completedOperations) {
-        IsSuccess = isSuccess;
-        IsCancelled = isCancelled;
-        ErrorMessage = errorMessage;
-        CompletedOperations = completedOperations;
-    }
-
-    public static CardPlayResult Success(int completedOperations) =>
-        new(true, false, null, completedOperations);
-
-    public static CardPlayResult Failed(string errorMessage) =>
-        new(false, false, errorMessage, 0);
-
-    public static CardPlayResult Cancelled() =>
-        new(false, true, "Cancelled", 0);
-
-    public bool IsFailed => !IsSuccess && !IsCancelled;
-}
 
 public readonly struct CardOperationResultEvent : IEvent {
     public Card Card { get; }

@@ -27,6 +27,8 @@ public class ZoneView : UnitView, IArea {
     [SerializeField] private float disappearDuration = 0.5f;
     [SerializeField] private float rearrangeDuration = 0.5f;
 
+    [SerializeField] Transform spawnPoint;
+
     public event Action OnRemoveDebugRequest;
 
     #region IArea 
@@ -68,6 +70,12 @@ public class ZoneView : UnitView, IArea {
     }
 
     #region Creatures - Public Synchronous API
+    public CreatureView CreateCreatureView() {
+        CreatureView creatureView = creaturePool.Get();
+        creatureView.gameObject.SetActive(false);
+        creatureView.transform.position = spawnPoint ? spawnPoint.position : transform.position + Vector3.up * 2f;
+        return creatureView;
+    }
 
     public void SummonCreatureView(CreatureView creatureView) {
         if (creatureView == null) {
@@ -75,7 +83,8 @@ public class ZoneView : UnitView, IArea {
             return;
         }
 
-        var summonTask = new SummonCreatureVisualTask(
+
+        var summonTask = new AddCreatureVisualTask(
             creatureView,
             layoutComponent,
             appearDuration
@@ -93,7 +102,8 @@ public class ZoneView : UnitView, IArea {
             creatureView,
             layoutComponent,
             creaturePool,
-            disappearDuration
+            disappearDuration,
+            spawnPoint
         );
         visualManager.Push(removeTask);
     }
@@ -165,12 +175,12 @@ public class ZoneView : UnitView, IArea {
 
 #region Visual Tasks
 
-public class SummonCreatureVisualTask : VisualTask {
+public class AddCreatureVisualTask : VisualTask {
     private readonly CreatureView _creatureView;
     private readonly ZoneLayoutComponent _layout;
     private readonly float _animationDuration;
 
-    public SummonCreatureVisualTask(
+    public AddCreatureVisualTask(
         CreatureView creatureView,
         ZoneLayoutComponent layout,
         float animationDuration = 0.5f) {
@@ -179,7 +189,7 @@ public class SummonCreatureVisualTask : VisualTask {
         _animationDuration = animationDuration;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         // Активуємо creature
         _creatureView.gameObject.SetActive(true);
 
@@ -199,20 +209,27 @@ public class RemoveCreatureVisualTask : VisualTask {
     private readonly ZoneLayoutComponent _layout;
     private readonly IComponentPool<CreatureView> _creaturePool;
     private readonly float _animationDuration;
+    private readonly Transform _spawnPoint;
 
     public RemoveCreatureVisualTask(
         CreatureView creatureView,
         ZoneLayoutComponent layout,
         IComponentPool<CreatureView> creaturePool,
-        float animationDuration = 0.5f) {
+        float animationDuration,
+        Transform spawnPoint) {
         _creatureView = creatureView;
         _layout = layout;
         _creaturePool = creaturePool;
         _animationDuration = animationDuration;
+        _spawnPoint = spawnPoint;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
+        Vector3 spawnPosition = _spawnPoint.position;
+        _creatureView.transform.position = spawnPosition;
+
         _creatureView.gameObject.SetActive(true);
+
         float duration = _animationDuration * TimeModifier;
 
         // Анімуємо зникнення створіння
@@ -249,7 +266,7 @@ public class RearrangeCreaturesVisualTask : VisualTask {
         _animationDuration = animationDuration;
     }
 
-    public override async UniTask<bool> Execute() {
+    public override async UniTask<bool> ExecuteAsync() {
         // Перераховуємо layout
         _layout.RecalculateLayout();
 

@@ -1,3 +1,5 @@
-public class TargetKeys {
-    public const string Target = "target";
+public enum TargetKeys {
+    MainTarget,
+    SecondaryTarget,
+    SourceCard
 }

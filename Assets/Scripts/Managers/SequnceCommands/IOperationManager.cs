@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Zenject;
 
 public interface IOperationManager {
     bool IsRunning { get; }
@@ -20,8 +19,6 @@ public interface IOperationManager {
 }
 
 public class OperationManager : BaseQueueManager<GameOperation>, IOperationManager {
-    [Inject] private ITargetFiller operationFiller;
-
     public event Action<GameOperation, OperationResult> OnOperationEnd;
 
     protected override LogCategory LogCategory => LogCategory.OperationManager;
@@ -29,54 +26,15 @@ public class OperationManager : BaseQueueManager<GameOperation>, IOperationManag
 
     protected override async UniTask<OperationResult> ProcessTaskAsync(GameOperation operation, CancellationToken cancellationToken) {
         try {
-            OperationResult result = ValidateOperation(operation);
-            if (!result) {
-                return result;
-            }
-
             logger.LogInfo($"Beginning operation: {operation}", LogCategory);
-            if (operation.IsReady()) {
-                logger.LogDebug($"Operation {operation} is already ready, executing...", LogCategory);
-                bool success = await operation.Execute();
-                return success ? OperationResult.Success() : OperationResult.Failure("Failed execution");
-            }
+            bool success = await operation.ExecuteAsync();
 
-            
+            return success ? OperationResult.Success() : OperationResult.Failure("Failed execution");
 
-            TargetOperationRequest request = new(
-                operation.GetTargets(),
-                operation.IsMandatory,
-                operation.Source);
-
-            TargetOperationResult targets = await operationFiller.FillTargetsAsync(request, cancellationToken);
-
-            if (targets == null) {
-                return OperationResult.Failure("Was cancelled during target filling");
-            }
-
-            operation.SetTargets(targets.FilledTargets);
-
-            if (operation.IsReady()) {
-                logger.LogDebug($"Operation {operation} is ready, executing...", LogCategory);
-                bool success = await operation.Execute();
-                return success ? OperationResult.Success() : OperationResult.Failure("Failed execution");
-            } else {
-                return OperationResult.Failure("Not ready for execution");
-            }
         } catch (OperationCanceledException) {
             logger.LogInfo($"Operation {operation} was cancelled", LogCategory);
             throw;
         }
-    }
-
-    private bool ValidateOperation(GameOperation operation) {
-        List<TargetInfo> typedTargetBases = operation.GetTargets();
-
-        if (!operationFiller.CanFillTargets(typedTargetBases, operation.Source.OwnerId)) {
-            return OperationResult.Failure($"{operation} cannot be executed - targets cannot be filled");
-        }
-
-        return OperationResult.Success();
     }
 
     protected override void OnTaskCompleted(GameOperation task, OperationResult result) {

@@ -13,7 +13,7 @@ public class VisualSequenceManager : BaseQueueManager<VisualTask>, IVisualManage
             }
 
             logger.LogInfo($"Beginning task: {task}", LogCategory);
-            bool result = await task.Execute();
+            bool result = await task.ExecuteAsync();
             return result ? OperationResult.Success() : OperationResult.Failure("Failed execution");
         } catch (OperationCanceledException) {
             logger.LogInfo($"Task {task} was cancelled", LogCategory);

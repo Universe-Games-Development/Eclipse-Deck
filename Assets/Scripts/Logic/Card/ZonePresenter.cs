@@ -14,7 +14,7 @@ public class ZonePresenter : UnitPresenter, IDisposable {
         ZoneView = zoneView;
 
         Zone.OnChangedOwner += HandleOwnerChanged;
-        Zone.OnCreatureSummoned += HandleCreatureSummoned;
+        //Zone.OnCreatureSummoned += HandleCreatureSummoned;
         Zone.OnCreatureRemoved += HandleCreatureRemove;
         Zone.ONMaxCreaturesChanged += HandleSizeUpdate;
 
@@ -53,11 +53,44 @@ public class ZonePresenter : UnitPresenter, IDisposable {
         }
     }
 
-    private void HandleCreatureSummoned(Creature creature) {
-        ZoneView.UpdateSummonedCount(Zone.Creatures.Count);
-        CreaturePresenter creaturePresenter = _unitRegistry.GetPresenter<CreaturePresenter>(creature);
 
-        ZoneView.SummonCreatureView(creaturePresenter.CreatureView);
+    // Variant 1 External Creation 
+    // SummonCreatureOperation handle logic + creates SummonVisualTask to push in visualManager
+    // SummonVisualTask handle CreatureCard to creaturePresenter and position Creature to place of CreatureCard
+    public void AddCreatureVisual(CreaturePresenter creaturePresenter) {
+        CreatureView creatureView = creaturePresenter.CreatureView;
+
+        // Додаємо візуально через ZoneView
+        ZoneView.SummonCreatureView(creatureView);
+    }
+
+    // Variant 2 Direct React on model changes
+    private void HandleCreatureSummoned(Creature creature) {
+        CreaturePresenter creaturePresenter = CreateCreatureWithZoneView(creature);
+        CreatureView creatureView = creaturePresenter.CreatureView;
+
+        ZoneView.UpdateSummonedCount(Zone.Creatures.Count);
+        ZoneView.SummonCreatureView(creatureView);
+    }
+
+    // Variant 2.1 Automatical registration + CreatureView from pool
+    [Inject] IUnitSpawner<Creature, CreatureView, CreaturePresenter> creatureSpawner;
+    private CreaturePresenter CreateCreatureWithUnitSpawner(Creature creature) {
+        CreaturePresenter creaturePresenter = creatureSpawner.SpawnUnit(creature); // Automatical registration + pool view creation
+        CreatureView creatureView = creaturePresenter.CreatureView;
+        creatureView.gameObject.SetActive(false); // we also hide it mannually to be summoned in visual queue
+        return creaturePresenter;
+    }
+
+    // Variant 2.1 Manual registration + CreatureView from ZoneView
+    [Inject] IUnitRegistry unitRegistry;
+    [Inject] IPresenterFactory presenterFactory;
+    private CreaturePresenter CreateCreatureWithZoneView(Creature creature) {
+        CreatureView creatureView = ZoneView.CreateCreatureView(); // automatically hidden by ZoneView
+        CreaturePresenter creaturePresenter = presenterFactory.CreatePresenter<CreaturePresenter>(creature, creatureView);
+        unitRegistry.Register(creaturePresenter); // we will also need to register it
+        
+        return creaturePresenter;
     }
 
     private void HandleCreatureRemove(Creature creature) {
@@ -81,4 +114,5 @@ public class ZonePresenter : UnitPresenter, IDisposable {
         Zone.OnCreatureRemoved -= HandleCreatureRemove;
         Zone.ONMaxCreaturesChanged -= HandleSizeUpdate;
     }
+
 }
