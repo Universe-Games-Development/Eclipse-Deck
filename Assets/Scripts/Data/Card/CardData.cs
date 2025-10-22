@@ -17,17 +17,24 @@ public abstract class CardData : ScriptableObject {
     public string resourseId;
     public Rarity Rarity;
 
-
     [Header("Rarity Info (Auto-Generated)")]
-    [SerializeField] private float spawnChance; // Тепер приватне, оновлюється автоматично
-    [SerializeField] private Color rarityColor; // Показуємо колір в інспекторі для наглядності
-    [SerializeField] private string rarityDisplayName; // Локалізована назва
+    [SerializeField] private float spawnChance;
+    [SerializeField] private Color rarityColor;
+    [SerializeField] private string rarityDisplayName;
 
     [Header("Operations")]
     public List<OperationData> operationsData = new List<OperationData>();
 
+    private void OnEnable() {
+        Debug.Log("CardData Lol :" + Name);
+        CleanOperationsData();
+    }
+
     private void OnValidate() {
-        // Генеруємо унікальний ID якщо потрібно
+        Validate();
+    }
+
+    protected virtual void Validate() {
         if (string.IsNullOrEmpty(resourseId)) {
             resourseId = System.Guid.NewGuid().ToString();
 #if UNITY_EDITOR
@@ -35,11 +42,12 @@ public abstract class CardData : ScriptableObject {
 #endif
         }
 
-        // Оновлюємо дані рідкості через утиліту
         UpdateRarityData();
+        CleanOperationsData();
+    }
 
-        operationsData.RemoveAll(op => op == null);
-
+    private void CleanOperationsData() {
+        operationsData = operationsData.FindAll(op => op != null);
     }
 
     private void UpdateRarityData() {
@@ -47,5 +55,4 @@ public abstract class CardData : ScriptableObject {
         rarityColor = RarityUtility.GetRarityColor(Rarity);
         rarityDisplayName = RarityUtility.GetRarityDisplayName(Rarity);
     }
-
 }

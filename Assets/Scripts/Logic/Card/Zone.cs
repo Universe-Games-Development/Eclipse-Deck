@@ -82,6 +82,8 @@ public class Zone : AreaModel, IDisposable {
         if (_creatures.Count >= MaxCreatures) return false;
 
         _creatures.Add(creature);
+        creature.ChangeOwner(OwnerId);
+
         OnCreatureSummoned?.Invoke(creature);
         return true;
     }

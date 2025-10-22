@@ -1,12 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
 [CreateAssetMenu(fileName = "Summon", menuName = "Operations/Summon")]
 public class SummonOperationData : OperationData {
-    [SerializeField] public SacrificeOperationData sacrificeOperationData;
+    [SerializeField] public SacrificeOperationData SacrificeOperationData;
 
     public override GameOperation CreateOperation(IOperationFactory factory, TargetRegistry targetRegistry) {
         Zone zone = targetRegistry.Get<Zone>(TargetKeys.MainTarget);
@@ -28,7 +27,7 @@ public class SummonCreatureOperation : GameOperation {
     [Inject] private readonly IEntityFactory _entityFactory;
     [Inject] private readonly IVisualManager _visualManager;
     [Inject] private readonly IVisualTaskFactory visualTaskFactory;
-
+    [Inject] private readonly IUnitRegistry _unitRegistry;
     public SummonCreatureOperation(SummonOperationData summonData, Zone zone, CreatureCard creatureCard) {
         _data = summonData;
         _zone = zone;
@@ -42,107 +41,115 @@ public class SummonCreatureOperation : GameOperation {
 
         // 1. Створюємо модель істоти
         Creature creature = _entityFactory.CreateCreatureFromCard(_creatureCard);
+        bool isSummoned = _zone.TrySummonCreature(creature);
+        if (isSummoned) {
+            StartVisualTask(creature);
+        }
+
+        // 4. Логічно додаємо істоту в зону (синхронно)
+        return isSummoned;
+    }
+
+
+
+    private void StartVisualTask(Creature creature) {
+        if (!_unitRegistry.TryGetPresenterByModel<CardPresenter>(_creatureCard, out var cardPresenter)) {
+            Debug.LogWarning($"[SummoningVisualTask] Card presenter not found for {_creatureCard.UnitName}");
+            return;
+        }
+
+        if (!_unitRegistry.TryGetPresenterByModel<ZonePresenter>(_zone, out var zonePresenter)) {
+            Debug.LogWarning($"[SummoningVisualTask] Zone presenter not found for {_zone.UnitName}");
+            return;
+        }
 
         SummoningVisualTask summoningVisualTask = visualTaskFactory.Create<SummoningVisualTask>(
-            creature,
-            _creatureCard,
-            _zone
-            );
+           _data.visualData,
+           creature,
+           cardPresenter,
+           zonePresenter
+           );
 
         // 3. Додаємо в чергу візуальних завдань
         _visualManager.Push(summoningVisualTask);
-
-        // 4. Логічно додаємо істоту в зону (синхронно)
-        return _zone.TrySummonCreature(creature);
     }
 }
+
+//Summon Effects will depends on card rarity
 public class SummoningVisualTask : VisualTask {
+    private readonly SummonVisualData _visualData;
+   
     private readonly Creature _creature;
-    private readonly CreatureCard _creatureCard;
-    private readonly Zone _zone;
-    private readonly IEntityFactory _entityFactory;
-    private readonly IUnitRegistry _unitRegistry;
+
+    private readonly CardPresenter _cardPresenter;
+    private readonly ZonePresenter _zonePresenter;
+
     private readonly IUnitSpawner<Creature, CreatureView, CreaturePresenter> _creatureSpawner;
 
+    private readonly Vector3 _spawnPosition;
+
     public SummoningVisualTask(
-        Creature creature,
-        CreatureCard creatureCard,
-        Zone zone,
-        IEntityFactory entityFactory,
-        IUnitRegistry unitRegistry,
-        IUnitSpawner<Creature, CreatureView, CreaturePresenter> creatureSpawner) {
+       SummonVisualData visualData,
+       Creature creature,
+       CardPresenter cardPresenter,
+       ZonePresenter zonePresenter,
+       IUnitSpawner<Creature, CreatureView, CreaturePresenter> creatureSpawner) {
+        _visualData = visualData;
         _creature = creature;
-        _creatureCard = creatureCard;
-        _zone = zone;
-        _entityFactory = entityFactory;
-        _unitRegistry = unitRegistry;
+
+        _cardPresenter = cardPresenter;
+        _zonePresenter = zonePresenter;
         _creatureSpawner = creatureSpawner;
+
+        _spawnPosition = cardPresenter.CardView.transform.position;
     }
-
     public override async UniTask<bool> ExecuteAsync() {
-        // 1. Знаходимо CardView для анімації "з картки"
-        if (!_unitRegistry.TryGetPresenterByModel<CardPresenter>(_creatureCard, out var cardPresenter)) {
-            Debug.LogWarning($"Card presenter not found for {_creatureCard}");
-            return await CreateCreatureDirectly();
-        }
+        _cardPresenter.CardView.gameObject.SetActive(false);
 
-        Vector3 cardPosition = cardPresenter.CardView.transform.position;
+        // Spawn creature view
+        var creaturePresenter = _creatureSpawner.SpawnUnit(_creature);
+        var creatureView = creaturePresenter.CreatureView;
 
-        // 2. Створюємо CreaturePresenter та CreatureView
-        CreaturePresenter creaturePresenter = _creatureSpawner.SpawnUnit(_creature);
-        CreatureView creatureView = creaturePresenter.CreatureView;
+        // Set initial position
+        creatureView.transform.position = _spawnPosition;
 
-        // 3. Налаштовуємо початкову позицію (там де картка)
-        creatureView.transform.position = cardPosition;
-        creatureView.gameObject.SetActive(true);
+        // Animate summon
+        await AnimateSummonAsync(creatureView);
 
-        // 4. Знаходимо ZonePresenter для фінальної позиції
-        if (!_unitRegistry.TryGetPresenterByModel<ZonePresenter>(_zone, out var zonePresenter)) {
-            Debug.LogWarning($"Zone presenter not found for {_zone}");
-            return false;
-        }
-
-        // 5. Анімуємо перехід від картки до зони
-        await AnimateSummonFromCard(creatureView, cardPosition, zonePresenter);
-
-        // 6. Додаємо в ZonePresenter для подальшого управління
-        zonePresenter.AddCreatureVisual(creaturePresenter);
+        // Add to zone layout
+        _zonePresenter.AddCreatureVisual(creaturePresenter);
 
         return true;
     }
 
-    private async UniTask<bool> CreateCreatureDirectly() {
-        // Fallback: створюємо без анімації з картки
-        CreaturePresenter creaturePresenter = _creatureSpawner.SpawnUnit(_creature);
+    private async UniTask AnimateSummonAsync(CreatureView creatureView) {
+        var duration = _visualData.transformDuration * TimeModifier;
+        var fadeOutDuration = duration * 0.5f;
 
-        if (_unitRegistry.TryGetPresenterByModel<ZonePresenter>(_zone, out var zonePresenter)) {
-            zonePresenter.AddCreatureVisual(creaturePresenter);
-            return true;
-        }
+        var sequence = DOTween.Sequence()
+            .Append(AnimateShake(creatureView.transform, fadeOutDuration))
+            .Join(AnimateScale(creatureView.transform, fadeOutDuration));
 
-        return false;
+        await sequence.Play().ToUniTask();
     }
 
-    private async UniTask AnimateSummonFromCard(
-        CreatureView creatureView,
-        Vector3 startPosition,
-        ZonePresenter zonePresenter) {
-        // Отримуємо фінальну позицію в зоні
-        Vector3? targetPosition = zonePresenter.ZoneView.GetCreaturePosition(creatureView);
+    private Tween AnimateShake(Transform transform, float duration) {
+        const float shakeStrength = 0.5f;
+        const int vibrato = 10;
 
-        if (!targetPosition.HasValue) {
-            creatureView.transform.position = zonePresenter.ZoneView.transform.position;
-            return;
-        }
+        return transform.DOShakePosition(
+            duration,
+            strength: shakeStrength,
+            vibrato: vibrato,
+            randomness: 90,
+            fadeOut: true
+        );
+    }
 
-        // Анімація переміщення
-        float duration = 0.8f * TimeModifier;
-
-        Sequence summonSequence = DOTween.Sequence()
-            .Join(creatureView.transform.DOMove(targetPosition.Value, duration).SetEase(Ease.OutBack))
-            .Join(creatureView.transform.DOScale(Vector3.one, duration * 0.5f).From(Vector3.zero))
-            .Join(creatureView.transform.DORotate(Vector3.up * 360f, duration, RotateMode.LocalAxisAdd));
-
-        await summonSequence.Play().ToUniTask();
+    private Tween AnimateScale(Transform transform, float duration) {
+        transform.localScale = Vector3.zero;
+        return transform.DOScale(Vector3.one, duration).SetEase(Ease.OutBack);
     }
 }
+
+

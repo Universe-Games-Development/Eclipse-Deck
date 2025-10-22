@@ -71,7 +71,7 @@ public class Card3DView : CardView {
 
     public void ToggleFrame(bool isEnabled) {
         if (_instancedMaterial != null) {
-            _instancedMaterial.SetFloat("_FrameMask", isEnabled ? 0f : -1f);
+            _instancedMaterial.SetFloat("_MaskStrength", isEnabled ? 1f : 0f);
         }
     }
 }

@@ -38,13 +38,13 @@ public class TargetValidator : ITargetValidator {
         return true;
     }
 
-    public List<UnitModel> GetValidTargetsFor(ITargetRequirement target, string ownerId) {
+    public List<UnitModel> GetValidTargetsFor(ITargetRequirement req, string ownerId) {
         var validModels = new List<UnitModel>();
         var allModels = _unitRegistry.GetAllModels<UnitModel>();
         var context = new ValidationContext(ownerId);
 
         foreach (var model in allModels) {
-            var validationResult = target.IsValid(model, context);
+            var validationResult = req.IsValid(model, context);
             if (validationResult.IsValid) {
                 validModels.Add(model);
             }

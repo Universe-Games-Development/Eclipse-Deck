@@ -12,25 +12,27 @@ public class CreatureCardData : CardData {
 
     [Header("Operation Template")]
     [SerializeField] private OperationData _summonOperationTemplate;
+    private const string pathToSummonOperation = "Operations/Summon";
 
-    public void OnValidate() {
+    protected override void Validate() {
+        // Спочатку викликаємо батьківську валідацію
+        base.Validate();
+
+        // Додаємо специфічну для CreatureCardData логіку
         SummonOperationData summonOperation = operationsData
             .Find(op => op is SummonOperationData) as SummonOperationData;
 
         if (summonOperation == null) {
-            // Знаходимо шаблон за замовчуванням, якщо не вказано
             if (_summonOperationTemplate == null) {
-                _summonOperationTemplate = Resources.Load<OperationData>("OperationTemplates/SummonOperationData");
+                _summonOperationTemplate = Resources.Load<SummonOperationData>(pathToSummonOperation);
             }
 
-            if (_summonOperationTemplate == null) {
-                Debug.LogWarning("Failed to create spawnOperation");
-                return;
+            if (_summonOperationTemplate != null) {
+                operationsData.Add(_summonOperationTemplate);
+#if UNITY_EDITOR
+                EditorUtility.SetDirty(this);
+#endif
             }
-
-            operationsData.Add(_summonOperationTemplate);
         }
-
-        EditorUtility.SetDirty(this);
     }
 }

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eada865c8ea468949a6e16a2b130b735, type: 3}
+  m_Name: Sacrifice
+  m_EditorClassIdentifier: 
+  visualData: {fileID: 0}
+  targetRequirements:
+  - rid: 5584263935755812979
+  references:
+    version: 2
+    RefIds:
+    - rid: 5584263935755812979
+      type: {class: CreatureTargetRequirementData, ns: , asm: Assembly-CSharp}
+      data:
+        targetKey: 0
+        selector: 0
+        allowSameTargetMultipleTimes: 0
+        conditions:
+        - rid: 5584263935755812980
+        - rid: 5584263935755812981
+    - rid: 5584263935755812980
+      type: {class: AliveConditionData, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 5584263935755812981
+      type: {class: OwnershipConditionData, ns: , asm: Assembly-CSharp}
+      data:
+        ownershipType: 0

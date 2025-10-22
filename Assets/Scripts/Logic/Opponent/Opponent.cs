@@ -95,9 +95,14 @@ public class Opponent : UnitModel, IHealthable, IManaSystem, IDisposable {
     }
 
     public void DrawCards(int amount) {
-        for (int i = amount - 1; i >= 0; i--) {
-            DrawCard();
+        List<Card> cards = Deck.DrawMultiple(amount);
+        Hand.AddRange(cards);
+
+        int missing = amount - cards.Count;
+        for (int i = 0; i < missing; i++) {
+            TakeDamage(1);
         }
+
     }
 
     public void DiscardCard() {

@@ -297,7 +297,8 @@ public abstract class LayoutComponent<T> : MonoBehaviour where T : MonoBehaviour
         _layoutAnimationCts = new CancellationTokenSource();
 
         List<CancellationTokenSource> values = _itemAnimationTokens.Values.ToList();
-        foreach (var cts in values) {
+        for (int i = 0; i < values.Count; i++) {
+            var cts = values[i];
             cts.Cancel();
             cts.Dispose();
         }

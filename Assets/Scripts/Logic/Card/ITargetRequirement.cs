@@ -236,7 +236,6 @@ public interface ISerializableTargetCondition : ISerializableCondition {
 [System.Serializable]
 public abstract class SerializableTargetCondition<T> : ISerializableTargetCondition<T>, ISerializableTargetCondition {
     public Type TargetType => typeof(T);
-
     public abstract string GetDisplayName();
 
     public abstract ITargetCondition<T> BuildRuntime();

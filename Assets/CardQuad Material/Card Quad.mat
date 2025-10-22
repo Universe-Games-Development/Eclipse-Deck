@@ -121,6 +121,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Texture2DAsset_7ddce9d038a340f1a7b87e8d5719bd9c_Out_0_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 3732b6b014c71cc429b537be761a558c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -155,11 +159,12 @@ Material:
     - _EnvironmentReflections: 1
     - _Float: 0
     - _Float_1: 1
-    - _FrameMask: 0
+    - _FrameMask: -1.05
     - _FrameStrength: 0
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _MaskStrength: 1
     - _Mask_Strength: 0
     - _Metallic: 0
     - _OcclusionStrength: 1

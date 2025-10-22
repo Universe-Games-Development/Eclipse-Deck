@@ -1,20 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-public class Deck : CardContainer {
-    private readonly List<string> _cardOrder = new List<string>();
 
-    public Deck(int maxSize = DefaultSize) : base(maxSize) { }
+public class Deck : CardContainer
+{
+    private readonly List<string> _cardOrder;
 
-    public new IReadOnlyList<Card> Cards => _cardOrder.Select(id => _cards[id]).ToList().AsReadOnly();
-    public IReadOnlyList<string> CardIds => _cardOrder.AsReadOnly();
+    public Deck(int maxSize = DefaultSize) : base(maxSize)
+    {
+        _cardOrder = new List<string>(maxSize);
+    }
 
-    public Card PeekAt(int position) {
+    public new IReadOnlyList<Card> Cards => _cardOrder.Select(id => _cards[id]).ToList();
+    public IReadOnlyList<string> CardIds => _cardOrder;
+
+    public Card this[int index] => PeekAt(index);
+
+    public Card PeekAt(int position)
+    {
         if (position < 0 || position >= _cardOrder.Count)
             return null;
 
-        var cardId = _cardOrder[position];
-        return _cards.TryGetValue(cardId, out var card) ? card : null;
+        return _cards.GetValueOrDefault(_cardOrder[position]);
     }
 
     public Card Draw() => DrawFromPosition(_cardOrder.Count - 1);
@@ -23,7 +30,8 @@ public class Deck : CardContainer {
 
     public Card DrawAt(int position) => DrawFromPosition(position);
 
-    private Card DrawFromPosition(int position) {
+    private Card DrawFromPosition(int position)
+    {
         if (position < 0 || position >= _cardOrder.Count)
             return null;
 
@@ -31,44 +39,69 @@ public class Deck : CardContainer {
         if (!_cards.TryGetValue(cardId, out var card))
             return null;
 
-        RemoveCardFromDeck(cardId);
+        _cards.Remove(cardId);
+        _cardOrder.RemoveAt(position);
+
+        if (card.CurrentContainer == this)
+            card.SetContainer(null);
+
+        RaiseCardRemoved(card);
         return card;
     }
 
-    public override void Shuffle() {
-        if (IsEmpty) return;
+    public List<Card> DrawMultiple(int count)
+    {
+        count = Math.Min(count, _cardOrder.Count);
+        var drawnCards = new List<Card>(count);
 
-        var random = new Random();
-        for (int i = _cardOrder.Count - 1; i > 0; i--) {
-            int randomIndex = random.Next(i + 1);
-            (_cardOrder[i], _cardOrder[randomIndex]) = (_cardOrder[randomIndex], _cardOrder[i]);
+        for (int i = 0; i < count; i++)
+        {
+            var card = DrawFromPosition(_cardOrder.Count - 1);
+            if (card != null)
+                drawnCards.Add(card);
         }
 
-        OnChanged?.Invoke(this);
+        return drawnCards;
     }
 
-    public void ShuffleRange(int startIndex, int count) {
-        if (startIndex < 0 || startIndex >= _cardOrder.Count || count <= 0)
+    public override void Shuffle()
+    {
+        if (IsEmpty) return;
+
+        // Fisher-Yates shuffle
+        var random = RandomService.SystemRandom;
+        for (int i = _cardOrder.Count - 1; i > 0; i--)
+        {
+            int j = random.Next(i + 1);
+            (_cardOrder[i], _cardOrder[j]) = (_cardOrder[j], _cardOrder[i]);
+        }
+
+        RaiseChanged();
+    }
+
+    public void ShuffleRange(int startIndex, int count)
+    {
+        if (startIndex < 0 || startIndex >= _cardOrder.Count || count <= 1)
             return;
 
         int endIndex = Math.Min(startIndex + count, _cardOrder.Count);
-        var random = new Random();
+        var random = RandomService.SystemRandom;
 
-        for (int i = endIndex - 1; i > startIndex; i--) {
-            int randomIndex = random.Next(startIndex, i + 1);
-            (_cardOrder[i], _cardOrder[randomIndex]) = (_cardOrder[randomIndex], _cardOrder[i]);
+        for (int i = endIndex - 1; i > startIndex; i--)
+        {
+            int j = random.Next(startIndex, i + 1);
+            (_cardOrder[i], _cardOrder[j]) = (_cardOrder[j], _cardOrder[i]);
         }
 
-        OnChanged?.Invoke(this);
+        RaiseChanged();
     }
 
-    public bool AddToTop(Card card) => AddToPosition(card, _cardOrder.Count);
+    public bool AddToTop(Card card) => InsertAt(_cardOrder.Count, card);
 
-    public bool AddToBottom(Card card) => AddToPosition(card, 0);
+    public bool AddToBottom(Card card) => InsertAt(0, card);
 
-    public void InsertAt(int position, Card card) => AddToPosition(card, position);
-
-    private bool AddToPosition(Card card, int position) {
+    public bool InsertAt(int position, Card card)
+    {
         if (!CanAddCard(card))
             return false;
 
@@ -78,71 +111,72 @@ public class Deck : CardContainer {
         position = Math.Clamp(position, 0, _cardOrder.Count);
         _cardOrder.Insert(position, card.InstanceId);
 
-        NotifyChanges(singleCard: card);
+        RaiseCardAdded(card);
         return true;
     }
 
-    public bool AddRangeToTop(IEnumerable<Card> cards) => AddRangeToPosition(cards, _cardOrder.Count);
+    public int AddRangeToTop(IEnumerable<Card> cards) => InsertRangeAt(_cardOrder.Count, cards);
 
-    public bool AddRangeToBottom(IEnumerable<Card> cards) => AddRangeToPosition(cards, 0);
+    public int AddRangeToBottom(IEnumerable<Card> cards) => InsertRangeAt(0, cards);
 
-    private bool AddRangeToPosition(IEnumerable<Card> cards, int position) {
-        if (cards == null) return false;
+    public int InsertRangeAt(int position, IEnumerable<Card> cards)
+    {
+        if (cards == null) return 0;
 
         var addedCards = new List<Card>();
-        foreach (var card in cards) {
+        var insertPosition = Math.Clamp(position, 0, _cardOrder.Count);
+
+        foreach (var card in cards)
+        {
             if (IsFull) break;
             if (!CanAddCard(card)) continue;
 
             PrepareCardForAdd(card);
             _cards[card.InstanceId] = card;
-
-            position = Math.Clamp(position, 0, _cardOrder.Count);
-            _cardOrder.Insert(position, card.InstanceId);
+            _cardOrder.Insert(insertPosition, card.InstanceId);
             addedCards.Add(card);
 
-            // Для додавання зверху збільшуємо позицію
-            if (position == _cardOrder.Count)
-                position = _cardOrder.Count;
+            // For top insertion, keep position at end
+            if (position >= _cardOrder.Count - 1)
+                insertPosition = _cardOrder.Count;
+            else
+                insertPosition++;
         }
 
-        bool isAdded = addedCards.Count > 0;
-        if (isAdded) {
-            NotifyChanges(multipleCards: addedCards);
-        }
-        return isAdded;
-       
+        RaiseCardsAdded(addedCards);
+        return addedCards.Count;
     }
 
     public override bool Add(Card card) => AddToTop(card);
 
-    public override bool AddRange(IEnumerable<Card> newCards) => AddRangeToTop(newCards);
+    public override int AddRange(IEnumerable<Card> newCards) => AddRangeToTop(newCards);
 
-    private void RemoveCardFromDeck(string cardInstanceId) {
-        if (_cards.Remove(cardInstanceId)) {
-            _cardOrder.Remove(cardInstanceId);
-        }
-    }
-
-    public override bool Remove(string cardInstanceId) {
-        if (string.IsNullOrEmpty(cardInstanceId) || !_cards.TryGetValue(cardInstanceId, out var card))
+    public override bool Remove(string cardInstanceId)
+    {
+        if (string.IsNullOrEmpty(cardInstanceId))
             return false;
 
-        RemoveCardFromDeck(cardInstanceId);
+        if (!_cards.TryGetValue(cardInstanceId, out var card))
+            return false;
+
+        _cards.Remove(cardInstanceId);
+        _cardOrder.Remove(cardInstanceId);
 
         if (card.CurrentContainer == this)
             card.SetContainer(null);
 
-        NotifyRemovals(singleCard: card);
+        RaiseCardRemoved(card);
         return true;
     }
 
-    public override void Clear() {
+    public override void Clear()
+    {
         if (IsEmpty) return;
 
         var removedCards = _cards.Values.ToList();
 
-        foreach (var card in removedCards) {
+        foreach (var card in removedCards)
+        {
             if (card.CurrentContainer == this)
                 card.SetContainer(null);
         }
@@ -150,68 +184,94 @@ public class Deck : CardContainer {
         _cards.Clear();
         _cardOrder.Clear();
 
-        NotifyRemovals(multipleCards: removedCards);
+        RaiseCardsRemoved(removedCards);
     }
 
-    public override Card GetRandom() {
+    public override Card GetRandom()
+    {
         if (IsEmpty) return null;
-
-        var random = new Random();
+        var random = RandomService.SystemRandom;
         var randomId = _cardOrder[random.Next(_cardOrder.Count)];
         return _cards[randomId];
     }
 
     public Card PeekTop() => PeekAt(_cardOrder.Count - 1);
+    
     public Card PeekBottom() => PeekAt(0);
 
-    public List<Card> PeekTopCards(int count) {
+    public IReadOnlyList<Card> PeekTopCards(int count)
+    {
         count = Math.Min(count, _cardOrder.Count);
-        return _cardOrder.TakeLast(count).Select(id => _cards[id]).ToList();
+        return _cardOrder
+            .Skip(_cardOrder.Count - count)
+            .Select(id => _cards[id])
+            .ToList();
     }
 
-    public List<Card> PeekBottomCards(int count) {
+    public IReadOnlyList<Card> PeekBottomCards(int count)
+    {
         count = Math.Min(count, _cardOrder.Count);
-        return _cardOrder.Take(count).Select(id => _cards[id]).ToList();
+        return _cardOrder
+            .Take(count)
+            .Select(id => _cards[id])
+            .ToList();
     }
 
-    public int GetCardPosition(string cardInstanceId) => _cardOrder.IndexOf(cardInstanceId);
+    public int GetPosition(string cardInstanceId) => _cardOrder.IndexOf(cardInstanceId);
 
-    public void MoveCard(int fromIndex, int toIndex) {
+    public void MoveCard(int fromIndex, int toIndex)
+    {
         if (fromIndex < 0 || fromIndex >= _cardOrder.Count ||
-            toIndex < 0 || toIndex >= _cardOrder.Count || fromIndex == toIndex)
+            toIndex < 0 || toIndex >= _cardOrder.Count || 
+            fromIndex == toIndex)
             return;
 
         var cardId = _cardOrder[fromIndex];
         _cardOrder.RemoveAt(fromIndex);
         _cardOrder.Insert(toIndex, cardId);
 
-        OnChanged?.Invoke(this);
+        RaiseChanged();
     }
 
-    public void MoveCardToTop(string cardInstanceId) => MoveCardToPosition(cardInstanceId, _cardOrder.Count - 1);
+    public void MoveToTop(string cardInstanceId) => MoveToPosition(cardInstanceId, _cardOrder.Count - 1);
 
-    public void MoveCardToBottom(string cardInstanceId) => MoveCardToPosition(cardInstanceId, 0);
+    public void MoveToBottom(string cardInstanceId) => MoveToPosition(cardInstanceId, 0);
 
-    private void MoveCardToPosition(string cardInstanceId, int targetPosition) {
+    private void MoveToPosition(string cardInstanceId, int targetPosition)
+    {
         var currentIndex = _cardOrder.IndexOf(cardInstanceId);
-        if (currentIndex >= 0 && currentIndex != targetPosition) {
-            _cardOrder.RemoveAt(currentIndex);
+        if (currentIndex < 0 || currentIndex == targetPosition)
+            return;
 
-            // Коригуємо цільову позицію якщо видалили елемент перед нею
-            if (currentIndex < targetPosition)
-                targetPosition--;
+        _cardOrder.RemoveAt(currentIndex);
 
-            _cardOrder.Insert(targetPosition, cardInstanceId);
-            OnChanged?.Invoke(this);
-        }
+        if (currentIndex < targetPosition)
+            targetPosition--;
+
+        _cardOrder.Insert(targetPosition, cardInstanceId);
+        RaiseChanged();
     }
 
-    public void ReverseOrder() {
+    public void Reverse()
+    {
         _cardOrder.Reverse();
-        OnChanged?.Invoke(this);
+        RaiseChanged();
+    }
+
+    public void Sort(Comparison<Card> comparison)
+    {
+        var sortedCards = _cardOrder
+            .Select(id => _cards[id])
+            .ToList();
+            
+        sortedCards.Sort(comparison);
+        
+        _cardOrder.Clear();
+        _cardOrder.AddRange(sortedCards.Select(c => c.InstanceId));
+
+        RaiseChanged();
     }
 }
-
 public struct OnCardDrawn : IEvent {
     public Card card;
     public Opponent owner;

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SummonVisualTemplate
   m_EditorClassIdentifier: 
   transformEffectPrefab: {fileID: 0}
-  transformDuration: 0.29
+  transformDuration: 5
   transformCurve:
     serializedVersion: 2
     m_Curve:

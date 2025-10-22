@@ -27,8 +27,6 @@ public class ZoneView : UnitView, IArea {
     [SerializeField] private float disappearDuration = 0.5f;
     [SerializeField] private float rearrangeDuration = 0.5f;
 
-    [SerializeField] Transform spawnPoint;
-
     public event Action OnRemoveDebugRequest;
 
     #region IArea 
@@ -73,7 +71,7 @@ public class ZoneView : UnitView, IArea {
     public CreatureView CreateCreatureView() {
         CreatureView creatureView = creaturePool.Get();
         creatureView.gameObject.SetActive(false);
-        creatureView.transform.position = spawnPoint ? spawnPoint.position : transform.position + Vector3.up * 2f;
+        creatureView.transform.position = transform.position + Vector3.up * 2f;
         return creatureView;
     }
 
@@ -102,8 +100,7 @@ public class ZoneView : UnitView, IArea {
             creatureView,
             layoutComponent,
             creaturePool,
-            disappearDuration,
-            spawnPoint
+            disappearDuration
         );
         visualManager.Push(removeTask);
     }
@@ -209,27 +206,19 @@ public class RemoveCreatureVisualTask : VisualTask {
     private readonly ZoneLayoutComponent _layout;
     private readonly IComponentPool<CreatureView> _creaturePool;
     private readonly float _animationDuration;
-    private readonly Transform _spawnPoint;
 
     public RemoveCreatureVisualTask(
         CreatureView creatureView,
         ZoneLayoutComponent layout,
         IComponentPool<CreatureView> creaturePool,
-        float animationDuration,
-        Transform spawnPoint) {
+        float animationDuration) {
         _creatureView = creatureView;
         _layout = layout;
         _creaturePool = creaturePool;
         _animationDuration = animationDuration;
-        _spawnPoint = spawnPoint;
     }
 
     public override async UniTask<bool> ExecuteAsync() {
-        Vector3 spawnPosition = _spawnPoint.position;
-        _creatureView.transform.position = spawnPosition;
-
-        _creatureView.gameObject.SetActive(true);
-
         float duration = _animationDuration * TimeModifier;
 
         // Анімуємо зникнення створіння

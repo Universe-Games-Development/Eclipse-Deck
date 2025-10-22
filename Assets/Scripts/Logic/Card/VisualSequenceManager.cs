@@ -12,11 +12,9 @@ public class VisualSequenceManager : BaseQueueManager<VisualTask>, IVisualManage
                 return OperationResult.Failure("Task is null");
             }
 
-            logger.LogInfo($"Beginning task: {task}", LogCategory);
             bool result = await task.ExecuteAsync();
             return result ? OperationResult.Success() : OperationResult.Failure("Failed execution");
         } catch (OperationCanceledException) {
-            logger.LogInfo($"Task {task} was cancelled", LogCategory);
             throw;
         }
     }

@@ -208,8 +208,8 @@ public class AddCardVisualTask : VisualTask {
     public override async UniTask<bool> ExecuteAsync() {
         _cardView.gameObject.SetActive(true);
         // Додаємо в layout і перераховуємо позиції
-        _layout.AddItem(_cardView, recalculate: true);
-
+        _layout.AddItem(_cardView, recalculate: false);
+        await UniTask.CompletedTask;
         return true;
     }
 }

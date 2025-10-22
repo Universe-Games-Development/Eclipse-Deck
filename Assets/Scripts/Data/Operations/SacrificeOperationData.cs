@@ -23,12 +23,13 @@ public class SacrificeOperationData : OperationData {
 }
 
 public class SacrificeCreatureOperation : GameOperation {
-    private Creature creature;
+    private Creature _creature;
     public SacrificeCreatureOperation(SacrificeOperationData data, Creature creature) {
+        _creature = creature;
     }
 
     public override bool Execute() {
-        creature.Die();
+        _creature.Die();
 
         return true;
     }

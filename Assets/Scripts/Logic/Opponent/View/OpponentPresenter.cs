@@ -22,7 +22,7 @@ public abstract class OpponentPresenter : UnitPresenter, IDisposable {
     }
 
     public void PlayCard(string cardId) {
-        if (!Opponent.Hand.TryGetCardById(cardId, out Card card)) {
+        if (!Opponent.Hand.TryGetCard(cardId, out Card card)) {
             Debug.Log("Failed to find card: " + cardId);
             return;
         }

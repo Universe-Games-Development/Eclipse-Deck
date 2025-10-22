@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using UnityEngine;
 
 public interface ICardPlayService {
     event Action<Card, CardPlayResult> OnCardPlayFinished;
@@ -15,32 +16,25 @@ public interface ICardPlayService {
 
 // Module can play only 1 card at a time
 public class CardPlayService : ICardPlayService, IDisposable {
-    private readonly IOperationManager _operationManager;
-    private readonly IOperationFactory _operationFactory;
-    private readonly ITargetFiller _targetFiller;
+    private readonly IOperationExecutor _operationExecutor;
     private readonly IEventBus<IEvent> _eventBus;
+    private readonly ITargetFiller _targetFiller;
 
     public event Action<Card, CardPlayResult> OnCardPlayFinished;
     public event Action<Card> OnCardActivated;
 
     private Card _currentCard = null;
     private List<OperationData> _operations;
-    private int _currentOperationIndex = 0;
-    private UniTaskCompletionSource _completionSource;
-    private GameOperation _targetOperation;
     private readonly CancellationTokenSource _globalCancellationSource = new();
 
-    public CardPlayService(
-        IOperationManager operationManager,
-        IOperationFactory operationFactory,
-        ITargetFiller targetFiller,
-        IEventBus<IEvent> eventBus) {
-        _operationManager = operationManager ?? throw new ArgumentNullException(nameof(operationManager));
-        _operationFactory = operationFactory ?? throw new ArgumentNullException(nameof(operationFactory));
-        _targetFiller = targetFiller ?? throw new ArgumentNullException(nameof(targetFiller));
-        _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
-        _operationManager.OnQueueEmpty += OnManagerEmpty;
+    public CardPlayService(
+        IOperationExecutor operationExecutor,
+        IEventBus<IEvent> eventBus,
+        ITargetFiller targetFiller) {
+        _operationExecutor = operationExecutor ?? throw new ArgumentNullException(nameof(operationExecutor));
+        _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+        _targetFiller = targetFiller;
     }
 
     public async UniTask<CardPlayResult> PlayCardAsync(Card card, CancellationToken cancellationToken = default) {
@@ -59,7 +53,6 @@ public class CardPlayService : ICardPlayService, IDisposable {
         try {
             _currentCard = card;
             _operations = card.GetOperationData()?.ToList() ?? new List<OperationData>();
-            _currentOperationIndex = 0;
 
             if (_operations.Count == 0) {
                 var result = CardPlayResult.Failed("No operations defined for card");
@@ -67,47 +60,74 @@ public class CardPlayService : ICardPlayService, IDisposable {
                 return result;
             }
 
-            bool firstOperationCompleted = false;
+            int completedOperations = 0;
+            bool anyOperationStarted = false;
 
             for (int i = 0; i < _operations.Count && !token.IsCancellationRequested; i++) {
-                _currentOperationIndex = i;
 
-                // Fill targets for current operation
-                TargetsFillResult fillResult = await _targetFiller.FillTargetsAsync(_operations[i], card, token);
+                TargetsFillResult fillResult = await _targetFiller.FillTargetsAsync(_operations[i], _currentCard, cancellationToken);
                 TargetRegistry targetRegistry = fillResult.TargetRegistry;
 
-                // If player refused to fill targets, skip this operation
                 if (!fillResult.Status) {
-                    continue;
+                    if (anyOperationStarted) {
+                        continue;
+                    } else {
+                        var cancelledResult = CardPlayResult.Cancelled();
+                        CompleteCardPlay(cancelledResult);
+                        return cancelledResult;
+                    }
+                }
+
+
+                if (_operations[i] is SummonOperationData summon) {
+                    Zone zone = targetRegistry.Get<Zone>(TargetKeys.MainTarget);
+                    if (zone.IsFull()) {
+                        bool isSacrificed = await HandleCardSummon(summon.SacrificeOperationData);
+                        if (!isSacrificed)
+                            continue;
+                    }
                 }
 
                 targetRegistry.Add(TargetKeys.SourceCard, card);
-                _completionSource = new UniTaskCompletionSource();
 
-                _targetOperation = _operations[i].CreateOperation(_operationFactory, targetRegistry);
-                _operationManager.Push(_targetOperation);
+                // Execute operation through executor
+                OperationResult opResult = await _operationExecutor.ExecuteAsync(
+                    _operations[i],
+                    targetRegistry,
+                    token);
 
-                // Wait for operation completion
-                await _completionSource.Task;
+                // If target filling was cancelled, skip this operation
+                if (!opResult.IsSuccess) {
+                    if (opResult.Cancelled) {
+                        continue; // Skip to next operation
+                    }
+                    // Other errors - stop card play
+                    var failedResult = CardPlayResult.Failed(opResult.Message);
+                    CompleteCardPlay(failedResult);
+                    return failedResult;
+                }
 
-                // Mark card as activated after first successful operation execution
-                if (!firstOperationCompleted) {
-                    firstOperationCompleted = true;
+                completedOperations++;
+
+                // Notify card activation on first successful operation
+                if (!anyOperationStarted) {
+                    anyOperationStarted = true;
                     OnCardActivated?.Invoke(card);
                 }
             }
 
             if (token.IsCancellationRequested) {
-                var cancelledResult = CardPlayResult.Failed("Card play was cancelled");
+                var cancelledResult = CardPlayResult.Cancelled();
                 CompleteCardPlay(cancelledResult);
                 return cancelledResult;
             }
 
-            var successResult = CardPlayResult.Success(_operations.Count);
+            var successResult = CardPlayResult.Success(completedOperations);
             CompleteCardPlay(successResult);
             return successResult;
+
         } catch (OperationCanceledException) {
-            var cancelledResult = CardPlayResult.Failed("Card play was cancelled");
+            var cancelledResult = CardPlayResult.Cancelled();
             CompleteCardPlay(cancelledResult);
             return cancelledResult;
         } finally {
@@ -115,8 +135,19 @@ public class CardPlayService : ICardPlayService, IDisposable {
         }
     }
 
-    private void OnManagerEmpty() {
-        _completionSource?.TrySetResult();
+    private async UniTask<bool> HandleCardSummon(SacrificeOperationData sacrificeOperationData) {
+        if (sacrificeOperationData == null) {
+            Debug.LogWarning("Sacrifice Gained nulls");
+            return false;
+        }
+
+        TargetsFillResult targetsFillResult = await _targetFiller.FillTargetsAsync(sacrificeOperationData, _currentCard, CancellationToken.None);
+        if (!targetsFillResult.Status) {
+            return false;
+        }
+        // Execute sacrifice operation
+        OperationResult sacrificeResult = await _operationExecutor.ExecuteAsync(sacrificeOperationData, targetsFillResult.TargetRegistry, CancellationToken.None);
+        return sacrificeResult.IsSuccess;
     }
 
     private void CompleteCardPlay(CardPlayResult result) {
@@ -126,9 +157,6 @@ public class CardPlayService : ICardPlayService, IDisposable {
     private void Cleanup() {
         _currentCard = null;
         _operations = null;
-        _currentOperationIndex = 0;
-        _targetOperation = null;
-        _completionSource = null;
     }
 
     public bool IsPlayingCard() => _currentCard != null;
@@ -136,17 +164,15 @@ public class CardPlayService : ICardPlayService, IDisposable {
     public void CancelCardPlay() {
         if (IsPlayingCard()) {
             _globalCancellationSource.Cancel();
-            _completionSource?.TrySetCanceled();
         }
     }
 
     public void Dispose() {
-        _operationManager.OnQueueEmpty -= OnManagerEmpty;
         _globalCancellationSource?.Cancel();
         _globalCancellationSource?.Dispose();
-        _completionSource?.TrySetCanceled();
     }
 }
+
 
 public readonly struct CardPlayResult {
     public bool IsSuccess { get; }
