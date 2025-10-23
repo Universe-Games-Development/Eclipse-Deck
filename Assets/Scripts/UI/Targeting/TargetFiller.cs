@@ -286,21 +286,21 @@ public class OperationTargetsFiller : ITargetFiller {
 }
 
 public class TargetsFillResult {
-    public OperationResult Status { get; private set; }
+    public ExecutionResult Status { get; private set; }
     public TargetRegistry TargetRegistry { get; private set; }
     public TimeSpan Duration { get; private set; }
 
-    private TargetsFillResult(OperationResult status, TargetRegistry targetRegistry = null, TimeSpan duration = default) {
+    private TargetsFillResult(ExecutionResult status, TargetRegistry targetRegistry = null, TimeSpan duration = default) {
         Status = status;
         TargetRegistry = targetRegistry;
         Duration = duration;
     }
 
     public static TargetsFillResult Success(TargetRegistry targetRegistry, TimeSpan duration) =>
-        new(OperationResult.Success(), targetRegistry, duration: duration);
+        new(ExecutionResult.Success(), targetRegistry, duration: duration);
 
     public static TargetsFillResult Failure(string error = null, TimeSpan duration = default) =>
-        new(OperationResult.Failure(error), duration : duration);
+        new(ExecutionResult.Failure(error), duration : duration);
     
 }
 

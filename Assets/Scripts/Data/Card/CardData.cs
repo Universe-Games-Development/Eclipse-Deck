@@ -23,7 +23,7 @@ public abstract class CardData : ScriptableObject {
     [SerializeField] private string rarityDisplayName;
 
     [Header("Operations")]
-    public List<OperationData> operationsData = new List<OperationData>();
+    public List<OperationData> operationsData = new();
 
     private void OnEnable() {
         Debug.Log("CardData Lol :" + Name);

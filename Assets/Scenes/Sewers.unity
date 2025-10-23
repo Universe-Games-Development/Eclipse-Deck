@@ -6722,7 +6722,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardView: {fileID: 2100769153}
   minSize: 2
-  maxSize: 4
+  maxSize: 2
   colums: 2
   rows: 2
   doPopulate: 1

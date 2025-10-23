@@ -56,10 +56,10 @@ public readonly struct CardOperationResultEvent : IEvent {
     public Card Card { get; }
     public int OperationIndex { get; }
     public int TotalOperations { get; }
-    public OperationResult Result { get; }
+    public ExecutionResult Result { get; }
     public DateTime CompletedTime { get; }
 
-    public CardOperationResultEvent(Card card, int operationIndex, int totalOperations, OperationResult result) {
+    public CardOperationResultEvent(Card card, int operationIndex, int totalOperations, ExecutionResult result) {
         Card = card;
         OperationIndex = operationIndex;
         TotalOperations = totalOperations;

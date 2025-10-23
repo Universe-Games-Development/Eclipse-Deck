@@ -82,7 +82,7 @@ public class CardPlayService : ICardPlayService, IDisposable {
                 if (_operations[i] is SummonOperationData summon) {
                     Zone zone = targetRegistry.Get<Zone>(TargetKeys.MainTarget);
                     if (zone.IsFull()) {
-                        bool isSacrificed = await HandleCardSummon(summon.SacrificeOperationData);
+                        bool isSacrificed = await HandleSacrifice(summon.SacrificeOperationData, zone);
                         if (!isSacrificed)
                             continue;
                     }
@@ -91,7 +91,7 @@ public class CardPlayService : ICardPlayService, IDisposable {
                 targetRegistry.Add(TargetKeys.SourceCard, card);
 
                 // Execute operation through executor
-                OperationResult opResult = await _operationExecutor.ExecuteAsync(
+                ExecutionResult opResult = await _operationExecutor.ExecuteAsync(
                     _operations[i],
                     targetRegistry,
                     token);
@@ -135,20 +135,35 @@ public class CardPlayService : ICardPlayService, IDisposable {
         }
     }
 
-    private async UniTask<bool> HandleCardSummon(SacrificeOperationData sacrificeOperationData) {
-        if (sacrificeOperationData == null) {
+    private async UniTask<bool> HandleSacrifice(SacrificeOperationData originalData, Zone zone) {
+        if (originalData == null) {
             Debug.LogWarning("Sacrifice Gained nulls");
             return false;
         }
 
-        TargetsFillResult targetsFillResult = await _targetFiller.FillTargetsAsync(sacrificeOperationData, _currentCard, CancellationToken.None);
+        // Клонуємо дані операції
+        SacrificeOperationData clonedData = ScriptableObject.CreateInstance<SacrificeOperationData>();
+        clonedData.visualData = originalData.visualData;
+
+        // Клонуємо requirements
+        clonedData.targetRequirements = new List<ITargetRequirementData>(originalData.targetRequirements);
+        foreach (var req in clonedData.targetRequirements) {
+            if (req is CreatureTargetRequirementData creatureReq) {
+                creatureReq.conditions.Add(new ZoneConditionData(zone));
+            }
+        }
+
+        // Заповнюємо цілі
+        TargetsFillResult targetsFillResult = await _targetFiller.FillTargetsAsync(clonedData, _currentCard, CancellationToken.None);
         if (!targetsFillResult.Status) {
             return false;
         }
-        // Execute sacrifice operation
-        OperationResult sacrificeResult = await _operationExecutor.ExecuteAsync(sacrificeOperationData, targetsFillResult.TargetRegistry, CancellationToken.None);
-        return sacrificeResult.IsSuccess;
+
+        // Виконуємо операцію
+        ExecutionResult result = await _operationExecutor.ExecuteAsync(clonedData, targetsFillResult.TargetRegistry, CancellationToken.None);
+        return result.IsSuccess;
     }
+
 
     private void CompleteCardPlay(CardPlayResult result) {
         OnCardPlayFinished?.Invoke(_currentCard, result);

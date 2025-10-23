@@ -42,6 +42,20 @@ public abstract class OperationData : ScriptableObject {
         }
         return targetRequirements;
     }
+
+    public OperationData Clone() {
+        // Створюємо новий екземпляр того ж типу
+        var clone = CreateInstance(GetType()) as OperationData;
+
+        // Копіюємо VisualData (припускаємо, що вона теж ScriptableObject або має Clone)
+        clone.visualData = visualData; // або visualData.Clone() якщо потрібно глибше
+
+        // Копіюємо requirements — shallow copy, бо інтерфейси
+        clone.targetRequirements = new List<ITargetRequirementData>(targetRequirements);
+
+        return clone;
+    }
+
 }
 
 public class TargetRegistry {

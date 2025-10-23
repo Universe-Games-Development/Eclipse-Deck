@@ -1,79 +1,32 @@
 ﻿using Cysharp.Threading.Tasks;
-using NUnit.Framework.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
-public enum Priority {
-    Low = 0,
-    Normal = 1,
-    High = 2,
-    Critical = 3
-}
-
 public interface IOperationManager {
     bool IsRunning { get; }
     int QueueCount { get; }
 
-    event Action<GameOperation, OperationResult> OnOperationEnd;
+    event Action<GameOperation, ExecutionResult> OnOperationEnd;
     event Action OnQueueEmpty;
 
     UniTask CancelAllAsync();
     void CancelCurrent();
-    void ClearQueue();
+    int ClearQueue();
     bool IsQueueEmpty();
     void Push(GameOperation operation, Priority priority = Priority.Normal);
     void PushRange(IEnumerable<GameOperation> operations, Priority priority = Priority.Normal);
 }
 
-public class OperationManager : BaseQueueManager<GameOperation>, IOperationManager {
-    public event Action<GameOperation, OperationResult> OnOperationEnd;
+public class OperationManager : TaskQueueManager<GameOperation>, IOperationManager {
+    public event Action<GameOperation, ExecutionResult> OnOperationEnd;
 
     protected override LogCategory LogCategory => LogCategory.OperationManager;
     protected override string TaskTypeName => "operation";
 
-    protected override async UniTask<OperationResult> ProcessTaskAsync(GameOperation operation, CancellationToken cancellationToken) {
-        try {
-            logger.LogInfo($"Beginning operation: {operation}", LogCategory);
-            bool success = await operation.ExecuteAsync();
-
-            return success ? OperationResult.Success() : OperationResult.Failure("Failed execution");
-
-        } catch (OperationCanceledException) {
-            logger.LogInfo($"Operation {operation} was cancelled", LogCategory);
-            throw;
-        }
-    }
-
-    protected override void OnTaskCompleted(GameOperation task, OperationResult result) {
+    protected override void OnTaskCompleted(GameOperation task, ExecutionResult result) {
         OnOperationEnd?.Invoke(task, result);
-    }
-}
-
-public readonly struct ReadLock : IDisposable {
-    private readonly ReaderWriterLockSlim _lock;
-
-    public ReadLock(ReaderWriterLockSlim @lock) {
-        _lock = @lock;
-        _lock.EnterReadLock();
-    }
-
-    public void Dispose() {
-        _lock.ExitReadLock();
-    }
-}
-
-public readonly struct WriteLock : IDisposable {
-    private readonly ReaderWriterLockSlim _lock;
-
-    public WriteLock(ReaderWriterLockSlim @lock) {
-        _lock = @lock;
-        _lock.EnterWriteLock();
-    }
-
-    public void Dispose() {
-        _lock.ExitWriteLock();
     }
 }
 
@@ -85,7 +38,7 @@ public interface IOperationExecutor {
     /// <param name="source">The source unit (Card, Creature, etc.)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Result of the operation execution</returns>
-    UniTask<OperationResult> ExecuteAsync(
+    UniTask<ExecutionResult> ExecuteAsync(
         OperationData operationData,
         UnitModel source,
         CancellationToken cancellationToken = default);
@@ -93,7 +46,7 @@ public interface IOperationExecutor {
     /// <summary>
     /// Executes an operation with pre-filled targets
     /// </summary>
-    UniTask<OperationResult> ExecuteAsync(
+    UniTask<ExecutionResult> ExecuteAsync(
         OperationData operationData,
         TargetRegistry targetRegistry,
         CancellationToken cancellationToken = default);
@@ -109,7 +62,7 @@ public class OperationExecutor : IOperationExecutor, IDisposable {
     private readonly IOperationManager _operationManager;
     private readonly ITargetFiller _targetFiller;
 
-    private UniTaskCompletionSource<OperationResult> _completionSource;
+    private UniTaskCompletionSource<ExecutionResult> _completionSource;
     private GameOperation _currentOperation;
     private CancellationTokenRegistration _cancellationRegistration;
 
@@ -124,7 +77,7 @@ public class OperationExecutor : IOperationExecutor, IDisposable {
         _targetFiller = targetFiller ?? throw new ArgumentNullException(nameof(targetFiller));
     }
 
-    public async UniTask<OperationResult> ExecuteAsync(
+    public async UniTask<ExecutionResult> ExecuteAsync(
         OperationData operationData,
         UnitModel source,
         CancellationToken cancellationToken = default) {
@@ -146,7 +99,7 @@ public class OperationExecutor : IOperationExecutor, IDisposable {
 
             // If player cancelled or failed to fill targets
             if (!fillResult.Status) {
-                return OperationResult.Failure("Target fill failed");
+                return ExecutionResult.Failure("Target fill failed");
             }
 
             TargetRegistry targetRegistry = fillResult.TargetRegistry;
@@ -160,31 +113,31 @@ public class OperationExecutor : IOperationExecutor, IDisposable {
             return await ExecuteAsync(operationData, targetRegistry, cancellationToken);
 
         } catch (OperationCanceledException) {
-            return OperationResult.Failure("Canceled");
+            return ExecutionResult.Failure("Canceled");
         } catch (Exception ex) {
             Debug.LogError($"[OperationExecutor] Unexpected error: {ex.Message}");
-            return OperationResult.Failure($"Unexpected error: {ex.Message}");
+            return ExecutionResult.Failure($"Unexpected error: {ex.Message}");
         }
     }
 
-    public async UniTask<OperationResult> ExecuteAsync(
+    public async UniTask<ExecutionResult> ExecuteAsync(
         OperationData operationData,
         TargetRegistry targetRegistry,
         CancellationToken cancellationToken = default) {
 
         if (IsExecuting) {
-            return OperationResult.Failure("Another operation is already executing");
+            return ExecutionResult.Failure("Another operation is already executing");
         }
         if (operationData == null) {
-            return OperationResult.Failure("Data is null");
+            return ExecutionResult.Failure("Data is null");
         }
 
         try {
-            _completionSource = new UniTaskCompletionSource<OperationResult>();
+            _completionSource = new UniTaskCompletionSource<ExecutionResult>();
 
             // Register cancellation
             _cancellationRegistration = cancellationToken.Register(() => {
-                _completionSource?.TrySetResult(OperationResult.Failure("Canceled"));
+                _completionSource?.TrySetResult(ExecutionResult.Failure("Canceled"));
                 Cleanup();
             });
 
@@ -198,12 +151,12 @@ public class OperationExecutor : IOperationExecutor, IDisposable {
             _operationManager.Push(_currentOperation);
 
             // Wait for completion
-            OperationResult result = await _completionSource.Task;
+            ExecutionResult result = await _completionSource.Task;
 
             return result;
 
         } catch (OperationCanceledException) {
-            return OperationResult.Failure("Canceled");
+            return ExecutionResult.Failure("Canceled");
         } finally {
             Cleanup();
         }
@@ -211,7 +164,7 @@ public class OperationExecutor : IOperationExecutor, IDisposable {
 
     private void HandleOperationComplete() {
         // Operation completed successfully
-        _completionSource?.TrySetResult(OperationResult.Success());
+        _completionSource?.TrySetResult(ExecutionResult.Success());
     }
 
     private void Cleanup() {
@@ -226,29 +179,3 @@ public class OperationExecutor : IOperationExecutor, IDisposable {
     }
 }
 
-public enum OperationStatus {
-    Success,
-    Failure,
-    Canceled
-}
-
-public struct OperationResult {
-    public OperationStatus Status { get; }
-    public bool IsSuccess => Status == OperationStatus.Success;
-    public bool Cancelled => Status == OperationStatus.Canceled;
-    public bool Failed => Status == OperationStatus.Failure;
-
-    const string cancelledMessage = "Operation was cancelled";
-    public string Message { get; }
-
-    private OperationResult(OperationStatus status, string resultMessage = null) {
-        Status = status;
-        Message = resultMessage;
-    }
-
-    public static OperationResult Success() => new(OperationStatus.Success);
-    public static OperationResult Failure(string errorMessage = null) => new(OperationStatus.Failure, errorMessage);
-    public static OperationResult Canceled() => new(OperationStatus.Canceled, cancelledMessage);
-
-    public static implicit operator bool(OperationResult result) => result.Status == OperationStatus.Success;
-}
