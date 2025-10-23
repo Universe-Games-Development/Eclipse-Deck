@@ -20,4 +20,6 @@ MonoBehaviour:
   collection: {fileID: 0}
   isFlying: 0
   speechData: {fileID: 0}
+  Color: {r: 0, g: 0, b: 0, a: 0}
+  DeckConfig: {fileID: 11400000, guid: 49e769e6213cfb6408ee9ef6ae9a62e6, type: 2}
   enemyType: 0

@@ -33,8 +33,8 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<CardProvider>().AsSingle();
         Container.Bind<EnemyResourceProvider>().AsSingle();
 
-        Container.Bind<EnemyResourceLoader>().AsSingle();
-        Container.Bind<CardResourceLoader>().AsSingle();
+        Container.Bind<EnemyResourceLoader>().AsSingle().NonLazy(); ;
+        Container.Bind<CardResourceLoader>().AsSingle().NonLazy();
 
         Container.BindInstance(_randomConfig).AsSingle();
 

@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Zenject;
-using UnityEngine;
 
 public class BoardPresenter : IDisposable {
     public BoardView BoardView;
@@ -9,62 +8,92 @@ public class BoardPresenter : IDisposable {
 
     private Dictionary<Cell, CellPresenter> cellPresenters = new();
 
-    // ��� ��� �������� ������� �� ������ �� ��������
-    private Dictionary<(int row, int col), CellPresenter> cellPresentersByIndex = new();
+    [Inject] IPresenterFactory _presenterFactory;
 
-    [Inject] IPresenterFactory presenterFactory;
-
-    public BoardPresenter(Board board, BoardView boardView) {
+    public BoardPresenter(Board board, BoardView boardView, IPresenterFactory presenterFactory) {
         Board = board;
         BoardView = boardView;
+        _presenterFactory = presenterFactory;
+
         SubscribeToEvents();
+        SyncLogicBoardToView();
+    }
+
+    private void SyncLogicBoardToView() {
+        List<Cell> removedCells = new();
+        List<Cell> addedCells = new(Board.GetAllCells());
+
+
+        HandleNewStructure(this, new BoardStructureChangedEvent(addedCells, removedCells));
     }
 
     private void SubscribeToEvents() {
         if (Board != null) {
+            Board.StructureChanged += HandleNewStructure;
         }
     }
 
     private void UnsubscribeFromEvents() {
         if (Board != null) {
+            Board.StructureChanged -= HandleNewStructure;
         }
     }
 
-    public void CreateBoard() {
-        for (int rowIndex = 0; rowIndex < Board.RowCount; rowIndex++) {
-            var row = Board.GetRow(rowIndex);
-            for (int cellIndex = 0; cellIndex < row.CellCount; cellIndex++) {
-                var cell = row.GetCell(cellIndex);
-                if (cell == null) continue;
-                CreateCellPresenter(cell, rowIndex, cellIndex);
+    private void HandleNewStructure(object sender, BoardStructureChangedEvent eventData) {
+        HandleCellsRemoved(eventData.RemovedCells);
+        HandleCellsAdded(eventData.AddedCells);
+    }
+
+    private void HandleCellsRemoved(List<Cell> removedCells) {
+        if (removedCells == null || removedCells.Count == 0) return;
+
+        List<(int row, int column)> cellsData = new();
+
+        foreach (var cell in removedCells) {
+            if (cellPresenters.TryGetValue(cell, out var presenter)) {
+                presenter.OnSizeChanged -= HandleCellSizeChanged;
+                cellPresenters.Remove(cell);
+                presenter.Dispose();
+
+                cellsData.Add((cell.RowIndex, cell.ColumnIndex));
             }
         }
+
+        if (cellsData.Count > 0) {
+            BoardView.RemoveCellsBatch(cellsData);
+        }
     }
 
-    private CellPresenter CreateCellPresenter(Cell cell, int rowIndex, int colIndex) {
-        var cellView = BoardView.CreateCell(cell.RowIndex, cell.ColumnIndex);
+    private void HandleCellsAdded(List<Cell> addedCells) {
+        if (addedCells == null || addedCells.Count == 0) return;
 
-        if (cellView == null) {
-            Debug.LogWarning("Failed to create view in " + this);
-            return null;
+        var cellsData = new List<(Cell3DView cellView, int row, int column)>();
+
+        foreach (var cell in addedCells) {
+            // ✅ КРОК 1: Створюємо View СИНХРОННО (невидиме)
+            Cell3DView cellView = BoardView.CreateCellView();
+
+            // ✅ КРОК 2: Створюємо Presenter СИНХРОННО (вже маємо View)
+            var cellPresenter = _presenterFactory.CreatePresenter<CellPresenter>(cell, cellView);
+            cellPresenters[cell] = cellPresenter;
+            cellPresenter.OnSizeChanged += HandleCellSizeChanged;
+
+            // ✅ КРОК 3: Додаємо до списку для батч-операції
+            cellsData.Add((cellView, cell.RowIndex, cell.ColumnIndex));
         }
-        var cellPresenter = presenterFactory.CreatePresenter<CellPresenter>(cell, cellView);
 
-        cellPresenters[cell] = cellPresenter;
-        cellPresentersByIndex[(rowIndex, colIndex)] = cellPresenter;
-
-        return cellPresenter;
+        // ✅ КРОК 4: Додаємо всі View на дошку ОДНИМ батчем (через visualManager)
+        if (cellsData.Count > 0) {
+            BoardView.AddCellViewBatch(cellsData);
+        }
     }
 
+    public void UpdateLayout() {
+        BoardView.UpdateLayout();
+    }
 
-    public void Dispose() {
-        foreach (var presenter in cellPresenters.Values) {
-            presenter.Dispose();
-        }
-
-        cellPresenters.Clear();
-        cellPresentersByIndex.Clear();
-        UnsubscribeFromEvents();
+    private void HandleCellSizeChanged(CellPresenter presenter) {
+        UpdateLayout();
     }
 
     public void AssignArea(int row, int column, Zone zone) {
@@ -73,5 +102,25 @@ public class BoardPresenter : IDisposable {
 
     public void AssignArea(Cell cell, Zone zone) {
         Board.AssignAreaModelToCell(cell, zone);
+    }
+
+    public void AssignAreas(List<Cell> cells, List<Zone> zones) {
+        if (zones.Count < cells.Count) return;
+
+        for (int i = 0; i < cells.Count; i++) {
+            cells[i].AssignUnit(zones[i]);
+        }
+
+        UpdateLayout();
+    }
+
+    public void Dispose() {
+        foreach (var presenter in cellPresenters.Values) {
+            presenter.OnSizeChanged -= HandleCellSizeChanged;
+            presenter.Dispose();
+        }
+
+        cellPresenters.Clear();
+        UnsubscribeFromEvents();
     }
 }

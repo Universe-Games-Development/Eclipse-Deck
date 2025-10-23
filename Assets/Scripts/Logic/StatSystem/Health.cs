@@ -13,7 +13,7 @@ public class Health : Attribute {
     public Health(Attribute attribute) : base(attribute) {
     }
 
-    public void TakeDamage(int damage, IDamageDealer source = null) {
+    public void TakeDamage(int damage, IAttacker source = null) {
         if (IsDead) return;
 
         Subtract(damage);
@@ -29,7 +29,7 @@ public class Health : Attribute {
         if (IsDead || amount <= 0) return;
 
         // Відновлюємо здоров'я тільки до базового значення
-        int mainDifference = BaseValue - MainValue;
+        int mainDifference = BaseMaximum - MainValue;
 
         if (mainDifference > 0) {
             // Обмежуємо лікування базовим значенням

@@ -1,7 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using DG.Tweening;
-using System.Threading;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Card3DView : CardView {
     [SerializeField] private Renderer cardRenderer;
@@ -19,27 +16,6 @@ public class Card3DView : CardView {
         InitializeMaterials();
     }
 
-    #region Movement API - основне для інших модулів
-
-    /// <summary>
-    /// Плавний рух до позиції (для руки, реорганізації)
-    /// </summary>
-    public async UniTask DoTweenerInner(Tweener tweener, CancellationToken token = default) {
-        if (innerMovementComponent != null) {
-            await innerMovementComponent.ExecuteTween(tweener, token);
-        }
-    }
-
-    /// <summary>
-    /// Плавний рух до позиції (для руки, реорганізації)
-    /// </summary>
-    public async UniTask DoSequenceInner(Sequence sequence, CancellationToken token = default) {
-        if (innerMovementComponent != null) {
-            await innerMovementComponent.ExecuteTweenSequence(sequence, token);
-        }
-
-    }
-    #endregion
 
     #region Render Order Management
     public override void SetRenderOrder(int order) {
@@ -95,7 +71,7 @@ public class Card3DView : CardView {
 
     public void ToggleFrame(bool isEnabled) {
         if (_instancedMaterial != null) {
-            _instancedMaterial.SetFloat("_FrameMask", isEnabled ? 0f : -1f);
+            _instancedMaterial.SetFloat("_MaskStrength", isEnabled ? 1f : 0f);
         }
     }
 }

@@ -8,7 +8,7 @@ public class Attack : Attribute {
     }
 
     public void DealDamage(IHealthable target) {
-        target.Health.TakeDamage(Current);
+        target.TakeDamage(Current);
     }
 }
 

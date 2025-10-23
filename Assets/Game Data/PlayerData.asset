@@ -21,3 +21,4 @@ MonoBehaviour:
   isFlying: 0
   speechData: {fileID: 0}
   Color: {r: 0.31706125, g: 0.7075472, b: 0.44157457, a: 0}
+  DeckConfig: {fileID: 11400000, guid: 49e769e6213cfb6408ee9ef6ae9a62e6, type: 2}

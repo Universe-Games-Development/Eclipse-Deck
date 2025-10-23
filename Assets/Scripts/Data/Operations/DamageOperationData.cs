@@ -1,33 +1,34 @@
-using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
-using static Unity.VisualScripting.Member;
 
+[CreateAssetMenu(fileName = "Damage", menuName = "Operations/Damage")]
 public class DamageOperationData : OperationData {
     public int damage = 6;
     [SerializeField] private Fireball fireballPrefab;
-}
 
-[OperationFor(typeof(DamageOperationData))]
-public class DamageOperation : GameOperation {
-    private const string TargetKey = "target";
-    private readonly DamageOperationData data;
+    public override GameOperation CreateOperation(IOperationFactory factory, TargetRegistry targetRegistry) {
+        IHealthable healthable = targetRegistry.Get<IHealthable>(TargetKeys.MainTarget);
 
-    public DamageOperation(UnitModel source, DamageOperationData data) : base(source) {
-        this.data = data;
-
-        AddTarget(new TargetInfo(TargetKey, TargetRequirements.EnemyCreature));
+        return factory.Create<DamageOperation>(this, healthable);
     }
 
-    public override async UniTask<bool> Execute() {
-        // Type-safe отримання target без кастів!
-        if (!TryGetTypedTarget<IHealthable>(TargetKey, out var target)) {
-            Debug.LogError($"Valid {TargetKey} not found for damage operation");
-            return false;
-        }
+    protected override void BuildDefaultRequirements() {
+        AddRequirement(RequirementPresets.Damageble(TargetKeys.MainTarget));
+    }
+}
 
+public class DamageOperation : GameOperation {
+    private readonly DamageOperationData data;
+    private IHealthable target;
+
+    public DamageOperation(DamageOperationData data, IHealthable target) {
+        this.data = data;
+        this.target = target;
+    }
+
+    public override bool Execute() {
         // Тепер target вже має тип IHealthable!
-        target.Health.TakeDamage(data.damage);
-        await UniTask.DelayFrame(1);
+        target.TakeDamage(data.damage);
         return true;
     }
 }

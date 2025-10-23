@@ -3,21 +3,16 @@ using DG.Tweening;
 using System.Threading;
 using UnityEngine;
 
-public class CreatureView : InteractableView {
+public class CreatureView : UnitView {
     [SerializeField] MovementComponent movementComponent;
     [SerializeField] private Renderer cardRenderer;
     [SerializeField] MovementComponent innerMovementComponent;
-
     // Автоматично знаходимо компоненти
     private CardDisplayComponent[] displayComponents;
     private Material _instancedMaterial;
     private int _defaultRenderQueue;
 
-    
-
-    protected override void Awake() {
-        base.Awake();
-
+    protected void Awake() {
         displayComponents = GetComponentsInChildren<CardDisplayComponent>();
         
         InitializeMaterials();
@@ -114,10 +109,14 @@ public class CreatureView : InteractableView {
             component.UpdateDisplay(context);
         }
 
+        UpdateName(context.Config.showName);
         UpdatePortait(context.Data.portrait);
         ToggleFrame(context.Config.showFrame);
     }
 
+    public void UpdateName(bool isEnabled) {
+
+    }
     public void UpdatePortait(Sprite portrait) {
         if (_instancedMaterial != null && portrait != null) {
             _instancedMaterial.SetTexture("_Portait", portrait.texture);
@@ -126,8 +125,7 @@ public class CreatureView : InteractableView {
 
     public void ToggleFrame(bool isEnabled) {
         if (_instancedMaterial != null) {
-            _instancedMaterial.SetFloat("_FrameMask", isEnabled ? 0f : -1f);
+            _instancedMaterial.SetFloat("_MaskStrength", isEnabled ? 1f : 0f);
         }
     }
-
 }

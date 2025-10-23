@@ -15,6 +15,8 @@ public class EntitiesInstaller : MonoInstaller<EntitiesInstaller> {
         Container.Bind<IPresenterFactory>().To<PresenterFactory>().AsSingle(); 
 
         Container.Bind<IOpponentFactory>().To<OpponentFactory>().AsSingle();
+        Container.Bind<IDeckBuilder>().To<DeckBuilder>().AsSingle();
+        
         Container.Bind<ICardFactory>().To<CardFactory>().AsSingle();
         Container.Bind<IEntityFactory>().To<EntityFactory>().AsSingle();
     }

@@ -1,18 +1,30 @@
-﻿using Cysharp.Threading.Tasks;
-using System.Collections.Generic;
+﻿using UnityEngine;
+
+[CreateAssetMenu(fileName = "DrawCard", menuName = "Operations/DrawCard")]
+public class DrawCardOperationData : OperationData {
+    public int drawAmount = 1;
+
+    public override GameOperation CreateOperation(IOperationFactory factory, TargetRegistry targetRegistry) {
+        Opponent opponent = targetRegistry.Get<Opponent>(TargetKeys.MainTarget);
+
+        return factory.Create<DrawCardOperation>(this, opponent, drawAmount);
+    }
+
+    protected override void BuildDefaultRequirements() {
+    }
+}
 
 public class DrawCardOperation : GameOperation {
-    private OpponentPresenter opponentPresetner;
+    private Opponent _opponent;
     private int _drawAmount;
-    private List<Card> drawnCards;
-    public DrawCardOperation(UnitModel source, OpponentPresenter boardPlayer, int drawAmount = 1) : base (source) {
-        opponentPresetner = boardPlayer;
+
+    public DrawCardOperation(Opponent opponent, int drawAmount = 1) {
+        _opponent = opponent;
         _drawAmount = drawAmount;
     }
 
-    public override async UniTask<bool> Execute() {
-        opponentPresetner.DrawCards(_drawAmount);
-        await UniTask.DelayFrame(1);
+    public override bool Execute() {
+        _opponent.DrawCards(_drawAmount);
         return true;
     }
 }

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 936fd975f9f633545ad14eafd9e791cb, type: 3}
+  m_Name: Summon
+  m_EditorClassIdentifier: 
+  visualData: {fileID: 11400000, guid: d475267edbd12f94a9d41b2b06f37e15, type: 2}
+  targetRequirements:
+  - rid: 5584263935755812977
+  autoSacrificeIfFull: 1
+  SacrificeOperationData: {fileID: 11400000, guid: e5fa00ef735573247b08270a163e9915, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: 5584263935755812977
+      type: {class: ZoneTargetRequirementData, ns: , asm: Assembly-CSharp}
+      data:
+        targetKey: 0
+        selector: 0
+        allowSameTargetMultipleTimes: 0
+        conditions:
+        - rid: 5584263935755812978
+    - rid: 5584263935755812978
+      type: {class: OwnershipConditionData, ns: , asm: Assembly-CSharp}
+      data:
+        ownershipType: 0

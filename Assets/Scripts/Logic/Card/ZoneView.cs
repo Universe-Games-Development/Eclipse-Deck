@@ -1,11 +1,12 @@
 ﻿using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-public class ZoneView : AreaView {
+public class ZoneView : UnitView, IArea {
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI text;
     [SerializeField] private Renderer zoneRenderer;
@@ -14,19 +15,33 @@ public class ZoneView : AreaView {
 
     [Header("Layout")]
     [SerializeField] private ZoneLayoutComponent layoutComponent;
-    [SerializeField] private Transform creaturesContainer;
 
     [Header("Pool")]
     [Inject] private IComponentPool<CreatureView> creaturePool;
 
+    [Header("Visual Manager")]
+    [Inject] private IVisualManager visualManager;
+
     [Header("Animation")]
+    [SerializeField] private float appearDuration = 0.5f;
+    [SerializeField] private float disappearDuration = 0.5f;
     [SerializeField] private float rearrangeDuration = 0.5f;
 
     public event Action OnRemoveDebugRequest;
 
-    protected override void Awake() {
-        base.Awake();
+    #region IArea 
+    [SerializeField] private AreaBody ownBody;
+    public event Action<Vector3> OnSizeChanged;
 
+    public Vector3 Size => ownBody.Size;
+
+    public void Resize(Vector3 newSize) {
+        ownBody.Resize(newSize);
+        OnSizeChanged?.Invoke(newSize);
+    }
+    #endregion
+
+    protected void Awake() {
         ValidateReferences();
         SetupLayoutComponent();
         SetupUI();
@@ -35,8 +50,6 @@ public class ZoneView : AreaView {
     private void ValidateReferences() {
         if (layoutComponent == null)
             throw new UnassignedReferenceException(nameof(layoutComponent));
-        if (creaturesContainer == null)
-            throw new UnassignedReferenceException(nameof(creaturesContainer));
     }
 
     private void SetupLayoutComponent() {
@@ -54,34 +67,55 @@ public class ZoneView : AreaView {
         }
     }
 
-    #region Creatures
+    #region Creatures - Public Synchronous API
+    public CreatureView CreateCreatureView() {
+        CreatureView creatureView = creaturePool.Get();
+        creatureView.gameObject.SetActive(false);
+        creatureView.transform.position = transform.position + Vector3.up * 2f;
+        return creatureView;
+    }
 
-    public void AddCreatureView(CreatureView creatureView) {
-        if (creatureView == null) return;
+    public void SummonCreatureView(CreatureView creatureView) {
+        if (creatureView == null) {
+            Debug.LogWarning("Trying to add null CreatureView");
+            return;
+        }
 
-        // Layout component сам встановить parent
-        layoutComponent.AddItem(creatureView, recalculate: true);
 
-        // Анімуємо на позицію
-        layoutComponent.AnimateToLayoutPosition(creatureView).Forget();
+        var summonTask = new AddCreatureVisualTask(
+            creatureView,
+            layoutComponent,
+            appearDuration
+        );
+        visualManager.Push(summonTask);
     }
 
     public void RemoveCreatureView(CreatureView creatureView) {
-        if (creatureView == null) return;
+        if (creatureView == null) {
+            Debug.LogWarning("Trying to remove null CreatureView");
+            return;
+        }
 
-        // Видаляємо з layout
-        layoutComponent.RemoveItem(creatureView, recalculate: true);
-
-        // Анімуємо решту створінь
-        RearrangeCreatures(rearrangeDuration).Forget();
-
-        // Повертаємо в pool
-        creaturePool?.Release(creatureView);
+        var removeTask = new RemoveCreatureVisualTask(
+            creatureView,
+            layoutComponent,
+            creaturePool,
+            disappearDuration
+        );
+        visualManager.Push(removeTask);
     }
 
-    public async UniTask RearrangeCreatures(float duration = 0.5f) {
-        await layoutComponent.AnimateAllToLayoutPositions(duration);
+    public void RearrangeCreatures() {
+        var rearrangeTask = new RearrangeCreaturesVisualTask(
+            layoutComponent,
+            rearrangeDuration
+        );
+        visualManager.Push(rearrangeTask);
     }
+
+    #endregion
+
+    #region Info
 
     public void UpdateSummonedCount(int count) {
         if (text != null) {
@@ -135,3 +169,102 @@ public class ZoneView : AreaView {
         }
     }
 }
+
+#region Visual Tasks
+
+public class AddCreatureVisualTask : VisualTask {
+    private readonly CreatureView _creatureView;
+    private readonly ZoneLayoutComponent _layout;
+    private readonly float _animationDuration;
+
+    public AddCreatureVisualTask(
+        CreatureView creatureView,
+        ZoneLayoutComponent layout,
+        float animationDuration = 0.5f) {
+        _creatureView = creatureView;
+        _layout = layout;
+        _animationDuration = animationDuration;
+    }
+
+    public override async UniTask<bool> ExecuteAsync() {
+        // Активуємо creature
+        _creatureView.gameObject.SetActive(true);
+
+        // Додаємо в layout і перераховуємо
+        _layout.AddItem(_creatureView, recalculate: true);
+
+        // Анімуємо всіх створінь на нові позиції
+        float duration = _animationDuration * TimeModifier;
+        await _layout.AnimateAllToLayoutPositions(duration);
+
+        return true;
+    }
+}
+
+public class RemoveCreatureVisualTask : VisualTask {
+    private readonly CreatureView _creatureView;
+    private readonly ZoneLayoutComponent _layout;
+    private readonly IComponentPool<CreatureView> _creaturePool;
+    private readonly float _animationDuration;
+
+    public RemoveCreatureVisualTask(
+        CreatureView creatureView,
+        ZoneLayoutComponent layout,
+        IComponentPool<CreatureView> creaturePool,
+        float animationDuration) {
+        _creatureView = creatureView;
+        _layout = layout;
+        _creaturePool = creaturePool;
+        _animationDuration = animationDuration;
+    }
+
+    public override async UniTask<bool> ExecuteAsync() {
+        float duration = _animationDuration * TimeModifier;
+
+        // Анімуємо зникнення створіння
+        Sequence fadeSequence = DOTween.Sequence()
+            .Join(_creatureView.transform.DOScale(Vector3.zero, duration * 0.5f))
+            .Join(_creatureView.transform.DOMoveY(
+                _creatureView.transform.position.y - 1f,
+                duration * 0.5f
+            ));
+
+        await fadeSequence.Play().ToUniTask();
+
+        // Видаляємо з layout
+        _layout.RemoveItem(_creatureView, recalculate: true);
+
+        // Анімуємо перерозподіл решти створінь
+        await _layout.AnimateAllToLayoutPositions(duration);
+
+        // Повертаємо в pool
+        _creaturePool.Release(_creatureView);
+
+        return true;
+    }
+}
+
+public class RearrangeCreaturesVisualTask : VisualTask {
+    private readonly ZoneLayoutComponent _layout;
+    private readonly float _animationDuration;
+
+    public RearrangeCreaturesVisualTask(
+        ZoneLayoutComponent layout,
+        float animationDuration = 0.5f) {
+        _layout = layout;
+        _animationDuration = animationDuration;
+    }
+
+    public override async UniTask<bool> ExecuteAsync() {
+        // Перераховуємо layout
+        _layout.RecalculateLayout();
+
+        // Анімуємо всіх на нові позиції
+        float duration = _animationDuration * TimeModifier;
+        await _layout.AnimateAllToLayoutPositions(duration);
+
+        return true;
+    }
+}
+
+#endregion

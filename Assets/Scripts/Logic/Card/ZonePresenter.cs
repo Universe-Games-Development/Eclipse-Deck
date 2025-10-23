@@ -1,146 +1,118 @@
-﻿using Cysharp.Threading.Tasks;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using UnityEngine;
 using Zenject;
 
-public class AreaPresenter : InteractablePresenter {
-    public Action<Vector3> OnSizeChanged;
-    public AreaView AreaView;
-    public AreaPresenter(UnitModel model, AreaView view) : base(model, view) {
-        AreaView = view;
-    }
-
-    public Vector3 CurrentSize { get; protected set; }
-
-    public void ChangeSize(Vector3 size) {
-        AreaView.SetSize(size);
-        CurrentSize = size;
-        OnSizeChanged?.Invoke(size);
-    }
-}
-
-public class ZonePresenter : AreaPresenter, IDisposable {
+public class ZonePresenter : UnitPresenter, IDisposable {
     public Zone Zone;
     public ZoneView ZoneView;
-
     [Inject] private IUnitRegistry _unitRegistry;
-    [Inject] private IVisualTaskFactory _visualTaskFactory;
-    [Inject] private IVisualManager _visualManager;
-
-    
-    private List<CreaturePresenter> creatures = new();
-    
+    [Inject] IOpponentRegistry opponentRegistry;
 
     public ZonePresenter(Zone zone, ZoneView zoneView) : base(zone, zoneView) {
         Zone = zone;
         ZoneView = zoneView;
 
-        Zone.OnCreaturePlaced += HandleCreaturePlacement;
+        Zone.OnChangedOwner += HandleOwnerChanged;
+        //Zone.OnCreatureSummoned += HandleCreatureSummoned;
         Zone.OnCreatureRemoved += HandleCreatureRemove;
+        Zone.ONMaxCreaturesChanged += HandleSizeUpdate;
 
         ZoneView.OnRemoveDebugRequest += TryRemoveCreatureDebug;
 
-        ZoneView.ChangeColor(Zone.OwnerId != null ? Color.green : Color.black);
+        HandleOwnerChanged(Zone.OwnerId);
+        HandleSizeUpdate(Zone.MaxCreatures);
 
-        UpdateSize();
+        foreach (var creature in Zone.Creatures) {
+            HandleCreatureSummoned(creature);
+        }
+    }
+
+    private void HandleOwnerChanged(string ownerId) {
+        if (string.IsNullOrEmpty(ownerId)) {
+            ZoneView.ChangeColor(Color.black);
+            return;
+        }
+
+        Opponent oppponent = opponentRegistry.GetOpponentById(ownerId);
+
+        Color color = oppponent != null ? oppponent.Data.Color : Color.black;
+
+        ZoneView.ChangeColor(color);
+    }
+
+    private void HandleSizeUpdate(int maxSize) {
+        Vector3 size = ZoneView.CalculateRequiredSize(maxSize);
+        ZoneView.Resize(size);
     }
 
     private void TryRemoveCreatureDebug() {
         Creature creature = Zone.Creatures.FirstOrDefault();
-        Zone.RemoveCreature(creature);
+        if (creature != null) {
+            Zone.RemoveCreature(creature);
+        }
     }
 
-    private void HandleCreaturePlacement(Creature creature) {
-        if (!_unitRegistry.TryGetPresenterByModel<CreaturePresenter>(creature, out var presenter)) {
-            Debug.LogWarning("Failed to find presenter for : " + creature);
-        }
 
-        creatures.Add(presenter);
+    // Variant 1 External Creation 
+    // SummonCreatureOperation handle logic + creates SummonVisualTask to push in visualManager
+    // SummonVisualTask handle CreatureCard to creaturePresenter and position Creature to place of CreatureCard
+    public void AddCreatureVisual(CreaturePresenter creaturePresenter) {
+        CreatureView creatureView = creaturePresenter.CreatureView;
+
+        // Додаємо візуально через ZoneView
+        ZoneView.SummonCreatureView(creatureView);
+    }
+
+    // Variant 2 Direct React on model changes
+    private void HandleCreatureSummoned(Creature creature) {
+        CreaturePresenter creaturePresenter = CreateCreatureWithZoneView(creature);
+        CreatureView creatureView = creaturePresenter.CreatureView;
+
         ZoneView.UpdateSummonedCount(Zone.Creatures.Count);
+        ZoneView.SummonCreatureView(creatureView);
+    }
 
-        var addTask = new AddCreatureToZoneVisualTask(creature, this, _unitRegistry);
-        _visualManager.Push(addTask);
-        RearrangeCreatures();
+    // Variant 2.1 Automatical registration + CreatureView from pool
+    [Inject] IUnitSpawner<Creature, CreatureView, CreaturePresenter> creatureSpawner;
+    private CreaturePresenter CreateCreatureWithUnitSpawner(Creature creature) {
+        CreaturePresenter creaturePresenter = creatureSpawner.SpawnUnit(creature); // Automatical registration + pool view creation
+        CreatureView creatureView = creaturePresenter.CreatureView;
+        creatureView.gameObject.SetActive(false); // we also hide it mannually to be summoned in visual queue
+        return creaturePresenter;
+    }
+
+    // Variant 2.1 Manual registration + CreatureView from ZoneView
+    [Inject] IUnitRegistry unitRegistry;
+    [Inject] IPresenterFactory presenterFactory;
+    private CreaturePresenter CreateCreatureWithZoneView(Creature creature) {
+        CreatureView creatureView = ZoneView.CreateCreatureView(); // automatically hidden by ZoneView
+        CreaturePresenter creaturePresenter = presenterFactory.CreatePresenter<CreaturePresenter>(creature, creatureView);
+        unitRegistry.Register(creaturePresenter); // we will also need to register it
+        
+        return creaturePresenter;
     }
 
     private void HandleCreatureRemove(Creature creature) {
+        ZoneView.UpdateSummonedCount(Zone.Creatures.Count);
+
         if (!_unitRegistry.TryGetPresenterByModel<CreaturePresenter>(creature, out var presenter)) {
             Debug.LogWarning("Failed to find presenter for : " + creature);
+            return;
         }
 
-        if (presenter != null) {
-            creatures.Remove(presenter);
-            ZoneView.RemoveCreatureView(presenter.CreatureView);
-            _unitRegistry.Unregister(presenter);
-        }
-        ZoneView.UpdateSummonedCount(Zone.Creatures.Count);
-        RearrangeCreatures();
+        var view = presenter.CreatureView;
+        ZoneView.RemoveCreatureView(view);
+
+        _unitRegistry.Unregister(presenter);
     }
 
-    private void UpdateVisuals() {
-        RearrangeCreatures();
-        UpdateSize();
-    }
-
-    public void RearrangeCreatures() {
-        var rearrangeTask = new RearrangeZoneVisualTask(ZoneView, 0.1f);
-        _visualManager.Push(rearrangeTask);
-    }
-
-    private void UpdateSize() {
-        Vector3 size = ZoneView.CalculateRequiredSize(Zone.MaxCreatures);
-
-        ChangeSize(size);
-    }
-
-
-    public override void Dispose() {
-        base.Dispose();
+    public void Dispose() {
+        Zone.OnChangedOwner -= HandleOwnerChanged;
         ZoneView.OnRemoveDebugRequest -= TryRemoveCreatureDebug;
-        Zone.OnCreaturePlaced -= HandleCreaturePlacement;
+        Zone.OnCreatureSummoned -= HandleCreatureSummoned;
         Zone.OnCreatureRemoved -= HandleCreatureRemove;
-    }
-}
-
-public class RearrangeZoneVisualTask : VisualTask {
-    private readonly ZoneView _zoneView;
-    private readonly float _duration;
-    public RearrangeZoneVisualTask(ZoneView zoneView, float duration = 0.5f) {
-        _zoneView = zoneView;
-        _duration = duration;
+        Zone.ONMaxCreaturesChanged -= HandleSizeUpdate;
     }
 
-    public override async UniTask<bool> Execute() {
-        await _zoneView.RearrangeCreatures(_duration);
-        return true;
-    }
-}
-
-public class AddCreatureToZoneVisualTask : VisualTask {
-    private readonly Creature _creature;
-    private readonly ZonePresenter _zonePresenter;
-    private readonly IUnitRegistry _unitRegistry;
-
-    public AddCreatureToZoneVisualTask(Creature creature, ZonePresenter zonePresenter, IUnitRegistry unitRegistry) {
-        _creature = creature;
-        _zonePresenter = zonePresenter;
-        _unitRegistry = unitRegistry;
-    }
-
-    public override async UniTask<bool> Execute() {
-        CreaturePresenter creaturePresenter = _unitRegistry.GetPresenter<CreaturePresenter>(_creature);
-        if (creaturePresenter != null) {
-            _zonePresenter.ZoneView.AddCreatureView(creaturePresenter.CreatureView);
-            await PlaySpawnEffect(creaturePresenter);
-            return true;
-        }
-        return false;
-    }
-
-    private async UniTask PlaySpawnEffect(CreaturePresenter creaturePresenter) {
-        // Ефект появи
-        await UniTask.WaitForSeconds(0.1f); // Можна замінити на реальну анімацію
-    }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-public class CreaturePresenter : InteractablePresenter {
+public class CreaturePresenter : UnitPresenter {
     public Creature Creature;
     public CreatureView CreatureView;
 
@@ -13,27 +13,26 @@ public class CreaturePresenter : InteractablePresenter {
 
     private void UpdateUI() {
         // Простий спосіб через готовий конфіг
-        var displayData = ConvertToDisplayData(Creature.SourceCard);
+        var displayData = ConvertToDisplayData(Creature);
         CardDisplayContext context = new(displayData, CardDisplayConfig.ForCreature());
         CreatureView.UpdateDisplay(context);
     }
 
-    private CardDisplayData ConvertToDisplayData(Card card) {
+    private CardDisplayData ConvertToDisplayData(Creature creature) {
         int attack = 0;
         int health = 0;
-        if (card is CreatureCard creature) {
-            attack = creature.Attack.Current;
-            health = creature.Health.Current;
-        }
+
+        attack = creature.Attack.Current;
+        health = creature.Health.Current;
 
         return new CardDisplayData {
-            name = card.Data.Name,
-            cost = card.Cost.Current,
+            name = creature.Data.Name,
+            cost = creature.Cost.Current,
             attack = attack,
             health = health,
-            portrait = card.Data.Portait,
-            background = card.Data.Background,
-            rarity = RarityUtility.GetRarityColor(card.Data.Rarity)
+            portrait = creature.Data.Portait,
+            background = creature.Data.Background,
+            rarity = RarityUtility.GetRarityColor(creature.Data.Rarity)
         };
     }
 

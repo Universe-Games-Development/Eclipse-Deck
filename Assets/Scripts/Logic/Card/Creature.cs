@@ -1,56 +1,56 @@
 ﻿using System;
-using Unity.VisualScripting;
 using Zenject;
 
-public class Creature : UnitModel, IHealthable {
+public class Creature : UnitModel, IHealthable, IAttacker {
     public Action OnDeath;
+    public CreatureCardData Data { get; private set; }
     public Health Health { get; private set; }
     public Attack Attack { get; private set; }
-    public CreatureCardData Data { get; private set; }
+    public Cost Cost { get; private set; }
+    public string SourceCardId { get; private set; }
 
-    private CreatureCard sourceCard;
-    private Zone currentZone;
-
-    public CreatureCard SourceCard => sourceCard;
-    public Zone CurrentZone => currentZone;
     [Inject] IEventBus<IEvent> eventBus;
+    
+    public Creature(CreatureCardData data, Health health, Attack attack, Cost cost, string cardID) {
+        Data = data ?? throw new ArgumentNullException(nameof(data));
+        Health = health;
+        Attack = attack;
+        Cost = cost;
+        SourceCardId = cardID;
 
-    public string Name { get; private set; }
-    public Creature(CreatureCard card) {
-        Data = card.CreatureCardData ?? throw new ArgumentNullException(nameof(card.CreatureCardData));
-        Health = new Health(card.Health);
-        Attack = new Attack(card.Attack);
-        sourceCard = card;
-        Name = Data.Name;
+        UnitName = Data.Name;
 
-        Id = System.Guid.NewGuid().ToString();
-    }
-
-
-    public void SetZone(Zone zone) {
-        currentZone = zone;
+        InstanceId = System.Guid.NewGuid().ToString();
     }
 
     public bool CanAttack() {
-        // Логіка перевірки чи може істота атакувати
         return Health.Current > 0 && Attack.Current > 0;
-    }
-
-    public override string ToString() {
-        return $"{Name} ({Attack.Current}/{Health.Current})";
-    }
-
-    public override string GetName() {
-        return Data.Name;
-    }
-
-    public void SetName(string name) {
-        Name = name;
     }
 
     public void Die() {
         eventBus.Raise(new DeathEvent(this));
 
         OnDeath?.Invoke();
+    }
+
+    #region IAttacker
+    public int CurrentAttack => Attack.Current;
+
+    #endregion
+
+    #region IHealthable
+    public bool IsDead => Health.IsDead;
+
+    public int CurrentHealth => Health.Current;
+
+    public float BaseValue => Health.BaseMaximum;
+
+    public void TakeDamage(int damage) {
+        Health.TakeDamage(damage);
+    }
+    #endregion
+
+    public override string ToString() {
+        return $"{UnitName} ({Attack.Current}/{Health.Current})";
     }
 }

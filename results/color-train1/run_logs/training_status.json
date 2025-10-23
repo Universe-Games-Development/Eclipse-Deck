@@ -1,0 +1,29 @@
+{
+    "ColorMatchAgent": {
+        "checkpoints": [
+            {
+                "steps": 3629,
+                "file_path": "results\\color-train1\\ColorMatchAgent\\ColorMatchAgent-3629.onnx",
+                "reward": -0.620253164556962,
+                "creation_time": 1760540888.4051151,
+                "auxillary_file_paths": [
+                    "results\\color-train1\\ColorMatchAgent\\ColorMatchAgent-3629.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 3629,
+            "file_path": "results\\color-train1\\ColorMatchAgent.onnx",
+            "reward": -0.620253164556962,
+            "creation_time": 1760540888.4051151,
+            "auxillary_file_paths": [
+                "results\\color-train1\\ColorMatchAgent\\ColorMatchAgent-3629.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cu121"
+    }
+}
